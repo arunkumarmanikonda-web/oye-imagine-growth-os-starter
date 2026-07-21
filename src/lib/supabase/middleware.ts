@@ -44,18 +44,40 @@ export async function updateSession(request: NextRequest) {
   const isAdminRoute = pathname.startsWith("/admin");
   const isLoginRoute = pathname.startsWith("/login");
 
-  if (isAdminRoute && !user) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/login";
-    redirectUrl.searchParams.set("next", pathname);
-    return NextResponse.redirect(redirectUrl);
+  if (isAdminRoute) {
+    if (!user) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/login";
+      redirectUrl.searchParams.set("next", pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    const userRole =
+      user.user_metadata?.role ??
+      user.app_metadata?.role ??
+      "";
+
+    if (userRole !== "platform_admin") {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/login";
+      redirectUrl.searchParams.set("next", pathname);
+      redirectUrl.searchParams.set("error", "platform_admin_required");
+      return NextResponse.redirect(redirectUrl);
+    }
   }
 
   if (isLoginRoute && user) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/admin";
-    redirectUrl.search = "";
-    return NextResponse.redirect(redirectUrl);
+    const userRole =
+      user.user_metadata?.role ??
+      user.app_metadata?.role ??
+      "";
+
+    if (userRole === "platform_admin") {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/admin";
+      redirectUrl.search = "";
+      return NextResponse.redirect(redirectUrl);
+    }
   }
 
   return response;
