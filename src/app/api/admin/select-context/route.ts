@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getAdminContexts } from "@/lib/admin/context";
+import { logAdminAuditEvent } from "@/lib/admin/audit";
 
 type SelectContextBody = {
   workspaceId?: string;
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { options } = await getAdminContexts();
+    const { active: previous, options } = await getAdminContexts();
     const selected = options.find((item) => item.workspaceId === workspaceId);
 
     if (!selected) {
@@ -50,6 +51,27 @@ export async function POST(request: NextRequest) {
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 30,
     });
+
+    try {
+      await logAdminAuditEvent({
+        event: "admin_context_switched",
+        actorUserId: user.id,
+        actorEmail: user.email ?? null,
+        tenantId: selected.tenantId,
+        brandId: selected.brandId,
+        workspaceId: selected.workspaceId,
+        payload: {
+          previousWorkspaceId: previous?.workspaceId ?? null,
+          previousWorkspaceSlug: previous?.workspaceSlug ?? null,
+          previousTenantSlug: previous?.tenantSlug ?? null,
+          nextWorkspaceId: selected.workspaceId,
+          nextWorkspaceSlug: selected.workspaceSlug,
+          nextTenantSlug: selected.tenantSlug,
+        },
+      });
+    } catch (auditError) {
+      console.error("Failed to write admin context switch audit event", auditError);
+    }
 
     return response;
   } catch (error) {

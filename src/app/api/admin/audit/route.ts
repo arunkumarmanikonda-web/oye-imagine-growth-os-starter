@@ -31,7 +31,7 @@ export async function GET() {
     const admin = createServiceRoleClient();
     const { data, error } = await admin
       .from("admin_audit_events")
-      .select("*")
+      .select("id, event, actor_user_id, actor_email, tenant_id, brand_id, workspace_id, payload, created_at")
       .order("created_at", { ascending: false })
       .limit(25);
 

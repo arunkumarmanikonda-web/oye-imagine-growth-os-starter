@@ -24,9 +24,21 @@ type ContextResponse = {
   error?: string;
 };
 
+type AuditItem = {
+  id?: string;
+  event?: string;
+  actor_user_id?: string;
+  actor_email?: string;
+  tenant_id?: string;
+  brand_id?: string;
+  workspace_id?: string;
+  payload?: Record<string, unknown>;
+  created_at?: string;
+};
+
 type AuditResponse = {
   ok: boolean;
-  items?: Record<string, unknown>[];
+  items?: AuditItem[];
   error?: string;
 };
 
@@ -38,7 +50,7 @@ export default function AdminPage() {
   const [active, setActive] = useState<AdminWorkspaceContext | null>(null);
   const [options, setOptions] = useState<AdminWorkspaceContext[]>([]);
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState("");
-  const [auditItems, setAuditItems] = useState<Record<string, unknown>[]>([]);
+  const [auditItems, setAuditItems] = useState<AuditItem[]>([]);
 
   async function loadContext() {
     const response = await fetch("/api/admin/context", {
@@ -95,6 +107,10 @@ export default function AdminPage() {
     return `${active.tenantDisplayName} / ${active.brandName} / ${active.workspaceName}`;
   }, [active]);
 
+  const latestSwitchEvent = useMemo(() => {
+    return auditItems.find((item) => item.event === "admin_context_switched") ?? null;
+  }, [auditItems]);
+
   async function onSwitchContext() {
     if (!selectedWorkspaceId) return;
 
@@ -138,26 +154,12 @@ export default function AdminPage() {
       {loading ? <p>Loading admin context...</p> : null}
       {error ? <p style={{ color: "crimson" }}>{error}</p> : null}
 
-      <section
-        style={{
-          border: "1px solid #ddd",
-          borderRadius: 8,
-          padding: 16,
-          marginBottom: 16,
-        }}
-      >
+      <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, marginBottom: 16 }}>
         <h2>Admin Identity</h2>
         <p><strong>Email:</strong> {userEmail || "Unknown"}</p>
       </section>
 
-      <section
-        style={{
-          border: "1px solid #ddd",
-          borderRadius: 8,
-          padding: 16,
-          marginBottom: 16,
-        }}
-      >
+      <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, marginBottom: 16 }}>
         <h2>Active Context</h2>
         {active ? (
           <>
@@ -171,16 +173,8 @@ export default function AdminPage() {
         )}
       </section>
 
-      <section
-        style={{
-          border: "1px solid #ddd",
-          borderRadius: 8,
-          padding: 16,
-          marginBottom: 16,
-        }}
-      >
+      <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, marginBottom: 16 }}>
         <h2>Switch Workspace</h2>
-
         <label htmlFor="workspaceId"><strong>Workspace</strong></label>
         <br />
         <select
@@ -206,27 +200,26 @@ export default function AdminPage() {
         </button>
       </section>
 
-      <section
-        style={{
-          border: "1px solid #ddd",
-          borderRadius: 8,
-          padding: 16,
-        }}
-      >
+      <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, marginBottom: 16 }}>
+        <h2>Latest Context Switch</h2>
+        {latestSwitchEvent ? (
+          <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0, fontSize: 12 }}>
+            {JSON.stringify(latestSwitchEvent, null, 2)}
+          </pre>
+        ) : (
+          <p>No context switch audit found yet.</p>
+        )}
+      </section>
+
+      <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16 }}>
         <h2>Recent Admin Audit</h2>
         {auditItems.length === 0 ? (
           <p>No audit rows found.</p>
         ) : (
           <div style={{ display: "grid", gap: 12 }}>
             {auditItems.map((item, index) => {
-              const createdAt =
-                typeof item.created_at === "string" ? item.created_at : "n/a";
-              const action =
-                typeof item.action === "string"
-                  ? item.action
-                  : typeof item.event === "string"
-                  ? item.event
-                  : "n/a";
+              const createdAt = item.created_at || "n/a";
+              const action = item.event || "n/a";
 
               return (
                 <div
@@ -239,15 +232,9 @@ export default function AdminPage() {
                   }}
                 >
                   <p><strong>Created:</strong> {createdAt}</p>
-                  <p><strong>Action/Event:</strong> {action}</p>
-                  <pre
-                    style={{
-                      whiteSpace: "pre-wrap",
-                      wordBreak: "break-word",
-                      margin: 0,
-                      fontSize: 12,
-                    }}
-                  >
+                  <p><strong>Event:</strong> {action}</p>
+                  <p><strong>Actor:</strong> {item.actor_email || item.actor_user_id || "n/a"}</p>
+                  <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0, fontSize: 12 }}>
                     {JSON.stringify(item, null, 2)}
                   </pre>
                 </div>
