@@ -55,9 +55,27 @@ type WorkspaceSummaryResponse = {
   error?: string;
 };
 
+type WorkspaceNote = {
+  id: string;
+  tenant_id: string;
+  brand_id: string;
+  workspace_id: string;
+  title: string;
+  body: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type WorkspaceNotesResponse = {
+  ok: boolean;
+  items?: WorkspaceNote[];
+  error?: string;
+};
+
 export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [noteSaving, setNoteSaving] = useState(false);
   const [error, setError] = useState("");
   const [userEmail, setUserEmail] = useState<string>("");
   const [active, setActive] = useState<AdminWorkspaceContext | null>(null);
@@ -66,6 +84,10 @@ export default function AdminPage() {
   const [auditItems, setAuditItems] = useState<AuditItem[]>([]);
   const [auditActionFilter, setAuditActionFilter] = useState("");
   const [summary, setSummary] = useState<{ tenants: number; brands: number; workspaces: number } | null>(null);
+  const [notes, setNotes] = useState<WorkspaceNote[]>([]);
+  const [editingNoteId, setEditingNoteId] = useState("");
+  const [noteTitle, setNoteTitle] = useState("");
+  const [noteBody, setNoteBody] = useState("");
 
   async function loadContext() {
     const response = await fetch("/api/admin/context", {
@@ -121,6 +143,21 @@ export default function AdminPage() {
     setSummary(json.counts || null);
   }
 
+  async function loadNotes() {
+    const response = await fetch("/api/admin/workspace-notes", {
+      credentials: "include",
+      cache: "no-store",
+    });
+
+    const json = (await response.json()) as WorkspaceNotesResponse;
+
+    if (!response.ok || !json.ok) {
+      throw new Error(json.error || "Failed to load workspace notes");
+    }
+
+    setNotes(json.items || []);
+  }
+
   async function loadAll(nextAuditFilter?: string) {
     setLoading(true);
     setError("");
@@ -130,6 +167,7 @@ export default function AdminPage() {
         loadContext(),
         loadAudit(nextAuditFilter ?? auditActionFilter),
         loadSummary(),
+        loadNotes(),
       ]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load admin page");
@@ -179,6 +217,10 @@ export default function AdminPage() {
         throw new Error(json.error || "Failed to switch context");
       }
 
+      setEditingNoteId("");
+      setNoteTitle("");
+      setNoteBody("");
+
       await loadAll(auditActionFilter);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to switch context");
@@ -209,6 +251,63 @@ export default function AdminPage() {
       setError(err instanceof Error ? err.message : "Failed to clear admin audit filter");
     } finally {
       setLoading(false);
+    }
+  }
+
+  function startCreateNote() {
+    setEditingNoteId("");
+    setNoteTitle("");
+    setNoteBody("");
+  }
+
+  function startEditNote(note: WorkspaceNote) {
+    setEditingNoteId(note.id);
+    setNoteTitle(note.title);
+    setNoteBody(note.body);
+  }
+
+  async function saveNote() {
+    if (!noteTitle.trim()) {
+      setError("Note title is required");
+      return;
+    }
+
+    setNoteSaving(true);
+    setError("");
+
+    try {
+      const method = editingNoteId ? "PUT" : "POST";
+      const body = editingNoteId
+        ? { id: editingNoteId, title: noteTitle, body: noteBody }
+        : { title: noteTitle, body: noteBody };
+
+      const response = await fetch("/api/admin/workspace-notes", {
+        method,
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      const json = await response.json();
+
+      if (!response.ok || !json.ok) {
+        throw new Error(json.error || "Failed to save workspace note");
+      }
+
+      setEditingNoteId("");
+      setNoteTitle("");
+      setNoteBody("");
+
+      await Promise.all([
+        loadNotes(),
+        loadAudit(auditActionFilter),
+      ]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save workspace note");
+    } finally {
+      setNoteSaving(false);
     }
   }
 
@@ -276,6 +375,82 @@ export default function AdminPage() {
         >
           {saving ? "Switching..." : "Switch Context"}
         </button>
+      </section>
+
+      <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, marginBottom: 16 }}>
+        <h2>Workspace Notes</h2>
+        <p><strong>Scoped to:</strong> {activeLabel}</p>
+
+        <label htmlFor="noteTitle"><strong>Title</strong></label>
+        <br />
+        <input
+          id="noteTitle"
+          value={noteTitle}
+          onChange={(e) => setNoteTitle(e.target.value)}
+          style={{ minWidth: 420, padding: 8, marginTop: 8, marginBottom: 12 }}
+        />
+        <br />
+
+        <label htmlFor="noteBody"><strong>Body</strong></label>
+        <br />
+        <textarea
+          id="noteBody"
+          value={noteBody}
+          onChange={(e) => setNoteBody(e.target.value)}
+          rows={5}
+          style={{ minWidth: 420, width: "100%", maxWidth: 700, padding: 8, marginTop: 8, marginBottom: 12 }}
+        />
+        <br />
+
+        <button
+          type="button"
+          onClick={saveNote}
+          disabled={noteSaving}
+          style={{ padding: "8px 14px", cursor: "pointer", marginRight: 8 }}
+        >
+          {noteSaving ? "Saving..." : editingNoteId ? "Update Note" : "Create Note"}
+        </button>
+
+        <button
+          type="button"
+          onClick={startCreateNote}
+          style={{ padding: "8px 14px", cursor: "pointer" }}
+        >
+          New Note
+        </button>
+
+        <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
+          {notes.length === 0 ? (
+            <p>No notes for this workspace yet.</p>
+          ) : (
+            notes.map((note) => (
+              <div
+                key={note.id}
+                style={{
+                  border: "1px solid #eee",
+                  borderRadius: 6,
+                  padding: 12,
+                  background: "#fafafa",
+                }}
+              >
+                <p><strong>Title:</strong> {note.title}</p>
+                <p><strong>Updated:</strong> {note.updated_at}</p>
+                <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0, fontSize: 12 }}>
+                  {note.body}
+                </pre>
+                <div style={{ marginTop: 12 }}>
+                  <button
+                    type="button"
+                    onClick={() => startEditNote(note)}
+                    style={{ padding: "8px 14px", cursor: "pointer" }}
+                  >
+                    Edit
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </section>
 
       <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, marginBottom: 16 }}>
