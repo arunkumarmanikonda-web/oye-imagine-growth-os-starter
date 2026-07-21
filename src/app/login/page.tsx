@@ -1,13 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export default function LoginPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const nextUrl = useMemo(() => searchParams.get("next") || "/admin", [searchParams]);
+
+  const nextUrl = useMemo(() => {
+    const value = searchParams.get("next");
+    if (!value || !value.startsWith("/")) {
+      return "/admin";
+    }
+    return value;
+  }, [searchParams]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,8 +37,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.push(nextUrl);
-      router.refresh();
+      window.location.href = nextUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
