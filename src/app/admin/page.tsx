@@ -26,12 +26,14 @@ type ContextResponse = {
 
 type AuditItem = {
   id?: string;
-  event?: string;
+  action?: string;
   actor_user_id?: string;
   actor_email?: string;
   tenant_id?: string;
   brand_id?: string;
   workspace_id?: string;
+  target_type?: string;
+  target_id?: string;
   payload?: Record<string, unknown>;
   created_at?: string;
 };
@@ -108,7 +110,7 @@ export default function AdminPage() {
   }, [active]);
 
   const latestSwitchEvent = useMemo(() => {
-    return auditItems.find((item) => item.event === "admin_context_switched") ?? null;
+    return auditItems.find((item) => item.action === "admin_context_switched") ?? null;
   }, [auditItems]);
 
   async function onSwitchContext() {
@@ -219,7 +221,7 @@ export default function AdminPage() {
           <div style={{ display: "grid", gap: 12 }}>
             {auditItems.map((item, index) => {
               const createdAt = item.created_at || "n/a";
-              const action = item.event || "n/a";
+              const action = item.action || "n/a";
 
               return (
                 <div
@@ -232,7 +234,7 @@ export default function AdminPage() {
                   }}
                 >
                   <p><strong>Created:</strong> {createdAt}</p>
-                  <p><strong>Event:</strong> {action}</p>
+                  <p><strong>Action:</strong> {action}</p>
                   <p><strong>Actor:</strong> {item.actor_email || item.actor_user_id || "n/a"}</p>
                   <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0, fontSize: 12 }}>
                     {JSON.stringify(item, null, 2)}
