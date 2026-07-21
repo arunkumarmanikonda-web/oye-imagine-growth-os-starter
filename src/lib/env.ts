@@ -21,3 +21,13 @@ export const env = {
 export function isPresent(value: string | undefined | null): boolean {
   return Boolean(value && value.trim().length > 0);
 }
+
+export function requireEnv(name: string): string {
+  const value = process.env[name];
+
+  if (!value || value.trim().length === 0) {
+    throw new Error(name + " is missing");
+  }
+
+  return value;
+}
