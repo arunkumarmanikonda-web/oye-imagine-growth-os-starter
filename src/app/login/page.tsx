@@ -1,24 +1,23 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export default function LoginPage() {
-  const searchParams = useSearchParams();
-
-  const nextUrl = useMemo(() => {
-    const value = searchParams.get("next");
-    if (!value || !value.startsWith("/")) {
-      return "/admin";
-    }
-    return value;
-  }, [searchParams]);
-
+  const [nextUrl, setNextUrl] = useState("/admin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const value = params.get("next");
+
+    if (value && value.startsWith("/")) {
+      setNextUrl(value);
+    }
+  }, []);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
