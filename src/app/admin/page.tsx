@@ -64,6 +64,7 @@ type WorkspaceNote = {
   body: string;
   created_at: string;
   updated_at: string;
+  archived_at?: string | null;
 };
 
 type WorkspaceNotesResponse = {
@@ -76,6 +77,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [noteSaving, setNoteSaving] = useState(false);
+  const [noteSearch, setNoteSearch] = useState("");
+  const [includeArchived, setIncludeArchived] = useState(false);
   const [error, setError] = useState("");
   const [userEmail, setUserEmail] = useState<string>("");
   const [active, setActive] = useState<AdminWorkspaceContext | null>(null);
@@ -143,8 +146,19 @@ export default function AdminPage() {
     setSummary(json.counts || null);
   }
 
-  async function loadNotes() {
-    const response = await fetch("/api/admin/workspace-notes", {
+  async function loadNotes(nextSearch?: string, nextIncludeArchived?: boolean) {
+    const qs = new URLSearchParams();
+    const q = typeof nextSearch === "string" ? nextSearch : noteSearch;
+    const include = typeof nextIncludeArchived === "boolean" ? nextIncludeArchived : includeArchived;
+
+    if (q.trim()) {
+      qs.set("q", q.trim());
+    }
+    if (include) {
+      qs.set("includeArchived", "true");
+    }
+
+    const response = await fetch(`/api/admin/workspace-notes?${qs.toString()}`, {
       credentials: "include",
       cache: "no-store",
     });
@@ -158,7 +172,7 @@ export default function AdminPage() {
     setNotes(json.items || []);
   }
 
-  async function loadAll(nextAuditFilter?: string) {
+  async function loadAll(nextAuditFilter?: string, nextSearch?: string, nextIncludeArchived?: boolean) {
     setLoading(true);
     setError("");
 
@@ -167,7 +181,7 @@ export default function AdminPage() {
         loadContext(),
         loadAudit(nextAuditFilter ?? auditActionFilter),
         loadSummary(),
-        loadNotes(),
+        loadNotes(nextSearch, nextIncludeArchived),
       ]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load admin page");
@@ -177,7 +191,7 @@ export default function AdminPage() {
   }
 
   useEffect(() => {
-    void loadAll("");
+    void loadAll("", "", false);
   }, []);
 
   const activeLabel = useMemo(() => {
@@ -221,7 +235,7 @@ export default function AdminPage() {
       setNoteTitle("");
       setNoteBody("");
 
-      await loadAll(auditActionFilter);
+      await loadAll(auditActionFilter, noteSearch, includeArchived);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to switch context");
     } finally {
@@ -249,6 +263,32 @@ export default function AdminPage() {
       await loadAudit("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to clear admin audit filter");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function applyNoteFilter() {
+    setLoading(true);
+    setError("");
+    try {
+      await loadNotes(noteSearch, includeArchived);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to filter workspace notes");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function clearNoteFilter() {
+    setNoteSearch("");
+    setIncludeArchived(false);
+    setLoading(true);
+    setError("");
+    try {
+      await loadNotes("", false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to clear workspace note filter");
     } finally {
       setLoading(false);
     }
@@ -301,11 +341,69 @@ export default function AdminPage() {
       setNoteBody("");
 
       await Promise.all([
-        loadNotes(),
+        loadNotes(noteSearch, includeArchived),
         loadAudit(auditActionFilter),
       ]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save workspace note");
+    } finally {
+      setNoteSaving(false);
+    }
+  }
+
+  async function archiveNote(noteId: string) {
+    setNoteSaving(true);
+    setError("");
+    try {
+      const response = await fetch(`/api/admin/workspace-notes?id=${encodeURIComponent(noteId)}&mode=archive`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      const json = await response.json();
+
+      if (!response.ok || !json.ok) {
+        throw new Error(json.error || "Failed to archive workspace note");
+      }
+
+      if (editingNoteId === noteId) {
+        setEditingNoteId("");
+        setNoteTitle("");
+        setNoteBody("");
+      }
+
+      await Promise.all([
+        loadNotes(noteSearch, includeArchived),
+        loadAudit(auditActionFilter),
+      ]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to archive workspace note");
+    } finally {
+      setNoteSaving(false);
+    }
+  }
+
+  async function restoreNote(noteId: string) {
+    setNoteSaving(true);
+    setError("");
+    try {
+      const response = await fetch(`/api/admin/workspace-notes?id=${encodeURIComponent(noteId)}&mode=restore`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      const json = await response.json();
+
+      if (!response.ok || !json.ok) {
+        throw new Error(json.error || "Failed to restore workspace note");
+      }
+
+      await Promise.all([
+        loadNotes(noteSearch, includeArchived),
+        loadAudit(auditActionFilter),
+      ]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to restore workspace note");
     } finally {
       setNoteSaving(false);
     }
@@ -333,7 +431,7 @@ export default function AdminPage() {
             <p><strong>Summary:</strong> {activeLabel}</p>
           </>
         ) : (
-          <p>No context available.</p>
+          <p>No active context.</p>
         )}
       </section>
 
@@ -380,6 +478,36 @@ export default function AdminPage() {
       <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, marginBottom: 16 }}>
         <h2>Workspace Notes</h2>
         <p><strong>Scoped to:</strong> {activeLabel}</p>
+
+        <label htmlFor="noteSearch"><strong>Search</strong></label>
+        <br />
+        <input
+          id="noteSearch"
+          value={noteSearch}
+          onChange={(e) => setNoteSearch(e.target.value)}
+          placeholder="Search title or body"
+          style={{ minWidth: 320, padding: 8, marginTop: 8, marginBottom: 12 }}
+        />
+        <br />
+
+        <label style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+          <input
+            type="checkbox"
+            checked={includeArchived}
+            onChange={(e) => setIncludeArchived(e.target.checked)}
+          />
+          Include archived
+        </label>
+        <br />
+
+        <button type="button" onClick={applyNoteFilter} style={{ padding: "8px 14px", cursor: "pointer", marginRight: 8 }}>
+          Apply Note Filter
+        </button>
+        <button type="button" onClick={clearNoteFilter} style={{ padding: "8px 14px", cursor: "pointer", marginBottom: 16 }}>
+          Clear Note Filter
+        </button>
+
+        <hr style={{ margin: "16px 0" }} />
 
         <label htmlFor="noteTitle"><strong>Title</strong></label>
         <br />
@@ -430,11 +558,13 @@ export default function AdminPage() {
                   border: "1px solid #eee",
                   borderRadius: 6,
                   padding: 12,
-                  background: "#fafafa",
+                  background: note.archived_at ? "#f3f3f3" : "#fafafa",
+                  opacity: note.archived_at ? 0.8 : 1,
                 }}
               >
                 <p><strong>Title:</strong> {note.title}</p>
                 <p><strong>Updated:</strong> {note.updated_at}</p>
+                <p><strong>Archived:</strong> {note.archived_at || "No"}</p>
                 <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0, fontSize: 12 }}>
                   {note.body}
                 </pre>
@@ -442,10 +572,28 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={() => startEditNote(note)}
-                    style={{ padding: "8px 14px", cursor: "pointer" }}
+                    style={{ padding: "8px 14px", cursor: "pointer", marginRight: 8 }}
                   >
                     Edit
                   </button>
+
+                  {note.archived_at ? (
+                    <button
+                      type="button"
+                      onClick={() => restoreNote(note.id)}
+                      style={{ padding: "8px 14px", cursor: "pointer" }}
+                    >
+                      Restore
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => archiveNote(note.id)}
+                      style={{ padding: "8px 14px", cursor: "pointer" }}
+                    >
+                      Archive
+                    </button>
+                  )}
                 </div>
               </div>
             ))

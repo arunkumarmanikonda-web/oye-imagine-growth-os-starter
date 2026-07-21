@@ -50,8 +50,6 @@ export async function GET(request: NextRequest) {
       .eq("workspace_id", active.workspaceId)
       .order("updated_at", { ascending: false });
 
-    if (-not $includeArchived) { }
-
     if (!includeArchived) {
       query = query.is("archived_at", null);
     }
