@@ -44,6 +44,17 @@ type AuditResponse = {
   error?: string;
 };
 
+type WorkspaceSummaryResponse = {
+  ok: boolean;
+  active?: AdminWorkspaceContext;
+  counts?: {
+    tenants: number;
+    brands: number;
+    workspaces: number;
+  };
+  error?: string;
+};
+
 export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -53,6 +64,8 @@ export default function AdminPage() {
   const [options, setOptions] = useState<AdminWorkspaceContext[]>([]);
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState("");
   const [auditItems, setAuditItems] = useState<AuditItem[]>([]);
+  const [auditActionFilter, setAuditActionFilter] = useState("");
+  const [summary, setSummary] = useState<{ tenants: number; brands: number; workspaces: number } | null>(null);
 
   async function loadContext() {
     const response = await fetch("/api/admin/context", {
@@ -72,8 +85,14 @@ export default function AdminPage() {
     setSelectedWorkspaceId(json.active?.workspaceId || "");
   }
 
-  async function loadAudit() {
-    const response = await fetch("/api/admin/audit", {
+  async function loadAudit(actionFilter?: string) {
+    const qs = new URLSearchParams();
+    qs.set("limit", "25");
+    if (actionFilter && actionFilter.trim()) {
+      qs.set("action", actionFilter.trim());
+    }
+
+    const response = await fetch(`/api/admin/audit?${qs.toString()}`, {
       credentials: "include",
       cache: "no-store",
     });
@@ -87,12 +106,31 @@ export default function AdminPage() {
     setAuditItems(json.items || []);
   }
 
-  async function loadAll() {
+  async function loadSummary() {
+    const response = await fetch("/api/admin/workspace-summary", {
+      credentials: "include",
+      cache: "no-store",
+    });
+
+    const json = (await response.json()) as WorkspaceSummaryResponse;
+
+    if (!response.ok || !json.ok) {
+      throw new Error(json.error || "Failed to load workspace summary");
+    }
+
+    setSummary(json.counts || null);
+  }
+
+  async function loadAll(nextAuditFilter?: string) {
     setLoading(true);
     setError("");
 
     try {
-      await Promise.all([loadContext(), loadAudit()]);
+      await Promise.all([
+        loadContext(),
+        loadAudit(nextAuditFilter ?? auditActionFilter),
+        loadSummary(),
+      ]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load admin page");
     } finally {
@@ -101,7 +139,7 @@ export default function AdminPage() {
   }
 
   useEffect(() => {
-    void loadAll();
+    void loadAll("");
   }, []);
 
   const activeLabel = useMemo(() => {
@@ -141,11 +179,36 @@ export default function AdminPage() {
         throw new Error(json.error || "Failed to switch context");
       }
 
-      await loadAll();
+      await loadAll(auditActionFilter);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to switch context");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function applyAuditFilter() {
+    setLoading(true);
+    setError("");
+    try {
+      await loadAudit(auditActionFilter);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to filter admin audit");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function clearAuditFilter() {
+    setAuditActionFilter("");
+    setLoading(true);
+    setError("");
+    try {
+      await loadAudit("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to clear admin audit filter");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -172,6 +235,19 @@ export default function AdminPage() {
           </>
         ) : (
           <p>No context available.</p>
+        )}
+      </section>
+
+      <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, marginBottom: 16 }}>
+        <h2>Context-Scoped Summary</h2>
+        {summary ? (
+          <>
+            <p><strong>Tenants in scope:</strong> {summary.tenants}</p>
+            <p><strong>Brands in scope:</strong> {summary.brands}</p>
+            <p><strong>Workspaces in scope:</strong> {summary.workspaces}</p>
+          </>
+        ) : (
+          <p>No summary available.</p>
         )}
       </section>
 
@@ -213,6 +289,26 @@ export default function AdminPage() {
         )}
       </section>
 
+      <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, marginBottom: 16 }}>
+        <h2>Audit Filter</h2>
+        <label htmlFor="auditAction"><strong>Action</strong></label>
+        <br />
+        <input
+          id="auditAction"
+          value={auditActionFilter}
+          onChange={(e) => setAuditActionFilter(e.target.value)}
+          placeholder="admin_context_switched"
+          style={{ minWidth: 320, padding: 8, marginTop: 8, marginBottom: 12 }}
+        />
+        <br />
+        <button type="button" onClick={applyAuditFilter} style={{ padding: "8px 14px", cursor: "pointer", marginRight: 8 }}>
+          Apply Filter
+        </button>
+        <button type="button" onClick={clearAuditFilter} style={{ padding: "8px 14px", cursor: "pointer" }}>
+          Clear Filter
+        </button>
+      </section>
+
       <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16 }}>
         <h2>Recent Admin Audit</h2>
         {auditItems.length === 0 ? (
@@ -236,6 +332,7 @@ export default function AdminPage() {
                   <p><strong>Created:</strong> {createdAt}</p>
                   <p><strong>Action:</strong> {action}</p>
                   <p><strong>Actor:</strong> {item.actor_email || item.actor_user_id || "n/a"}</p>
+                  <p><strong>Target:</strong> {item.target_type || "n/a"} / {item.target_id || "n/a"}</p>
                   <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0, fontSize: 12 }}>
                     {JSON.stringify(item, null, 2)}
                   </pre>
