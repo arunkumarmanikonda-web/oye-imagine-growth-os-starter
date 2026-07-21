@@ -1,127 +1,261 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-type AdminContextResponse = {
+type AdminWorkspaceContext = {
+  tenantId: string;
+  tenantSlug: string;
+  tenantDisplayName: string;
+  brandId: string;
+  brandName: string;
+  workspaceId: string;
+  workspaceName: string;
+  workspaceSlug: string;
+};
+
+type ContextResponse = {
   ok: boolean;
   user?: {
     id: string;
     email: string | null;
-    role: string | null;
-    full_name: string | null;
   };
-  context?: {
-    tenant?: {
-      id: string;
-      slug: string;
-      legal_name: string | null;
-      display_name: string | null;
-      created_at: string;
-    } | null;
-    brand?: {
-      id: string;
-      tenant_id: string;
-      name: string;
-      website_url: string | null;
-      created_at: string;
-    } | null;
-    workspace?: {
-      id: string;
-      tenant_id: string;
-      brand_id: string | null;
-      name: string;
-      slug: string;
-      created_at: string;
-      updated_at: string;
-    } | null;
-  };
+  active?: AdminWorkspaceContext | null;
+  options?: AdminWorkspaceContext[];
+  error?: string;
+};
+
+type AuditResponse = {
+  ok: boolean;
+  items?: Record<string, unknown>[];
   error?: string;
 };
 
 export default function AdminPage() {
-  const [data, setData] = useState<AdminContextResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [userEmail, setUserEmail] = useState<string>("");
+  const [active, setActive] = useState<AdminWorkspaceContext | null>(null);
+  const [options, setOptions] = useState<AdminWorkspaceContext[]>([]);
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState("");
+  const [auditItems, setAuditItems] = useState<Record<string, unknown>[]>([]);
 
-  useEffect(() => {
-    let cancelled = false;
+  async function loadContext() {
+    const response = await fetch("/api/admin/context", {
+      credentials: "include",
+      cache: "no-store",
+    });
 
-    async function load() {
-      try {
-        const res = await fetch("/api/admin/context", { cache: "no-store" });
-        const json = await res.json();
+    const json = (await response.json()) as ContextResponse;
 
-        if (!cancelled) {
-          setData(json);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setData({
-            ok: false,
-            error: error instanceof Error ? error.message : "Failed to load admin context",
-          });
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
+    if (!response.ok || !json.ok) {
+      throw new Error(json.error || "Failed to load admin context");
     }
 
-    load();
+    setUserEmail(json.user?.email || "");
+    setActive(json.active || null);
+    setOptions(json.options || []);
+    setSelectedWorkspaceId(json.active?.workspaceId || "");
+  }
 
-    return () => {
-      cancelled = true;
-    };
+  async function loadAudit() {
+    const response = await fetch("/api/admin/audit", {
+      credentials: "include",
+      cache: "no-store",
+    });
+
+    const json = (await response.json()) as AuditResponse;
+
+    if (!response.ok || !json.ok) {
+      throw new Error(json.error || "Failed to load admin audit");
+    }
+
+    setAuditItems(json.items || []);
+  }
+
+  async function loadAll() {
+    setLoading(true);
+    setError("");
+
+    try {
+      await Promise.all([loadContext(), loadAudit()]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load admin page");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadAll();
   }, []);
 
+  const activeLabel = useMemo(() => {
+    if (!active) return "No active context";
+    return `${active.tenantDisplayName} / ${active.brandName} / ${active.workspaceName}`;
+  }, [active]);
+
+  async function onSwitchContext() {
+    if (!selectedWorkspaceId) return;
+
+    setSaving(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/admin/select-context", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          workspaceId: selectedWorkspaceId,
+        }),
+      });
+
+      const json = (await response.json()) as {
+        ok: boolean;
+        active?: AdminWorkspaceContext;
+        error?: string;
+      };
+
+      if (!response.ok || !json.ok) {
+        throw new Error(json.error || "Failed to switch context");
+      }
+
+      await loadAll();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to switch context");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
-    <main style={{ padding: "32px", fontFamily: "Arial, sans-serif" }}>
-      <h1>Oye !magine Admin</h1>
-      <p>Platform-admin guard is active. Tenant-aware admin context is loading from the live Supabase seed.</p>
+    <main style={{ padding: 24, fontFamily: "Arial, sans-serif" }}>
+      <h1>Platform Admin</h1>
 
-      {loading ? (
-        <p>Loading admin context...</p>
-      ) : !data?.ok ? (
-        <div style={{ color: "#b42318", background: "#fef3f2", padding: "12px", borderRadius: "8px" }}>
-          {data?.error ?? "Failed to load admin context"}
-        </div>
-      ) : (
-        <>
-          <section style={{ marginTop: "24px" }}>
-            <h2>Admin Identity</h2>
-            <ul style={{ lineHeight: 1.8 }}>
-              <li><strong>Name:</strong> {data.user?.full_name ?? "-"}</li>
-              <li><strong>Email:</strong> {data.user?.email ?? "-"}</li>
-              <li><strong>Role:</strong> {data.user?.role ?? "-"}</li>
-              <li><strong>User ID:</strong> {data.user?.id ?? "-"}</li>
-            </ul>
-          </section>
+      {loading ? <p>Loading admin context...</p> : null}
+      {error ? <p style={{ color: "crimson" }}>{error}</p> : null}
 
-          <section style={{ marginTop: "24px" }}>
-            <h2>Tenant Context</h2>
-            <ul style={{ lineHeight: 1.8 }}>
-              <li><strong>Tenant:</strong> {data.context?.tenant?.display_name ?? data.context?.tenant?.legal_name ?? "-"}</li>
-              <li><strong>Tenant Slug:</strong> {data.context?.tenant?.slug ?? "-"}</li>
-              <li><strong>Tenant ID:</strong> {data.context?.tenant?.id ?? "-"}</li>
-              <li><strong>Brand:</strong> {data.context?.brand?.name ?? "-"}</li>
-              <li><strong>Brand ID:</strong> {data.context?.brand?.id ?? "-"}</li>
-              <li><strong>Workspace:</strong> {data.context?.workspace?.name ?? "-"}</li>
-              <li><strong>Workspace Slug:</strong> {data.context?.workspace?.slug ?? "-"}</li>
-              <li><strong>Workspace ID:</strong> {data.context?.workspace?.id ?? "-"}</li>
-            </ul>
-          </section>
+      <section
+        style={{
+          border: "1px solid #ddd",
+          borderRadius: 8,
+          padding: 16,
+          marginBottom: 16,
+        }}
+      >
+        <h2>Admin Identity</h2>
+        <p><strong>Email:</strong> {userEmail || "Unknown"}</p>
+      </section>
 
-          <section style={{ marginTop: "24px" }}>
-            <h2>Next Build Targets</h2>
-            <ul style={{ lineHeight: 1.8 }}>
-              <li>Neejee tenant / brand / workspace seed</li>
-              <li>0004 RLS hardening migration</li>
-              <li>Platform-admin action audit trail</li>
-              <li>Tenant-aware admin UI shell</li>
-            </ul>
-          </section>
-        </>
-      )}
+      <section
+        style={{
+          border: "1px solid #ddd",
+          borderRadius: 8,
+          padding: 16,
+          marginBottom: 16,
+        }}
+      >
+        <h2>Active Context</h2>
+        {active ? (
+          <>
+            <p><strong>Tenant:</strong> {active.tenantDisplayName}</p>
+            <p><strong>Brand:</strong> {active.brandName}</p>
+            <p><strong>Workspace:</strong> {active.workspaceName}</p>
+            <p><strong>Summary:</strong> {activeLabel}</p>
+          </>
+        ) : (
+          <p>No context available.</p>
+        )}
+      </section>
+
+      <section
+        style={{
+          border: "1px solid #ddd",
+          borderRadius: 8,
+          padding: 16,
+          marginBottom: 16,
+        }}
+      >
+        <h2>Switch Workspace</h2>
+
+        <label htmlFor="workspaceId"><strong>Workspace</strong></label>
+        <br />
+        <select
+          id="workspaceId"
+          value={selectedWorkspaceId}
+          onChange={(e) => setSelectedWorkspaceId(e.target.value)}
+          style={{ minWidth: 420, padding: 8, marginTop: 8, marginBottom: 12 }}
+        >
+          {options.map((item) => (
+            <option key={item.workspaceId} value={item.workspaceId}>
+              {`${item.tenantDisplayName} / ${item.brandName} / ${item.workspaceName}`}
+            </option>
+          ))}
+        </select>
+        <br />
+        <button
+          type="button"
+          onClick={onSwitchContext}
+          disabled={saving || !selectedWorkspaceId}
+          style={{ padding: "8px 14px", cursor: "pointer" }}
+        >
+          {saving ? "Switching..." : "Switch Context"}
+        </button>
+      </section>
+
+      <section
+        style={{
+          border: "1px solid #ddd",
+          borderRadius: 8,
+          padding: 16,
+        }}
+      >
+        <h2>Recent Admin Audit</h2>
+        {auditItems.length === 0 ? (
+          <p>No audit rows found.</p>
+        ) : (
+          <div style={{ display: "grid", gap: 12 }}>
+            {auditItems.map((item, index) => {
+              const createdAt =
+                typeof item.created_at === "string" ? item.created_at : "n/a";
+              const action =
+                typeof item.action === "string"
+                  ? item.action
+                  : typeof item.event === "string"
+                  ? item.event
+                  : "n/a";
+
+              return (
+                <div
+                  key={`${createdAt}-${index}`}
+                  style={{
+                    border: "1px solid #eee",
+                    borderRadius: 6,
+                    padding: 12,
+                    background: "#fafafa",
+                  }}
+                >
+                  <p><strong>Created:</strong> {createdAt}</p>
+                  <p><strong>Action/Event:</strong> {action}</p>
+                  <pre
+                    style={{
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                      margin: 0,
+                      fontSize: 12,
+                    }}
+                  >
+                    {JSON.stringify(item, null, 2)}
+                  </pre>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </main>
   );
 }
