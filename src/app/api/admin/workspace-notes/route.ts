@@ -24,7 +24,7 @@ type WorkspaceNoteBody = {
   body?: string;
 };
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createSupabaseServerClient();
     const {
@@ -39,13 +39,28 @@ export async function GET() {
     const active = await requireActiveAdminContext();
     const admin = createServiceRoleClient();
 
-    const { data, error } = await admin
+    const q = request.nextUrl.searchParams.get("q")?.trim() ?? "";
+    const includeArchived = request.nextUrl.searchParams.get("includeArchived") === "true";
+
+    let query = admin
       .from("workspace_notes")
-      .select("id, tenant_id, brand_id, workspace_id, title, body, created_by_user_id, created_by_email, updated_by_user_id, updated_by_email, created_at, updated_at")
+      .select("id, tenant_id, brand_id, workspace_id, title, body, created_by_user_id, created_by_email, updated_by_user_id, updated_by_email, archived_at, archived_by_user_id, archived_by_email, created_at, updated_at")
       .eq("tenant_id", active.tenantId)
       .eq("brand_id", active.brandId)
       .eq("workspace_id", active.workspaceId)
       .order("updated_at", { ascending: false });
+
+    if (-not $includeArchived) { }
+
+    if (!includeArchived) {
+      query = query.is("archived_at", null);
+    }
+
+    if (q) {
+      query = query.or(`title.ilike.%${q}%,body.ilike.%${q}%`);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
@@ -54,6 +69,10 @@ export async function GET() {
     return NextResponse.json({
       ok: true,
       active,
+      filters: {
+        q,
+        includeArchived,
+      },
       items: data ?? [],
     });
   } catch (error) {
@@ -100,7 +119,7 @@ export async function POST(request: NextRequest) {
         updated_by_user_id: user.id,
         updated_by_email: user.email ?? null,
       })
-      .select("id, tenant_id, brand_id, workspace_id, title, body, created_at, updated_at")
+      .select("id, tenant_id, brand_id, workspace_id, title, body, archived_at, created_at, updated_at")
       .single();
 
     if (error) {
@@ -176,7 +195,7 @@ export async function PUT(request: NextRequest) {
       .eq("tenant_id", active.tenantId)
       .eq("brand_id", active.brandId)
       .eq("workspace_id", active.workspaceId)
-      .select("id, tenant_id, brand_id, workspace_id, title, body, created_at, updated_at")
+      .select("id, tenant_id, brand_id, workspace_id, title, body, archived_at, created_at, updated_at")
       .single();
 
     if (error) {
@@ -204,6 +223,116 @@ export async function PUT(request: NextRequest) {
       ok: true,
       item: data,
     });
+  } catch (error) {
+    return NextResponse.json(
+      { ok: false, error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const id = request.nextUrl.searchParams.get("id")?.trim() ?? "";
+    const mode = request.nextUrl.searchParams.get("mode")?.trim() ?? "archive";
+
+    if (!id) {
+      return NextResponse.json({ ok: false, error: "id is required" }, { status: 400 });
+    }
+
+    const active = await requireActiveAdminContext();
+    const admin = createServiceRoleClient();
+
+    if (mode === "restore") {
+      const { data, error } = await admin
+        .from("workspace_notes")
+        .update({
+          archived_at: null,
+          archived_by_user_id: null,
+          archived_by_email: null,
+          updated_by_user_id: user.id,
+          updated_by_email: user.email ?? null,
+        })
+        .eq("id", id)
+        .eq("tenant_id", active.tenantId)
+        .eq("brand_id", active.brandId)
+        .eq("workspace_id", active.workspaceId)
+        .select("id, title")
+        .single();
+
+      if (error) {
+        return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+      }
+
+      try {
+        await logAdminAuditEvent({
+          event: "admin_workspace_note_restored",
+          actorUserId: user.id,
+          actorEmail: user.email ?? null,
+          tenantId: active.tenantId,
+          brandId: active.brandId,
+          workspaceId: active.workspaceId,
+          payload: {
+            noteId: data.id,
+            title: data.title,
+          },
+        });
+      } catch (auditError) {
+        console.error("Failed to write workspace note restore audit event", auditError);
+      }
+
+      return NextResponse.json({ ok: true, item: data });
+    }
+
+    const { data, error } = await admin
+      .from("workspace_notes")
+      .update({
+        archived_at: new Date().toISOString(),
+        archived_by_user_id: user.id,
+        archived_by_email: user.email ?? null,
+        updated_by_user_id: user.id,
+        updated_by_email: user.email ?? null,
+      })
+      .eq("id", id)
+      .eq("tenant_id", active.tenantId)
+      .eq("brand_id", active.brandId)
+      .eq("workspace_id", active.workspaceId)
+      .is("archived_at", null)
+      .select("id, title")
+      .single();
+
+    if (error) {
+      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    }
+
+    try {
+      await logAdminAuditEvent({
+        event: "admin_workspace_note_archived",
+        actorUserId: user.id,
+        actorEmail: user.email ?? null,
+        tenantId: active.tenantId,
+        brandId: active.brandId,
+        workspaceId: active.workspaceId,
+        payload: {
+          noteId: data.id,
+          title: data.title,
+        },
+      });
+    } catch (auditError) {
+      console.error("Failed to write workspace note archive audit event", auditError);
+    }
+
+    return NextResponse.json({ ok: true, item: data });
   } catch (error) {
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Unknown error" },
