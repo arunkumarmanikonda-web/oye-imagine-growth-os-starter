@@ -218,7 +218,9 @@ async function resolveActorUserId(client: AnyClient, actorEmail: string): Promis
   return null;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) return adminAuthError;
   try {
     const client = getServiceClient();
     const activeContext = await getActiveContext(client);
