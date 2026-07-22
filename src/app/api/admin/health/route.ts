@@ -1,31 +1,25 @@
-import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-
-function unauthorized() {
-  return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-}
-
-function getAdminPassword() {
-  return (process.env.ADMIN_PASSWORD ?? "").trim();
-}
-
-function isAuthorized(request: Request) {
-  const expected = getAdminPassword();
-  const provided = (request.headers.get("x-admin-password") ?? "").trim();
-  return Boolean(expected) && provided === expected;
-}
+import { adminError, adminJson, adminUnauthorized } from "@/lib/admin-api";
+import {
+  authorizeAdminRequest,
+  getConfiguredAdminSecretKeys,
+} from "@/lib/admin-auth";
 
 export async function GET(request: Request) {
-  if (!isAuthorized(request)) {
-    return unauthorized();
+  const auth = authorizeAdminRequest(request);
+  if (!auth.ok) {
+    return adminUnauthorized(auth.reason);
   }
 
   const timestamp = new Date().toISOString();
+  const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").trim();
+  const serviceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY ?? "").trim();
+  const configuredSecretKeys = getConfiguredAdminSecretKeys();
 
   const envChecks = {
-    NEXT_PUBLIC_SUPABASE_URL: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
-    SUPABASE_SERVICE_ROLE_KEY: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
-    ADMIN_PASSWORD: Boolean(process.env.ADMIN_PASSWORD),
+    NEXT_PUBLIC_SUPABASE_URL: Boolean(supabaseUrl),
+    SUPABASE_SERVICE_ROLE_KEY: Boolean(serviceRoleKey),
+    ADMIN_SECRET_CONFIGURED: configuredSecretKeys.length > 0,
   };
 
   const missingEnv = Object.entries(envChecks)
@@ -33,73 +27,50 @@ export async function GET(request: Request) {
     .map(([key]) => key);
 
   if (missingEnv.length > 0) {
-    return NextResponse.json(
-      {
-        ok: false,
-        timestamp,
-        checks: {
-          env: {
-            ok: false,
-            missing: missingEnv,
-          },
-          db: {
-            ok: false,
-            reason: "Skipped because required environment variables are missing.",
-          },
-        },
-      },
-      { status: 500 }
+    return adminError(
+      500,
+      "Admin health check failed",
+      `Missing required environment configuration: ${missingEnv.join(", ")}`
     );
   }
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    }
-  );
+  const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 
   try {
     const { data, error } = await supabase
       .from("workspace_settings")
-      .select("id, workspace_id, key, updated_at")
+      .select("id, tenant_id, brand_id, workspace_id, key, updated_at")
       .order("updated_at", { ascending: false })
       .limit(1);
 
     if (error) {
-      return NextResponse.json(
-        {
-          ok: false,
-          timestamp,
-          checks: {
-            env: { ok: true, missing: [] },
-            db: {
-              ok: false,
-              reason: error.message,
-            },
-          },
-        },
-        { status: 500 }
-      );
+      return adminError(500, "Admin health check failed", error.message);
     }
 
-    const latest = Array.isArray(data) && data.length > 0 ? data[0] : null;
+    const latestWorkspaceSetting =
+      Array.isArray(data) && data.length > 0 ? data[0] : null;
 
-    return NextResponse.json({
+    return adminJson({
       ok: true,
       timestamp,
+      auth: {
+        ok: true,
+        matchedHeader: auth.matchedHeader,
+        matchedEnvKey: auth.matchedEnvKey,
+      },
       checks: {
         env: {
           ok: true,
-          missing: [],
+          configuredSecretKeys,
         },
         db: {
           ok: true,
-          latestWorkspaceSetting: latest,
+          latestWorkspaceSetting,
         },
       },
       links: {
@@ -113,19 +84,6 @@ export async function GET(request: Request) {
     const message =
       error instanceof Error ? error.message : "Unknown admin health error";
 
-    return NextResponse.json(
-      {
-        ok: false,
-        timestamp,
-        checks: {
-          env: { ok: true, missing: [] },
-          db: {
-            ok: false,
-            reason: message,
-          },
-        },
-      },
-      { status: 500 }
-    );
+    return adminError(500, "Admin health check failed", message);
   }
 }
