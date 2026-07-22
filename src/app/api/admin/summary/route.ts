@@ -1,3 +1,5 @@
+import { requireAdmin } from "@/lib/admin-route";
+import { adminJson, adminError, adminUnauthorized } from "@/lib/admin-api";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -227,14 +229,14 @@ export async function GET(request: NextRequest) {
   try {
     const auth = await requireAdmin(request);
     if (!auth.ok) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+      return adminUnauthorized("Unauthorized");
     }
 
     const supabase = createAdminClient();
     const activeContext = await resolveActiveContext(supabase);
 
     if (!activeContext.workspaceId) {
-      return NextResponse.json({
+      return adminJson({
         ok: true,
         activeContext,
         onboarding: {},
@@ -284,7 +286,7 @@ export async function GET(request: NextRequest) {
       .sort()
       .reverse()[0] ?? null;
 
-    return NextResponse.json({
+    return adminJson({
       ok: true,
       activeContext,
       onboarding,
@@ -308,7 +310,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
+    return adminJson(
       {
         ok: false,
         error: "Failed to load admin summary",

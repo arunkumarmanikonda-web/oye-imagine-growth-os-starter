@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/admin-route";
+import { adminJson, adminError, adminUnauthorized } from "@/lib/admin-api";
 import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
@@ -272,7 +273,7 @@ export async function GET() {
     const activeContext = await getActiveContext(client);
 
     if (!activeContext.workspaceId) {
-      return NextResponse.json(
+      return adminJson(
         {
           ok: true,
           activeContext,
@@ -293,7 +294,7 @@ export async function GET() {
     const notes = existingPlan.value?.notes ?? "";
     const strategy = generateStrategyPlan(onboarding, notes);
 
-    return NextResponse.json(
+    return adminJson(
       {
         ok: true,
         activeContext,
@@ -303,7 +304,7 @@ export async function GET() {
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
-    return NextResponse.json(
+    return adminJson(
       {
         ok: false,
         error: error instanceof Error ? error.message : "Failed to load strategy.",
@@ -322,7 +323,7 @@ export async function PUT(request: Request) {
     const activeContext = await getActiveContext(client);
 
     if (!activeContext.workspaceId) {
-      return NextResponse.json(
+      return adminJson(
         { ok: false, error: "No active workspace context found." },
         { status: 400, headers: { "Cache-Control": "no-store" } },
       );
@@ -421,7 +422,7 @@ export async function PUT(request: Request) {
       throw auditResult.error;
     }
 
-    return NextResponse.json(
+    return adminJson(
       {
         ok: true,
         activeContext,
@@ -431,7 +432,7 @@ export async function PUT(request: Request) {
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
-    return NextResponse.json(
+    return adminJson(
       {
         ok: false,
         error: error instanceof Error ? error.message : "Failed to save strategy.",

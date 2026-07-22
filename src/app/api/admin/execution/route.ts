@@ -1,3 +1,5 @@
+import { requireAdmin } from "@/lib/admin-route";
+import { adminJson, adminError, adminUnauthorized } from "@/lib/admin-api";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -382,7 +384,7 @@ export async function GET(request: NextRequest) {
   try {
     const auth = await requireAdmin(request);
     if (!auth.ok) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+      return adminUnauthorized("Unauthorized");
     }
 
     const supabase = createAdminClient();
@@ -390,7 +392,7 @@ export async function GET(request: NextRequest) {
 
     if (!activeContext.workspaceId) {
       const emptyPlan = buildDefaultExecutionPlan({}, {}, null);
-      return NextResponse.json(
+      return adminJson(
         buildPayload({
           activeContext,
           onboarding: {},
@@ -418,7 +420,7 @@ export async function GET(request: NextRequest) {
     const strategy = asRecord(map.get(STRATEGY_KEY)?.value);
     const execution = buildDefaultExecutionPlan(onboarding, strategy, map.get(EXECUTION_KEY)?.value);
 
-    return NextResponse.json(
+    return adminJson(
       buildPayload({
         activeContext,
         onboarding,
@@ -428,7 +430,7 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
+    return adminJson(
       {
         ok: false,
         error: "Failed to load execution workspace",
@@ -443,7 +445,7 @@ export async function PUT(request: NextRequest) {
   try {
     const auth = await requireAdmin(request);
     if (!auth.ok) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+      return adminUnauthorized("Unauthorized");
     }
 
     const supabase = createAdminClient();
@@ -455,7 +457,7 @@ export async function PUT(request: NextRequest) {
       activeContext.workspaceId;
 
     if (!workspaceId) {
-      return NextResponse.json(
+      return adminJson(
         { ok: false, error: "No workspace_id available for execution save" },
         { status: 400 },
       );
@@ -565,7 +567,7 @@ export async function PUT(request: NextRequest) {
       workspaceId,
     };
 
-    return NextResponse.json(
+    return adminJson(
       buildPayload({
         activeContext: responseContext,
         onboarding,
@@ -575,7 +577,7 @@ export async function PUT(request: NextRequest) {
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
+    return adminJson(
       {
         ok: false,
         error: "Failed to save execution workspace",
