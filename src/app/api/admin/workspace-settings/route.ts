@@ -28,7 +28,7 @@ type SettingVersionRow = {
   id: string;
   workspace_setting_id: string | null;
   key: string;
-  action: "created" | "updated" | "deleted";
+  action: "created" | "updated" | "deleted" | "restored";
   value: unknown;
   actor_email: string | null;
   created_at: string;
@@ -155,7 +155,7 @@ async function writeAudit(
   action: string,
   payload: Record<string, unknown>
 ) {
-  await serviceClient.from("admin_audit_events").insert({
+  const { error } = await serviceClient.from("admin_audit_events").insert({
     actor_user_id: user.id,
     actor_email: user.email ?? null,
     action,
@@ -166,6 +166,10 @@ async function writeAudit(
     workspace_id: active.workspaceId,
     payload,
   });
+
+  if (error) {
+    throw new Error("Failed to write admin audit event: " + error.message);
+  }
 }
 
 async function writeVersion(
@@ -175,7 +179,7 @@ async function writeVersion(
   params: {
     workspaceSettingId: string | null;
     key: string;
-    action: "created" | "updated" | "deleted";
+    action: "created" | "updated" | "deleted" | "restored";
     value: unknown;
   }
 ) {
@@ -229,7 +233,7 @@ export async function GET() {
       .select("id, workspace_setting_id, key, action, value, actor_email, created_at")
       .eq("workspace_id", active.workspaceId)
       .order("created_at", { ascending: false })
-      .limit(20);
+      .limit(30);
 
     if (versionsError) {
       return NextResponse.json({ ok: false, error: versionsError.message }, { status: 500 });
@@ -347,6 +351,112 @@ export async function PUT(request: NextRequest) {
   }
 }
 
+export async function POST(request: NextRequest) {
+  try {
+    const user = await requireUser();
+
+    if (!user) {
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json().catch(() => null);
+    const versionId = typeof body?.versionId === "string" ? body.versionId : "";
+
+    if (!versionId) {
+      return NextResponse.json({ ok: false, error: "versionId is required" }, { status: 400 });
+    }
+
+    const serviceClient = createServiceClient();
+    const active = await getActiveContext(serviceClient);
+
+    if (!active) {
+      return NextResponse.json(
+        { ok: false, error: "No active admin workspace selected" },
+        { status: 400 }
+      );
+    }
+
+    const { data: version, error: versionError } = await serviceClient
+      .from("workspace_setting_versions")
+      .select("id, workspace_setting_id, key, action, value")
+      .eq("id", versionId)
+      .eq("workspace_id", active.workspaceId)
+      .single();
+
+    if (versionError || !version) {
+      return NextResponse.json({ ok: false, error: "Version not found" }, { status: 404 });
+    }
+
+    const { data: existing } = await serviceClient
+      .from("workspace_settings")
+      .select("id")
+      .eq("workspace_id", active.workspaceId)
+      .eq("key", version.key)
+      .maybeSingle();
+
+    const payload: Record<string, unknown> = {
+      tenant_id: active.tenantId,
+      brand_id: active.brandId,
+      workspace_id: active.workspaceId,
+      key: version.key,
+      value: version.value,
+      updated_by_user_id: user.id,
+      updated_by_email: user.email ?? null,
+    };
+
+    if (!existing) {
+      payload.created_by_user_id = user.id;
+      payload.created_by_email = user.email ?? null;
+    }
+
+    const { data: row, error: restoreError } = await serviceClient
+      .from("workspace_settings")
+      .upsert(payload, { onConflict: "workspace_id,key" })
+      .select("id, key, value, created_by_email, updated_by_email, created_at, updated_at")
+      .single();
+
+    if (restoreError) {
+      return NextResponse.json({ ok: false, error: restoreError.message }, { status: 500 });
+    }
+
+    await writeVersion(
+      serviceClient,
+      { id: user.id, email: user.email },
+      active,
+      {
+        workspaceSettingId: row.id,
+        key: row.key,
+        action: "restored",
+        value: row.value,
+      }
+    );
+
+    await writeAudit(
+      serviceClient,
+      { id: user.id, email: user.email },
+      active,
+      "admin_workspace_setting_restored",
+      {
+        key: row.key,
+        settingId: row.id,
+        sourceVersionId: version.id,
+      }
+    );
+
+    return NextResponse.json({
+      ok: true,
+      active,
+      item: row as SettingRow,
+      restoredFromVersionId: version.id,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { ok: false, error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   try {
     const user = await requireUser();
@@ -388,7 +498,7 @@ export async function DELETE(request: NextRequest) {
       { id: user.id, email: user.email },
       active,
       {
-        workspaceSettingId: existing.id,
+        workspaceSettingId: null,
         key: existing.key,
         action: "deleted",
         value: existing.value,

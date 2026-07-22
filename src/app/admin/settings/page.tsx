@@ -27,7 +27,7 @@ type SettingVersionItem = {
   id: string;
   workspace_setting_id: string | null;
   key: string;
-  action: "created" | "updated" | "deleted";
+  action: "created" | "updated" | "deleted" | "restored";
   value: unknown;
   actor_email: string | null;
   created_at: string;
@@ -42,6 +42,7 @@ type SettingsResponse = {
   recentVersions?: SettingVersionItem[];
   deletedId?: string;
   deletedKey?: string;
+  restoredFromVersionId?: string;
 };
 
 async function readJson<T>(response: Response): Promise<T> {
@@ -61,6 +62,7 @@ export default function AdminWorkspaceSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [restoringVersionId, setRestoringVersionId] = useState<string | null>(null);
   const [selected, setSelected] = useState<SettingItem | null>(null);
   const [keyInput, setKeyInput] = useState("");
   const [valueInput, setValueInput] = useState('{\n  "mode": "dark"\n}');
@@ -212,13 +214,50 @@ export default function AdminWorkspaceSettingsPage() {
     }
   }
 
+  async function restoreVersion(item: SettingVersionItem) {
+    const confirmed = window.confirm('Restore version for "' + item.key + '"?');
+    if (!confirmed) {
+      return;
+    }
+
+    setRestoringVersionId(item.id);
+    setError("");
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/admin/workspace-settings", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          versionId: item.id,
+        }),
+      });
+
+      const data = await readJson<SettingsResponse>(response);
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error ?? "Failed to restore setting version");
+      }
+
+      setMessage('Restored version for "' + item.key + '".');
+      await loadSettings();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to restore setting version");
+    } finally {
+      setRestoringVersionId(null);
+    }
+  }
+
   return (
     <main style={{ padding: 24, maxWidth: 1200, margin: "0 auto", fontFamily: "Arial, sans-serif" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div>
           <h1 style={{ margin: 0 }}>Workspace Settings Admin</h1>
           <p style={{ marginTop: 8, color: "#555" }}>
-            Manage tenant-scoped workspace settings and inspect recent versions.
+            Manage tenant-scoped workspace settings and restore prior versions.
           </p>
         </div>
         <a href="/admin" style={{ color: "#2563eb", textDecoration: "none", fontWeight: 600 }}>
@@ -377,7 +416,7 @@ export default function AdminWorkspaceSettingsPage() {
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700 }}>
-                      {item.key} Â· {item.action}
+                      {item.key} · {item.action}
                     </div>
                     <div style={{ color: "#666", fontSize: 13, marginTop: 4 }}>
                       {item.actor_email ?? "unknown"} at {new Date(item.created_at).toLocaleString()}
@@ -395,6 +434,17 @@ export default function AdminWorkspaceSettingsPage() {
                     >
 {JSON.stringify(item.value, null, 2)}
                     </pre>
+                  </div>
+
+                  <div>
+                    <button
+                      onClick={() => void restoreVersion(item)}
+                      disabled={restoringVersionId === item.id}
+                      type="button"
+                      style={{ padding: "8px 12px", borderRadius: 8, border: 0, background: "#2563eb", color: "#fff", cursor: "pointer" }}
+                    >
+                      {restoringVersionId === item.id ? "Restoring..." : "Restore This Version"}
+                    </button>
                   </div>
                 </div>
               </article>
