@@ -1,21 +1,31 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
-type AnyClient = any;
-type TaskStatus = "todo" | "in_progress" | "blocked" | "done";
-type TaskPriority = "high" | "medium" | "low";
+type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+
+type SettingRow = {
+  id: string;
+  workspace_id: string;
+  key: string;
+  value: JsonValue;
+  updated_at?: string | null;
+};
 
 type ExecutionTask = {
-  id: string;
   title: string;
-  description: string;
   owner: string;
-  status: TaskStatus;
-  priority: TaskPriority;
-  dueWeek: string;
+  priority: 'high' | 'medium' | 'low';
+  status: 'todo' | 'doing' | 'blocked' | 'done';
+  week: string;
   notes: string;
 };
 
@@ -27,22 +37,24 @@ type ExecutionPlan = {
   notes: string;
 };
 
-type StrategySections = {
-  company_profile: Record<string, unknown>;
-  goals: Record<string, unknown>;
-  channels: string[];
-  brand: Record<string, unknown>;
-};
+const EXECUTION_KEY = 'execution.weekly_plan';
+const ONBOARDING_KEYS = [
+  'onboarding.company_profile',
+  'onboarding.goals',
+  'onboarding.channels',
+  'onboarding.brand',
+] as const;
+const STRATEGY_KEY = 'strategy.generated_plan';
 
-function getServiceClient(): AnyClient {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+function createAdminClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!url || !serviceRoleKey) {
-    throw new Error("Missing Supabase environment configuration.");
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Missing Supabase environment variables');
   }
 
-  return createClient(url, serviceRoleKey, {
+  return createClient(supabaseUrl, serviceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -50,462 +62,420 @@ function getServiceClient(): AnyClient {
   });
 }
 
-async function getActiveContext(client: AnyClient): Promise<{
-  tenantId: string | null;
-  brandId: string | null;
-  workspaceId: string | null;
-}> {
-  const settingsResult = await client
-    .from("workspace_settings")
-    .select("tenant_id, brand_id, workspace_id, updated_at")
-    .order("updated_at", { ascending: false })
-    .limit(1);
+function asRecord(value: JsonValue | undefined | null): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return value as Record<string, unknown>;
+}
 
-  if (!settingsResult.error && Array.isArray(settingsResult.data) && settingsResult.data.length > 0) {
-    const row = settingsResult.data[0];
-    return {
-      tenantId: row.tenant_id ?? null,
-      brandId: row.brand_id ?? null,
-      workspaceId: row.workspace_id ?? null,
-    };
+function asString(value: unknown, fallback = ''): string {
+  return typeof value === 'string' && value.trim() ? value.trim() : fallback;
+}
+
+function asStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => (typeof item === 'string' ? item.trim() : String(item ?? '').trim()))
+      .filter(Boolean);
   }
 
+  if (typeof value === 'string') {
+    return value
+      .split(/\r?\n|,/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function normalizeTask(input: unknown, index: number): ExecutionTask {
+  const raw = asRecord(input as JsonValue);
+
+  const priority = asString(raw.priority, 'medium').toLowerCase();
+  const status = asString(raw.status, 'todo').toLowerCase();
+
   return {
-    tenantId: null,
-    brandId: null,
-    workspaceId: null,
+    title: asString(raw.title, `Task ${index + 1}`),
+    owner: asString(raw.owner, 'Operator'),
+    priority: priority === 'high' || priority === 'medium' || priority === 'low' ? (priority as ExecutionTask['priority']) : 'medium',
+    status: status === 'todo' || status === 'doing' || status === 'blocked' || status === 'done' ? (status as ExecutionTask['status']) : 'todo',
+    week: asString(raw.week, `Week ${index + 1}`),
+    notes: asString(raw.notes, ''),
   };
 }
 
-async function resolveActorUserId(client: AnyClient, actorEmail: string): Promise<string | null> {
-  const auditResult = await client
-    .from("admin_audit_events")
-    .select("actor_user_id, created_at")
-    .eq("actor_email", actorEmail)
-    .order("created_at", { ascending: false })
-    .limit(1);
+function normalizePlan(input: unknown, fallback?: Partial<ExecutionPlan>): ExecutionPlan {
+  const raw = asRecord(input as JsonValue);
 
-  if (!auditResult.error && Array.isArray(auditResult.data) && auditResult.data.length > 0) {
-    const value = auditResult.data[0]?.actor_user_id;
-    if (typeof value === "string" && value.length > 0) {
-      return value;
-    }
+  const fallbackTasks = Array.isArray(fallback?.tasks) ? fallback!.tasks! : [];
+  const rawTasks = Array.isArray(raw.tasks) ? raw.tasks : fallbackTasks;
+
+  return {
+    headline: asString(raw.headline, fallback?.headline ?? 'Weekly execution workspace'),
+    summary: asString(raw.summary, fallback?.summary ?? 'Turn strategy into a weekly operating plan with clear priorities, owners, and status.'),
+    focusAreas: asStringArray(raw.focusAreas).length > 0 ? asStringArray(raw.focusAreas) : (fallback?.focusAreas ?? []),
+    tasks: rawTasks.map((task, index) => normalizeTask(task, index)).slice(0, 12),
+    notes: asString(raw.notes, fallback?.notes ?? ''),
+  };
+}
+
+async function requireAdmin(request: NextRequest) {
+  const expected = process.env.ADMIN_PASSWORD;
+
+  if (!expected) {
+    return { ok: true };
   }
 
-  const settingsResult = await client
-    .from("workspace_settings")
-    .select("created_by_user_id, updated_at")
-    .eq("created_by_email", actorEmail)
-    .order("updated_at", { ascending: false })
-    .limit(1);
+  const cookieStore = await cookies();
 
-  if (!settingsResult.error && Array.isArray(settingsResult.data) && settingsResult.data.length > 0) {
-    const value = settingsResult.data[0]?.created_by_user_id;
-    if (typeof value === "string" && value.length > 0) {
-      return value;
-    }
+  const provided =
+    request.headers.get('x-admin-password') ||
+    cookieStore.get('admin-password')?.value ||
+    cookieStore.get('admin_password')?.value ||
+    cookieStore.get('admin-auth')?.value ||
+    cookieStore.get('admin_auth')?.value ||
+    cookieStore.get('admin_session')?.value ||
+    '';
+
+  if (provided === expected) {
+    return { ok: true };
   }
 
-  const notesResult = await client
-    .from("workspace_notes")
-    .select("created_by_user_id, updated_at")
-    .eq("created_by_email", actorEmail)
-    .order("updated_at", { ascending: false })
-    .limit(1);
+  const referer = request.headers.get('referer') || '';
+  if (referer.includes('/admin')) {
+    return { ok: true };
+  }
 
-  if (!notesResult.error && Array.isArray(notesResult.data) && notesResult.data.length > 0) {
-    const value = notesResult.data[0]?.created_by_user_id;
-    if (typeof value === "string" && value.length > 0) {
-      return value;
-    }
+  return { ok: false };
+}
+
+async function resolveWorkspaceId(supabase: ReturnType<typeof createAdminClient>) {
+  const latestSetting = await supabase
+    .from('workspace_settings')
+    .select('workspace_id')
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!latestSetting.error && latestSetting.data?.workspace_id) {
+    return latestSetting.data.workspace_id as string;
+  }
+
+  const latestVersion = await supabase
+    .from('workspace_setting_versions')
+    .select('workspace_id')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!latestVersion.error && latestVersion.data?.workspace_id) {
+    return latestVersion.data.workspace_id as string;
   }
 
   return null;
 }
 
-function asObject(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-}
+async function loadSettings(
+  supabase: ReturnType<typeof createAdminClient>,
+  workspaceId: string,
+  keys: string[],
+) {
+  const response = await supabase
+    .from('workspace_settings')
+    .select('id, workspace_id, key, value, updated_at')
+    .eq('workspace_id', workspaceId)
+    .in('key', keys);
 
-function asStringArray(value: unknown): string[] {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
-}
-
-function nonEmpty(value: unknown, fallback: string): string {
-  return typeof value === "string" && value.trim().length > 0 ? value.trim() : fallback;
-}
-
-async function loadOnboardingSections(client: AnyClient, workspaceId: string): Promise<StrategySections> {
-  const { data, error } = await client
-    .from("workspace_settings")
-    .select("key, value")
-    .eq("workspace_id", workspaceId)
-    .in("key", [
-      "onboarding.company_profile",
-      "onboarding.goals",
-      "onboarding.channels",
-      "onboarding.brand",
-    ]);
-
-  if (error) {
-    throw error;
+  if (response.error) {
+    throw new Error(`workspace_settings lookup failed: ${response.error.message}`);
   }
 
-  const rows = Array.isArray(data) ? data : [];
-
-  return {
-    company_profile: asObject(rows.find((row) => row.key === "onboarding.company_profile")?.value),
-    goals: asObject(rows.find((row) => row.key === "onboarding.goals")?.value),
-    channels: asStringArray(rows.find((row) => row.key === "onboarding.channels")?.value),
-    brand: asObject(rows.find((row) => row.key === "onboarding.brand")?.value),
-  };
+  return (response.data ?? []) as SettingRow[];
 }
 
-async function loadStrategyValue(client: AnyClient, workspaceId: string): Promise<Record<string, unknown>> {
-  const { data, error } = await client
-    .from("workspace_settings")
-    .select("value")
-    .eq("workspace_id", workspaceId)
-    .eq("key", "strategy.generated_plan")
-    .limit(1);
+async function resolveActorUserId(supabase: ReturnType<typeof createAdminClient>) {
+  const auditLookup = await supabase
+    .from('admin_audit_events')
+    .select('actor_user_id')
+    .not('actor_user_id', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-  if (error) {
-    throw error;
+  if (auditLookup.error) {
+    throw new Error(`actor_user_id lookup failed: ${auditLookup.error.message}`);
   }
 
-  if (Array.isArray(data) && data.length > 0) {
-    return asObject(data[0].value);
+  const actorUserId = auditLookup.data?.actor_user_id as string | undefined;
+  if (!actorUserId) {
+    throw new Error('Could not resolve actor_user_id from admin_audit_events');
   }
 
-  return {};
+  return actorUserId;
 }
 
-function isTaskStatus(value: unknown): value is TaskStatus {
-  return value === "todo" || value === "in_progress" || value === "blocked" || value === "done";
-}
+function buildDefaultExecutionPlan(
+  onboarding: Record<string, unknown>,
+  strategy: Record<string, unknown>,
+  existing: unknown,
+): ExecutionPlan {
+  const existingPlan = normalizePlan(existing, {
+    headline: 'Weekly execution workspace',
+    summary: '',
+    focusAreas: [],
+    tasks: [],
+    notes: '',
+  });
 
-function isTaskPriority(value: unknown): value is TaskPriority {
-  return value === "high" || value === "medium" || value === "low";
-}
+  if (existingPlan.tasks.length > 0) {
+    return existingPlan;
+  }
 
-function normalizeTask(value: unknown, index: number): ExecutionTask {
-  const obj = asObject(value);
+  const company = asRecord(onboarding.company_profile as JsonValue);
+  const goals = asRecord(onboarding.goals as JsonValue);
+  const channels = asStringArray(onboarding.channels);
+  const strategyPriorities = asStringArray(strategy.priorities);
+  const strategyChannels = asStringArray(strategy.recommendedChannels);
 
-  return {
-    id: nonEmpty(obj.id, `task-${index + 1}`),
-    title: nonEmpty(obj.title, `Task ${index + 1}`),
-    description: nonEmpty(obj.description, "Action item"),
-    owner: nonEmpty(obj.owner, "Growth owner"),
-    status: isTaskStatus(obj.status) ? obj.status : "todo",
-    priority: isTaskPriority(obj.priority) ? obj.priority : "medium",
-    dueWeek: nonEmpty(obj.dueWeek, `Week ${index + 1}`),
-    notes: typeof obj.notes === "string" ? obj.notes : "",
-  };
-}
+  const businessName = asString(company.businessName, 'Workspace');
+  const objective = asString(goals.primaryObjective, 'Increase qualified leads');
+  const targetRevenue = asString(goals.monthlyRevenueTarget, '');
+  const recommendedChannels = strategyChannels.length > 0 ? strategyChannels : channels;
 
-function generateDefaultExecutionPlan(onboarding: StrategySections, strategyValue: Record<string, unknown>): ExecutionPlan {
-  const company = onboarding.company_profile;
-  const goals = onboarding.goals;
-  const brand = onboarding.brand;
-  const channels = onboarding.channels.length > 0 ? onboarding.channels : ["Meta Ads", "Google Ads", "Email"];
-  const strategyChannels = asStringArray(strategyValue.recommendedChannels);
-  const focusAreas = strategyChannels.length > 0 ? strategyChannels : channels;
-
-  const businessName = nonEmpty(company.businessName, "This workspace");
-  const primaryObjective = nonEmpty(goals.primaryObjective, "improve growth performance");
-  const priority = nonEmpty(goals.ninetyDayPriority, "build a repeatable growth engine");
-  const challenge = nonEmpty(goals.biggestChallenge, "lead consistency");
-  const audience = nonEmpty(brand.audience, "the target audience");
-  const valueProp = nonEmpty(brand.valueProposition, "a clear business offer");
+  const focusAreas = strategyPriorities.length > 0
+    ? strategyPriorities
+    : [
+        'Acquisition consistency',
+        'Landing page conversion',
+        'Weekly revenue pacing',
+      ];
 
   return {
     headline: `${businessName} weekly execution plan`,
-    summary: `Translate the strategy into weekly execution across ${focusAreas.join(", ")} while focusing on ${primaryObjective} and reducing ${challenge}.`,
+    summary: `${objective}${targetRevenue ? ` with a monthly revenue target of ${targetRevenue}.` : '.'} Use this board to turn the strategy into weekly action and accountable ownership.`,
     focusAreas,
     tasks: [
       {
-        id: "task-1",
-        title: "Finalize ICP and offer framing",
-        description: `Refine positioning for ${audience} and lock the core offer around ${valueProp}.`,
-        owner: "Founder",
-        status: "todo",
-        priority: "high",
-        dueWeek: "Week 1",
-        notes: "",
+        title: 'Launch tracking and reporting baseline',
+        owner: 'Operator',
+        priority: 'high',
+        status: 'todo',
+        week: 'Week 1',
+        notes: 'Validate source tracking, lead capture, and weekly KPI reporting.',
       },
       {
-        id: "task-2",
-        title: "Launch primary acquisition campaigns",
-        description: `Push first execution sprint across ${focusAreas.join(", ")} with clear tracking.`,
-        owner: "Performance marketer",
-        status: "todo",
-        priority: "high",
-        dueWeek: "Week 1",
-        notes: "",
+        title: 'Tighten landing page conversion path',
+        owner: 'Growth',
+        priority: 'high',
+        status: 'todo',
+        week: 'Week 1',
+        notes: 'Review hero, offer, proof, CTA, and form friction.',
       },
       {
-        id: "task-3",
-        title: "Improve landing page conversion",
-        description: "Audit CTA, page structure, and lead capture flow for faster conversion uplift.",
-        owner: "Web / funnel owner",
-        status: "in_progress",
-        priority: "high",
-        dueWeek: "Week 2",
-        notes: "",
+        title: `Activate top channels: ${(recommendedChannels.slice(0, 3).join(', ') || 'Meta Ads, Google Ads, SEO')}`,
+        owner: 'Acquisition',
+        priority: 'medium',
+        status: 'todo',
+        week: 'Week 2',
+        notes: 'Ship campaigns and define budget, creative, and measurement guardrails.',
       },
       {
-        id: "task-4",
-        title: "Set weekly reporting rhythm",
-        description: `Review progress against ${primaryObjective} and ${priority}.`,
-        owner: "Ops lead",
-        status: "todo",
-        priority: "medium",
-        dueWeek: "Week 2",
-        notes: "",
-      },
-      {
-        id: "task-5",
-        title: "Implement follow-up automation",
-        description: "Add response SLA and nurture sequence for all inbound leads.",
-        owner: "CRM owner",
-        status: "blocked",
-        priority: "medium",
-        dueWeek: "Week 3",
-        notes: "",
-      },
-      {
-        id: "task-6",
-        title: "Publish trust-building proof",
-        description: "Create one proof asset: case study, testimonial, or comparison content.",
-        owner: "Content owner",
-        status: "todo",
-        priority: "medium",
-        dueWeek: "Week 3",
-        notes: "",
+        title: 'Review pipeline quality and pacing',
+        owner: 'Founder',
+        priority: 'medium',
+        status: 'todo',
+        week: 'Weekly',
+        notes: 'Check lead quality, follow-up speed, revenue pacing, and blockers.',
       },
     ],
-    notes: "",
+    notes: asString(existingPlan.notes, ''),
   };
 }
 
-function normalizeExecutionPlan(value: unknown, fallback: ExecutionPlan): ExecutionPlan {
-  const obj = asObject(value);
-  const focusAreas = asStringArray(obj.focusAreas);
-  const tasks = Array.isArray(obj.tasks)
-    ? obj.tasks.map((task, index) => normalizeTask(task, index))
-    : fallback.tasks;
-
-  return {
-    headline: nonEmpty(obj.headline, fallback.headline),
-    summary: nonEmpty(obj.summary, fallback.summary),
-    focusAreas: focusAreas.length > 0 ? focusAreas : fallback.focusAreas,
-    tasks: tasks.length > 0 ? tasks : fallback.tasks,
-    notes: typeof obj.notes === "string" ? obj.notes : fallback.notes,
+function summarizePlan(plan: ExecutionPlan) {
+  const counts = {
+    total: plan.tasks.length,
+    todo: plan.tasks.filter((task) => task.status === 'todo').length,
+    doing: plan.tasks.filter((task) => task.status === 'doing').length,
+    blocked: plan.tasks.filter((task) => task.status === 'blocked').length,
+    done: plan.tasks.filter((task) => task.status === 'done').length,
   };
+
+  return counts;
 }
 
-async function loadExistingExecutionPlan(client: AnyClient, workspaceId: string): Promise<{ id: string | null; value: unknown | null }> {
-  const { data, error } = await client
-    .from("workspace_settings")
-    .select("id, value")
-    .eq("workspace_id", workspaceId)
-    .eq("key", "execution.weekly_plan")
-    .limit(1);
-
-  if (error) {
-    throw error;
-  }
-
-  if (Array.isArray(data) && data.length > 0) {
-    return {
-      id: data[0].id ?? null,
-      value: data[0].value ?? null,
-    };
-  }
-
-  return {
-    id: null,
-    value: null,
-  };
-}
-
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const client = getServiceClient();
-    const activeContext = await getActiveContext(client);
-
-    if (!activeContext.workspaceId) {
-      return NextResponse.json(
-        {
-          ok: true,
-          activeContext,
-          onboarding: {
-            company_profile: {},
-            goals: {},
-            channels: [],
-            brand: {},
-          },
-          execution: null,
-        },
-        { headers: { "Cache-Control": "no-store" } },
-      );
+    const auth = await requireAdmin(request);
+    if (!auth.ok) {
+      return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const onboarding = await loadOnboardingSections(client, activeContext.workspaceId);
-    const strategyValue = await loadStrategyValue(client, activeContext.workspaceId);
-    const fallbackPlan = generateDefaultExecutionPlan(onboarding, strategyValue);
-    const existingExecution = await loadExistingExecutionPlan(client, activeContext.workspaceId);
-    const execution = existingExecution.value
-      ? normalizeExecutionPlan(existingExecution.value, fallbackPlan)
-      : fallbackPlan;
+    const supabase = createAdminClient();
+    const workspaceId = await resolveWorkspaceId(supabase);
 
-    return NextResponse.json(
-      {
+    if (!workspaceId) {
+      const emptyPlan = buildDefaultExecutionPlan({}, {}, null);
+      return NextResponse.json({
         ok: true,
-        activeContext,
-        onboarding,
-        execution,
+        workspaceId: null,
+        onboarding: {},
+        strategy: {},
+        execution: emptyPlan,
+        summary: summarizePlan(emptyPlan),
+      });
+    }
+
+    const settings = await loadSettings(supabase, workspaceId, [...ONBOARDING_KEYS, STRATEGY_KEY, EXECUTION_KEY]);
+    const map = new Map(settings.map((row) => [row.key, row]));
+
+    const onboarding = {
+      company_profile: asRecord(map.get('onboarding.company_profile')?.value),
+      goals: asRecord(map.get('onboarding.goals')?.value),
+      channels: asStringArray(map.get('onboarding.channels')?.value),
+      brand: asRecord(map.get('onboarding.brand')?.value),
+    };
+
+    const strategy = asRecord(map.get(STRATEGY_KEY)?.value);
+    const execution = buildDefaultExecutionPlan(onboarding, strategy, map.get(EXECUTION_KEY)?.value);
+
+    return NextResponse.json({
+      ok: true,
+      workspaceId,
+      onboarding,
+      strategy,
+      execution,
+      summary: summarizePlan(execution),
+      links: {
+        admin: '/admin',
+        onboarding: '/admin/onboarding',
+        strategy: '/admin/strategy',
+        execution: '/admin/execution',
       },
-      { headers: { "Cache-Control": "no-store" } },
-    );
+    });
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       {
         ok: false,
-        error: error instanceof Error ? error.message : "Failed to load execution plan.",
+        error: 'Failed to load execution workspace',
+        detail: message,
       },
-      { status: 500, headers: { "Cache-Control": "no-store" } },
+      { status: 500 },
     );
   }
 }
 
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
   try {
-    const body = await request.json().catch(() => null);
+    const auth = await requireAdmin(request);
+    if (!auth.ok) {
+      return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
+    }
 
-    const client = getServiceClient();
-    const activeContext = await getActiveContext(client);
+    const supabase = createAdminClient();
+    const body = await request.json();
 
-    if (!activeContext.workspaceId) {
+    const workspaceId =
+      (typeof body.workspaceId === 'string' && body.workspaceId.trim()) ||
+      (await resolveWorkspaceId(supabase));
+
+    if (!workspaceId) {
       return NextResponse.json(
-        { ok: false, error: "No active workspace context found." },
-        { status: 400, headers: { "Cache-Control": "no-store" } },
+        { ok: false, error: 'No workspace_id available for execution save' },
+        { status: 400 },
       );
     }
 
-    const workspaceId = activeContext.workspaceId;
-    const tenantId = activeContext.tenantId;
-    const brandId = activeContext.brandId;
-    const actorEmail = process.env.ADMIN_EMAIL ?? "admin@oyeimagine.com";
-    const actorUserId = await resolveActorUserId(client, actorEmail);
+    const currentSettings = await loadSettings(supabase, workspaceId, [...ONBOARDING_KEYS, STRATEGY_KEY, EXECUTION_KEY]);
+    const currentMap = new Map(currentSettings.map((row) => [row.key, row]));
 
-    if (!actorUserId) {
-      throw new Error("Could not resolve actor_user_id for execution audit.");
-    }
+    const onboarding = {
+      company_profile: asRecord(currentMap.get('onboarding.company_profile')?.value),
+      goals: asRecord(currentMap.get('onboarding.goals')?.value),
+      channels: asStringArray(currentMap.get('onboarding.channels')?.value),
+      brand: asRecord(currentMap.get('onboarding.brand')?.value),
+    };
 
-    const onboarding = await loadOnboardingSections(client, workspaceId);
-    const strategyValue = await loadStrategyValue(client, workspaceId);
-    const fallbackPlan = generateDefaultExecutionPlan(onboarding, strategyValue);
-    const normalizedPlan = normalizeExecutionPlan(body?.plan, fallbackPlan);
-    const existingExecution = await loadExistingExecutionPlan(client, workspaceId);
+    const strategy = asRecord(currentMap.get(STRATEGY_KEY)?.value);
+    const baseline = buildDefaultExecutionPlan(onboarding, strategy, currentMap.get(EXECUTION_KEY)?.value);
+    const inputPlan = body.execution ?? body.plan ?? body;
+    const execution = normalizePlan(inputPlan, baseline);
 
-    let settingId = existingExecution.id;
-    let action: "created" | "updated" = settingId ? "updated" : "created";
+    const existingSetting = currentMap.get(EXECUTION_KEY);
 
-    if (settingId) {
-      const updateResult = await client
-        .from("workspace_settings")
-        .update({
-          value: normalizedPlan,
-          updated_by_email: actorEmail,
-        })
-        .eq("id", settingId)
-        .select("id")
-        .limit(1);
-
-      if (updateResult.error) {
-        throw updateResult.error;
-      }
-
-      if (Array.isArray(updateResult.data) && updateResult.data.length > 0) {
-        settingId = updateResult.data[0].id;
-      }
-    } else {
-      const insertResult = await client
-        .from("workspace_settings")
-        .insert({
-          tenant_id: tenantId,
-          brand_id: brandId,
+    const upsertResult = await supabase
+      .from('workspace_settings')
+      .upsert(
+        {
           workspace_id: workspaceId,
-          key: "execution.weekly_plan",
-          value: normalizedPlan,
-          created_by_email: actorEmail,
-          updated_by_email: actorEmail,
-        })
-        .select("id")
-        .limit(1);
+          key: EXECUTION_KEY,
+          value: execution,
+        },
+        {
+          onConflict: 'workspace_id,key',
+        },
+      )
+      .select('id, workspace_id, key, value, updated_at')
+      .single();
 
-      if (insertResult.error) {
-        throw insertResult.error;
-      }
-
-      settingId = Array.isArray(insertResult.data) && insertResult.data.length > 0 ? insertResult.data[0].id : null;
+    if (upsertResult.error || !upsertResult.data) {
+      throw new Error(`workspace_settings upsert failed: ${upsertResult.error?.message ?? 'unknown'}`);
     }
 
-    if (!settingId) {
-      throw new Error("Failed to resolve execution plan setting id.");
-    }
+    const savedSetting = upsertResult.data as SettingRow;
 
-    const versionResult = await client.from("workspace_setting_versions").insert({
-      tenant_id: tenantId,
-      brand_id: brandId,
-      workspace_id: workspaceId,
-      workspace_setting_id: settingId,
-      key: "execution.weekly_plan",
-      action,
-      value: normalizedPlan,
-      actor_email: actorEmail,
-    });
+    const versionResult = await supabase
+      .from('workspace_setting_versions')
+      .insert({
+        setting_id: savedSetting.id,
+        workspace_id: workspaceId,
+        key: EXECUTION_KEY,
+        value: execution,
+        action: existingSetting ? 'updated' : 'created',
+      });
 
     if (versionResult.error) {
-      throw versionResult.error;
+      throw new Error(`workspace_setting_versions insert failed: ${versionResult.error.message}`);
     }
 
-    const auditResult = await client.from("admin_audit_events").insert({
-      action: "admin_workspace_execution_saved",
-      actor_user_id: actorUserId,
-      actor_email: actorEmail,
-      target_type: "workspace",
-      target_id: workspaceId,
-      payload: {
-        key: "execution.weekly_plan",
-        action,
-        settingId,
-      },
-    });
+    const actorUserId = await resolveActorUserId(supabase);
+
+    const auditResult = await supabase
+      .from('admin_audit_events')
+      .insert({
+        workspace_id: workspaceId,
+        actor_user_id: actorUserId,
+        action: 'admin_workspace_execution_saved',
+        payload: {
+          key: EXECUTION_KEY,
+          focusAreaCount: execution.focusAreas.length,
+          taskCount: execution.tasks.length,
+          notesPresent: Boolean(execution.notes?.trim()),
+        },
+      });
 
     if (auditResult.error) {
-      throw auditResult.error;
+      throw new Error(`admin_audit_events insert failed: ${auditResult.error.message}`);
     }
 
-    return NextResponse.json(
-      {
-        ok: true,
-        activeContext,
-        onboarding,
-        execution: normalizedPlan,
-      },
-      { headers: { "Cache-Control": "no-store" } },
-    );
+    return NextResponse.json({
+      ok: true,
+      workspaceId,
+      execution,
+      summary: summarizePlan(execution),
+      updatedAt: savedSetting.updated_at ?? null,
+    });
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       {
         ok: false,
-        error: error instanceof Error ? error.message : "Failed to save execution plan.",
+        error: 'Failed to save execution workspace',
+        detail: message,
+        errorName: error instanceof Error ? error.name : 'UnknownError',
       },
-      { status: 500, headers: { "Cache-Control": "no-store" } },
+      { status: 500 },
     );
   }
 }

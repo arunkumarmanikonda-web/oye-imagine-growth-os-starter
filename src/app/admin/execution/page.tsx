@@ -1,18 +1,16 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from 'react';
 
-type TaskStatus = "todo" | "in_progress" | "blocked" | "done";
-type TaskPriority = "high" | "medium" | "low";
+type TaskStatus = 'todo' | 'doing' | 'blocked' | 'done';
+type TaskPriority = 'high' | 'medium' | 'low';
 
 type ExecutionTask = {
-  id: string;
   title: string;
-  description: string;
   owner: string;
-  status: TaskStatus;
   priority: TaskPriority;
-  dueWeek: string;
+  status: TaskStatus;
+  week: string;
   notes: string;
 };
 
@@ -24,370 +22,461 @@ type ExecutionPlan = {
   notes: string;
 };
 
-type ApiResponse = {
-  ok: boolean;
-  activeContext: {
-    tenantId: string | null;
-    brandId: string | null;
-    workspaceId: string | null;
-  };
-  onboarding: {
-    company_profile: Record<string, unknown>;
-    goals: Record<string, unknown>;
-    channels: string[];
-    brand: Record<string, unknown>;
-  };
-  execution: ExecutionPlan | null;
-  error?: string;
+type ApiSummary = {
+  total: number;
+  todo: number;
+  doing: number;
+  blocked: number;
+  done: number;
 };
 
-const STATUS_COLUMNS: Array<{ key: TaskStatus; label: string }> = [
-  { key: "todo", label: "To do" },
-  { key: "in_progress", label: "In progress" },
-  { key: "blocked", label: "Blocked" },
-  { key: "done", label: "Done" },
-];
-
-function emptyPlan(): ExecutionPlan {
-  return {
-    headline: "",
-    summary: "",
-    focusAreas: [],
-    tasks: [],
-    notes: "",
+type ApiPayload = {
+  ok: boolean;
+  workspaceId: string | null;
+  onboarding: {
+    company_profile?: Record<string, unknown>;
+    goals?: Record<string, unknown>;
+    channels?: string[];
+    brand?: Record<string, unknown>;
   };
-}
+  strategy: Record<string, unknown>;
+  execution: ExecutionPlan;
+  summary: ApiSummary;
+  links: {
+    admin: string;
+    onboarding: string;
+    strategy: string;
+    execution: string;
+  };
+};
 
-function badgeColor(priority: TaskPriority): string {
-  if (priority === "high") return "bg-rose-100 text-rose-700";
-  if (priority === "medium") return "bg-amber-100 text-amber-700";
-  return "bg-emerald-100 text-emerald-700";
-}
+const emptyPlan: ExecutionPlan = {
+  headline: '',
+  summary: '',
+  focusAreas: [],
+  tasks: [],
+  notes: '',
+};
+
+const statusOptions: TaskStatus[] = ['todo', 'doing', 'blocked', 'done'];
+const priorityOptions: TaskPriority[] = ['high', 'medium', 'low'];
 
 export default function AdminExecutionPage() {
+  const [data, setData] = useState<ApiPayload | null>(null);
+  const [plan, setPlan] = useState<ExecutionPlan>(emptyPlan);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [data, setData] = useState<ApiResponse | null>(null);
-  const [plan, setPlan] = useState<ExecutionPlan>(emptyPlan());
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  async function loadExecution() {
+    setLoading(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const response = await fetch('/api/admin/execution', {
+        method: 'GET',
+        cache: 'no-store',
+      });
+
+      const payload = await response.json();
+
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.detail || payload.error || 'Failed to load execution workspace');
+      }
+
+      setData(payload);
+      setPlan(payload.execution);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load execution workspace');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const response = await fetch("/api/admin/execution", {
-          cache: "no-store",
-          credentials: "include",
-        });
-
-        const json = (await response.json()) as ApiResponse;
-
-        if (!response.ok || !json.ok) {
-          throw new Error(json.error || "Failed to load execution plan.");
-        }
-
-        if (!cancelled) {
-          setData(json);
-          setPlan(json.execution ?? emptyPlan());
-          setSelectedTaskId(json.execution?.tasks?.[0]?.id ?? null);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Unknown error.");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    void load();
-
-    return () => {
-      cancelled = true;
-    };
+    loadExecution();
   }, []);
 
-  const selectedTask = useMemo(
-    () => plan.tasks.find((task) => task.id === selectedTaskId) ?? null,
-    [plan.tasks, selectedTaskId],
-  );
+  const groupedCounts = useMemo(() => {
+    return {
+      total: plan.tasks.length,
+      todo: plan.tasks.filter((task) => task.status === 'todo').length,
+      doing: plan.tasks.filter((task) => task.status === 'doing').length,
+      blocked: plan.tasks.filter((task) => task.status === 'blocked').length,
+      done: plan.tasks.filter((task) => task.status === 'done').length,
+    };
+  }, [plan]);
 
-  function updateTask(taskId: string, patch: Partial<ExecutionTask>) {
-    setPlan((prev) => ({
-      ...prev,
-      tasks: prev.tasks.map((task) => (task.id === taskId ? { ...task, ...patch } : task)),
+  function updateTask(index: number, field: keyof ExecutionTask, value: string) {
+    setPlan((current) => {
+      const tasks = [...current.tasks];
+      tasks[index] = { ...tasks[index], [field]: value } as ExecutionTask;
+      return { ...current, tasks };
+    });
+  }
+
+  function updateFocusAreas(value: string) {
+    const focusAreas = value
+      .split(/\r?\n/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    setPlan((current) => ({ ...current, focusAreas }));
+  }
+
+  function addTask() {
+    setPlan((current) => ({
+      ...current,
+      tasks: [
+        ...current.tasks,
+        {
+          title: '',
+          owner: 'Operator',
+          priority: 'medium',
+          status: 'todo',
+          week: `Week ${current.tasks.length + 1}`,
+          notes: '',
+        },
+      ],
+    }));
+  }
+
+  function removeTask(index: number) {
+    setPlan((current) => ({
+      ...current,
+      tasks: current.tasks.filter((_, taskIndex) => taskIndex !== index),
     }));
   }
 
   async function savePlan() {
-    try {
-      setSaving(true);
-      setError(null);
-      setMessage(null);
+    setSaving(true);
+    setError('');
+    setMessage('');
 
-      const response = await fetch("/api/admin/execution", {
-        method: "PUT",
-        credentials: "include",
+    try {
+      const response = await fetch('/api/admin/execution', {
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          plan,
+          workspaceId: data?.workspaceId ?? null,
+          execution: plan,
         }),
       });
 
-      const json = (await response.json()) as ApiResponse;
+      const payload = await response.json();
 
-      if (!response.ok || !json.ok) {
-        throw new Error(json.error || "Failed to save execution plan.");
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.detail || payload.error || 'Failed to save execution workspace');
       }
 
-      setData(json);
-      setPlan(json.execution ?? emptyPlan());
-      setSelectedTaskId((json.execution?.tasks?.[0]?.id as string | undefined) ?? null);
-      setMessage("Execution plan saved.");
+      setPlan(payload.execution);
+      setMessage('Execution workspace saved.');
+      await loadExecution();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error.");
+      setError(err instanceof Error ? err.message : 'Failed to save execution workspace');
     } finally {
       setSaving(false);
     }
   }
 
+  if (loading) {
+    return (
+      <main className="mx-auto max-w-7xl px-6 py-10">
+        <div className="rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
+          <p className="text-sm text-neutral-500">Loading execution workspace…</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (error && !data) {
+    return (
+      <main className="mx-auto max-w-7xl px-6 py-10">
+        <div className="rounded-3xl border border-red-200 bg-red-50 p-8 shadow-sm">
+          <h1 className="text-xl font-semibold text-red-700">Execution workspace unavailable</h1>
+          <p className="mt-2 text-sm text-red-600">{error}</p>
+          <button
+            type="button"
+            onClick={loadExecution}
+            className="mt-4 rounded-full bg-black px-4 py-2 text-sm font-medium text-white"
+          >
+            Retry
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  const company = (data?.onboarding?.company_profile ?? {}) as Record<string, unknown>;
+  const goals = (data?.onboarding?.goals ?? {}) as Record<string, unknown>;
+  const channels = (data?.onboarding?.channels ?? []) as string[];
+  const links = data?.links ?? {
+    admin: '/admin',
+    onboarding: '/admin/onboarding',
+    strategy: '/admin/strategy',
+    execution: '/admin/execution',
+  };
+
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8">
-      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+    <main className="mx-auto max-w-7xl px-6 py-10">
+      <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Execution</p>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Weekly execution workspace</h1>
-          <p className="mt-2 max-w-3xl text-sm text-slate-600">
-            Convert the strategy into actionable weekly tasks with owners, priorities, due weeks, and status tracking.
+          <p className="text-sm font-medium uppercase tracking-[0.18em] text-neutral-500">Admin execution</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-neutral-950">Weekly execution workspace</h1>
+          <p className="mt-3 max-w-3xl text-sm text-neutral-600">
+            Turn onboarding and strategy inputs into weekly work, owner accountability, and execution status.
           </p>
         </div>
+
         <div className="flex flex-wrap gap-3">
-          <a className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50" href="/admin/onboarding">
-            Open onboarding
+          <a href={links.admin} className="rounded-full border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
+            Admin home
           </a>
-          <a className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50" href="/admin/strategy">
-            Open strategy
+          <a href={links.onboarding} className="rounded-full border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
+            Onboarding
           </a>
-          <a className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800" href="/admin">
-            Back to Admin
+          <a href={links.strategy} className="rounded-full border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
+            Strategy
           </a>
+          <button
+            type="button"
+            onClick={savePlan}
+            disabled={saving}
+            className="rounded-full bg-black px-5 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {saving ? 'Saving…' : 'Save execution workspace'}
+          </button>
         </div>
       </div>
 
-      {loading ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">Loading execution workspace…</div>
+      {message ? (
+        <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          {message}
+        </div>
       ) : null}
 
       {error ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">{error}</div>
+        <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
       ) : null}
 
-      {message ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-sm text-emerald-700">{message}</div>
-      ) : null}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <section className="space-y-6">
+          <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
+            <label className="block text-sm font-medium text-neutral-700">Headline</label>
+            <input
+              value={plan.headline}
+              onChange={(event) => setPlan((current) => ({ ...current, headline: event.target.value }))}
+              className="mt-2 w-full rounded-2xl border border-neutral-300 px-4 py-3 text-sm outline-none ring-0 transition focus:border-black"
+              placeholder="Execution headline"
+            />
 
-      {data && !loading ? (
-        <>
-          <section className="grid gap-4 md:grid-cols-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Workspace</p>
-              <p className="mt-3 break-all text-sm font-semibold text-slate-900">{data.activeContext.workspaceId ?? "—"}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Focus areas</p>
-              <p className="mt-3 text-sm font-semibold text-slate-900">{plan.focusAreas.length}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Tasks</p>
-              <p className="mt-3 text-3xl font-bold text-slate-900">{plan.tasks.length}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Goal</p>
-              <p className="mt-3 text-sm font-semibold text-slate-900">
-                {typeof data.onboarding.goals.primaryObjective === "string" ? data.onboarding.goals.primaryObjective : "—"}
-              </p>
-            </div>
-          </section>
+            <label className="mt-5 block text-sm font-medium text-neutral-700">Summary</label>
+            <textarea
+              value={plan.summary}
+              onChange={(event) => setPlan((current) => ({ ...current, summary: event.target.value }))}
+              rows={4}
+              className="mt-2 w-full rounded-2xl border border-neutral-300 px-4 py-3 text-sm outline-none ring-0 transition focus:border-black"
+              placeholder="Execution summary"
+            />
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-2xl font-bold text-slate-900">{plan.headline}</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-600">{plan.summary}</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {plan.focusAreas.map((item) => (
-                <span key={item} className="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white">
-                  {item}
-                </span>
-              ))}
-            </div>
-          </section>
+            <label className="mt-5 block text-sm font-medium text-neutral-700">Focus areas</label>
+            <textarea
+              value={plan.focusAreas.join('\n')}
+              onChange={(event) => updateFocusAreas(event.target.value)}
+              rows={5}
+              className="mt-2 w-full rounded-2xl border border-neutral-300 px-4 py-3 text-sm outline-none ring-0 transition focus:border-black"
+              placeholder={'Acquisition consistency\nLanding page conversion\nWeekly revenue pacing'}
+            />
 
-          <section className="grid gap-6 lg:grid-cols-[1.45fr_0.9fr]">
-            <div className="overflow-x-auto">
-              <div className="grid min-w-[980px] gap-4 lg:grid-cols-4">
-                {STATUS_COLUMNS.map((column) => (
-                  <div key={column.key} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-700">{column.label}</h3>
-                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                        {plan.tasks.filter((task) => task.status === column.key).length}
-                      </span>
+            <label className="mt-5 block text-sm font-medium text-neutral-700">Operator notes</label>
+            <textarea
+              value={plan.notes}
+              onChange={(event) => setPlan((current) => ({ ...current, notes: event.target.value }))}
+              rows={5}
+              className="mt-2 w-full rounded-2xl border border-neutral-300 px-4 py-3 text-sm outline-none ring-0 transition focus:border-black"
+              placeholder="Operator notes, review cadence, blockers, and context"
+            />
+          </div>
+
+          <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-neutral-950">Execution board</h2>
+                <p className="text-sm text-neutral-500">Define weekly tasks with owner, priority, and status.</p>
+              </div>
+              <button
+                type="button"
+                onClick={addTask}
+                className="rounded-full border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+              >
+                Add task
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {plan.tasks.map((task, index) => (
+                <div key={`${task.title}-${index}`} className="rounded-2xl border border-neutral-200 p-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wide text-neutral-500">Task title</label>
+                      <input
+                        value={task.title}
+                        onChange={(event) => updateTask(index, 'title', event.target.value)}
+                        className="mt-2 w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm focus:border-black"
+                        placeholder="Task title"
+                      />
                     </div>
 
-                    <div className="mt-4 space-y-3">
-                      {plan.tasks
-                        .filter((task) => task.status === column.key)
-                        .map((task) => (
-                          <button
-                            key={task.id}
-                            className={`w-full rounded-2xl border p-4 text-left transition ${
-                              selectedTaskId === task.id
-                                ? "border-slate-900 bg-slate-900 text-white"
-                                : "border-slate-200 bg-slate-50 text-slate-800 hover:bg-slate-100"
-                            }`}
-                            onClick={() => setSelectedTaskId(task.id)}
-                            type="button"
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <p className="text-sm font-semibold">{task.title}</p>
-                              <span
-                                className={`rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${
-                                  selectedTaskId === task.id ? "bg-white/15 text-white" : badgeColor(task.priority)
-                                }`}
-                              >
-                                {task.priority}
-                              </span>
-                            </div>
-                            <p className={`mt-2 text-xs ${selectedTaskId === task.id ? "text-slate-200" : "text-slate-500"}`}>
-                              {task.owner} • {task.dueWeek}
-                            </p>
-                            <p className={`mt-2 text-xs ${selectedTaskId === task.id ? "text-slate-200" : "text-slate-600"}`}>
-                              {task.description}
-                            </p>
-                          </button>
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wide text-neutral-500">Owner</label>
+                      <input
+                        value={task.owner}
+                        onChange={(event) => updateTask(index, 'owner', event.target.value)}
+                        className="mt-2 w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm focus:border-black"
+                        placeholder="Owner"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wide text-neutral-500">Priority</label>
+                      <select
+                        value={task.priority}
+                        onChange={(event) => updateTask(index, 'priority', event.target.value)}
+                        className="mt-2 w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm focus:border-black"
+                      >
+                        {priorityOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
                         ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wide text-neutral-500">Status</label>
+                      <select
+                        value={task.status}
+                        onChange={(event) => updateTask(index, 'status', event.target.value)}
+                        className="mt-2 w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm focus:border-black"
+                      >
+                        {statusOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold uppercase tracking-wide text-neutral-500">Week / cadence</label>
+                      <input
+                        value={task.week}
+                        onChange={(event) => updateTask(index, 'week', event.target.value)}
+                        className="mt-2 w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm focus:border-black"
+                        placeholder="Week 1 / Weekly / Sprint 2"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold uppercase tracking-wide text-neutral-500">Notes</label>
+                      <textarea
+                        value={task.notes}
+                        onChange={(event) => updateTask(index, 'notes', event.target.value)}
+                        rows={3}
+                        className="mt-2 w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm focus:border-black"
+                        placeholder="Definition of done, blockers, dependencies"
+                      />
                     </div>
                   </div>
-                ))}
+
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => removeTask(index)}
+                      className="rounded-full border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                    >
+                      Remove task
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {plan.tasks.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-neutral-300 p-6 text-sm text-neutral-500">
+                  No tasks yet. Add the first execution task to start the weekly plan.
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </section>
+
+        <aside className="space-y-6">
+          <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-neutral-950">Execution snapshot</h2>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="rounded-2xl bg-neutral-50 p-4">
+                <p className="text-xs uppercase tracking-wide text-neutral-500">Total</p>
+                <p className="mt-2 text-2xl font-semibold text-neutral-950">{groupedCounts.total}</p>
+              </div>
+              <div className="rounded-2xl bg-neutral-50 p-4">
+                <p className="text-xs uppercase tracking-wide text-neutral-500">Done</p>
+                <p className="mt-2 text-2xl font-semibold text-neutral-950">{groupedCounts.done}</p>
+              </div>
+              <div className="rounded-2xl bg-neutral-50 p-4">
+                <p className="text-xs uppercase tracking-wide text-neutral-500">Doing</p>
+                <p className="mt-2 text-2xl font-semibold text-neutral-950">{groupedCounts.doing}</p>
+              </div>
+              <div className="rounded-2xl bg-neutral-50 p-4">
+                <p className="text-xs uppercase tracking-wide text-neutral-500">Blocked</p>
+                <p className="mt-2 text-2xl font-semibold text-neutral-950">{groupedCounts.blocked}</p>
               </div>
             </div>
+          </div>
 
-            <aside className="space-y-6">
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h3 className="text-lg font-semibold text-slate-900">Plan notes</h3>
-                <textarea
-                  className="mt-4 min-h-28 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm"
-                  value={plan.notes}
-                  onChange={(e) => setPlan((prev) => ({ ...prev, notes: e.target.value }))}
-                />
-                <button
-                  className="mt-4 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-                  disabled={saving}
-                  onClick={savePlan}
-                  type="button"
-                >
-                  {saving ? "Saving…" : "Save execution plan"}
-                </button>
+          <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-neutral-950">Workspace inputs</h2>
+            <dl className="mt-4 space-y-3 text-sm">
+              <div>
+                <dt className="font-medium text-neutral-500">Business</dt>
+                <dd className="text-neutral-900">{String(company.businessName ?? '—')}</dd>
               </div>
+              <div>
+                <dt className="font-medium text-neutral-500">Industry</dt>
+                <dd className="text-neutral-900">{String(company.industry ?? '—')}</dd>
+              </div>
+              <div>
+                <dt className="font-medium text-neutral-500">Primary objective</dt>
+                <dd className="text-neutral-900">{String(goals.primaryObjective ?? '—')}</dd>
+              </div>
+              <div>
+                <dt className="font-medium text-neutral-500">Revenue target</dt>
+                <dd className="text-neutral-900">{String(goals.monthlyRevenueTarget ?? '—')}</dd>
+              </div>
+              <div>
+                <dt className="font-medium text-neutral-500">Channels</dt>
+                <dd className="text-neutral-900">{channels.length > 0 ? channels.join(', ') : '—'}</dd>
+              </div>
+            </dl>
+          </div>
 
-              {selectedTask ? (
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <h3 className="text-lg font-semibold text-slate-900">Task editor</h3>
-
-                  <div className="mt-4 space-y-4">
-                    <label className="space-y-2">
-                      <span className="text-sm font-medium text-slate-700">Title</span>
-                      <input
-                        className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm"
-                        value={selectedTask.title}
-                        onChange={(e) => updateTask(selectedTask.id, { title: e.target.value })}
-                      />
-                    </label>
-
-                    <label className="space-y-2">
-                      <span className="text-sm font-medium text-slate-700">Description</span>
-                      <textarea
-                        className="min-h-24 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm"
-                        value={selectedTask.description}
-                        onChange={(e) => updateTask(selectedTask.id, { description: e.target.value })}
-                      />
-                    </label>
-
-                    <label className="space-y-2">
-                      <span className="text-sm font-medium text-slate-700">Owner</span>
-                      <input
-                        className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm"
-                        value={selectedTask.owner}
-                        onChange={(e) => updateTask(selectedTask.id, { owner: e.target.value })}
-                      />
-                    </label>
-
-                    <div className="grid gap-4 md:grid-cols-3">
-                      <label className="space-y-2">
-                        <span className="text-sm font-medium text-slate-700">Status</span>
-                        <select
-                          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm"
-                          value={selectedTask.status}
-                          onChange={(e) => updateTask(selectedTask.id, { status: e.target.value as TaskStatus })}
-                        >
-                          <option value="todo">To do</option>
-                          <option value="in_progress">In progress</option>
-                          <option value="blocked">Blocked</option>
-                          <option value="done">Done</option>
-                        </select>
-                      </label>
-
-                      <label className="space-y-2">
-                        <span className="text-sm font-medium text-slate-700">Priority</span>
-                        <select
-                          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm"
-                          value={selectedTask.priority}
-                          onChange={(e) => updateTask(selectedTask.id, { priority: e.target.value as TaskPriority })}
-                        >
-                          <option value="high">High</option>
-                          <option value="medium">Medium</option>
-                          <option value="low">Low</option>
-                        </select>
-                      </label>
-
-                      <label className="space-y-2">
-                        <span className="text-sm font-medium text-slate-700">Due week</span>
-                        <input
-                          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm"
-                          value={selectedTask.dueWeek}
-                          onChange={(e) => updateTask(selectedTask.id, { dueWeek: e.target.value })}
-                        />
-                      </label>
-                    </div>
-
-                    <label className="space-y-2">
-                      <span className="text-sm font-medium text-slate-700">Notes</span>
-                      <textarea
-                        className="min-h-24 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm"
-                        value={selectedTask.notes}
-                        onChange={(e) => updateTask(selectedTask.id, { notes: e.target.value })}
-                      />
-                    </label>
-                  </div>
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
-                  Select a task card to edit owner, status, priority, due week, and notes.
-                </div>
-              )}
-            </aside>
-          </section>
-        </>
-      ) : null}
+          <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-neutral-950">Save checklist</h2>
+            <ul className="mt-4 space-y-3 text-sm text-neutral-700">
+              <li>• Headline and summary reflect the current strategy</li>
+              <li>• Focus areas are clear and limited</li>
+              <li>• Every task has an owner and a week/cadence</li>
+              <li>• Status values are current before review</li>
+              <li>• Notes capture blockers and operator context</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
     </main>
   );
 }
