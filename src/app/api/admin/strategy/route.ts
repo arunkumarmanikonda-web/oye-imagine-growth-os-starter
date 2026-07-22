@@ -267,7 +267,11 @@ async function loadExistingStrategyPlan(client: AnyClient, workspaceId: string):
   return { id: null, value: null };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) {
+    return adminAuthError;
+  }
   try {
     const client = getServiceClient();
     const activeContext = await getActiveContext(client);
