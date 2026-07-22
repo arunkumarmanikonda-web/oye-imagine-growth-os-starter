@@ -148,6 +148,21 @@ function isValidKey(key: string): boolean {
   return /^[a-zA-Z0-9._-]{1,120}$/.test(key);
 }
 
+function normalizeLimit(value: string | null, fallback: number, max: number): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return Math.min(Math.floor(parsed), max);
+}
+
+function normalizeVersionAction(
+  value: string | null
+): "created" | "updated" | "deleted" | "restored" | null {
+  if (value === "created" || value === "updated" || value === "deleted" || value === "restored") {
+    return value;
+  }
+  return null;
+}
+
 async function writeAudit(
   serviceClient: ReturnType<typeof createServiceClient>,
   user: { id: string; email?: string | null },
@@ -200,7 +215,7 @@ async function writeVersion(
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const user = await requireUser();
 
@@ -218,22 +233,44 @@ export async function GET() {
       );
     }
 
-    const { data: items, error: itemsError } = await serviceClient
+    const q = request.nextUrl.searchParams.get("q")?.trim() ?? "";
+    const versionAction = normalizeVersionAction(request.nextUrl.searchParams.get("versionAction"));
+    const settingsLimit = normalizeLimit(request.nextUrl.searchParams.get("settingsLimit"), 25, 200);
+    const versionsLimit = normalizeLimit(request.nextUrl.searchParams.get("versionsLimit"), 30, 200);
+
+    let settingsQuery = serviceClient
       .from("workspace_settings")
       .select("id, key, value, created_by_email, updated_by_email, created_at, updated_at")
       .eq("workspace_id", active.workspaceId)
-      .order("updated_at", { ascending: false });
+      .order("updated_at", { ascending: false })
+      .limit(settingsLimit);
+
+    if (q) {
+      settingsQuery = settingsQuery.ilike("key", "%" + q + "%");
+    }
+
+    const { data: items, error: itemsError } = await settingsQuery;
 
     if (itemsError) {
       return NextResponse.json({ ok: false, error: itemsError.message }, { status: 500 });
     }
 
-    const { data: recentVersions, error: versionsError } = await serviceClient
+    let versionsQuery = serviceClient
       .from("workspace_setting_versions")
       .select("id, workspace_setting_id, key, action, value, actor_email, created_at")
       .eq("workspace_id", active.workspaceId)
       .order("created_at", { ascending: false })
-      .limit(30);
+      .limit(versionsLimit);
+
+    if (q) {
+      versionsQuery = versionsQuery.ilike("key", "%" + q + "%");
+    }
+
+    if (versionAction) {
+      versionsQuery = versionsQuery.eq("action", versionAction);
+    }
+
+    const { data: recentVersions, error: versionsError } = await versionsQuery;
 
     if (versionsError) {
       return NextResponse.json({ ok: false, error: versionsError.message }, { status: 500 });
@@ -242,6 +279,12 @@ export async function GET() {
     return NextResponse.json({
       ok: true,
       active,
+      filters: {
+        q,
+        versionAction,
+        settingsLimit,
+        versionsLimit,
+      },
       items: (items ?? []) as SettingRow[],
       recentVersions: (recentVersions ?? []) as SettingVersionRow[],
     });

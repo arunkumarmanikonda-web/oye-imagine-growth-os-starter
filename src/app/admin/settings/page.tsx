@@ -43,6 +43,12 @@ type SettingsResponse = {
   deletedId?: string;
   deletedKey?: string;
   restoredFromVersionId?: string;
+  filters?: {
+    q: string;
+    versionAction: "created" | "updated" | "deleted" | "restored" | null;
+    settingsLimit: number;
+    versionsLimit: number;
+  };
 };
 
 async function readJson<T>(response: Response): Promise<T> {
@@ -79,24 +85,16 @@ export default function AdminWorkspaceSettingsPage() {
   const [valueInput, setValueInput] = useState('{\n  "mode": "dark"\n}');
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [query, setQuery] = useState("");
+  const [versionAction, setVersionAction] = useState<"" | "created" | "updated" | "deleted" | "restored">("");
+  const [settingsLimit, setSettingsLimit] = useState("25");
+  const [versionsLimit, setVersionsLimit] = useState("30");
 
   const activeLabel = useMemo(() => {
     if (!active) return "";
     return [active.tenantName, active.brandName, active.workspaceName].filter(Boolean).join(" / ");
   }, [active]);
-
-  const filteredItems = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return items;
-    return items.filter((item) => item.key.toLowerCase().includes(q));
-  }, [items, search]);
-
-  const filteredVersions = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return recentVersions;
-    return recentVersions.filter((item) => item.key.toLowerCase().includes(q));
-  }, [recentVersions, search]);
 
   async function loadSettings() {
     setLoading(true);
@@ -104,7 +102,13 @@ export default function AdminWorkspaceSettingsPage() {
     setMessage("");
 
     try {
-      const response = await fetch("/api/admin/workspace-settings", {
+      const params = new URLSearchParams();
+      if (query.trim()) params.set("q", query.trim());
+      if (versionAction) params.set("versionAction", versionAction);
+      params.set("settingsLimit", settingsLimit);
+      params.set("versionsLimit", versionsLimit);
+
+      const response = await fetch("/api/admin/workspace-settings?" + params.toString(), {
         credentials: "include",
       });
 
@@ -126,12 +130,20 @@ export default function AdminWorkspaceSettingsPage() {
 
   useEffect(() => {
     void loadSettings();
-  }, []);
+  }, [query, versionAction, settingsLimit, versionsLimit]);
 
   function resetForm() {
     setSelected(null);
     setKeyInput("");
     setValueInput('{\n  "mode": "dark"\n}');
+  }
+
+  function clearFilters() {
+    setSearchInput("");
+    setQuery("");
+    setVersionAction("");
+    setSettingsLimit("25");
+    setVersionsLimit("30");
   }
 
   function startEdit(item: SettingItem) {
@@ -268,7 +280,7 @@ export default function AdminWorkspaceSettingsPage() {
   }
 
   return (
-    <main style={{ padding: 24, maxWidth: 1280, margin: "0 auto", fontFamily: "Arial, sans-serif" }}>
+    <main style={{ padding: 24, maxWidth: 1320, margin: "0 auto", fontFamily: "Arial, sans-serif" }}>
       <div
         style={{
           display: "flex",
@@ -281,9 +293,9 @@ export default function AdminWorkspaceSettingsPage() {
       >
         <div>
           <h1 style={{ margin: 0, fontSize: 32 }}>Workspace Settings Admin</h1>
-          <p style={{ marginTop: 8, color: "#555", maxWidth: 780 }}>
+          <p style={{ marginTop: 8, color: "#555", maxWidth: 820 }}>
             Manage tenant-scoped workspace settings, inspect version history, restore prior versions,
-            and export operational data for review.
+            export operational data, and work with larger data sets more efficiently.
           </p>
         </div>
 
@@ -319,12 +331,12 @@ export default function AdminWorkspaceSettingsPage() {
         </div>
 
         <div style={{ border: "1px solid #e5e7eb", borderRadius: 14, padding: 16, background: "#fafafa" }}>
-          <div style={{ fontSize: 12, color: "#666", textTransform: "uppercase", letterSpacing: 0.5 }}>Current Settings</div>
+          <div style={{ fontSize: 12, color: "#666", textTransform: "uppercase", letterSpacing: 0.5 }}>Visible Settings</div>
           <div style={{ marginTop: 8, fontWeight: 700, fontSize: 24 }}>{items.length}</div>
         </div>
 
         <div style={{ border: "1px solid #e5e7eb", borderRadius: 14, padding: 16, background: "#fafafa" }}>
-          <div style={{ fontSize: 12, color: "#666", textTransform: "uppercase", letterSpacing: 0.5 }}>Recent Versions</div>
+          <div style={{ fontSize: 12, color: "#666", textTransform: "uppercase", letterSpacing: 0.5 }}>Visible Versions</div>
           <div style={{ marginTop: 8, fontWeight: 700, fontSize: 24 }}>{recentVersions.length}</div>
         </div>
       </section>
@@ -367,6 +379,87 @@ export default function AdminWorkspaceSettingsPage() {
               Export Audit CSV
             </button>
           </div>
+        </div>
+      </section>
+
+      <section
+        style={{
+          border: "1px solid #e5e7eb",
+          borderRadius: 14,
+          padding: 16,
+          marginBottom: 20,
+          background: "#fff",
+        }}
+      >
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr auto auto", gap: 12, alignItems: "end" }}>
+          <label style={{ display: "grid", gap: 6 }}>
+            <span>Search key</span>
+            <input
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="ui.theme"
+              style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #cbd5e1" }}
+            />
+          </label>
+
+          <label style={{ display: "grid", gap: 6 }}>
+            <span>Version action</span>
+            <select
+              value={versionAction}
+              onChange={(e) => setVersionAction(e.target.value as "" | "created" | "updated" | "deleted" | "restored")}
+              style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff" }}
+            >
+              <option value="">All</option>
+              <option value="created">created</option>
+              <option value="updated">updated</option>
+              <option value="deleted">deleted</option>
+              <option value="restored">restored</option>
+            </select>
+          </label>
+
+          <label style={{ display: "grid", gap: 6 }}>
+            <span>Settings limit</span>
+            <select
+              value={settingsLimit}
+              onChange={(e) => setSettingsLimit(e.target.value)}
+              style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff" }}
+            >
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </label>
+
+          <label style={{ display: "grid", gap: 6 }}>
+            <span>Versions limit</span>
+            <select
+              value={versionsLimit}
+              onChange={(e) => setVersionsLimit(e.target.value)}
+              style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff" }}
+            >
+              <option value="10">10</option>
+              <option value="30">30</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </label>
+
+          <button
+            onClick={() => setQuery(searchInput.trim())}
+            type="button"
+            style={{ padding: "10px 14px", borderRadius: 10, border: 0, background: "#111827", color: "#fff", cursor: "pointer" }}
+          >
+            Apply
+          </button>
+
+          <button
+            onClick={clearFilters}
+            type="button"
+            style={{ padding: "10px 14px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer" }}
+          >
+            Clear
+          </button>
         </div>
       </section>
 
@@ -473,33 +566,26 @@ export default function AdminWorkspaceSettingsPage() {
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
               <h2 style={{ margin: 0 }}>Current Settings</h2>
-
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Filter by key"
-                  style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #cbd5e1" }}
-                />
-                <button
-                  onClick={() => void loadSettings()}
-                  type="button"
-                  style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer" }}
-                >
-                  Refresh
-                </button>
-              </div>
+              <button
+                onClick={() => void loadSettings()}
+                type="button"
+                style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer" }}
+              >
+                Refresh
+              </button>
             </div>
 
             {loading ? <div>Loading...</div> : null}
 
-            {!loading && filteredItems.length === 0 ? (
-              <div>No workspace settings found.</div>
+            {!loading && items.length === 0 ? (
+              <div style={{ padding: 16, borderRadius: 12, background: "#f8fafc", color: "#475569" }}>
+                No settings matched the current filters.
+              </div>
             ) : null}
 
-            {!loading && filteredItems.length > 0 ? (
+            {!loading && items.length > 0 ? (
               <div style={{ display: "grid", gap: 12 }}>
-                {filteredItems.map((item) => (
+                {items.map((item) => (
                   <article
                     key={item.id}
                     style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 14, background: "#fff" }}
@@ -562,13 +648,15 @@ export default function AdminWorkspaceSettingsPage() {
 
             {loading ? <div>Loading...</div> : null}
 
-            {!loading && filteredVersions.length === 0 ? (
-              <div>No setting versions found.</div>
+            {!loading && recentVersions.length === 0 ? (
+              <div style={{ padding: 16, borderRadius: 12, background: "#f8fafc", color: "#475569" }}>
+                No version history matched the current filters.
+              </div>
             ) : null}
 
-            {!loading && filteredVersions.length > 0 ? (
+            {!loading && recentVersions.length > 0 ? (
               <div style={{ display: "grid", gap: 12 }}>
-                {filteredVersions.map((item) => (
+                {recentVersions.map((item) => (
                   <article
                     key={item.id}
                     style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 14, background: "#fff" }}
