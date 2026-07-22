@@ -538,11 +538,17 @@ export async function PUT(request: NextRequest) {
     const auditResult = await supabase
       .from("admin_audit_events")
       .insert({
+        tenant_id: tenantId,
+        brand_id: brandId,
         workspace_id: workspaceId,
         actor_user_id: actorUserId,
         action: "admin_workspace_execution_saved",
+        target_type: "workspace_setting",
+        target_id: savedSetting.id,
         payload: {
           key: EXECUTION_KEY,
+          action: existingSetting ? "updated" : "created",
+          settingId: savedSetting.id,
           focusAreaCount: execution.focusAreas.length,
           taskCount: execution.tasks.length,
           notesPresent: Boolean(execution.notes?.trim()),
@@ -550,7 +556,7 @@ export async function PUT(request: NextRequest) {
       });
 
     if (auditResult.error) {
-      throw new Error(`admin_audit_events insert failed: ${auditResult.error.message}`);
+      throw new Error(dmin_audit_events insert failed: ${auditResult.error.message});
     }
 
     const responseContext: ActiveContext = {
