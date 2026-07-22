@@ -32,7 +32,7 @@ async function createAuthClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: Array<{ name: string; value: string; options: any }>) {
           try {
             for (const cookie of cookiesToSet) {
               cookieStore.set(cookie.name, cookie.value, cookie.options);
