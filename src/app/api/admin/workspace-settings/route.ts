@@ -179,7 +179,7 @@ async function writeVersion(
     value: unknown;
   }
 ) {
-  await serviceClient.from("workspace_setting_versions").insert({
+  const { error } = await serviceClient.from("workspace_setting_versions").insert({
     tenant_id: active.tenantId,
     brand_id: active.brandId,
     workspace_id: active.workspaceId,
@@ -190,6 +190,10 @@ async function writeVersion(
     actor_user_id: user.id,
     actor_email: user.email ?? null,
   });
+
+  if (error) {
+    throw new Error("Failed to write workspace setting version: " + error.message);
+  }
 }
 
 export async function GET() {

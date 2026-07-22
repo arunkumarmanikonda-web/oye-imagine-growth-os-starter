@@ -63,7 +63,7 @@ export default function AdminWorkspaceSettingsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selected, setSelected] = useState<SettingItem | null>(null);
   const [keyInput, setKeyInput] = useState("");
-  const [valueInput, setValueInput] = useState("{`n  `"mode`": `"dark`"`n}".Replace("`" + '"',"\"" ))
+  const [valueInput, setValueInput] = useState('{\n  "mode": "dark"\n}');
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
@@ -377,7 +377,7 @@ export default function AdminWorkspaceSettingsPage() {
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700 }}>
-                      {item.key} · {item.action}
+                      {item.key} Â· {item.action}
                     </div>
                     <div style={{ color: "#666", fontSize: 13, marginTop: 4 }}>
                       {item.actor_email ?? "unknown"} at {new Date(item.created_at).toLocaleString()}
