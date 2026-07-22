@@ -1,3 +1,5 @@
+import { adminError, adminJson, adminUnauthorized } from "@/lib/admin-api";
+import { requireAdmin } from "@/lib/admin-route";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -256,6 +258,8 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) return adminAuthError;
   try {
     const body = await request.json().catch(() => null);
     const section = normalizeIncomingSection(body?.section);
