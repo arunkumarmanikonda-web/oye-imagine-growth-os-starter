@@ -42,14 +42,14 @@ function badgeClass(value: boolean): string {
 
 function formatValue(value: string | number | null): string {
   if (value === null || typeof value === "undefined") {
-    return "—";
+    return "â€”";
   }
   return String(value);
 }
 
 function formatDateTime(value: string | null): string {
   if (!value) {
-    return "—";
+    return "â€”";
   }
 
   const date = new Date(value);
@@ -177,7 +177,7 @@ export default function AdminOpsPage() {
       </div>
 
       {loading ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">Loading release status…</div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">Loading release statusâ€¦</div>
       ) : null}
 
       {error ? (
@@ -258,15 +258,15 @@ export default function AdminOpsPage() {
               <div className="mt-6">
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Quick links</h3>
                 <div className="mt-3 flex flex-col gap-2">
-                  <Link className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href={data.links.admin}>
+                  <a className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href={data.links.admin}>
                     /admin
-                  </Link>
-                  <Link className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href={data.links.settings}>
+                  </a>
+                  <a className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href={data.links.settings}>
                     /admin/settings
-                  </Link>
-                  <Link className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href={data.links.ops}>
+                  </a>
+                  <a className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href={data.links.ops}>
                     /admin/ops
-                  </Link>
+                  </a>
                 </div>
               </div>
             </div>
