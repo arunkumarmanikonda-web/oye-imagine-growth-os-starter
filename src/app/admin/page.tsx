@@ -665,6 +665,23 @@ export default function AdminPage() {
           </div>
         )}
       </section>
-    </main>
+          <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Onboarding</p>
+            <h2 className="mt-2 text-2xl font-bold text-slate-900">Workspace onboarding</h2>
+            <p className="mt-2 max-w-2xl text-sm text-slate-600">
+              Capture workspace profile, goals, channels, and brand inputs.
+            </p>
+          </div>
+          <a
+            className="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+            href="/admin/onboarding"
+          >
+            Open onboarding
+          </a>
+        </div>
+      </section>
+</main>
   );
 }
