@@ -307,7 +307,7 @@ export async function PUT(request: Request) {
     });
 
     if (versionResult.error) {
-      throw versionResult.error;
+      throw new Error(`workspace_setting_versions insert failed: ${versionResult.error.message}`);
     }
 
     const auditResult = await client.from("admin_audit_events").insert({
@@ -324,7 +324,7 @@ export async function PUT(request: Request) {
     });
 
     if (auditResult.error) {
-      throw auditResult.error;
+      throw new Error(`admin_audit_events insert failed: ${auditResult.error.message}`);
     }
 
     const payload = await loadSections(client, workspaceId);
@@ -343,6 +343,7 @@ export async function PUT(request: Request) {
       {
         ok: false,
         error: error instanceof Error ? error.message : "Failed to save onboarding data.",
+        errorName: error instanceof Error ? error.name : "UnknownError",
       },
       { status: 500, headers: { "Cache-Control": "no-store" } },
     );
