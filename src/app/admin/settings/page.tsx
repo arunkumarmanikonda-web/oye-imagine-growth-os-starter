@@ -55,6 +55,17 @@ async function readJson<T>(response: Response): Promise<T> {
   }
 }
 
+function formatJson(value: unknown) {
+  return JSON.stringify(value, null, 2);
+}
+
+function actionBadgeColor(action: SettingVersionItem["action"]) {
+  if (action === "created") return "#065f46";
+  if (action === "updated") return "#1d4ed8";
+  if (action === "deleted") return "#b91c1c";
+  return "#7c3aed";
+}
+
 export default function AdminWorkspaceSettingsPage() {
   const [active, setActive] = useState<ActiveContext | null>(null);
   const [items, setItems] = useState<SettingItem[]>([]);
@@ -126,9 +137,10 @@ export default function AdminWorkspaceSettingsPage() {
   function startEdit(item: SettingItem) {
     setSelected(item);
     setKeyInput(item.key);
-    setValueInput(JSON.stringify(item.value, null, 2));
+    setValueInput(formatJson(item.value));
     setMessage("");
     setError("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function saveSetting() {
@@ -251,207 +263,378 @@ export default function AdminWorkspaceSettingsPage() {
     }
   }
 
+  function exportCsv(kind: "settings" | "versions" | "audit") {
+    window.open("/api/admin/exports?kind=" + kind, "_blank");
+  }
+
   return (
-    <main style={{ padding: 24, maxWidth: 1200, margin: "0 auto", fontFamily: "Arial, sans-serif" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+    <main style={{ padding: 24, maxWidth: 1280, margin: "0 auto", fontFamily: "Arial, sans-serif" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          gap: 16,
+          marginBottom: 20,
+          flexWrap: "wrap",
+        }}
+      >
         <div>
-          <h1 style={{ margin: 0 }}>Workspace Settings Admin</h1>
-          <p style={{ marginTop: 8, color: "#555" }}>
-            Manage tenant-scoped workspace settings and restore prior versions.
+          <h1 style={{ margin: 0, fontSize: 32 }}>Workspace Settings Admin</h1>
+          <p style={{ marginTop: 8, color: "#555", maxWidth: 780 }}>
+            Manage tenant-scoped workspace settings, inspect version history, restore prior versions,
+            and export operational data for review.
           </p>
         </div>
-        <a href="/admin" style={{ color: "#2563eb", textDecoration: "none", fontWeight: 600 }}>
-          Back to /admin
-        </a>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <a
+            href="/admin"
+            style={{
+              color: "#2563eb",
+              textDecoration: "none",
+              fontWeight: 600,
+              padding: "10px 14px",
+              border: "1px solid #cbd5e1",
+              borderRadius: 10,
+              background: "#fff",
+            }}
+          >
+            Back to /admin
+          </a>
+        </div>
       </div>
 
-      <section style={{ border: "1px solid #ddd", borderRadius: 12, padding: 16, marginBottom: 16, background: "#fafafa" }}>
-        <h2 style={{ marginTop: 0 }}>Active Context</h2>
-        <div>{active ? activeLabel : "No active context loaded"}</div>
-      </section>
+      <section
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gap: 12,
+          marginBottom: 20,
+        }}
+      >
+        <div style={{ border: "1px solid #e5e7eb", borderRadius: 14, padding: 16, background: "#fafafa" }}>
+          <div style={{ fontSize: 12, color: "#666", textTransform: "uppercase", letterSpacing: 0.5 }}>Active Context</div>
+          <div style={{ marginTop: 8, fontWeight: 700 }}>{active ? activeLabel : "No active context"}</div>
+        </div>
 
-      <section style={{ border: "1px solid #ddd", borderRadius: 12, padding: 16, marginBottom: 16 }}>
-        <h2 style={{ marginTop: 0 }}>{selected ? "Edit Setting" : "Create Setting"}</h2>
+        <div style={{ border: "1px solid #e5e7eb", borderRadius: 14, padding: 16, background: "#fafafa" }}>
+          <div style={{ fontSize: 12, color: "#666", textTransform: "uppercase", letterSpacing: 0.5 }}>Current Settings</div>
+          <div style={{ marginTop: 8, fontWeight: 700, fontSize: 24 }}>{items.length}</div>
+        </div>
 
-        <div style={{ display: "grid", gap: 12 }}>
-          <label style={{ display: "grid", gap: 6 }}>
-            <span>Key</span>
-            <input
-              value={keyInput}
-              onChange={(e) => setKeyInput(e.target.value)}
-              placeholder="ui.theme"
-              disabled={Boolean(selected)}
-              style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-            />
-          </label>
-
-          <label style={{ display: "grid", gap: 6 }}>
-            <span>JSON Value</span>
-            <textarea
-              value={valueInput}
-              onChange={(e) => setValueInput(e.target.value)}
-              rows={12}
-              style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc", fontFamily: "Consolas, monospace" }}
-            />
-          </label>
-
-          <div style={{ display: "flex", gap: 10 }}>
-            <button
-              onClick={() => void saveSetting()}
-              disabled={saving}
-              style={{ padding: "10px 14px", borderRadius: 8, border: 0, background: "#111827", color: "#fff", cursor: "pointer" }}
-            >
-              {saving ? "Saving..." : selected ? "Update Setting" : "Create Setting"}
-            </button>
-
-            <button
-              onClick={resetForm}
-              type="button"
-              style={{ padding: "10px 14px", borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" }}
-            >
-              Reset
-            </button>
-          </div>
-
-          {message ? <div style={{ color: "#065f46", fontWeight: 600 }}>{message}</div> : null}
-          {error ? <div style={{ color: "#b91c1c", fontWeight: 600 }}>{error}</div> : null}
+        <div style={{ border: "1px solid #e5e7eb", borderRadius: 14, padding: 16, background: "#fafafa" }}>
+          <div style={{ fontSize: 12, color: "#666", textTransform: "uppercase", letterSpacing: 0.5 }}>Recent Versions</div>
+          <div style={{ marginTop: 8, fontWeight: 700, fontSize: 24 }}>{recentVersions.length}</div>
         </div>
       </section>
 
-      <section style={{ border: "1px solid #ddd", borderRadius: 12, padding: 16, marginBottom: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 12 }}>
-          <h2 style={{ margin: 0 }}>Current Settings</h2>
-          <div style={{ display: "flex", gap: 10 }}>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Filter by key"
-              style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #ccc" }}
-            />
+      <section
+        style={{
+          border: "1px solid #e5e7eb",
+          borderRadius: 14,
+          padding: 16,
+          marginBottom: 20,
+          background: "#fff",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <h2 style={{ margin: 0 }}>Exports</h2>
+            <p style={{ marginTop: 6, color: "#666" }}>Download CSV snapshots for settings, versions, and audit activity.</p>
+          </div>
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button
-              onClick={() => void loadSettings()}
+              onClick={() => exportCsv("settings")}
               type="button"
-              style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" }}
+              style={{ padding: "10px 14px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer" }}
             >
-              Refresh
+              Export Settings CSV
+            </button>
+            <button
+              onClick={() => exportCsv("versions")}
+              type="button"
+              style={{ padding: "10px 14px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer" }}
+            >
+              Export Versions CSV
+            </button>
+            <button
+              onClick={() => exportCsv("audit")}
+              type="button"
+              style={{ padding: "10px 14px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer" }}
+            >
+              Export Audit CSV
             </button>
           </div>
         </div>
-
-        {loading ? <div>Loading...</div> : null}
-
-        {!loading && filteredItems.length === 0 ? (
-          <div>No workspace settings found.</div>
-        ) : null}
-
-        {!loading && filteredItems.length > 0 ? (
-          <div style={{ display: "grid", gap: 12 }}>
-            {filteredItems.map((item) => (
-              <article
-                key={item.id}
-                style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: 14, background: "#fff" }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700 }}>{item.key}</div>
-                    <div style={{ color: "#666", fontSize: 13, marginTop: 4 }}>
-                      updated by {item.updated_by_email ?? "unknown"} at {new Date(item.updated_at).toLocaleString()}
-                    </div>
-                    <pre
-                      style={{
-                        marginTop: 10,
-                        padding: 12,
-                        borderRadius: 8,
-                        background: "#0f172a",
-                        color: "#e5e7eb",
-                        overflowX: "auto",
-                        fontSize: 12,
-                      }}
-                    >
-{JSON.stringify(item.value, null, 2)}
-                    </pre>
-                  </div>
-
-                  <div style={{ display: "grid", gap: 8 }}>
-                    <button
-                      onClick={() => startEdit(item)}
-                      type="button"
-                      style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" }}
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      onClick={() => void deleteSetting(item)}
-                      disabled={deletingId === item.id}
-                      type="button"
-                      style={{ padding: "8px 12px", borderRadius: 8, border: 0, background: "#b91c1c", color: "#fff", cursor: "pointer" }}
-                    >
-                      {deletingId === item.id ? "Deleting..." : "Delete"}
-                    </button>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : null}
       </section>
 
-      <section style={{ border: "1px solid #ddd", borderRadius: 12, padding: 16 }}>
-        <h2 style={{ marginTop: 0 }}>Recent Setting Versions</h2>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(320px, 420px) minmax(0, 1fr)",
+          gap: 20,
+          alignItems: "start",
+        }}
+      >
+        <section
+          style={{
+            border: "1px solid #e5e7eb",
+            borderRadius: 14,
+            padding: 16,
+            background: "#fff",
+            position: "sticky",
+            top: 16,
+          }}
+        >
+          <h2 style={{ marginTop: 0 }}>{selected ? "Edit Setting" : "Create Setting"}</h2>
 
-        {loading ? <div>Loading...</div> : null}
-
-        {!loading && filteredVersions.length === 0 ? (
-          <div>No setting versions found.</div>
-        ) : null}
-
-        {!loading && filteredVersions.length > 0 ? (
           <div style={{ display: "grid", gap: 12 }}>
-            {filteredVersions.map((item) => (
-              <article
-                key={item.id}
-                style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: 14, background: "#fff" }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700 }}>
-                      {item.key} · {item.action}
-                    </div>
-                    <div style={{ color: "#666", fontSize: 13, marginTop: 4 }}>
-                      {item.actor_email ?? "unknown"} at {new Date(item.created_at).toLocaleString()}
-                    </div>
-                    <pre
-                      style={{
-                        marginTop: 10,
-                        padding: 12,
-                        borderRadius: 8,
-                        background: "#111827",
-                        color: "#e5e7eb",
-                        overflowX: "auto",
-                        fontSize: 12,
-                      }}
-                    >
-{JSON.stringify(item.value, null, 2)}
-                    </pre>
-                  </div>
+            <label style={{ display: "grid", gap: 6 }}>
+              <span>Key</span>
+              <input
+                value={keyInput}
+                onChange={(e) => setKeyInput(e.target.value)}
+                placeholder="ui.theme"
+                disabled={Boolean(selected)}
+                style={{ padding: 10, borderRadius: 10, border: "1px solid #cbd5e1" }}
+              />
+            </label>
 
-                  <div>
-                    <button
-                      onClick={() => void restoreVersion(item)}
-                      disabled={restoringVersionId === item.id}
-                      type="button"
-                      style={{ padding: "8px 12px", borderRadius: 8, border: 0, background: "#2563eb", color: "#fff", cursor: "pointer" }}
-                    >
-                      {restoringVersionId === item.id ? "Restoring..." : "Restore This Version"}
-                    </button>
-                  </div>
-                </div>
-              </article>
-            ))}
+            <label style={{ display: "grid", gap: 6 }}>
+              <span>JSON Value</span>
+              <textarea
+                value={valueInput}
+                onChange={(e) => setValueInput(e.target.value)}
+                rows={14}
+                style={{
+                  padding: 10,
+                  borderRadius: 10,
+                  border: "1px solid #cbd5e1",
+                  fontFamily: "Consolas, monospace",
+                }}
+              />
+            </label>
+
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button
+                onClick={() => void saveSetting()}
+                disabled={saving}
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: 10,
+                  border: 0,
+                  background: "#111827",
+                  color: "#fff",
+                  cursor: "pointer",
+                }}
+              >
+                {saving ? "Saving..." : selected ? "Update Setting" : "Create Setting"}
+              </button>
+
+              <button
+                onClick={resetForm}
+                type="button"
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: 10,
+                  border: "1px solid #cbd5e1",
+                  background: "#fff",
+                  cursor: "pointer",
+                }}
+              >
+                Reset
+              </button>
+            </div>
+
+            {message ? (
+              <div style={{ color: "#065f46", fontWeight: 600, background: "#ecfdf5", padding: 10, borderRadius: 10 }}>
+                {message}
+              </div>
+            ) : null}
+
+            {error ? (
+              <div style={{ color: "#b91c1c", fontWeight: 600, background: "#fef2f2", padding: 10, borderRadius: 10 }}>
+                {error}
+              </div>
+            ) : null}
           </div>
-        ) : null}
-      </section>
+        </section>
+
+        <section style={{ display: "grid", gap: 20 }}>
+          <section
+            style={{
+              border: "1px solid #e5e7eb",
+              borderRadius: 14,
+              padding: 16,
+              background: "#fff",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
+              <h2 style={{ margin: 0 }}>Current Settings</h2>
+
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Filter by key"
+                  style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #cbd5e1" }}
+                />
+                <button
+                  onClick={() => void loadSettings()}
+                  type="button"
+                  style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer" }}
+                >
+                  Refresh
+                </button>
+              </div>
+            </div>
+
+            {loading ? <div>Loading...</div> : null}
+
+            {!loading && filteredItems.length === 0 ? (
+              <div>No workspace settings found.</div>
+            ) : null}
+
+            {!loading && filteredItems.length > 0 ? (
+              <div style={{ display: "grid", gap: 12 }}>
+                {filteredItems.map((item) => (
+                  <article
+                    key={item.id}
+                    style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 14, background: "#fff" }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", flexWrap: "wrap" }}>
+                      <div style={{ flex: 1, minWidth: 280 }}>
+                        <div style={{ fontWeight: 700, fontSize: 16 }}>{item.key}</div>
+                        <div style={{ color: "#666", fontSize: 13, marginTop: 4 }}>
+                          updated by {item.updated_by_email ?? "unknown"} at {new Date(item.updated_at).toLocaleString()}
+                        </div>
+                        <pre
+                          style={{
+                            marginTop: 10,
+                            padding: 12,
+                            borderRadius: 10,
+                            background: "#0f172a",
+                            color: "#e5e7eb",
+                            overflowX: "auto",
+                            fontSize: 12,
+                          }}
+                        >
+{formatJson(item.value)}
+                        </pre>
+                      </div>
+
+                      <div style={{ display: "grid", gap: 8 }}>
+                        <button
+                          onClick={() => startEdit(item)}
+                          type="button"
+                          style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer" }}
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          onClick={() => void deleteSetting(item)}
+                          disabled={deletingId === item.id}
+                          type="button"
+                          style={{ padding: "8px 12px", borderRadius: 10, border: 0, background: "#b91c1c", color: "#fff", cursor: "pointer" }}
+                        >
+                          {deletingId === item.id ? "Deleting..." : "Delete"}
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : null}
+          </section>
+
+          <section
+            style={{
+              border: "1px solid #e5e7eb",
+              borderRadius: 14,
+              padding: 16,
+              background: "#fff",
+            }}
+          >
+            <h2 style={{ marginTop: 0 }}>Recent Setting Versions</h2>
+
+            {loading ? <div>Loading...</div> : null}
+
+            {!loading && filteredVersions.length === 0 ? (
+              <div>No setting versions found.</div>
+            ) : null}
+
+            {!loading && filteredVersions.length > 0 ? (
+              <div style={{ display: "grid", gap: 12 }}>
+                {filteredVersions.map((item) => (
+                  <article
+                    key={item.id}
+                    style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 14, background: "#fff" }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", flexWrap: "wrap" }}>
+                      <div style={{ flex: 1, minWidth: 280 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          <span style={{ fontWeight: 700 }}>{item.key}</span>
+                          <span
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 700,
+                              color: "#fff",
+                              background: actionBadgeColor(item.action),
+                              borderRadius: 999,
+                              padding: "4px 8px",
+                              textTransform: "uppercase",
+                              letterSpacing: 0.3,
+                            }}
+                          >
+                            {item.action}
+                          </span>
+                        </div>
+                        <div style={{ color: "#666", fontSize: 13, marginTop: 4 }}>
+                          {item.actor_email ?? "unknown"} at {new Date(item.created_at).toLocaleString()}
+                        </div>
+                        <pre
+                          style={{
+                            marginTop: 10,
+                            padding: 12,
+                            borderRadius: 10,
+                            background: "#111827",
+                            color: "#e5e7eb",
+                            overflowX: "auto",
+                            fontSize: 12,
+                          }}
+                        >
+{formatJson(item.value)}
+                        </pre>
+                      </div>
+
+                      <div>
+                        <button
+                          onClick={() => void restoreVersion(item)}
+                          disabled={restoringVersionId === item.id}
+                          type="button"
+                          style={{
+                            padding: "8px 12px",
+                            borderRadius: 10,
+                            border: 0,
+                            background: "#2563eb",
+                            color: "#fff",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {restoringVersionId === item.id ? "Restoring..." : "Restore This Version"}
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : null}
+          </section>
+        </section>
+      </div>
     </main>
   );
 }
