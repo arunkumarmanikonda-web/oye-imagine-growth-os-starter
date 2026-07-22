@@ -1,3 +1,5 @@
+import { adminError, adminJson, adminUnauthorized } from "@/lib/admin-api";
+import { requireAdmin } from "@/lib/admin-route";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -113,7 +115,9 @@ async function getActiveContext(client: AnyClient): Promise<{
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) return adminAuthError;
   const env = {
     NEXT_PUBLIC_SUPABASE_URL: hasEnv("NEXT_PUBLIC_SUPABASE_URL"),
     NEXT_PUBLIC_SUPABASE_ANON_KEY: hasEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
