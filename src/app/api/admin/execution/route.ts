@@ -484,10 +484,23 @@ export async function PUT(request: NextRequest) {
     const existingSetting = currentMap.get(EXECUTION_KEY);
     const actorUserId = await resolveActorUserId(supabase);
 
+    const tenantId = existingSetting?.tenant_id ?? activeContext.tenantId;
+    const brandId = existingSetting?.brand_id ?? activeContext.brandId;
+
+    if (!tenantId) {
+      throw new Error("No tenant_id available for execution save");
+    }
+
+    if (!brandId) {
+      throw new Error("No brand_id available for execution save");
+    }
+
     const upsertResult = await supabase
       .from("workspace_settings")
       .upsert(
         {
+          tenant_id: tenantId,
+          brand_id: brandId,
           workspace_id: workspaceId,
           key: EXECUTION_KEY,
           value: execution,
@@ -508,8 +521,8 @@ export async function PUT(request: NextRequest) {
     const versionResult = await supabase
       .from("workspace_setting_versions")
       .insert({
-        tenant_id: savedSetting.tenant_id ?? activeContext.tenantId,
-        brand_id: savedSetting.brand_id ?? activeContext.brandId,
+        tenant_id: tenantId,
+        brand_id: brandId,
         workspace_id: workspaceId,
         workspace_setting_id: savedSetting.id,
         key: EXECUTION_KEY,
@@ -541,8 +554,8 @@ export async function PUT(request: NextRequest) {
     }
 
     const responseContext: ActiveContext = {
-      tenantId: savedSetting.tenant_id ?? activeContext.tenantId ?? null,
-      brandId: savedSetting.brand_id ?? activeContext.brandId ?? null,
+      tenantId: tenantId ?? null,
+      brandId: brandId ?? null,
       workspaceId,
     };
 
