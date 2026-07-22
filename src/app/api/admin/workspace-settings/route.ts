@@ -14,6 +14,16 @@ type ActiveContext = {
   workspaceSlug: string | null;
 };
 
+type SettingRow = {
+  id: string;
+  key: string;
+  value: unknown;
+  created_by_email: string | null;
+  updated_by_email: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 function getEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -24,6 +34,7 @@ function getEnv(name: string): string {
 
 async function createAuthClient() {
   const cookieStore = await cookies();
+
   return createServerClient(
     getEnv("NEXT_PUBLIC_SUPABASE_URL"),
     getEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
@@ -38,7 +49,7 @@ async function createAuthClient() {
               cookieStore.set(cookie.name, cookie.value, cookie.options);
             }
           } catch {
-            // no-op in route handlers if cookies cannot be mutated here
+            // ignored
           }
         },
       },
@@ -59,7 +70,23 @@ function createServiceClient() {
   );
 }
 
-async function getActiveContext(serviceClient: ReturnType<typeof createServiceClient>): Promise<ActiveContext | null> {
+async function requireUser() {
+  const authClient = await createAuthClient();
+  const {
+    data: { user },
+    error,
+  } = await authClient.auth.getUser();
+
+  if (error || !user) {
+    return null;
+  }
+
+  return user;
+}
+
+async function getActiveContext(
+  serviceClient: ReturnType<typeof createServiceClient>
+): Promise<ActiveContext | null> {
   const cookieStore = await cookies();
   const workspaceId = cookieStore.get("oye_admin_workspace_id")?.value;
 
@@ -84,12 +111,14 @@ async function getActiveContext(serviceClient: ReturnType<typeof createServiceCl
     .single();
 
   let brandName: string | null = null;
+
   if (workspace.brand_id) {
     const { data: brand } = await serviceClient
       .from("brands")
       .select("id, name")
       .eq("id", workspace.brand_id)
       .single();
+
     brandName = brand?.name ?? null;
   }
 
@@ -109,23 +138,30 @@ function isValidKey(key: string): boolean {
   return /^[a-zA-Z0-9._-]{1,120}$/.test(key);
 }
 
-async function requireUser() {
-  const authClient = await createAuthClient();
-  const {
-    data: { user },
-    error,
-  } = await authClient.auth.getUser();
-
-  if (error || !user) {
-    return null;
-  }
-
-  return user;
+async function writeAudit(
+  serviceClient: ReturnType<typeof createServiceClient>,
+  user: { id: string; email?: string | null },
+  active: ActiveContext,
+  action: string,
+  payload: Record<string, unknown>
+) {
+  await serviceClient.from("admin_audit_events").insert({
+    actor_user_id: user.id,
+    actor_email: user.email ?? null,
+    action,
+    target_type: "workspace",
+    target_id: active.workspaceId,
+    tenant_id: active.tenantId,
+    brand_id: active.brandId,
+    workspace_id: active.workspaceId,
+    payload,
+  });
 }
 
 export async function GET() {
   try {
     const user = await requireUser();
+
     if (!user) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
@@ -153,7 +189,7 @@ export async function GET() {
     return NextResponse.json({
       ok: true,
       active,
-      items: data ?? [],
+      items: (data ?? []) as SettingRow[],
     });
   } catch (error) {
     return NextResponse.json(
@@ -166,6 +202,7 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     const user = await requireUser();
+
     if (!user) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
@@ -182,10 +219,7 @@ export async function PUT(request: NextRequest) {
     }
 
     if (value === undefined) {
-      return NextResponse.json(
-        { ok: false, error: "value is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ ok: false, error: "value is required" }, { status: 400 });
     }
 
     const serviceClient = createServiceClient();
@@ -205,7 +239,7 @@ export async function PUT(request: NextRequest) {
       .eq("key", key)
       .maybeSingle();
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       tenant_id: active.tenantId,
       brand_id: active.brandId,
       workspace_id: active.workspaceId,
@@ -213,7 +247,7 @@ export async function PUT(request: NextRequest) {
       value,
       updated_by_user_id: user.id,
       updated_by_email: user.email ?? null,
-    } as Record<string, unknown>;
+    };
 
     if (!existing) {
       payload.created_by_user_id = user.id;
@@ -230,29 +264,86 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
     }
 
-    const action = existing
-      ? "admin_workspace_setting_updated"
-      : "admin_workspace_setting_created";
-
-    await serviceClient.from("admin_audit_events").insert({
-      actor_user_id: user.id,
-      actor_email: user.email ?? null,
-      action,
-      target_type: "workspace",
-      target_id: active.workspaceId,
-      tenant_id: active.tenantId,
-      brand_id: active.brandId,
-      workspace_id: active.workspaceId,
-      payload: {
-        key,
-        settingId: row.id,
-      },
-    });
+    await writeAudit(
+      serviceClient,
+      { id: user.id, email: user.email },
+      active,
+      existing ? "admin_workspace_setting_updated" : "admin_workspace_setting_created",
+      { key, settingId: row.id }
+    );
 
     return NextResponse.json({
       ok: true,
       active,
-      item: row,
+      item: row as SettingRow,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { ok: false, error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const user = await requireUser();
+
+    if (!user) {
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json().catch(() => null);
+    const id = typeof body?.id === "string" ? body.id : "";
+
+    if (!id) {
+      return NextResponse.json({ ok: false, error: "id is required" }, { status: 400 });
+    }
+
+    const serviceClient = createServiceClient();
+    const active = await getActiveContext(serviceClient);
+
+    if (!active) {
+      return NextResponse.json(
+        { ok: false, error: "No active admin workspace selected" },
+        { status: 400 }
+      );
+    }
+
+    const { data: existing, error: existingError } = await serviceClient
+      .from("workspace_settings")
+      .select("id, key")
+      .eq("id", id)
+      .eq("workspace_id", active.workspaceId)
+      .single();
+
+    if (existingError || !existing) {
+      return NextResponse.json({ ok: false, error: "Setting not found" }, { status: 404 });
+    }
+
+    const { error: deleteError } = await serviceClient
+      .from("workspace_settings")
+      .delete()
+      .eq("id", id)
+      .eq("workspace_id", active.workspaceId);
+
+    if (deleteError) {
+      return NextResponse.json({ ok: false, error: deleteError.message }, { status: 500 });
+    }
+
+    await writeAudit(
+      serviceClient,
+      { id: user.id, email: user.email },
+      active,
+      "admin_workspace_setting_deleted",
+      { key: existing.key, settingId: existing.id }
+    );
+
+    return NextResponse.json({
+      ok: true,
+      active,
+      deletedId: existing.id,
+      deletedKey: existing.key,
     });
   } catch (error) {
     return NextResponse.json(
