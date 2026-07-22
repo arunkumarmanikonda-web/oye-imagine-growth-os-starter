@@ -24,6 +24,16 @@ type SettingRow = {
   updated_at: string;
 };
 
+type SettingVersionRow = {
+  id: string;
+  workspace_setting_id: string | null;
+  key: string;
+  action: "created" | "updated" | "deleted";
+  value: unknown;
+  actor_email: string | null;
+  created_at: string;
+};
+
 function getEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -158,6 +168,30 @@ async function writeAudit(
   });
 }
 
+async function writeVersion(
+  serviceClient: ReturnType<typeof createServiceClient>,
+  user: { id: string; email?: string | null },
+  active: ActiveContext,
+  params: {
+    workspaceSettingId: string | null;
+    key: string;
+    action: "created" | "updated" | "deleted";
+    value: unknown;
+  }
+) {
+  await serviceClient.from("workspace_setting_versions").insert({
+    tenant_id: active.tenantId,
+    brand_id: active.brandId,
+    workspace_id: active.workspaceId,
+    workspace_setting_id: params.workspaceSettingId,
+    key: params.key,
+    action: params.action,
+    value: params.value,
+    actor_user_id: user.id,
+    actor_email: user.email ?? null,
+  });
+}
+
 export async function GET() {
   try {
     const user = await requireUser();
@@ -176,20 +210,32 @@ export async function GET() {
       );
     }
 
-    const { data, error } = await serviceClient
+    const { data: items, error: itemsError } = await serviceClient
       .from("workspace_settings")
       .select("id, key, value, created_by_email, updated_by_email, created_at, updated_at")
       .eq("workspace_id", active.workspaceId)
       .order("updated_at", { ascending: false });
 
-    if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    if (itemsError) {
+      return NextResponse.json({ ok: false, error: itemsError.message }, { status: 500 });
+    }
+
+    const { data: recentVersions, error: versionsError } = await serviceClient
+      .from("workspace_setting_versions")
+      .select("id, workspace_setting_id, key, action, value, actor_email, created_at")
+      .eq("workspace_id", active.workspaceId)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (versionsError) {
+      return NextResponse.json({ ok: false, error: versionsError.message }, { status: 500 });
     }
 
     return NextResponse.json({
       ok: true,
       active,
-      items: (data ?? []) as SettingRow[],
+      items: (items ?? []) as SettingRow[],
+      recentVersions: (recentVersions ?? []) as SettingVersionRow[],
     });
   } catch (error) {
     return NextResponse.json(
@@ -264,6 +310,18 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
     }
 
+    await writeVersion(
+      serviceClient,
+      { id: user.id, email: user.email },
+      active,
+      {
+        workspaceSettingId: row.id,
+        key,
+        action: existing ? "updated" : "created",
+        value,
+      }
+    );
+
     await writeAudit(
       serviceClient,
       { id: user.id, email: user.email },
@@ -312,7 +370,7 @@ export async function DELETE(request: NextRequest) {
 
     const { data: existing, error: existingError } = await serviceClient
       .from("workspace_settings")
-      .select("id, key")
+      .select("id, key, value")
       .eq("id", id)
       .eq("workspace_id", active.workspaceId)
       .single();
@@ -320,6 +378,18 @@ export async function DELETE(request: NextRequest) {
     if (existingError || !existing) {
       return NextResponse.json({ ok: false, error: "Setting not found" }, { status: 404 });
     }
+
+    await writeVersion(
+      serviceClient,
+      { id: user.id, email: user.email },
+      active,
+      {
+        workspaceSettingId: existing.id,
+        key: existing.key,
+        action: "deleted",
+        value: existing.value,
+      }
+    );
 
     const { error: deleteError } = await serviceClient
       .from("workspace_settings")

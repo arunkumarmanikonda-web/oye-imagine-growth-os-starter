@@ -23,12 +23,23 @@ type SettingItem = {
   updated_at: string;
 };
 
+type SettingVersionItem = {
+  id: string;
+  workspace_setting_id: string | null;
+  key: string;
+  action: "created" | "updated" | "deleted";
+  value: unknown;
+  actor_email: string | null;
+  created_at: string;
+};
+
 type SettingsResponse = {
   ok: boolean;
   error?: string;
   active?: ActiveContext;
   items?: SettingItem[];
   item?: SettingItem;
+  recentVersions?: SettingVersionItem[];
   deletedId?: string;
   deletedKey?: string;
 };
@@ -46,19 +57,33 @@ async function readJson<T>(response: Response): Promise<T> {
 export default function AdminWorkspaceSettingsPage() {
   const [active, setActive] = useState<ActiveContext | null>(null);
   const [items, setItems] = useState<SettingItem[]>([]);
+  const [recentVersions, setRecentVersions] = useState<SettingVersionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selected, setSelected] = useState<SettingItem | null>(null);
   const [keyInput, setKeyInput] = useState("");
-  const [valueInput, setValueInput] = useState('{\n  "mode": "dark"\n}');
+  const [valueInput, setValueInput] = useState("{`n  `"mode`": `"dark`"`n}".Replace("`" + '"',"\"" ))
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
 
   const activeLabel = useMemo(() => {
     if (!active) return "";
     return [active.tenantName, active.brandName, active.workspaceName].filter(Boolean).join(" / ");
   }, [active]);
+
+  const filteredItems = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter((item) => item.key.toLowerCase().includes(q));
+  }, [items, search]);
+
+  const filteredVersions = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return recentVersions;
+    return recentVersions.filter((item) => item.key.toLowerCase().includes(q));
+  }, [recentVersions, search]);
 
   async function loadSettings() {
     setLoading(true);
@@ -78,6 +103,7 @@ export default function AdminWorkspaceSettingsPage() {
 
       setActive(data.active ?? null);
       setItems(data.items ?? []);
+      setRecentVersions(data.recentVersions ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load workspace settings");
     } finally {
@@ -187,12 +213,12 @@ export default function AdminWorkspaceSettingsPage() {
   }
 
   return (
-    <main style={{ padding: 24, maxWidth: 1100, margin: "0 auto", fontFamily: "Arial, sans-serif" }}>
+    <main style={{ padding: 24, maxWidth: 1200, margin: "0 auto", fontFamily: "Arial, sans-serif" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div>
           <h1 style={{ margin: 0 }}>Workspace Settings Admin</h1>
           <p style={{ marginTop: 8, color: "#555" }}>
-            Manage tenant-scoped workspace settings via the existing admin context.
+            Manage tenant-scoped workspace settings and inspect recent versions.
           </p>
         </div>
         <a href="/admin" style={{ color: "#2563eb", textDecoration: "none", fontWeight: 600 }}>
@@ -253,27 +279,35 @@ export default function AdminWorkspaceSettingsPage() {
         </div>
       </section>
 
-      <section style={{ border: "1px solid #ddd", borderRadius: 12, padding: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+      <section style={{ border: "1px solid #ddd", borderRadius: 12, padding: 16, marginBottom: 16 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 12 }}>
           <h2 style={{ margin: 0 }}>Current Settings</h2>
-          <button
-            onClick={() => void loadSettings()}
-            type="button"
-            style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" }}
-          >
-            Refresh
-          </button>
+          <div style={{ display: "flex", gap: 10 }}>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Filter by key"
+              style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #ccc" }}
+            />
+            <button
+              onClick={() => void loadSettings()}
+              type="button"
+              style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" }}
+            >
+              Refresh
+            </button>
+          </div>
         </div>
 
         {loading ? <div>Loading...</div> : null}
 
-        {!loading && items.length === 0 ? (
+        {!loading && filteredItems.length === 0 ? (
           <div>No workspace settings found.</div>
         ) : null}
 
-        {!loading && items.length > 0 ? (
+        {!loading && filteredItems.length > 0 ? (
           <div style={{ display: "grid", gap: 12 }}>
-            {items.map((item) => (
+            {filteredItems.map((item) => (
               <article
                 key={item.id}
                 style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: 14, background: "#fff" }}
@@ -316,6 +350,51 @@ export default function AdminWorkspaceSettingsPage() {
                     >
                       {deletingId === item.id ? "Deleting..." : "Delete"}
                     </button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : null}
+      </section>
+
+      <section style={{ border: "1px solid #ddd", borderRadius: 12, padding: 16 }}>
+        <h2 style={{ marginTop: 0 }}>Recent Setting Versions</h2>
+
+        {loading ? <div>Loading...</div> : null}
+
+        {!loading && filteredVersions.length === 0 ? (
+          <div>No setting versions found.</div>
+        ) : null}
+
+        {!loading && filteredVersions.length > 0 ? (
+          <div style={{ display: "grid", gap: 12 }}>
+            {filteredVersions.map((item) => (
+              <article
+                key={item.id}
+                style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: 14, background: "#fff" }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700 }}>
+                      {item.key} · {item.action}
+                    </div>
+                    <div style={{ color: "#666", fontSize: 13, marginTop: 4 }}>
+                      {item.actor_email ?? "unknown"} at {new Date(item.created_at).toLocaleString()}
+                    </div>
+                    <pre
+                      style={{
+                        marginTop: 10,
+                        padding: 12,
+                        borderRadius: 8,
+                        background: "#111827",
+                        color: "#e5e7eb",
+                        overflowX: "auto",
+                        fontSize: 12,
+                      }}
+                    >
+{JSON.stringify(item.value, null, 2)}
+                    </pre>
                   </div>
                 </div>
               </article>
