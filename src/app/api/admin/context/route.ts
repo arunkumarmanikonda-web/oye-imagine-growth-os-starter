@@ -1,8 +1,13 @@
-import { NextResponse } from "next/server";
+import { adminJson, adminError, adminUnauthorized } from "@/lib/admin-api";
+import { requireAdmin } from "@/lib/admin-route";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getAdminContexts } from "@/lib/admin/context";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) {
+    return adminAuthError;
+  }
   try {
     const supabase = await createSupabaseServerClient();
     const {
@@ -11,12 +16,12 @@ export async function GET() {
     } = await supabase.auth.getUser();
 
     if (error || !user) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+      return adminJson({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const { active, options } = await getAdminContexts();
 
-    return NextResponse.json({
+    return adminJson({
       ok: true,
       user: {
         id: user.id,
@@ -26,7 +31,7 @@ export async function GET() {
       options,
     });
   } catch (error) {
-    return NextResponse.json(
+    return adminJson(
       {
         ok: false,
         error: error instanceof Error ? error.message : "Unknown error",

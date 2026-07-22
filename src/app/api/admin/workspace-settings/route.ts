@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { adminJson, adminError, adminUnauthorized } from "@/lib/admin-api";
+import { requireAdmin } from "@/lib/admin-route";
+import { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
@@ -216,18 +218,22 @@ async function writeVersion(
 }
 
 export async function GET(request: NextRequest) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) {
+    return adminAuthError;
+  }
   try {
     const user = await requireUser();
 
     if (!user) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+      return adminJson({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const serviceClient = createServiceClient();
     const active = await getActiveContext(serviceClient);
 
     if (!active) {
-      return NextResponse.json(
+      return adminJson(
         { ok: false, error: "No active admin workspace selected" },
         { status: 400 }
       );
@@ -252,7 +258,7 @@ export async function GET(request: NextRequest) {
     const { data: items, error: itemsError } = await settingsQuery;
 
     if (itemsError) {
-      return NextResponse.json({ ok: false, error: itemsError.message }, { status: 500 });
+      return adminJson({ ok: false, error: itemsError.message }, { status: 500 });
     }
 
     let versionsQuery = serviceClient
@@ -273,10 +279,10 @@ export async function GET(request: NextRequest) {
     const { data: recentVersions, error: versionsError } = await versionsQuery;
 
     if (versionsError) {
-      return NextResponse.json({ ok: false, error: versionsError.message }, { status: 500 });
+      return adminJson({ ok: false, error: versionsError.message }, { status: 500 });
     }
 
-    return NextResponse.json({
+    return adminJson({
       ok: true,
       active,
       filters: {
@@ -289,7 +295,7 @@ export async function GET(request: NextRequest) {
       recentVersions: (recentVersions ?? []) as SettingVersionRow[],
     });
   } catch (error) {
-    return NextResponse.json(
+    return adminJson(
       { ok: false, error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
@@ -297,11 +303,15 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) {
+    return adminAuthError;
+  }
   try {
     const user = await requireUser();
 
     if (!user) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+      return adminJson({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -309,21 +319,21 @@ export async function PUT(request: NextRequest) {
     const value = body?.value;
 
     if (!key || !isValidKey(key)) {
-      return NextResponse.json(
+      return adminJson(
         { ok: false, error: "Invalid key. Use letters, numbers, dot, underscore, or dash." },
         { status: 400 }
       );
     }
 
     if (value === undefined) {
-      return NextResponse.json({ ok: false, error: "value is required" }, { status: 400 });
+      return adminJson({ ok: false, error: "value is required" }, { status: 400 });
     }
 
     const serviceClient = createServiceClient();
     const active = await getActiveContext(serviceClient);
 
     if (!active) {
-      return NextResponse.json(
+      return adminJson(
         { ok: false, error: "No active admin workspace selected" },
         { status: 400 }
       );
@@ -358,7 +368,7 @@ export async function PUT(request: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+      return adminJson({ ok: false, error: error.message }, { status: 500 });
     }
 
     await writeVersion(
@@ -381,13 +391,13 @@ export async function PUT(request: NextRequest) {
       { key, settingId: row.id }
     );
 
-    return NextResponse.json({
+    return adminJson({
       ok: true,
       active,
       item: row as SettingRow,
     });
   } catch (error) {
-    return NextResponse.json(
+    return adminJson(
       { ok: false, error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
@@ -395,25 +405,29 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) {
+    return adminAuthError;
+  }
   try {
     const user = await requireUser();
 
     if (!user) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+      return adminJson({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json().catch(() => null);
     const versionId = typeof body?.versionId === "string" ? body.versionId : "";
 
     if (!versionId) {
-      return NextResponse.json({ ok: false, error: "versionId is required" }, { status: 400 });
+      return adminJson({ ok: false, error: "versionId is required" }, { status: 400 });
     }
 
     const serviceClient = createServiceClient();
     const active = await getActiveContext(serviceClient);
 
     if (!active) {
-      return NextResponse.json(
+      return adminJson(
         { ok: false, error: "No active admin workspace selected" },
         { status: 400 }
       );
@@ -427,7 +441,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (versionError || !version) {
-      return NextResponse.json({ ok: false, error: "Version not found" }, { status: 404 });
+      return adminJson({ ok: false, error: "Version not found" }, { status: 404 });
     }
 
     const { data: existing } = await serviceClient
@@ -459,7 +473,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (restoreError) {
-      return NextResponse.json({ ok: false, error: restoreError.message }, { status: 500 });
+      return adminJson({ ok: false, error: restoreError.message }, { status: 500 });
     }
 
     await writeVersion(
@@ -486,14 +500,14 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    return NextResponse.json({
+    return adminJson({
       ok: true,
       active,
       item: row as SettingRow,
       restoredFromVersionId: version.id,
     });
   } catch (error) {
-    return NextResponse.json(
+    return adminJson(
       { ok: false, error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
@@ -501,25 +515,29 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) {
+    return adminAuthError;
+  }
   try {
     const user = await requireUser();
 
     if (!user) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+      return adminJson({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json().catch(() => null);
     const id = typeof body?.id === "string" ? body.id : "";
 
     if (!id) {
-      return NextResponse.json({ ok: false, error: "id is required" }, { status: 400 });
+      return adminJson({ ok: false, error: "id is required" }, { status: 400 });
     }
 
     const serviceClient = createServiceClient();
     const active = await getActiveContext(serviceClient);
 
     if (!active) {
-      return NextResponse.json(
+      return adminJson(
         { ok: false, error: "No active admin workspace selected" },
         { status: 400 }
       );
@@ -533,7 +551,7 @@ export async function DELETE(request: NextRequest) {
       .single();
 
     if (existingError || !existing) {
-      return NextResponse.json({ ok: false, error: "Setting not found" }, { status: 404 });
+      return adminJson({ ok: false, error: "Setting not found" }, { status: 404 });
     }
 
     await writeVersion(
@@ -555,7 +573,7 @@ export async function DELETE(request: NextRequest) {
       .eq("workspace_id", active.workspaceId);
 
     if (deleteError) {
-      return NextResponse.json({ ok: false, error: deleteError.message }, { status: 500 });
+      return adminJson({ ok: false, error: deleteError.message }, { status: 500 });
     }
 
     await writeAudit(
@@ -566,14 +584,14 @@ export async function DELETE(request: NextRequest) {
       { key: existing.key, settingId: existing.id }
     );
 
-    return NextResponse.json({
+    return adminJson({
       ok: true,
       active,
       deletedId: existing.id,
       deletedKey: existing.key,
     });
   } catch (error) {
-    return NextResponse.json(
+    return adminJson(
       { ok: false, error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );

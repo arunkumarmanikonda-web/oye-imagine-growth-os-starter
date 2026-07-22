@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { adminJson, adminError, adminUnauthorized } from "@/lib/admin-api";
+import { requireAdmin } from "@/lib/admin-route";
 import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
@@ -113,7 +114,11 @@ async function getActiveContext(client: AnyClient): Promise<{
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) {
+    return adminAuthError;
+  }
   const env = {
     NEXT_PUBLIC_SUPABASE_URL: hasEnv("NEXT_PUBLIC_SUPABASE_URL"),
     NEXT_PUBLIC_SUPABASE_ANON_KEY: hasEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
@@ -130,7 +135,7 @@ export async function GET() {
   const client = getServiceClient();
 
   if (!client) {
-    return NextResponse.json(
+    return adminJson(
       {
         ok: true,
         generatedAt: new Date().toISOString(),
@@ -191,7 +196,7 @@ export async function GET() {
     getLatestTimestamp(client, "admin_audit_events", "created_at"),
   ]);
 
-  return NextResponse.json(
+  return adminJson(
     {
       ok: true,
       generatedAt: new Date().toISOString(),

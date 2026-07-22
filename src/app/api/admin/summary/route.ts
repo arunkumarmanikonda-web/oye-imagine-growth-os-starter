@@ -196,6 +196,10 @@ function executionSummary(execution: Record<string, unknown>) {
 }
 
 export async function GET(request: NextRequest) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) {
+    return adminAuthError;
+  }
   try {
   const adminAuthError = requireAdmin(request);
   if (adminAuthError) {

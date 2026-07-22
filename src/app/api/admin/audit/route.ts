@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { adminJson, adminError, adminUnauthorized } from "@/lib/admin-api";
+import { requireAdmin } from "@/lib/admin-route";
+import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { env } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -17,6 +19,10 @@ function createServiceRoleClient() {
 }
 
 export async function GET(request: NextRequest) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) {
+    return adminAuthError;
+  }
   try {
     const supabase = await createSupabaseServerClient();
     const {
@@ -25,7 +31,7 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+      return adminJson({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const action = request.nextUrl.searchParams.get("action")?.trim() ?? "";
@@ -47,13 +53,13 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      return NextResponse.json(
+      return adminJson(
         { ok: false, error: error.message },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({
+    return adminJson({
       ok: true,
       filters: {
         action,
@@ -62,7 +68,7 @@ export async function GET(request: NextRequest) {
       items: data ?? [],
     });
   } catch (error) {
-    return NextResponse.json(
+    return adminJson(
       {
         ok: false,
         error: error instanceof Error ? error.message : "Unknown error",

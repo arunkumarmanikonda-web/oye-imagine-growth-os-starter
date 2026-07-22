@@ -1,3 +1,5 @@
+import { adminJson, adminError, adminUnauthorized } from "@/lib/admin-api";
+import { requireAdmin } from "@/lib/admin-route";
 import { createClient } from "@supabase/supabase-js";
 import { adminError, adminJson, adminUnauthorized } from "@/lib/admin-api";
 import {
@@ -6,6 +8,10 @@ import {
 } from "@/lib/admin-auth";
 
 export async function GET(request: Request) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) {
+    return adminAuthError;
+  }
   const auth = authorizeAdminRequest(request);
   if (!auth.ok) {
     return adminUnauthorized(auth.reason);

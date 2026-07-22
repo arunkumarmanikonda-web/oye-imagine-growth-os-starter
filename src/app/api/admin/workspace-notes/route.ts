@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { adminJson, adminError, adminUnauthorized } from "@/lib/admin-api";
+import { requireAdmin } from "@/lib/admin-route";
+import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { env } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -25,6 +27,10 @@ type WorkspaceNoteBody = {
 };
 
 export async function GET(request: NextRequest) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) {
+    return adminAuthError;
+  }
   try {
     const supabase = await createSupabaseServerClient();
     const {
@@ -33,7 +39,7 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+      return adminJson({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const active = await requireActiveAdminContext();
@@ -61,10 +67,10 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+      return adminJson({ ok: false, error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({
+    return adminJson({
       ok: true,
       active,
       filters: {
@@ -74,7 +80,7 @@ export async function GET(request: NextRequest) {
       items: data ?? [],
     });
   } catch (error) {
-    return NextResponse.json(
+    return adminJson(
       { ok: false, error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
@@ -82,6 +88,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) {
+    return adminAuthError;
+  }
   try {
     const supabase = await createSupabaseServerClient();
     const {
@@ -90,7 +100,7 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+      return adminJson({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const body = (await request.json()) as WorkspaceNoteBody;
@@ -98,7 +108,7 @@ export async function POST(request: NextRequest) {
     const noteBody = body.body?.trim() ?? "";
 
     if (!title) {
-      return NextResponse.json({ ok: false, error: "title is required" }, { status: 400 });
+      return adminJson({ ok: false, error: "title is required" }, { status: 400 });
     }
 
     const active = await requireActiveAdminContext();
@@ -121,7 +131,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+      return adminJson({ ok: false, error: error.message }, { status: 500 });
     }
 
     try {
@@ -141,12 +151,12 @@ export async function POST(request: NextRequest) {
       console.error("Failed to write workspace note create audit event", auditError);
     }
 
-    return NextResponse.json({
+    return adminJson({
       ok: true,
       item: data,
     });
   } catch (error) {
-    return NextResponse.json(
+    return adminJson(
       { ok: false, error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
@@ -154,6 +164,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) {
+    return adminAuthError;
+  }
   try {
     const supabase = await createSupabaseServerClient();
     const {
@@ -162,7 +176,7 @@ export async function PUT(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+      return adminJson({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const body = (await request.json()) as WorkspaceNoteBody;
@@ -171,11 +185,11 @@ export async function PUT(request: NextRequest) {
     const noteBody = body.body?.trim() ?? "";
 
     if (!id) {
-      return NextResponse.json({ ok: false, error: "id is required" }, { status: 400 });
+      return adminJson({ ok: false, error: "id is required" }, { status: 400 });
     }
 
     if (!title) {
-      return NextResponse.json({ ok: false, error: "title is required" }, { status: 400 });
+      return adminJson({ ok: false, error: "title is required" }, { status: 400 });
     }
 
     const active = await requireActiveAdminContext();
@@ -197,7 +211,7 @@ export async function PUT(request: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+      return adminJson({ ok: false, error: error.message }, { status: 500 });
     }
 
     try {
@@ -217,12 +231,12 @@ export async function PUT(request: NextRequest) {
       console.error("Failed to write workspace note update audit event", auditError);
     }
 
-    return NextResponse.json({
+    return adminJson({
       ok: true,
       item: data,
     });
   } catch (error) {
-    return NextResponse.json(
+    return adminJson(
       { ok: false, error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
@@ -230,6 +244,10 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) {
+    return adminAuthError;
+  }
   try {
     const supabase = await createSupabaseServerClient();
     const {
@@ -238,14 +256,14 @@ export async function DELETE(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+      return adminJson({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const id = request.nextUrl.searchParams.get("id")?.trim() ?? "";
     const mode = request.nextUrl.searchParams.get("mode")?.trim() ?? "archive";
 
     if (!id) {
-      return NextResponse.json({ ok: false, error: "id is required" }, { status: 400 });
+      return adminJson({ ok: false, error: "id is required" }, { status: 400 });
     }
 
     const active = await requireActiveAdminContext();
@@ -269,7 +287,7 @@ export async function DELETE(request: NextRequest) {
         .single();
 
       if (error) {
-        return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+        return adminJson({ ok: false, error: error.message }, { status: 500 });
       }
 
       try {
@@ -289,7 +307,7 @@ export async function DELETE(request: NextRequest) {
         console.error("Failed to write workspace note restore audit event", auditError);
       }
 
-      return NextResponse.json({ ok: true, item: data });
+      return adminJson({ ok: true, item: data });
     }
 
     const { data, error } = await admin
@@ -310,7 +328,7 @@ export async function DELETE(request: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+      return adminJson({ ok: false, error: error.message }, { status: 500 });
     }
 
     try {
@@ -330,9 +348,9 @@ export async function DELETE(request: NextRequest) {
       console.error("Failed to write workspace note archive audit event", auditError);
     }
 
-    return NextResponse.json({ ok: true, item: data });
+    return adminJson({ ok: true, item: data });
   } catch (error) {
-    return NextResponse.json(
+    return adminJson(
       { ok: false, error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );

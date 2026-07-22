@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { adminJson, adminError, adminUnauthorized } from "@/lib/admin-api";
+import { requireAdmin } from "@/lib/admin-route";
 import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
@@ -216,13 +217,17 @@ async function resolveActorUserId(client: AnyClient, actorEmail: string): Promis
   return null;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) {
+    return adminAuthError;
+  }
   try {
     const client = getServiceClient();
     const activeContext = await getActiveContext(client);
 
     if (!activeContext.workspaceId) {
-      return NextResponse.json(
+      return adminJson(
         {
           ok: true,
           activeContext,
@@ -235,7 +240,7 @@ export async function GET() {
 
     const payload = await loadSections(client, activeContext.workspaceId);
 
-    return NextResponse.json(
+    return adminJson(
       {
         ok: true,
         activeContext,
@@ -245,7 +250,7 @@ export async function GET() {
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
-    return NextResponse.json(
+    return adminJson(
       {
         ok: false,
         error: error instanceof Error ? error.message : "Failed to load onboarding data.",
@@ -256,13 +261,17 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) {
+    return adminAuthError;
+  }
   try {
     const body = await request.json().catch(() => null);
     const section = normalizeIncomingSection(body?.section);
     const value = body?.value;
 
     if (!section) {
-      return NextResponse.json(
+      return adminJson(
         { ok: false, error: "Invalid onboarding section." },
         { status: 400, headers: { "Cache-Control": "no-store" } },
       );
@@ -272,7 +281,7 @@ export async function PUT(request: Request) {
     const activeContext = await getActiveContext(client);
 
     if (!activeContext.workspaceId) {
-      return NextResponse.json(
+      return adminJson(
         { ok: false, error: "No active workspace context found." },
         { status: 400, headers: { "Cache-Control": "no-store" } },
       );
@@ -381,7 +390,7 @@ export async function PUT(request: Request) {
 
     const payload = await loadSections(client, workspaceId);
 
-    return NextResponse.json(
+    return adminJson(
       {
         ok: true,
         activeContext,
@@ -391,7 +400,7 @@ export async function PUT(request: Request) {
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
-    return NextResponse.json(
+    return adminJson(
       {
         ok: false,
         error: error instanceof Error ? error.message : "Failed to save onboarding data.",
