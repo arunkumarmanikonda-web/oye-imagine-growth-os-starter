@@ -716,6 +716,23 @@ export default function AdminPage() {
           </a>
         </div>
       </section>
+      <section className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-sm font-medium uppercase tracking-[0.18em] text-neutral-500">Summary</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">Workspace summary</h2>
+            <p className="mt-3 max-w-2xl text-sm text-neutral-600">
+              Review onboarding, strategy, execution, counts, and recent audit activity.
+            </p>
+          </div>
+          <a
+            href="/admin/summary"
+            className="inline-flex items-center justify-center rounded-full bg-black px-5 py-2 text-sm font-medium text-white"
+          >
+            Open summary
+          </a>
+        </div>
+      </section>
 </main>
   );
 }
