@@ -1,3 +1,5 @@
+import { adminError, adminJson, adminUnauthorized } from "@/lib/admin-api";
+import { requireAdmin } from "@/lib/admin-route";
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getAdminContexts } from "@/lib/admin/context";
@@ -7,7 +9,9 @@ type SelectContextBody = {
   workspaceId?: string;
 };
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) return adminAuthError;
   try {
     const supabase = await createSupabaseServerClient();
     const {
