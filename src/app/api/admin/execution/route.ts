@@ -159,36 +159,6 @@ function normalizePlan(input: unknown, fallback?: Partial<ExecutionPlan>): Execu
   };
 }
 
-async function requireAdmin(request: NextRequest) {
-  const expected = process.env.ADMIN_PASSWORD;
-
-  if (!expected) {
-    return { ok: true };
-  }
-
-  const cookieStore = await cookies();
-
-  const provided =
-    request.headers.get("x-admin-password") ||
-    cookieStore.get("admin-password")?.value ||
-    cookieStore.get("admin_password")?.value ||
-    cookieStore.get("admin-auth")?.value ||
-    cookieStore.get("admin_auth")?.value ||
-    cookieStore.get("admin_session")?.value ||
-    "";
-
-  if (provided === expected) {
-    return { ok: true };
-  }
-
-  const referer = request.headers.get("referer") || "";
-  if (referer.includes("/admin")) {
-    return { ok: true };
-  }
-
-  return { ok: false };
-}
-
 async function resolveActiveContext(supabase: ReturnType<typeof createAdminClient>): Promise<ActiveContext> {
   const latestSetting = await supabase
     .from("workspace_settings")
@@ -382,10 +352,10 @@ function buildPayload(args: {
 
 export async function GET(request: NextRequest) {
   try {
-    const auth = await requireAdmin(request);
-    if (!auth.ok) {
-      return adminUnauthorized("Unauthorized");
-    }
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) {
+    return adminAuthError;
+  }
 
     const supabase = createAdminClient();
     const activeContext = await resolveActiveContext(supabase);
@@ -443,10 +413,10 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const auth = await requireAdmin(request);
-    if (!auth.ok) {
-      return adminUnauthorized("Unauthorized");
-    }
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) {
+    return adminAuthError;
+  }
 
     const supabase = createAdminClient();
     const body = await request.json();

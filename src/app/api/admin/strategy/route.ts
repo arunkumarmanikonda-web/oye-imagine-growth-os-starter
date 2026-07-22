@@ -315,6 +315,10 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) {
+    return adminAuthError;
+  }
   try {
     const body = await request.json().catch(() => null);
     const incomingNotes = typeof body?.notes === "string" ? body.notes : "";

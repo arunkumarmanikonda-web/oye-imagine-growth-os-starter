@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/admin-route";
 import { adminJson, adminError, adminUnauthorized } from "@/lib/admin-api";
 import { cookies } from "next/headers";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
@@ -89,36 +89,6 @@ function asStringArray(value: unknown): string[] {
   }
 
   return [];
-}
-
-async function requireAdmin(request: NextRequest) {
-  const expected = process.env.ADMIN_PASSWORD;
-
-  if (!expected) {
-    return { ok: true };
-  }
-
-  const cookieStore = await cookies();
-
-  const provided =
-    request.headers.get("x-admin-password") ||
-    cookieStore.get("admin-password")?.value ||
-    cookieStore.get("admin_password")?.value ||
-    cookieStore.get("admin-auth")?.value ||
-    cookieStore.get("admin_auth")?.value ||
-    cookieStore.get("admin_session")?.value ||
-    "";
-
-  if (provided === expected) {
-    return { ok: true };
-  }
-
-  const referer = request.headers.get("referer") || "";
-  if (referer.includes("/admin")) {
-    return { ok: true };
-  }
-
-  return { ok: false };
 }
 
 async function resolveActiveContext(supabase: ReturnType<typeof createAdminClient>): Promise<ActiveContext> {
@@ -227,10 +197,10 @@ function executionSummary(execution: Record<string, unknown>) {
 
 export async function GET(request: NextRequest) {
   try {
-    const auth = await requireAdmin(request);
-    if (!auth.ok) {
-      return adminUnauthorized("Unauthorized");
-    }
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) {
+    return adminAuthError;
+  }
 
     const supabase = createAdminClient();
     const activeContext = await resolveActiveContext(supabase);
