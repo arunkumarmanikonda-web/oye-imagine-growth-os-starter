@@ -1,5 +1,4 @@
-import { adminJson, adminError, adminUnauthorized } from "@/lib/admin-api";
-import { requireAdmin } from "@/lib/admin-route";
+import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { env } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -19,11 +18,7 @@ function createServiceRoleClient() {
   );
 }
 
-export async function GET(request: Request) {
-  const adminAuthError = requireAdmin(request);
-  if (adminAuthError) {
-    return adminAuthError;
-  }
+export async function GET() {
   try {
     const supabase = await createSupabaseServerClient();
     const {
@@ -32,7 +27,7 @@ export async function GET(request: Request) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return adminJson({ ok: false, error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const active = await requireActiveAdminContext();
@@ -46,7 +41,7 @@ export async function GET(request: Request) {
 
     const summaryError = tenantError || brandError || workspaceError;
     if (summaryError) {
-      return adminJson({ ok: false, error: summaryError.message }, { status: 500 });
+      return NextResponse.json({ ok: false, error: summaryError.message }, { status: 500 });
     }
 
     try {
@@ -66,7 +61,7 @@ export async function GET(request: Request) {
       console.error("Failed to write workspace summary audit event", auditError);
     }
 
-    return adminJson({
+    return NextResponse.json({
       ok: true,
       active,
       counts: {
@@ -76,7 +71,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    return adminJson(
+    return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );

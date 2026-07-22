@@ -351,10 +351,6 @@ function buildPayload(args: {
 }
 
 export async function GET(request: NextRequest) {
-  const adminAuthError = requireAdmin(request);
-  if (adminAuthError) {
-    return adminAuthError;
-  }
   try {
   const adminAuthError = requireAdmin(request);
   if (adminAuthError) {
@@ -416,10 +412,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const adminAuthError = requireAdmin(request);
-  if (adminAuthError) {
-    return adminAuthError;
-  }
   try {
   const adminAuthError = requireAdmin(request);
   if (adminAuthError) {

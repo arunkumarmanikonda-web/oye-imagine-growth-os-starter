@@ -1,6 +1,4 @@
-import { adminJson, adminError, adminUnauthorized } from "@/lib/admin-api";
-import { requireAdmin } from "@/lib/admin-route";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getAdminContexts } from "@/lib/admin/context";
 import { logAdminAuditEvent } from "@/lib/admin/audit";
@@ -10,10 +8,6 @@ type SelectContextBody = {
 };
 
 export async function POST(request: NextRequest) {
-  const adminAuthError = requireAdmin(request);
-  if (adminAuthError) {
-    return adminAuthError;
-  }
   try {
     const supabase = await createSupabaseServerClient();
     const {
@@ -22,14 +16,14 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return adminJson({ ok: false, error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const body = (await request.json()) as SelectContextBody;
     const workspaceId = body.workspaceId?.trim();
 
     if (!workspaceId) {
-      return adminJson(
+      return NextResponse.json(
         { ok: false, error: "workspaceId is required" },
         { status: 400 }
       );
@@ -39,13 +33,13 @@ export async function POST(request: NextRequest) {
     const selected = options.find((item) => item.workspaceId === workspaceId);
 
     if (!selected) {
-      return adminJson(
+      return NextResponse.json(
         { ok: false, error: "Invalid workspaceId" },
         { status: 400 }
       );
     }
 
-    const response = adminJson({
+    const response = NextResponse.json({
       ok: true,
       active: selected,
     });
@@ -81,7 +75,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    return adminJson(
+    return NextResponse.json(
       {
         ok: false,
         error: error instanceof Error ? error.message : "Unknown error",

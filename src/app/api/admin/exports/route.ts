@@ -1,6 +1,4 @@
-import { adminJson, adminError, adminUnauthorized } from "@/lib/admin-api";
-import { requireAdmin } from "@/lib/admin-route";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
@@ -157,15 +155,11 @@ function fileNameFor(kind: string, workspaceSlug: string | null): string {
 }
 
 export async function GET(request: NextRequest) {
-  const adminAuthError = requireAdmin(request);
-  if (adminAuthError) {
-    return adminAuthError;
-  }
   try {
     const user = await requireUser();
 
     if (!user) {
-      return adminJson({ ok: false, error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const kind = request.nextUrl.searchParams.get("kind") || "settings";
@@ -173,7 +167,7 @@ export async function GET(request: NextRequest) {
     const active = await getActiveContext(serviceClient);
 
     if (!active) {
-      return adminJson(
+      return NextResponse.json(
         { ok: false, error: "No active admin workspace selected" },
         { status: 400 }
       );
@@ -187,7 +181,7 @@ export async function GET(request: NextRequest) {
         .order("updated_at", { ascending: false });
 
       if (error) {
-        return adminJson({ ok: false, error: error.message }, { status: 500 });
+        return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
       }
 
       const csv = toCsv(
@@ -211,7 +205,7 @@ export async function GET(request: NextRequest) {
         .order("created_at", { ascending: false });
 
       if (error) {
-        return adminJson({ ok: false, error: error.message }, { status: 500 });
+        return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
       }
 
       const csv = toCsv(
@@ -235,7 +229,7 @@ export async function GET(request: NextRequest) {
         .order("created_at", { ascending: false });
 
       if (error) {
-        return adminJson({ ok: false, error: error.message }, { status: 500 });
+        return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
       }
 
       const csv = toCsv(
@@ -251,12 +245,12 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    return adminJson(
+    return NextResponse.json(
       { ok: false, error: "Unsupported export kind" },
       { status: 400 }
     );
   } catch (error) {
-    return adminJson(
+    return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
