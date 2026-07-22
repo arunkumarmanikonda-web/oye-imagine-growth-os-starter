@@ -170,6 +170,52 @@ function normalizeIncomingSection(section: unknown): SectionId | null {
   return null;
 }
 
+async function resolveActorUserId(client: AnyClient, actorEmail: string): Promise<string | null> {
+  const auditResult = await client
+    .from("admin_audit_events")
+    .select("actor_user_id, created_at")
+    .eq("actor_email", actorEmail)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (!auditResult.error && Array.isArray(auditResult.data) && auditResult.data.length > 0) {
+    const value = auditResult.data[0]?.actor_user_id;
+    if (typeof value === "string" && value.length > 0) {
+      return value;
+    }
+  }
+
+  const notesResult = await client
+    .from("workspace_notes")
+    .select("created_by_user_id, updated_at")
+    .eq("created_by_email", actorEmail)
+    .order("updated_at", { ascending: false })
+    .limit(1);
+
+  if (!notesResult.error && Array.isArray(notesResult.data) && notesResult.data.length > 0) {
+    const value = notesResult.data[0]?.created_by_user_id;
+    if (typeof value === "string" && value.length > 0) {
+      return value;
+    }
+  }
+
+  const settingsResult = await client
+    .from("workspace_settings")
+    .select("created_by_user_id, updated_at")
+    .eq("created_by_email", actorEmail)
+    .order("updated_at", { ascending: false })
+    .limit(1);
+
+  if (!settingsResult.error && Array.isArray(settingsResult.data) && settingsResult.data.length > 0) {
+    const value = settingsResult.data[0]?.created_by_user_id;
+    if (typeof value === "string" && value.length > 0) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
 export async function GET() {
   try {
     const client = getServiceClient();
@@ -237,6 +283,11 @@ export async function PUT(request: Request) {
     const brandId = activeContext.brandId;
     const key = SECTION_KEY_MAP[section];
     const actorEmail = process.env.ADMIN_EMAIL ?? "admin@oyeimagine.com";
+    const actorUserId = await resolveActorUserId(client, actorEmail);
+
+    if (!actorUserId) {
+      throw new Error("Could not resolve actor_user_id for onboarding audit.");
+    }
 
     const existingResult = await client
       .from("workspace_settings")
@@ -312,6 +363,7 @@ export async function PUT(request: Request) {
 
     const auditResult = await client.from("admin_audit_events").insert({
       action: "admin_workspace_onboarding_saved",
+      actor_user_id: actorUserId,
       actor_email: actorEmail,
       target_type: "workspace",
       target_id: workspaceId,
