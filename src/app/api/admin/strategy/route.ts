@@ -177,9 +177,6 @@ function generateStrategyPlan(sections: StrategySections, existingNotes: string)
   const tone = nonEmpty(brand.tone, "clear and trusted");
   const audience = nonEmpty(brand.audience, "the core audience");
   const valueProposition = nonEmpty(brand.valueProposition, "a clear business offer");
-
-  $null = $businessName
-
   const recommendedChannels = channels.length > 0
     ? channels
     : ["Meta Ads", "Google Ads", "Email"];
