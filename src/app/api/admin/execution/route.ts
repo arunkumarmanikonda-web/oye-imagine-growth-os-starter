@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/admin-route";
 import { adminJson, adminError, adminUnauthorized } from "@/lib/admin-api";
 import { cookies } from "next/headers";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
