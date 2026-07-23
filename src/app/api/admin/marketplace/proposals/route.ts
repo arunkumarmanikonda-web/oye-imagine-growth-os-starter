@@ -65,6 +65,21 @@ function normalizeDeliverables(value: unknown): string[] {
 
   return [];
 }
+async function appendEvent(
+  supabase: ReturnType<typeof getAdminClient>,
+  requestId: string,
+  eventType: string,
+  payload: Record<string, unknown>,
+  proposalId?: string | null,
+) {
+  await supabase.from("marketplace_request_events").insert({
+    request_id: requestId,
+    proposal_id: proposalId ?? null,
+    event_type: eventType,
+    actor: "admin",
+    payload,
+  });
+}
 
 export async function GET(request: NextRequest) {
   const unauthorized = requireAdmin(request);
@@ -329,6 +344,18 @@ export async function PUT(request: NextRequest) {
         { status: 500, headers: { "Cache-Control": "no-store" } }
       );
     }
+
+    await appendEvent(
+      supabase,
+      existingProposal.request_id,
+      "proposal_status_changed",
+      {
+        fromStatus: existingProposal.status,
+        toStatus: parsed.status,
+        title: existingProposal.title,
+      },
+      existingProposal.id,
+    );
 
     if (parsed.status === "accepted") {
       await supabase
