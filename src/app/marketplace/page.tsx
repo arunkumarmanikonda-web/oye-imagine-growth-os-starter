@@ -13,14 +13,34 @@ type Service = {
   sort_order: number;
 };
 
-type ApiResponse = {
+type Specialist = {
+  id: string;
+  slug: string;
+  full_name: string;
+  title: string;
+  primary_category: string;
+  bio: string;
+  skills: string[];
+  languages: string[];
+  verified: boolean;
+  sort_order: number;
+};
+
+type ServicesResponse = {
   ok: boolean;
   services?: Service[];
   error?: string;
 };
 
+type SpecialistsResponse = {
+  ok: boolean;
+  specialists?: Specialist[];
+  error?: string;
+};
+
 export default function MarketplacePage() {
   const [services, setServices] = useState<Service[]>([]);
+  const [specialists, setSpecialists] = useState<Specialist[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -39,34 +59,47 @@ export default function MarketplacePage() {
   useEffect(() => {
     let active = true;
 
-    async function loadServices() {
+    async function loadData() {
       setLoading(true);
       setLoadError("");
 
       try {
-        const response = await fetch("/api/marketplace/services", { cache: "no-store" });
-        const json = (await response.json()) as ApiResponse;
+        const [servicesResponse, specialistsResponse] = await Promise.all([
+          fetch("/api/marketplace/services", { cache: "no-store" }),
+          fetch("/api/marketplace/specialists", { cache: "no-store" }),
+        ]);
 
-        if (!response.ok || !json.ok) {
-          throw new Error(json.error || "Failed to load services.");
+        const servicesJson = (await servicesResponse.json()) as ServicesResponse;
+        const specialistsJson = (await specialistsResponse.json()) as SpecialistsResponse;
+
+        if (!servicesResponse.ok || !servicesJson.ok) {
+          throw new Error(servicesJson.error || "Failed to load services.");
+        }
+
+        if (!specialistsResponse.ok || !specialistsJson.ok) {
+          throw new Error(specialistsJson.error || "Failed to load specialists.");
         }
 
         if (!active) return;
 
-        const nextServices = json.services ?? [];
+        const nextServices = servicesJson.services ?? [];
+        const nextSpecialists = specialistsJson.specialists ?? [];
+
         setServices(nextServices);
+        setSpecialists(nextSpecialists);
+
         if (!serviceSlug && nextServices.length > 0) {
           setServiceSlug(nextServices[0].slug);
         }
       } catch (error) {
         if (!active) return;
-        setLoadError(error instanceof Error ? error.message : "Failed to load services.");
+        setLoadError(error instanceof Error ? error.message : "Failed to load marketplace data.");
       } finally {
         if (active) setLoading(false);
       }
     }
 
-    loadServices();
+    loadData();
 
     return () => {
       active = false;
@@ -137,10 +170,16 @@ export default function MarketplacePage() {
             Find execution partners without leaving the Growth OS
           </h1>
           <p className="mt-4 max-w-3xl text-base text-neutral-300 sm:text-lg">
-            Browse specialist-led services, capture a structured brief, and route demand into a governed
+            Browse specialist-led services, discover vetted execution talent, and route demand into a governed
             marketplace workflow.
           </p>
         </div>
+
+        {loadError ? (
+          <div className="mb-8 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+            {loadError}
+          </div>
+        ) : null}
 
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
           <section className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-fuchsia-950/20">
@@ -148,12 +187,6 @@ export default function MarketplacePage() {
               <h2 className="text-2xl font-semibold">Service catalog</h2>
               {loading ? <span className="text-sm text-neutral-400">Loading�</span> : null}
             </div>
-
-            {loadError ? (
-              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
-                {loadError}
-              </div>
-            ) : null}
 
             <div className="grid gap-4">
               {services.map((service) => {
@@ -305,6 +338,80 @@ export default function MarketplacePage() {
             </form>
           </section>
         </div>
+
+        <section className="mt-10 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-fuchsia-950/20">
+          <div className="mb-6">
+            <p className="text-sm uppercase tracking-[0.2em] text-fuchsia-300">Specialists</p>
+            <h2 className="mt-2 text-3xl font-bold">Meet the execution bench</h2>
+            <p className="mt-3 max-w-3xl text-neutral-300">
+              Discover category specialists who can be assigned through the Oye !magine marketplace workflow.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {specialists.map((specialist) => (
+              <div
+                key={specialist.id}
+                className="rounded-2xl border border-white/10 bg-black/20 p-5"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.18em] text-fuchsia-200">
+                      {specialist.primary_category}
+                    </p>
+                    <h3 className="mt-2 text-xl font-semibold">{specialist.full_name}</h3>
+                    <p className="mt-1 text-sm text-neutral-300">{specialist.title}</p>
+                  </div>
+                  {specialist.verified ? (
+                    <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-emerald-200">
+                      Verified
+                    </span>
+                  ) : (
+                    <span className="rounded-full border border-white/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-neutral-400">
+                      Emerging
+                    </span>
+                  )}
+                </div>
+
+                <p className="mt-4 text-sm leading-6 text-neutral-300">{specialist.bio}</p>
+
+                <div className="mt-4">
+                  <p className="mb-2 text-xs uppercase tracking-[0.18em] text-neutral-400">Skills</p>
+                  <div className="flex flex-wrap gap-2">
+                    {specialist.skills.map((skill) => (
+                      <span
+                        key={skill}
+                        className="rounded-full border border-white/10 px-3 py-1 text-xs text-neutral-200"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <p className="mb-2 text-xs uppercase tracking-[0.18em] text-neutral-400">Languages</p>
+                  <div className="flex flex-wrap gap-2">
+                    {specialist.languages.map((language) => (
+                      <span
+                        key={language}
+                        className="rounded-full bg-white/5 px-3 py-1 text-xs text-neutral-300"
+                      >
+                        {language}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {!loading && specialists.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-white/10 p-6 text-sm text-neutral-400">
+                No specialists found.
+              </div>
+            ) : null}
+          </div>
+        </section>
       </section>
     </main>
   );
