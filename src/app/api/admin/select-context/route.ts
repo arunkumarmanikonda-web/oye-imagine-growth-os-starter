@@ -1,7 +1,5 @@
-import { adminError, adminJson, adminUnauthorized } from "@/lib/admin-api";
+import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-route";
-import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getAdminContexts } from "@/lib/admin/context";
 import { logAdminAuditEvent } from "@/lib/admin/audit";
 
@@ -12,17 +10,8 @@ type SelectContextBody = {
 export async function POST(request: Request) {
   const adminAuthError = requireAdmin(request);
   if (adminAuthError) return adminAuthError;
+
   try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
-
     const body = (await request.json()) as SelectContextBody;
     const workspaceId = body.workspaceId?.trim();
 
@@ -59,8 +48,8 @@ export async function POST(request: Request) {
     try {
       await logAdminAuditEvent({
         event: "admin_context_switched",
-        actorUserId: user.id,
-        actorEmail: user.email ?? null,
+        actorUserId: "admin-secret",
+        actorEmail: "admin-secret@local",
         tenantId: selected.tenantId,
         brandId: selected.brandId,
         workspaceId: selected.workspaceId,
@@ -71,6 +60,7 @@ export async function POST(request: Request) {
           nextWorkspaceId: selected.workspaceId,
           nextWorkspaceSlug: selected.workspaceSlug,
           nextTenantSlug: selected.tenantSlug,
+          authMode: "admin-secret",
         },
       });
     } catch (auditError) {
