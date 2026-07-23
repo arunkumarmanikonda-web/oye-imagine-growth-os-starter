@@ -47,12 +47,35 @@ type EventRow = {
   created_at: string;
 };
 
+type SpecialistRow = {
+  id: string;
+  slug: string;
+  name: string;
+};
+
 function formatInr(value: number) {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(value);
+}
+
+function formatEventLabel(eventType: string) {
+  switch (eventType) {
+    case "proposal_created":
+      return "Proposal created";
+    case "proposal_status_changed":
+      return "Proposal status changed";
+    case "request_closed":
+      return "Request closed";
+    case "request_reopened":
+      return "Request reopened";
+    case "request_status_changed":
+      return "Request status changed";
+    default:
+      return eventType.replace(/_/g, " ");
+  }
 }
 
 export default function MarketplaceRequestDetailPage() {
@@ -62,10 +85,12 @@ export default function MarketplaceRequestDetailPage() {
   const [request, setRequest] = useState<RequestRow | null>(null);
   const [proposals, setProposals] = useState<ProposalRow[]>([]);
   const [events, setEvents] = useState<EventRow[]>([]);
+  const [specialists, setSpecialists] = useState<SpecialistRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyProposalId, setBusyProposalId] = useState<string | null>(null);
   const [busyRequestAction, setBusyRequestAction] = useState<string | null>(null);
   const [creatingProposal, setCreatingProposal] = useState(false);
+  const [proposalFormError, setProposalFormError] = useState<string | null>(null);
   const [proposalForm, setProposalForm] = useState({
     specialistSlug: "",
     title: "",
@@ -84,7 +109,7 @@ export default function MarketplaceRequestDetailPage() {
     setError(null);
 
     try {
-      const [requestRes, proposalsRes, eventsRes] = await Promise.all([
+      const [requestRes, proposalsRes, eventsRes, specialistsRes] = await Promise.all([
         fetch("/api/admin/marketplace/requests?id=" + requestId, {
           headers: { "x-admin-secret": ADMIN_SECRET },
           cache: "no-store",
@@ -97,11 +122,15 @@ export default function MarketplaceRequestDetailPage() {
           headers: { "x-admin-secret": ADMIN_SECRET },
           cache: "no-store",
         }),
+        fetch("/api/marketplace/specialists", {
+          cache: "no-store",
+        }),
       ]);
 
       const requestJson = await requestRes.json();
       const proposalsJson = await proposalsRes.json();
       const eventsJson = await eventsRes.json();
+      const specialistsJson = await specialistsRes.json();
 
       if (!requestRes.ok) {
         throw new Error(requestJson?.detail || requestJson?.error || "Failed to load request.");
@@ -115,9 +144,14 @@ export default function MarketplaceRequestDetailPage() {
         throw new Error(eventsJson?.detail || eventsJson?.error || "Failed to load events.");
       }
 
+      if (!specialistsRes.ok) {
+        throw new Error(specialistsJson?.detail || specialistsJson?.error || "Failed to load specialists.");
+      }
+
       setRequest(requestJson?.request ?? null);
       setProposals(Array.isArray(proposalsJson?.proposals) ? proposalsJson.proposals : []);
       setEvents(Array.isArray(eventsJson?.events) ? eventsJson.events : []);
+      setSpecialists(Array.isArray(specialistsJson?.specialists) ? specialistsJson.specialists : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load request detail.");
     } finally {
@@ -134,12 +168,40 @@ export default function MarketplaceRequestDetailPage() {
 
     setCreatingProposal(true);
     setError(null);
+    setProposalFormError(null);
 
     try {
       const deliverables = proposalForm.deliverablesText
         .split(/\r?\n|,/)
         .map((item) => item.trim())
         .filter(Boolean);
+
+      const priceInr = Number(proposalForm.priceInr);
+      const timelineDays = Number(proposalForm.timelineDays);
+
+      if (!proposalForm.specialistSlug.trim()) {
+        throw new Error("Specialist is required.");
+      }
+
+      if (!proposalForm.title.trim()) {
+        throw new Error("Proposal title is required.");
+      }
+
+      if (!proposalForm.scopeSummary.trim()) {
+        throw new Error("Scope summary is required.");
+      }
+
+      if (deliverables.length === 0) {
+        throw new Error("At least one deliverable is required.");
+      }
+
+      if (!Number.isFinite(priceInr) || priceInr <= 0) {
+        throw new Error("Price must be greater than 0.");
+      }
+
+      if (!Number.isFinite(timelineDays) || timelineDays <= 0) {
+        throw new Error("Timeline must be greater than 0.");
+      }
 
       const res = await fetch("/api/admin/marketplace/proposals", {
         method: "POST",
@@ -153,8 +215,8 @@ export default function MarketplaceRequestDetailPage() {
           title: proposalForm.title.trim(),
           scopeSummary: proposalForm.scopeSummary.trim(),
           deliverables,
-          priceInr: Number(proposalForm.priceInr),
-          timelineDays: Number(proposalForm.timelineDays),
+          priceInr,
+          timelineDays,
           notes: proposalForm.notes.trim() || null,
         }),
       });
@@ -177,7 +239,9 @@ export default function MarketplaceRequestDetailPage() {
 
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create proposal.");
+      const message = err instanceof Error ? err.message : "Failed to create proposal.";
+      setProposalFormError(message);
+      setError(message);
     } finally {
       setCreatingProposal(false);
     }
@@ -345,15 +409,21 @@ export default function MarketplaceRequestDetailPage() {
 
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <label className="text-sm">
-                <div className="mb-1 font-medium text-neutral-700">Specialist slug</div>
-                <input
+                <div className="mb-1 font-medium text-neutral-700">Specialist</div>
+                <select
                   value={proposalForm.specialistSlug}
                   onChange={(e) =>
                     setProposalForm((current) => ({ ...current, specialistSlug: e.target.value }))
                   }
                   className="w-full rounded-lg border px-3 py-2"
-                  placeholder="rahul-performance"
-                />
+                >
+                  <option value="">Select specialist</option>
+                  {specialists.map((specialist) => (
+                    <option key={specialist.id} value={specialist.slug}>
+                      {specialist.name} ({specialist.slug})
+                    </option>
+                  ))}
+                </select>
               </label>
 
               <label className="text-sm">
@@ -432,6 +502,12 @@ export default function MarketplaceRequestDetailPage() {
               </label>
             </div>
 
+            {proposalFormError ? (
+              <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                {proposalFormError}
+              </div>
+            ) : null}
+
             <div className="mt-4 flex justify-end">
               <button
                 type="button"
@@ -460,7 +536,7 @@ export default function MarketplaceRequestDetailPage() {
                   <article key={event.id} className="rounded-xl border p-4">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium uppercase tracking-wide text-neutral-700">
-                        {event.event_type}
+                        {formatEventLabel(event.event_type)}
                       </span>
                       <span className="text-xs text-neutral-500">
                         {event.actor || "system"} · {new Date(event.created_at).toLocaleString("en-IN")}
