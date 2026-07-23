@@ -1,16 +1,10 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 import { requireAdmin } from "@/lib/admin-route";
+import { getAdminContexts } from "@/lib/admin/context";
 
-type ActiveContext = {
-  tenantId: string;
-  tenantName: string;
-  tenantSlug: string | null;
-  brandId: string | null;
-  brandName: string | null;
+type ExportContext = {
   workspaceId: string;
-  workspaceName: string;
   workspaceSlug: string | null;
 };
 
@@ -35,53 +29,16 @@ function createServiceClient() {
   );
 }
 
-async function getActiveContext(
-  serviceClient: ReturnType<typeof createServiceClient>
-): Promise<ActiveContext | null> {
-  const cookieStore = await cookies();
-  const workspaceId = cookieStore.get("oye_admin_workspace_id")?.value;
+async function getActiveExportContext(): Promise<ExportContext | null> {
+  const { active } = await getAdminContexts();
 
-  if (!workspaceId) {
+  if (!active?.workspaceId) {
     return null;
-  }
-
-  const { data: workspace, error: workspaceError } = await serviceClient
-    .from("workspaces")
-    .select("id, name, slug, tenant_id, brand_id")
-    .eq("id", workspaceId)
-    .single();
-
-  if (workspaceError || !workspace) {
-    return null;
-  }
-
-  const { data: tenant } = await serviceClient
-    .from("tenants")
-    .select("id, display_name, slug")
-    .eq("id", workspace.tenant_id)
-    .single();
-
-  let brandName: string | null = null;
-
-  if (workspace.brand_id) {
-    const { data: brand } = await serviceClient
-      .from("brands")
-      .select("id, name")
-      .eq("id", workspace.brand_id)
-      .single();
-
-    brandName = brand?.name ?? null;
   }
 
   return {
-    tenantId: workspace.tenant_id,
-    tenantName: tenant?.display_name ?? "Unknown Tenant",
-    tenantSlug: tenant?.slug ?? null,
-    brandId: workspace.brand_id ?? null,
-    brandName,
-    workspaceId: workspace.id,
-    workspaceName: workspace.name,
-    workspaceSlug: workspace.slug ?? null,
+    workspaceId: active.workspaceId,
+    workspaceSlug: active.workspaceSlug ?? null,
   };
 }
 
@@ -124,7 +81,7 @@ export async function GET(request: Request) {
     const kind = url.searchParams.get("kind") || "settings";
 
     const serviceClient = createServiceClient();
-    const active = await getActiveContext(serviceClient);
+    const active = await getActiveExportContext();
 
     if (!active) {
       return NextResponse.json(
