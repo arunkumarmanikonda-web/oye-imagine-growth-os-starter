@@ -33,7 +33,7 @@ function requestStatusClasses(status: string) {
     case "rejected":
       return "bg-red-100 text-red-800";
     default:
-      return "bg-neutral-100 text-neutral-700";
+      return "bg-slate-100 text-slate-700";
   }
 }
 
@@ -46,7 +46,7 @@ function proposalStatusClasses(status: string) {
     case "sent":
       return "bg-amber-100 text-amber-800";
     default:
-      return "bg-neutral-100 text-neutral-700";
+      return "bg-slate-100 text-slate-700";
   }
 }
 
@@ -212,47 +212,47 @@ export default function AdminMarketplacePage() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
+    <main className="mx-auto mt-6 max-w-6xl rounded-[32px] border border-slate-200/70 bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.10),_transparent_28%),radial-gradient(circle_at_top_right,_rgba(14,165,233,0.10),_transparent_24%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] px-6 py-10 text-slate-900 shadow-2xl shadow-slate-900/10">
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Marketplace Admin</h1>
-          <p className="mt-2 text-sm text-neutral-600">
+          <p className="mt-2 text-sm text-slate-600">
             Review incoming requests, inspect proposals, and accept or reject specialist proposals.
           </p>
         </div>
         <button
           type="button"
           onClick={() => void load()}
-          className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-neutral-50"
+          className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
         >
           Refresh
         </button>
       </div>
 
       {error ? (
-        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-6 rounded-xl border border-red-200 bg-red-50/90 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       ) : null}
 
-      <section className="mb-6 rounded-2xl border bg-white p-4 shadow-sm">
+      <section className="mb-6 rounded-3xl border border-slate-200/80 bg-white/90 p-4 shadow-xl shadow-slate-200/70 backdrop-blur">
         <div className="grid gap-4 md:grid-cols-4">
           <label className="text-sm">
-            <div className="mb-1 font-medium text-neutral-700">Search</div>
+            <div className="mb-1 font-medium text-slate-700">Search</div>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Name, email, company, specialist, service"
-              className="w-full rounded-lg border px-3 py-2"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
             />
           </label>
 
           <label className="text-sm">
-            <div className="mb-1 font-medium text-neutral-700">Status</div>
+            <div className="mb-1 font-medium text-slate-700">Status</div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
             >
               <option value="all">All statuses</option>
               <option value="submitted">submitted</option>
@@ -265,11 +265,11 @@ export default function AdminMarketplacePage() {
           </label>
 
           <label className="text-sm">
-            <div className="mb-1 font-medium text-neutral-700">Specialist</div>
+            <div className="mb-1 font-medium text-slate-700">Specialist</div>
             <select
               value={specialistFilter}
               onChange={(e) => setSpecialistFilter(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
             >
               <option value="all">All specialists</option>
               {specialistOptions.map((specialist) => (
@@ -281,11 +281,11 @@ export default function AdminMarketplacePage() {
           </label>
 
           <label className="text-sm">
-            <div className="mb-1 font-medium text-neutral-700">Service</div>
+            <div className="mb-1 font-medium text-slate-700">Service</div>
             <select
               value={serviceFilter}
               onChange={(e) => setServiceFilter(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
             >
               <option value="all">All services</option>
               {serviceOptions.map((service) => (
@@ -297,28 +297,28 @@ export default function AdminMarketplacePage() {
           </label>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-neutral-600">
-          <span className="rounded-full bg-neutral-100 px-3 py-1">
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-slate-600">
+          <span className="rounded-full bg-slate-100 px-3 py-1">
             Showing {filteredRequests.length} of {requests.length}
           </span>
-          <span className="rounded-full bg-neutral-100 px-3 py-1">
+          <span className="rounded-full bg-slate-100 px-3 py-1">
             Status: {statusFilter}
           </span>
-          <span className="rounded-full bg-neutral-100 px-3 py-1">
+          <span className="rounded-full bg-slate-100 px-3 py-1">
             Specialist: {specialistFilter}
           </span>
-          <span className="rounded-full bg-neutral-100 px-3 py-1">
+          <span className="rounded-full bg-slate-100 px-3 py-1">
             Service: {serviceFilter}
           </span>
         </div>
       </section>
 
       {loading ? (
-        <div className="rounded-2xl border bg-white p-6 text-sm text-neutral-600">Loading marketplace admin data...</div>
+        <div className="rounded-3xl border border-slate-200/80 bg-white/90 p-6 text-sm text-slate-600 shadow-xl shadow-slate-200/70">Loading marketplace admin data...</div>
       ) : null}
 
       {!loading && requests.length === 0 ? (
-        <div className="rounded-2xl border bg-white p-6 text-sm text-neutral-600">No marketplace requests match the current filters.</div>
+        <div className="rounded-3xl border border-slate-200/80 bg-white/90 p-6 text-sm text-slate-600 shadow-xl shadow-slate-200/70">No marketplace requests match the current filters.</div>
       ) : null}
 
       <div className="space-y-6">
@@ -326,7 +326,7 @@ export default function AdminMarketplacePage() {
           const requestProposals = proposalsByRequest.get(request.id) ?? [];
 
           return (
-            <section key={request.id} className="rounded-2xl border bg-white p-6 shadow-sm">
+            <section key={request.id} className="rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-xl shadow-slate-200/70 backdrop-blur">
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
@@ -335,20 +335,20 @@ export default function AdminMarketplacePage() {
                     >
                       {request.status}
                     </span>
-                    <span className="text-xs text-neutral-500">{request.service_slug ?? "service-unmapped"}</span>
+                    <span className="text-xs text-slate-500">{request.service_slug ?? "service-unmapped"}</span>
                   </div>
                   <h2 className="text-xl font-semibold">{request.full_name}</h2>
-                  <p className="text-sm text-neutral-600">
+                  <p className="text-sm text-slate-600">
                     {request.company_name || "No company"} Â· {request.email}
                   </p>
-                  <p className="text-sm text-neutral-600">
+                  <p className="text-sm text-slate-600">
                     Assigned specialist: {request.assigned_specialist_name || "Unassigned"}
                   </p>
                   <div className="flex flex-wrap gap-2 pt-1">
-                    <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-700">
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-700">
                       {request.assigned_specialist_name ? "Assigned" : "Unassigned"}
                     </span>
-                    <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-700">
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-700">
                       {requestProposals.length} proposal(s)
                     </span>
                     {request.status === "closed" ? (
@@ -362,11 +362,11 @@ export default function AdminMarketplacePage() {
                 <div className="flex flex-col items-start gap-2 md:items-end">
                   <Link
                     href={`/admin/marketplace/requests/${request.id}` as Route}
-                    className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-neutral-50"
+                    className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
                   >
                     Open detail
                   </Link>
-                  <span className="text-xs text-neutral-500">
+                  <span className="text-xs text-slate-500">
                     Created {new Date(request.created_at).toLocaleString("en-IN", {
                       dateStyle: "medium",
                       timeStyle: "short",
@@ -376,28 +376,28 @@ export default function AdminMarketplacePage() {
               </div>
 
               <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <div className="rounded-xl bg-neutral-50 p-4">
-                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">Budget</div>
-                  <div className="text-sm text-neutral-800">{request.budget_range || "Not specified"}</div>
+                <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Budget</div>
+                  <div className="text-sm text-slate-800">{request.budget_range || "Not specified"}</div>
                 </div>
-                <div className="rounded-xl bg-neutral-50 p-4">
-                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">Brief</div>
-                  <div className="text-sm text-neutral-800">{request.brief}</div>
+                <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Brief</div>
+                  <div className="text-sm text-slate-800">{request.brief}</div>
                 </div>
               </div>
 
               <div className="mt-6">
-                <div className="mb-3 text-sm font-semibold text-neutral-900">Proposals</div>
+                <div className="mb-3 text-sm font-semibold text-slate-900">Proposals</div>
 
                 {requestProposals.length === 0 ? (
-                  <div className="rounded-xl border border-dashed p-4 text-sm text-neutral-500">No proposals yet.</div>
+                  <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50/70 p-4 text-sm text-slate-500">No proposals yet.</div>
                 ) : (
                   <div className="space-y-4">
                     {requestProposals.map((proposal) => {
                       const actionable = proposal.status === "sent";
 
                       return (
-                        <article key={proposal.id} className="rounded-xl border p-4">
+                        <article key={proposal.id} className="rounded-2xl border border-slate-200/80 bg-white/85 p-4 shadow-sm shadow-slate-200/60">
                           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                             <div>
                               <div className="flex flex-wrap items-center gap-2">
@@ -408,7 +408,7 @@ export default function AdminMarketplacePage() {
                                   {proposal.status}
                                 </span>
                               </div>
-                              <p className="mt-1 text-sm text-neutral-600">
+                              <p className="mt-1 text-sm text-slate-600">
                                 {proposal.specialist_name || "No specialist"} Â· {formatInr(proposal.price_inr)} Â· {proposal.timeline_days} days
                               </p>
                             </div>
@@ -418,7 +418,7 @@ export default function AdminMarketplacePage() {
                                 type="button"
                                 disabled={!actionable || busyProposalId === proposal.id}
                                 onClick={() => void updateProposal(proposal.id, "accepted")}
-                                className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                className="rounded-xl bg-gradient-to-r from-slate-900 to-indigo-700 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
                               >
                                 Accept
                               </button>
@@ -426,16 +426,16 @@ export default function AdminMarketplacePage() {
                                 type="button"
                                 disabled={!actionable || busyProposalId === proposal.id}
                                 onClick={() => void updateProposal(proposal.id, "rejected")}
-                                className="rounded-lg border px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
+                                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
                               >
                                 Reject
                               </button>
                             </div>
                           </div>
 
-                          <p className="mt-3 text-sm text-neutral-800">{proposal.scope_summary}</p>
+                          <p className="mt-3 text-sm text-slate-800">{proposal.scope_summary}</p>
 
-                          <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-neutral-700">
+                          <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700">
                             {proposal.deliverables.map((item) => (
                               <li key={item}>{item}</li>
                             ))}
