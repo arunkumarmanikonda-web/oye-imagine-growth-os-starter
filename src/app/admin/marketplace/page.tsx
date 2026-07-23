@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-type MarketplaceRequest = {
+const ADMIN_SECRET = "OYE!MAGINE2026";
+
+type RequestRow = {
   id: string;
   service_slug: string | null;
   full_name: string;
@@ -16,259 +19,262 @@ type MarketplaceRequest = {
   assigned_specialist_name: string | null;
 };
 
-type Specialist = {
+type ProposalRow = {
   id: string;
-  slug: string;
-  full_name: string;
+  request_id: string;
+  specialist_slug: string | null;
+  specialist_name: string | null;
   title: string;
-  primary_category: string;
-  verified: boolean;
-};
-
-type DraftState = {
+  scope_summary: string;
+  deliverables: string[];
+  price_inr: number;
+  timeline_days: number;
+  notes: string | null;
   status: string;
-  specialistSlug: string;
+  created_at: string;
 };
 
-const STATUSES = ["submitted", "reviewing", "assigned", "closed", "rejected"] as const;
+function formatInr(value: number) {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
 
 export default function AdminMarketplacePage() {
-  const [items, setItems] = useState<MarketplaceRequest[]>([]);
-  const [specialists, setSpecialists] = useState<Specialist[]>([]);
-  const [drafts, setDrafts] = useState<Record<string, DraftState>>({});
+  const [requests, setRequests] = useState<RequestRow[]>([]);
+  const [proposals, setProposals] = useState<ProposalRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [savingId, setSavingId] = useState("");
+  const [busyProposalId, setBusyProposalId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const specialistOptions = useMemo(
-    () => specialists.map((s) => ({ value: s.slug, label: `${s.full_name} — ${s.primary_category}` })),
-    [specialists],
-  );
-
-  function buildDrafts(requests: MarketplaceRequest[]) {
-    const next: Record<string, DraftState> = {};
-    for (const item of requests) {
-      next[item.id] = {
-        status: item.status,
-        specialistSlug: item.assigned_specialist_slug ?? "",
-      };
-    }
-    return next;
-  }
-
-  async function loadData() {
+  const load = useCallback(async () => {
     setLoading(true);
-    setError("");
+    setError(null);
 
     try {
-      const [requestsResponse, specialistsResponse] = await Promise.all([
+      const [requestsRes, proposalsRes] = await Promise.all([
         fetch("/api/admin/marketplace/requests", {
-          headers: { "x-admin-secret": "OYE!MAGINE2026" },
+          headers: { "x-admin-secret": ADMIN_SECRET },
           cache: "no-store",
         }),
-        fetch("/api/marketplace/specialists", {
+        fetch("/api/admin/marketplace/proposals", {
+          headers: { "x-admin-secret": ADMIN_SECRET },
           cache: "no-store",
         }),
       ]);
 
-      const requestsJson = await requestsResponse.json();
-      const specialistsJson = await specialistsResponse.json();
+      const requestsJson = await requestsRes.json();
+      const proposalsJson = await proposalsRes.json();
 
-      if (!requestsResponse.ok || !requestsJson.ok) {
-        throw new Error(requestsJson.error || "Failed to load marketplace requests.");
+      if (!requestsRes.ok) {
+        throw new Error(requestsJson?.detail || requestsJson?.error || "Failed to load requests.");
       }
 
-      if (!specialistsResponse.ok || !specialistsJson.ok) {
-        throw new Error(specialistsJson.error || "Failed to load specialists.");
+      if (!proposalsRes.ok) {
+        throw new Error(proposalsJson?.detail || proposalsJson?.error || "Failed to load proposals.");
       }
 
-      const nextItems = requestsJson.requests ?? [];
-      const nextSpecialists = specialistsJson.specialists ?? [];
-
-      setItems(nextItems);
-      setSpecialists(nextSpecialists);
-      setDrafts(buildDrafts(nextItems));
+      setRequests(Array.isArray(requestsJson?.requests) ? requestsJson.requests : []);
+      setProposals(Array.isArray(proposalsJson?.proposals) ? proposalsJson.proposals : []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load marketplace data.");
+      setError(err instanceof Error ? err.message : "Failed to load marketplace admin data.");
     } finally {
       setLoading(false);
     }
-  }
-
-  useEffect(() => {
-    loadData();
   }, []);
 
-  function updateDraft(id: string, patch: Partial<DraftState>) {
-    setDrafts((current) => ({
-      ...current,
-      [id]: {
-        status: current[id]?.status ?? "submitted",
-        specialistSlug: current[id]?.specialistSlug ?? "",
-        ...patch,
-      },
-    }));
-  }
+  useEffect(() => {
+    void load();
+  }, [load]);
 
-  async function saveItem(id: string) {
-    const draft = drafts[id];
-    if (!draft) return;
+  const proposalsByRequest = useMemo(() => {
+    const map = new Map<string, ProposalRow[]>();
 
-    setSavingId(id);
-    setError("");
+    for (const proposal of proposals) {
+      const list = map.get(proposal.request_id) ?? [];
+      list.push(proposal);
+      map.set(proposal.request_id, list);
+    }
+
+    return map;
+  }, [proposals]);
+
+  async function updateProposal(proposalId: string, status: "accepted" | "rejected") {
+    setBusyProposalId(proposalId);
+    setError(null);
 
     try {
-      const response = await fetch("/api/admin/marketplace/requests", {
+      const res = await fetch("/api/admin/marketplace/proposals", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-secret": "OYE!MAGINE2026",
+          "x-admin-secret": ADMIN_SECRET,
         },
-        body: JSON.stringify({
-          id,
-          status: draft.status,
-          specialistSlug: draft.specialistSlug,
-        }),
+        body: JSON.stringify({ id: proposalId, status }),
       });
 
-      const json = await response.json();
+      const json = await res.json();
 
-      if (!response.ok || !json.ok) {
-        throw new Error(json.error || "Failed to update request.");
+      if (!res.ok) {
+        throw new Error(json?.detail || json?.error || "Failed to update proposal.");
       }
 
-      setItems((current) =>
-        current.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                status: json.request?.status ?? draft.status,
-                assigned_specialist_slug: json.request?.assigned_specialist_slug ?? (draft.specialistSlug || null),
-                assigned_specialist_name:
-                  json.request?.assigned_specialist_name ??
-                  specialists.find((s) => s.slug === draft.specialistSlug)?.full_name ??
-                  null,
-              }
-            : item,
-        ),
-      );
+      await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update request.");
+      setError(err instanceof Error ? err.message : "Failed to update proposal.");
     } finally {
-      setSavingId("");
+      setBusyProposalId(null);
     }
   }
 
   return (
-    <main className="min-h-screen bg-neutral-950 px-6 py-10 text-white">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-8">
-          <p className="text-sm uppercase tracking-[0.2em] text-fuchsia-300">Admin</p>
-          <h1 className="mt-2 text-4xl font-bold">Marketplace Requests</h1>
-          <p className="mt-3 text-neutral-300">
-            Review incoming marketplace demand, assign specialists, and move each request through a workflow.
+    <main className="mx-auto max-w-6xl px-6 py-10">
+      <div className="mb-8 flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">Marketplace Admin</h1>
+          <p className="mt-2 text-sm text-neutral-600">
+            Review incoming requests, inspect proposals, and accept or reject specialist proposals.
           </p>
         </div>
+        <button
+          type="button"
+          onClick={() => void load()}
+          className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-neutral-50"
+        >
+          Refresh
+        </button>
+      </div>
 
-        {error ? (
-          <div className="mb-6 rounded-2xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200">
-            {error}
-          </div>
-        ) : null}
-
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-          {loading ? (
-            <p className="text-neutral-300">Loading…</p>
-          ) : items.length === 0 ? (
-            <p className="text-neutral-300">No marketplace requests yet.</p>
-          ) : (
-            <div className="space-y-4">
-              {items.map((item) => {
-                const draft = drafts[item.id] ?? {
-                  status: item.status,
-                  specialistSlug: item.assigned_specialist_slug ?? "",
-                };
-
-                return (
-                  <div key={item.id} className="rounded-2xl border border-white/10 bg-black/20 p-5">
-                    <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-                      <div className="space-y-3 xl:max-w-3xl">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="rounded-full bg-fuchsia-500/15 px-3 py-1 text-xs uppercase tracking-[0.18em] text-fuchsia-200">
-                            {item.service_slug || "unmapped-service"}
-                          </span>
-                          <span className="rounded-full border border-white/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-neutral-300">
-                            {item.status}
-                          </span>
-                          {item.assigned_specialist_name ? (
-                            <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-emerald-200">
-                              {item.assigned_specialist_name}
-                            </span>
-                          ) : null}
-                        </div>
-
-                        <div>
-                          <h2 className="text-xl font-semibold">{item.full_name}</h2>
-                          <p className="mt-1 text-sm text-neutral-300">
-                            {item.email}
-                            {item.company_name ? ` • ${item.company_name}` : ""}
-                            {item.budget_range ? ` • ${item.budget_range}` : ""}
-                          </p>
-                        </div>
-
-                        <p className="text-sm leading-6 text-neutral-200">{item.brief}</p>
-                      </div>
-
-                      <div className="grid w-full gap-4 xl:w-80">
-                        <div>
-                          <label className="mb-2 block text-sm font-medium text-neutral-300">Status</label>
-                          <select
-                            className="w-full rounded-xl border border-white/10 bg-neutral-900 px-3 py-3 text-sm text-white"
-                            value={draft.status}
-                            disabled={savingId === item.id}
-                            onChange={(event) => updateDraft(item.id, { status: event.target.value })}
-                          >
-                            {STATUSES.map((status) => (
-                              <option key={status} value={status}>
-                                {status}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="mb-2 block text-sm font-medium text-neutral-300">Assign specialist</label>
-                          <select
-                            className="w-full rounded-xl border border-white/10 bg-neutral-900 px-3 py-3 text-sm text-white"
-                            value={draft.specialistSlug}
-                            disabled={savingId === item.id}
-                            onChange={(event) => updateDraft(item.id, { specialistSlug: event.target.value })}
-                          >
-                            <option value="">Unassigned</option>
-                            {specialistOptions.map((specialist) => (
-                              <option key={specialist.value} value={specialist.value}>
-                                {specialist.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <button
-                          type="button"
-                          disabled={savingId === item.id}
-                          onClick={() => saveItem(item.id)}
-                          className="inline-flex items-center justify-center rounded-xl bg-fuchsia-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-fuchsia-400 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {savingId === item.id ? "Saving…" : "Save changes"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+      {error ? (
+        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
         </div>
+      ) : null}
+
+      {loading ? (
+        <div className="rounded-2xl border bg-white p-6 text-sm text-neutral-600">Loading marketplace admin data...</div>
+      ) : null}
+
+      {!loading && requests.length === 0 ? (
+        <div className="rounded-2xl border bg-white p-6 text-sm text-neutral-600">No marketplace requests found.</div>
+      ) : null}
+
+      <div className="space-y-6">
+        {requests.map((request) => {
+          const requestProposals = proposalsByRequest.get(request.id) ?? [];
+
+          return (
+            <section key={request.id} className="rounded-2xl border bg-white p-6 shadow-sm">
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium uppercase tracking-wide text-neutral-700">
+                      {request.status}
+                    </span>
+                    <span className="text-xs text-neutral-500">{request.service_slug ?? "service-unmapped"}</span>
+                  </div>
+                  <h2 className="text-xl font-semibold">{request.full_name}</h2>
+                  <p className="text-sm text-neutral-600">
+                    {request.company_name || "No company"} · {request.email}
+                  </p>
+                  <p className="text-sm text-neutral-600">
+                    Assigned specialist: {request.assigned_specialist_name || "Unassigned"}
+                  </p>
+                </div>
+
+                <div className="flex flex-col items-start gap-2 md:items-end">
+                  <Link
+                    href={"/admin/marketplace/requests/" + request.id}
+                    className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-neutral-50"
+                  >
+                    Open detail
+                  </Link>
+                  <span className="text-xs text-neutral-500">
+                    Created {new Date(request.created_at).toLocaleString("en-IN")}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <div className="rounded-xl bg-neutral-50 p-4">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">Budget</div>
+                  <div className="text-sm text-neutral-800">{request.budget_range || "Not specified"}</div>
+                </div>
+                <div className="rounded-xl bg-neutral-50 p-4">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">Brief</div>
+                  <div className="text-sm text-neutral-800">{request.brief}</div>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <div className="mb-3 text-sm font-semibold text-neutral-900">Proposals</div>
+
+                {requestProposals.length === 0 ? (
+                  <div className="rounded-xl border border-dashed p-4 text-sm text-neutral-500">No proposals yet.</div>
+                ) : (
+                  <div className="space-y-4">
+                    {requestProposals.map((proposal) => {
+                      const actionable = proposal.status === "sent";
+
+                      return (
+                        <article key={proposal.id} className="rounded-xl border p-4">
+                          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                            <div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="text-lg font-semibold">{proposal.title}</h3>
+                                <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium uppercase tracking-wide text-neutral-700">
+                                  {proposal.status}
+                                </span>
+                              </div>
+                              <p className="mt-1 text-sm text-neutral-600">
+                                {proposal.specialist_name || "No specialist"} · {formatInr(proposal.price_inr)} · {proposal.timeline_days} days
+                              </p>
+                            </div>
+
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                disabled={!actionable || busyProposalId === proposal.id}
+                                onClick={() => void updateProposal(proposal.id, "accepted")}
+                                className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                Accept
+                              </button>
+                              <button
+                                type="button"
+                                disabled={!actionable || busyProposalId === proposal.id}
+                                onClick={() => void updateProposal(proposal.id, "rejected")}
+                                className="rounded-lg border px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          </div>
+
+                          <p className="mt-3 text-sm text-neutral-800">{proposal.scope_summary}</p>
+
+                          <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-neutral-700">
+                            {proposal.deliverables.map((item) => (
+                              <li key={item}>{item}</li>
+                            ))}
+                          </ul>
+
+                          {proposal.notes ? (
+                            <div className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                              {proposal.notes}
+                            </div>
+                          ) : null}
+                        </article>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </section>
+          );
+        })}
       </div>
     </main>
   );

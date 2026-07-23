@@ -17,6 +17,12 @@ const CreateProposalSchema = z.object({
   notes: z.string().optional().nullable(),
 });
 
+const UpdateProposalSchema = z.object({
+  id: z.string().uuid(),
+  status: z.enum(["accepted", "rejected"]),
+  notes: z.string().optional().nullable(),
+});
+
 function getAdminClient() {
   return createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: {
@@ -28,6 +34,7 @@ function getAdminClient() {
 
 function requireAdmin(request: NextRequest) {
   const configured = String(process.env.ADMIN_SECRET ?? "").trim();
+
   if (!configured) {
     return NextResponse.json(
       { ok: false, error: "Unauthorized", detail: "No admin secret configured in environment." },
@@ -36,6 +43,7 @@ function requireAdmin(request: NextRequest) {
   }
 
   const supplied = request.headers.get("x-admin-secret")?.trim();
+
   if (!supplied || supplied !== configured) {
     return NextResponse.json(
       { ok: false, error: "Unauthorized" },
@@ -64,12 +72,37 @@ export async function GET(request: NextRequest) {
 
   try {
     const supabase = getAdminClient();
-    const requestId = new URL(request.url).searchParams.get("requestId")?.trim();
+    const url = new URL(request.url);
+    const requestId = url.searchParams.get("requestId")?.trim();
+    const id = url.searchParams.get("id")?.trim();
 
     let query = supabase
       .from("marketplace_proposals")
       .select("*")
       .order("created_at", { ascending: false });
+
+    if (id) {
+      const { data, error } = await query.eq("id", id).maybeSingle();
+
+      if (error) {
+        return NextResponse.json(
+          { ok: false, error: "Failed to load proposal.", detail: error.message },
+          { status: 500, headers: { "Cache-Control": "no-store" } }
+        );
+      }
+
+      if (!data) {
+        return NextResponse.json(
+          { ok: false, error: "Proposal not found." },
+          { status: 404, headers: { "Cache-Control": "no-store" } }
+        );
+      }
+
+      return NextResponse.json(
+        { ok: true, proposal: data },
+        { status: 200, headers: { "Cache-Control": "no-store" } }
+      );
+    }
 
     if (requestId) {
       query = query.eq("request_id", requestId);
@@ -122,7 +155,7 @@ export async function POST(request: NextRequest) {
 
     const { data: existingRequest, error: requestError } = await supabase
       .from("marketplace_requests")
-      .select("id, status")
+      .select("id")
       .eq("id", parsed.requestId)
       .maybeSingle();
 
@@ -235,6 +268,139 @@ export async function POST(request: NextRequest) {
       {
         ok: false,
         error: "Failed to create proposal.",
+        detail: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
+  try {
+    const raw = await request.json();
+
+    const parsed = UpdateProposalSchema.parse({
+      id: raw?.id,
+      status: raw?.status,
+      notes: raw?.notes ?? null,
+    });
+
+    const supabase = getAdminClient();
+
+    const { data: existingProposal, error: proposalError } = await supabase
+      .from("marketplace_proposals")
+      .select("*")
+      .eq("id", parsed.id)
+      .maybeSingle();
+
+    if (proposalError) {
+      return NextResponse.json(
+        { ok: false, error: "Failed to load proposal.", detail: proposalError.message },
+        { status: 500, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    if (!existingProposal) {
+      return NextResponse.json(
+        { ok: false, error: "Proposal not found." },
+        { status: 404, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    const mergedNotes = [existingProposal.notes, parsed.notes].filter(Boolean).join("\n").trim() || null;
+
+    const { data: updatedProposal, error: updateProposalError } = await supabase
+      .from("marketplace_proposals")
+      .update({
+        status: parsed.status,
+        notes: mergedNotes,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", parsed.id)
+      .select("*")
+      .single();
+
+    if (updateProposalError) {
+      return NextResponse.json(
+        { ok: false, error: "Failed to update proposal.", detail: updateProposalError.message },
+        { status: 500, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    if (parsed.status === "accepted") {
+      await supabase
+        .from("marketplace_proposals")
+        .update({
+          status: "rejected",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("request_id", existingProposal.request_id)
+        .neq("id", existingProposal.id)
+        .in("status", ["draft", "sent"]);
+
+      const { error: updateRequestError } = await supabase
+        .from("marketplace_requests")
+        .update({
+          status: "assigned",
+          assigned_specialist_id: existingProposal.specialist_id,
+          assigned_specialist_slug: existingProposal.specialist_slug,
+          assigned_specialist_name: existingProposal.specialist_name,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existingProposal.request_id);
+
+      if (updateRequestError) {
+        return NextResponse.json(
+          { ok: false, error: "Proposal updated but request assignment failed.", detail: updateRequestError.message },
+          { status: 500, headers: { "Cache-Control": "no-store" } }
+        );
+      }
+    }
+
+    if (parsed.status === "rejected") {
+      const { data: openProposals } = await supabase
+        .from("marketplace_proposals")
+        .select("id")
+        .eq("request_id", existingProposal.request_id)
+        .in("status", ["draft", "sent", "accepted"]);
+
+      const shouldClose = !openProposals || openProposals.length === 0;
+
+      const { error: updateRequestError } = await supabase
+        .from("marketplace_requests")
+        .update({
+          status: shouldClose ? "closed" : "proposed",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existingProposal.request_id);
+
+      if (updateRequestError) {
+        return NextResponse.json(
+          { ok: false, error: "Proposal updated but request status refresh failed.", detail: updateRequestError.message },
+          { status: 500, headers: { "Cache-Control": "no-store" } }
+        );
+      }
+    }
+
+    return NextResponse.json(
+      { ok: true, proposal: updatedProposal },
+      { status: 200, headers: { "Cache-Control": "no-store" } }
+    );
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { ok: false, error: "Invalid request body.", issues: error.issues },
+        { status: 400, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "Failed to update proposal.",
         detail: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500, headers: { "Cache-Control": "no-store" } }

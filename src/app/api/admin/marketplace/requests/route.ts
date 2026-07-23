@@ -1,125 +1,217 @@
-import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-route";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { z } from "zod";
+import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const ALLOWED_STATUSES = new Set(["submitted", "reviewing", "assigned", "closed", "rejected"]);
+const RequestStatusSchema = z.enum([
+  "submitted",
+  "reviewing",
+  "proposed",
+  "assigned",
+  "closed",
+  "rejected",
+]);
 
-function text(value: unknown): string {
-  return typeof value === "string" ? value.trim() : "";
+const UpdateRequestSchema = z.object({
+  id: z.string().uuid(),
+  status: RequestStatusSchema,
+  specialistSlug: z.string().min(2).optional().nullable(),
+});
+
+function getAdminClient() {
+  return createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
 }
 
-export async function GET(request: Request) {
-  const adminAuthError = requireAdmin(request);
-  if (adminAuthError) return adminAuthError;
+function requireAdmin(request: NextRequest) {
+  const configured = String(process.env.ADMIN_SECRET ?? "").trim();
+
+  if (!configured) {
+    return NextResponse.json(
+      { ok: false, error: "Unauthorized", detail: "No admin secret configured in environment." },
+      { status: 401, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+
+  const supplied = request.headers.get("x-admin-secret")?.trim();
+
+  if (!supplied || supplied !== configured) {
+    return NextResponse.json(
+      { ok: false, error: "Unauthorized" },
+      { status: 401, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+
+  return null;
+}
+
+async function resolveSpecialist(supabase: ReturnType<typeof getAdminClient>, specialistSlug: string | null) {
+  if (!specialistSlug) {
+    return {
+      specialist_id: null,
+      assigned_specialist_slug: null,
+      assigned_specialist_name: null,
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("marketplace_specialists")
+    .select("id, slug, full_name")
+    .eq("slug", specialistSlug)
+    .eq("active", true)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    throw new Error("Specialist not found.");
+  }
+
+  return {
+    specialist_id: data.id,
+    assigned_specialist_slug: data.slug,
+    assigned_specialist_name: data.full_name,
+  };
+}
+
+export async function GET(request: NextRequest) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
 
   try {
-    const supabase = createSupabaseAdminClient();
+    const supabase = getAdminClient();
+    const id = new URL(request.url).searchParams.get("id")?.trim();
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("marketplace_requests")
       .select(
-        "id, service_slug, full_name, email, company_name, budget_range, brief, status, created_at, assigned_specialist_slug, assigned_specialist_name"
+        "id, service_slug, full_name, email, company_name, phone, website, budget_range, brief, status, created_at, assigned_specialist_slug, assigned_specialist_name"
       )
       .order("created_at", { ascending: false });
 
-    if (error) throw error;
+    if (id) {
+      const { data, error } = await query.eq("id", id).maybeSingle();
+
+      if (error) {
+        return NextResponse.json(
+          { ok: false, error: "Failed to load marketplace request.", detail: error.message },
+          { status: 500, headers: { "Cache-Control": "no-store" } }
+        );
+      }
+
+      if (!data) {
+        return NextResponse.json(
+          { ok: false, error: "Marketplace request not found." },
+          { status: 404, headers: { "Cache-Control": "no-store" } }
+        );
+      }
+
+      return NextResponse.json(
+        { ok: true, request: data },
+        { status: 200, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      return NextResponse.json(
+        { ok: false, error: "Failed to load marketplace requests.", detail: error.message },
+        { status: 500, headers: { "Cache-Control": "no-store" } }
+      );
+    }
 
     return NextResponse.json(
       { ok: true, requests: data ?? [] },
-      { headers: { "Cache-Control": "no-store" } },
+      { status: 200, headers: { "Cache-Control": "no-store" } }
     );
   } catch (error) {
     return NextResponse.json(
       {
         ok: false,
-        error: error instanceof Error ? error.message : "Failed to load marketplace requests.",
+        error: "Failed to load marketplace requests.",
+        detail: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500, headers: { "Cache-Control": "no-store" } },
+      { status: 500, headers: { "Cache-Control": "no-store" } }
     );
   }
 }
 
-export async function PUT(request: Request) {
-  const adminAuthError = requireAdmin(request);
-  if (adminAuthError) return adminAuthError;
+export async function PUT(request: NextRequest) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
 
   try {
-    const body = await request.json().catch(() => null);
-    const id = text(body?.id);
-    const status = text(body?.status);
-    const hasSpecialistSlug = Boolean(body && Object.prototype.hasOwnProperty.call(body, "specialistSlug"));
-    const specialistSlug = text(body?.specialistSlug);
+    const raw = await request.json();
+    const parsed = UpdateRequestSchema.parse({
+      id: raw?.id,
+      status: raw?.status,
+      specialistSlug: raw?.specialistSlug ?? null,
+    });
 
-    if (!id || !ALLOWED_STATUSES.has(status)) {
-      return NextResponse.json(
-        { ok: false, error: "Valid id and status are required." },
-        { status: 400, headers: { "Cache-Control": "no-store" } },
-      );
-    }
+    const supabase = getAdminClient();
 
-    const supabase = createSupabaseAdminClient();
+    const specialistFields = await resolveSpecialist(supabase, parsed.specialistSlug ?? null);
 
-    const updatePayload: Record<string, unknown> = {
-      status,
+    const payload: Record<string, unknown> = {
+      status: parsed.status,
       updated_at: new Date().toISOString(),
+      assigned_specialist_id: specialistFields.specialist_id,
+      assigned_specialist_slug: specialistFields.assigned_specialist_slug,
+      assigned_specialist_name: specialistFields.assigned_specialist_name,
     };
-
-    if (hasSpecialistSlug) {
-      if (!specialistSlug) {
-        updatePayload.assigned_specialist_id = null;
-        updatePayload.assigned_specialist_slug = null;
-        updatePayload.assigned_specialist_name = null;
-      } else {
-        const { data: specialists, error: specialistError } = await supabase
-          .from("marketplace_specialists")
-          .select("id, slug, full_name")
-          .eq("active", true)
-          .eq("slug", specialistSlug)
-          .limit(1);
-
-        if (specialistError) throw specialistError;
-
-        const specialist = Array.isArray(specialists) && specialists.length > 0 ? specialists[0] : null;
-
-        if (!specialist) {
-          return NextResponse.json(
-            { ok: false, error: "Selected specialist was not found." },
-            { status: 400, headers: { "Cache-Control": "no-store" } },
-          );
-        }
-
-        updatePayload.assigned_specialist_id = specialist.id;
-        updatePayload.assigned_specialist_slug = specialist.slug;
-        updatePayload.assigned_specialist_name = specialist.full_name;
-      }
-    }
 
     const { data, error } = await supabase
       .from("marketplace_requests")
-      .update(updatePayload)
-      .eq("id", id)
-      .select("id, status, updated_at, assigned_specialist_slug, assigned_specialist_name")
-      .limit(1);
+      .update(payload)
+      .eq("id", parsed.id)
+      .select(
+        "id, status, updated_at, assigned_specialist_slug, assigned_specialist_name"
+      )
+      .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+      return NextResponse.json(
+        { ok: false, error: "Failed to update marketplace request.", detail: error.message },
+        { status: 500, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    if (!data) {
+      return NextResponse.json(
+        { ok: false, error: "Marketplace request not found." },
+        { status: 404, headers: { "Cache-Control": "no-store" } }
+      );
+    }
 
     return NextResponse.json(
-      {
-        ok: true,
-        request: Array.isArray(data) && data.length > 0 ? data[0] : null,
-      },
-      { headers: { "Cache-Control": "no-store" } },
+      { ok: true, request: data },
+      { status: 200, headers: { "Cache-Control": "no-store" } }
     );
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { ok: false, error: "Invalid request body.", issues: error.issues },
+        { status: 400, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
     return NextResponse.json(
       {
         ok: false,
-        error: error instanceof Error ? error.message : "Failed to update request status.",
+        error: "Failed to update marketplace request.",
+        detail: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500, headers: { "Cache-Control": "no-store" } },
+      { status: 500, headers: { "Cache-Control": "no-store" } }
     );
   }
 }
