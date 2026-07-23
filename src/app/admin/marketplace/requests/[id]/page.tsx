@@ -64,6 +64,16 @@ export default function MarketplaceRequestDetailPage() {
   const [events, setEvents] = useState<EventRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyProposalId, setBusyProposalId] = useState<string | null>(null);
+  const [creatingProposal, setCreatingProposal] = useState(false);
+  const [proposalForm, setProposalForm] = useState({
+    specialistSlug: "",
+    title: "",
+    scopeSummary: "",
+    deliverablesText: "",
+    priceInr: "",
+    timelineDays: "",
+    notes: "",
+  });
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -117,6 +127,60 @@ export default function MarketplaceRequestDetailPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  async function createProposal() {
+    if (!requestId) return;
+
+    setCreatingProposal(true);
+    setError(null);
+
+    try {
+      const deliverables = proposalForm.deliverablesText
+        .split(/\r?\n|,/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+
+      const res = await fetch("/api/admin/marketplace/proposals", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-secret": ADMIN_SECRET,
+        },
+        body: JSON.stringify({
+          requestId,
+          specialistSlug: proposalForm.specialistSlug.trim(),
+          title: proposalForm.title.trim(),
+          scopeSummary: proposalForm.scopeSummary.trim(),
+          deliverables,
+          priceInr: Number(proposalForm.priceInr),
+          timelineDays: Number(proposalForm.timelineDays),
+          notes: proposalForm.notes.trim() || null,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json?.detail || json?.error || "Failed to create proposal.");
+      }
+
+      setProposalForm({
+        specialistSlug: "",
+        title: "",
+        scopeSummary: "",
+        deliverablesText: "",
+        priceInr: "",
+        timelineDays: "",
+        notes: "",
+      });
+
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create proposal.");
+    } finally {
+      setCreatingProposal(false);
+    }
+  }
 
   async function updateProposal(proposalId: string, status: "accepted" | "rejected") {
     setBusyProposalId(proposalId);
@@ -209,6 +273,113 @@ export default function MarketplaceRequestDetailPage() {
             <div className="mt-4 rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800">
               <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">Brief</div>
               {request.brief}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-xl font-semibold">Create Proposal</h3>
+              <span className="text-xs text-neutral-500">POST /api/admin/marketplace/proposals</span>
+            </div>
+
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <label className="text-sm">
+                <div className="mb-1 font-medium text-neutral-700">Specialist slug</div>
+                <input
+                  value={proposalForm.specialistSlug}
+                  onChange={(e) =>
+                    setProposalForm((current) => ({ ...current, specialistSlug: e.target.value }))
+                  }
+                  className="w-full rounded-lg border px-3 py-2"
+                  placeholder="rahul-performance"
+                />
+              </label>
+
+              <label className="text-sm">
+                <div className="mb-1 font-medium text-neutral-700">Title</div>
+                <input
+                  value={proposalForm.title}
+                  onChange={(e) =>
+                    setProposalForm((current) => ({ ...current, title: e.target.value }))
+                  }
+                  className="w-full rounded-lg border px-3 py-2"
+                  placeholder="90-day SEO recovery sprint"
+                />
+              </label>
+
+              <label className="text-sm md:col-span-2">
+                <div className="mb-1 font-medium text-neutral-700">Scope summary</div>
+                <textarea
+                  value={proposalForm.scopeSummary}
+                  onChange={(e) =>
+                    setProposalForm((current) => ({ ...current, scopeSummary: e.target.value }))
+                  }
+                  className="min-h-24 w-full rounded-lg border px-3 py-2"
+                  placeholder="Technical audit, keyword gap analysis, information architecture fixes, and weekly reporting."
+                />
+              </label>
+
+              <label className="text-sm md:col-span-2">
+                <div className="mb-1 font-medium text-neutral-700">Deliverables</div>
+                <textarea
+                  value={proposalForm.deliverablesText}
+                  onChange={(e) =>
+                    setProposalForm((current) => ({ ...current, deliverablesText: e.target.value }))
+                  }
+                  className="min-h-24 w-full rounded-lg border px-3 py-2"
+                  placeholder={"Technical SEO audit`nKeyword opportunity map`n90-day action plan"}
+                />
+                <div className="mt-1 text-xs text-neutral-500">One per line or comma-separated</div>
+              </label>
+
+              <label className="text-sm">
+                <div className="mb-1 font-medium text-neutral-700">Price (INR)</div>
+                <input
+                  type="number"
+                  value={proposalForm.priceInr}
+                  onChange={(e) =>
+                    setProposalForm((current) => ({ ...current, priceInr: e.target.value }))
+                  }
+                  className="w-full rounded-lg border px-3 py-2"
+                  placeholder="45000"
+                />
+              </label>
+
+              <label className="text-sm">
+                <div className="mb-1 font-medium text-neutral-700">Timeline (days)</div>
+                <input
+                  type="number"
+                  value={proposalForm.timelineDays}
+                  onChange={(e) =>
+                    setProposalForm((current) => ({ ...current, timelineDays: e.target.value }))
+                  }
+                  className="w-full rounded-lg border px-3 py-2"
+                  placeholder="21"
+                />
+              </label>
+
+              <label className="text-sm md:col-span-2">
+                <div className="mb-1 font-medium text-neutral-700">Notes</div>
+                <textarea
+                  value={proposalForm.notes}
+                  onChange={(e) =>
+                    setProposalForm((current) => ({ ...current, notes: e.target.value }))
+                  }
+                  className="min-h-20 w-full rounded-lg border px-3 py-2"
+                  placeholder="Optional internal notes"
+                />
+              </label>
+            </div>
+
+            <div className="mt-4 flex justify-end">
+              <button
+                type="button"
+                onClick={() => void createProposal()}
+                disabled={creatingProposal}
+                className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {creatingProposal ? "Creating..." : "Create proposal"}
+              </button>
             </div>
           </section>
 
