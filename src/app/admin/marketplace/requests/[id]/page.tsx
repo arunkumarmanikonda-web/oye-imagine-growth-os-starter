@@ -64,6 +64,7 @@ export default function MarketplaceRequestDetailPage() {
   const [events, setEvents] = useState<EventRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyProposalId, setBusyProposalId] = useState<string | null>(null);
+  const [busyRequestAction, setBusyRequestAction] = useState<string | null>(null);
   const [creatingProposal, setCreatingProposal] = useState(false);
   const [proposalForm, setProposalForm] = useState({
     specialistSlug: "",
@@ -182,6 +183,40 @@ export default function MarketplaceRequestDetailPage() {
     }
   }
 
+  async function updateRequestStatus(status: "closed" | "reviewing" | "proposed") {
+    if (!requestId || !request) return;
+
+    setBusyRequestAction(status);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/admin/marketplace/requests", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-secret": ADMIN_SECRET,
+        },
+        body: JSON.stringify({
+          id: requestId,
+          status,
+          specialistSlug: request.assigned_specialist_slug ?? undefined,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json?.detail || json?.error || "Failed to update request.");
+      }
+
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update request.");
+    } finally {
+      setBusyRequestAction(null);
+    }
+  }
+
   async function updateProposal(proposalId: string, status: "accepted" | "rejected") {
     setBusyProposalId(proposalId);
     setError(null);
@@ -253,7 +288,33 @@ export default function MarketplaceRequestDetailPage() {
               <span className="text-xs text-neutral-500">{request.service_slug ?? "service-unmapped"}</span>
             </div>
 
-            <h2 className="mt-3 text-2xl font-semibold">{request.full_name}</h2>
+            <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <h2 className="text-2xl font-semibold">{request.full_name}</h2>
+
+              <div className="flex flex-wrap gap-2">
+                {request.status !== "closed" ? (
+                  <button
+                    type="button"
+                    onClick={() => void updateRequestStatus("closed")}
+                    disabled={busyRequestAction !== null}
+                    className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {busyRequestAction === "closed" ? "Closing..." : "Close request"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => void updateRequestStatus(proposals.length > 0 ? "proposed" : "reviewing")}
+                    disabled={busyRequestAction !== null}
+                    className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {busyRequestAction === "proposed" || busyRequestAction === "reviewing"
+                      ? "Reopening..."
+                      : "Reopen request"}
+                  </button>
+                )}
+              </div>
+            </div>
 
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <div className="rounded-xl bg-neutral-50 p-4 text-sm">
