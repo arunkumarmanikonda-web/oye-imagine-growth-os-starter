@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
+import { requireAdmin } from "@/lib/admin-route";
 
 type ActiveContext = {
   tenantId: string;
@@ -22,31 +22,6 @@ function getEnv(name: string): string {
   return value;
 }
 
-async function createAuthClient() {
-  const cookieStore = await cookies();
-
-  return createServerClient(
-    getEnv("NEXT_PUBLIC_SUPABASE_URL"),
-    getEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet: Array<{ name: string; value: string; options: any }>) {
-          try {
-            for (const cookie of cookiesToSet) {
-              cookieStore.set(cookie.name, cookie.value, cookie.options);
-            }
-          } catch {
-            // ignored
-          }
-        },
-      },
-    }
-  );
-}
-
 function createServiceClient() {
   return createClient(
     getEnv("NEXT_PUBLIC_SUPABASE_URL"),
@@ -58,20 +33,6 @@ function createServiceClient() {
       },
     }
   );
-}
-
-async function requireUser() {
-  const authClient = await createAuthClient();
-  const {
-    data: { user },
-    error,
-  } = await authClient.auth.getUser();
-
-  if (error || !user) {
-    return null;
-  }
-
-  return user;
 }
 
 async function getActiveContext(
@@ -133,8 +94,8 @@ function csvEscape(value: unknown): string {
     typeof value === "string"
       ? value
       : typeof value === "number" || typeof value === "boolean"
-      ? String(value)
-      : JSON.stringify(value);
+        ? String(value)
+        : JSON.stringify(value);
 
   return '"' + text.replace(/"/g, '""') + '"';
 }
@@ -154,15 +115,14 @@ function fileNameFor(kind: string, workspaceSlug: string | null): string {
   return prefix + "_" + kind + "_" + date + ".csv";
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) return adminAuthError;
+
   try {
-    const user = await requireUser();
+    const url = new URL(request.url);
+    const kind = url.searchParams.get("kind") || "settings";
 
-    if (!user) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
-
-    const kind = request.nextUrl.searchParams.get("kind") || "settings";
     const serviceClient = createServiceClient();
     const active = await getActiveContext(serviceClient);
 
