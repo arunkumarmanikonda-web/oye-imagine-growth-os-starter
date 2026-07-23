@@ -13,4 +13,4 @@
 | 2026-07-23 10:31:31Z | M4 | marketplace assignment flow + specialist detail pages | PASS (assignment columns live; admin marketplace requests GET 200; assignment PUT 200; specialist detail page live) | 9f63e81 |
 | 2026-07-23 11:45:54Z | M5 | marketplace proposal workflow | PASS (proposal persistence live, proposals GET 200, requests GET 200, request transitioned to proposed) | b14084c |
 | 2026-07-23 12:03:35Z | M7A | marketplace events api | PASS (/api/admin/marketplace/events build live, events GET 200, empty audit trail ready) | c6461d0 |
-| 2026-07-23 <UTC> | M7B | marketplace event recording | PASS (request/proposal event writes live, close action recorded, events GET 200) | eb420d1 |
+| 2026-07-23 13:17:04Z | M7B | marketplace event recording | PASS (request/proposal event writes live, close action recorded, events GET 200) | b3d7e01 |
