@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { Route } from "next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const ADMIN_SECRET = "OYE!MAGINE2026";
@@ -177,7 +178,7 @@ export default function AdminMarketplacePage() {
                   </div>
                   <h2 className="text-xl font-semibold">{request.full_name}</h2>
                   <p className="text-sm text-neutral-600">
-                    {request.company_name || "No company"} · {request.email}
+                    {request.company_name || "No company"} Â· {request.email}
                   </p>
                   <p className="text-sm text-neutral-600">
                     Assigned specialist: {request.assigned_specialist_name || "Unassigned"}
@@ -186,7 +187,7 @@ export default function AdminMarketplacePage() {
 
                 <div className="flex flex-col items-start gap-2 md:items-end">
                   <Link
-                    href={"/admin/marketplace/requests/" + request.id}
+                    href={`/admin/marketplace/requests/${request.id}` as Route}
                     className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-neutral-50"
                   >
                     Open detail
@@ -229,7 +230,7 @@ export default function AdminMarketplacePage() {
                                 </span>
                               </div>
                               <p className="mt-1 text-sm text-neutral-600">
-                                {proposal.specialist_name || "No specialist"} · {formatInr(proposal.price_inr)} · {proposal.timeline_days} days
+                                {proposal.specialist_name || "No specialist"} Â· {formatInr(proposal.price_inr)} Â· {proposal.timeline_days} days
                               </p>
                             </div>
 
