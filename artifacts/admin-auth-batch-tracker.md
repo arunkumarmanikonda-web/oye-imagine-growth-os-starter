@@ -11,3 +11,4 @@
 | 2026-07-23 10:09:13Z | M2 | marketplace specialists + admin inbox | PASS (specialists API 200, admin requests API 200, /admin/marketplace page live) | 8eaff79 |
 | 2026-07-23 10:14:22Z | M3 | marketplace public specialists + status update | PASS (public marketplace shows specialists, admin request status update 200, marketplace/services+specialists APIs 200) | 40a4a6a |
 | 2026-07-23 10:31:31Z | M4 | marketplace assignment flow + specialist detail pages | PASS (assignment columns live; admin marketplace requests GET 200; assignment PUT 200; specialist detail page live) | 9f63e81 |
+| 2026-07-23 11:45:54Z | M5 | marketplace proposal workflow | PASS (proposal persistence live, proposals GET 200, requests GET 200, request transitioned to proposed) | b14084c |
