@@ -49,6 +49,10 @@ export default function AdminMarketplacePage() {
   const [loading, setLoading] = useState(true);
   const [busyProposalId, setBusyProposalId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [specialistFilter, setSpecialistFilter] = useState("all");
+  const [serviceFilter, setServiceFilter] = useState("all");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -89,6 +93,53 @@ export default function AdminMarketplacePage() {
   useEffect(() => {
     void load();
   }, [load]);
+  const specialistOptions = useMemo(() => {
+    return Array.from(
+      new Set(
+        requests
+          .map((request) => request.assigned_specialist_name || "Unassigned")
+          .filter(Boolean),
+      ),
+    );
+  }, [requests]);
+
+  const serviceOptions = useMemo(() => {
+    return Array.from(
+      new Set(
+        requests
+          .map((request) => request.service_slug || "service-unmapped")
+          .filter(Boolean),
+      ),
+    );
+  }, [requests]);
+
+  const filteredRequests = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+
+    return requests.filter((request) => {
+      const specialistName = request.assigned_specialist_name || "Unassigned";
+      const serviceSlug = request.service_slug || "service-unmapped";
+
+      const matchesSearch =
+        needle.length === 0 ||
+        request.full_name.toLowerCase().includes(needle) ||
+        request.email.toLowerCase().includes(needle) ||
+        (request.company_name || "").toLowerCase().includes(needle) ||
+        specialistName.toLowerCase().includes(needle) ||
+        serviceSlug.toLowerCase().includes(needle);
+
+      const matchesStatus =
+        statusFilter === "all" || request.status === statusFilter;
+
+      const matchesSpecialist =
+        specialistFilter === "all" || specialistName === specialistFilter;
+
+      const matchesService =
+        serviceFilter === "all" || serviceSlug === serviceFilter;
+
+      return matchesSearch && matchesStatus && matchesSpecialist && matchesService;
+    });
+  }, [requests, search, statusFilter, specialistFilter, serviceFilter]);
 
   const proposalsByRequest = useMemo(() => {
     const map = new Map<string, ProposalRow[]>();
@@ -154,12 +205,90 @@ export default function AdminMarketplacePage() {
         </div>
       ) : null}
 
+      <section className="mb-6 rounded-2xl border bg-white p-4 shadow-sm">
+        <div className="grid gap-4 md:grid-cols-4">
+          <label className="text-sm">
+            <div className="mb-1 font-medium text-neutral-700">Search</div>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Name, email, company, specialist, service"
+              className="w-full rounded-lg border px-3 py-2"
+            />
+          </label>
+
+          <label className="text-sm">
+            <div className="mb-1 font-medium text-neutral-700">Status</div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full rounded-lg border px-3 py-2"
+            >
+              <option value="all">All statuses</option>
+              <option value="submitted">submitted</option>
+              <option value="reviewing">reviewing</option>
+              <option value="proposed">proposed</option>
+              <option value="assigned">assigned</option>
+              <option value="closed">closed</option>
+              <option value="rejected">rejected</option>
+            </select>
+          </label>
+
+          <label className="text-sm">
+            <div className="mb-1 font-medium text-neutral-700">Specialist</div>
+            <select
+              value={specialistFilter}
+              onChange={(e) => setSpecialistFilter(e.target.value)}
+              className="w-full rounded-lg border px-3 py-2"
+            >
+              <option value="all">All specialists</option>
+              {specialistOptions.map((specialist) => (
+                <option key={specialist} value={specialist}>
+                  {specialist}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="text-sm">
+            <div className="mb-1 font-medium text-neutral-700">Service</div>
+            <select
+              value={serviceFilter}
+              onChange={(e) => setServiceFilter(e.target.value)}
+              className="w-full rounded-lg border px-3 py-2"
+            >
+              <option value="all">All services</option>
+              {serviceOptions.map((service) => (
+                <option key={service} value={service}>
+                  {service}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-neutral-600">
+          <span className="rounded-full bg-neutral-100 px-3 py-1">
+            Showing {filteredRequests.length} of {requests.length}
+          </span>
+          <span className="rounded-full bg-neutral-100 px-3 py-1">
+            Status: {statusFilter}
+          </span>
+          <span className="rounded-full bg-neutral-100 px-3 py-1">
+            Specialist: {specialistFilter}
+          </span>
+          <span className="rounded-full bg-neutral-100 px-3 py-1">
+            Service: {serviceFilter}
+          </span>
+        </div>
+      </section>
+
       {loading ? (
         <div className="rounded-2xl border bg-white p-6 text-sm text-neutral-600">Loading marketplace admin data...</div>
       ) : null}
 
       {!loading && requests.length === 0 ? (
-        <div className="rounded-2xl border bg-white p-6 text-sm text-neutral-600">No marketplace requests found.</div>
+        <div className="rounded-2xl border bg-white p-6 text-sm text-neutral-600">No marketplace requests match the current filters.</div>
       ) : null}
 
       <div className="space-y-6">
