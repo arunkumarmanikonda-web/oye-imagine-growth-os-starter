@@ -14,3 +14,4 @@
 | 2026-07-23 11:45:54Z | M5 | marketplace proposal workflow | PASS (proposal persistence live, proposals GET 200, requests GET 200, request transitioned to proposed) | b14084c |
 | 2026-07-23 12:03:35Z | M7A | marketplace events api | PASS (/api/admin/marketplace/events build live, events GET 200, empty audit trail ready) | c6461d0 |
 | 2026-07-23 13:17:04Z | M7B | marketplace event recording | PASS (request/proposal event writes live, close action recorded, events GET 200) | b3d7e01 |
+| 2026-07-23 19:28:00Z | M8 | marketplace admin triage filters | PASS (search + status/specialist/service filters live, admin marketplace build/runtime pass) | d438a16 |
