@@ -20,6 +20,36 @@ type RequestRow = {
   assigned_specialist_name: string | null;
 };
 
+function requestStatusClasses(status: string) {
+  switch (status) {
+    case "closed":
+      return "bg-neutral-900 text-white";
+    case "assigned":
+      return "bg-emerald-100 text-emerald-800";
+    case "proposed":
+      return "bg-amber-100 text-amber-800";
+    case "reviewing":
+      return "bg-blue-100 text-blue-800";
+    case "rejected":
+      return "bg-red-100 text-red-800";
+    default:
+      return "bg-neutral-100 text-neutral-700";
+  }
+}
+
+function proposalStatusClasses(status: string) {
+  switch (status) {
+    case "accepted":
+      return "bg-emerald-100 text-emerald-800";
+    case "rejected":
+      return "bg-red-100 text-red-800";
+    case "sent":
+      return "bg-amber-100 text-amber-800";
+    default:
+      return "bg-neutral-100 text-neutral-700";
+  }
+}
+
 type ProposalRow = {
   id: string;
   request_id: string;
@@ -300,7 +330,9 @@ export default function AdminMarketplacePage() {
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium uppercase tracking-wide text-neutral-700">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-medium uppercase tracking-wide ${requestStatusClasses(request.status)}`}
+                    >
                       {request.status}
                     </span>
                     <span className="text-xs text-neutral-500">{request.service_slug ?? "service-unmapped"}</span>
@@ -312,6 +344,19 @@ export default function AdminMarketplacePage() {
                   <p className="text-sm text-neutral-600">
                     Assigned specialist: {request.assigned_specialist_name || "Unassigned"}
                   </p>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-700">
+                      {request.assigned_specialist_name ? "Assigned" : "Unassigned"}
+                    </span>
+                    <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-700">
+                      {requestProposals.length} proposal(s)
+                    </span>
+                    {request.status === "closed" ? (
+                      <span className="rounded-full bg-neutral-900 px-2.5 py-1 text-xs text-white">
+                        Closed
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
 
                 <div className="flex flex-col items-start gap-2 md:items-end">
@@ -322,7 +367,10 @@ export default function AdminMarketplacePage() {
                     Open detail
                   </Link>
                   <span className="text-xs text-neutral-500">
-                    Created {new Date(request.created_at).toLocaleString("en-IN")}
+                    Created {new Date(request.created_at).toLocaleString("en-IN", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
                   </span>
                 </div>
               </div>
@@ -354,7 +402,9 @@ export default function AdminMarketplacePage() {
                             <div>
                               <div className="flex flex-wrap items-center gap-2">
                                 <h3 className="text-lg font-semibold">{proposal.title}</h3>
-                                <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium uppercase tracking-wide text-neutral-700">
+                                <span
+                                  className={`rounded-full px-2.5 py-1 text-xs font-medium uppercase tracking-wide ${proposalStatusClasses(proposal.status)}`}
+                                >
                                   {proposal.status}
                                 </span>
                               </div>
