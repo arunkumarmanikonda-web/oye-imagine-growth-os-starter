@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { env } from "@/lib/env";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/admin-route";
 import { requireActiveAdminContext } from "@/lib/admin/active-context";
 import { logAdminAuditEvent } from "@/lib/admin/audit";
 
@@ -24,23 +24,33 @@ type WorkspaceNoteBody = {
   body?: string;
 };
 
-export async function GET(request: NextRequest) {
+function getSearchParams(request: Request) {
+  return new URL(request.url).searchParams;
+}
+
+function getActorFromAdminHeaders(request: Request) {
+  const actorEmail =
+    request.headers.get("x-admin-email")?.trim() ||
+    request.headers.get("x-forwarded-email")?.trim() ||
+    null;
+
+  return {
+    actorUserId: "admin-secret",
+    actorEmail,
+  };
+}
+
+export async function GET(request: Request) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) return adminAuthError;
+
   try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
-
     const active = await requireActiveAdminContext();
     const admin = createServiceRoleClient();
+    const searchParams = getSearchParams(request);
 
-    const q = request.nextUrl.searchParams.get("q")?.trim() ?? "";
-    const includeArchived = request.nextUrl.searchParams.get("includeArchived") === "true";
+    const q = searchParams.get("q")?.trim() ?? "";
+    const includeArchived = searchParams.get("includeArchived") === "true";
 
     let query = admin
       .from("workspace_notes")
@@ -81,18 +91,11 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) return adminAuthError;
+
   try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
-
     const body = (await request.json()) as WorkspaceNoteBody;
     const title = body.title?.trim() ?? "";
     const noteBody = body.body?.trim() ?? "";
@@ -103,6 +106,7 @@ export async function POST(request: NextRequest) {
 
     const active = await requireActiveAdminContext();
     const admin = createServiceRoleClient();
+    const actor = getActorFromAdminHeaders(request);
 
     const { data, error } = await admin
       .from("workspace_notes")
@@ -112,10 +116,10 @@ export async function POST(request: NextRequest) {
         workspace_id: active.workspaceId,
         title,
         body: noteBody,
-        created_by_user_id: user.id,
-        created_by_email: user.email ?? null,
-        updated_by_user_id: user.id,
-        updated_by_email: user.email ?? null,
+        created_by_user_id: actor.actorUserId,
+        created_by_email: actor.actorEmail,
+        updated_by_user_id: actor.actorUserId,
+        updated_by_email: actor.actorEmail,
       })
       .select("id, tenant_id, brand_id, workspace_id, title, body, archived_at, created_at, updated_at")
       .single();
@@ -127,8 +131,8 @@ export async function POST(request: NextRequest) {
     try {
       await logAdminAuditEvent({
         event: "admin_workspace_note_created",
-        actorUserId: user.id,
-        actorEmail: user.email ?? null,
+        actorUserId: actor.actorUserId,
+        actorEmail: actor.actorEmail,
         tenantId: active.tenantId,
         brandId: active.brandId,
         workspaceId: active.workspaceId,
@@ -153,18 +157,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+export async function PUT(request: Request) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) return adminAuthError;
+
   try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
-
     const body = (await request.json()) as WorkspaceNoteBody;
     const id = body.id?.trim() ?? "";
     const title = body.title?.trim() ?? "";
@@ -180,14 +177,15 @@ export async function PUT(request: NextRequest) {
 
     const active = await requireActiveAdminContext();
     const admin = createServiceRoleClient();
+    const actor = getActorFromAdminHeaders(request);
 
     const { data, error } = await admin
       .from("workspace_notes")
       .update({
         title,
         body: noteBody,
-        updated_by_user_id: user.id,
-        updated_by_email: user.email ?? null,
+        updated_by_user_id: actor.actorUserId,
+        updated_by_email: actor.actorEmail,
       })
       .eq("id", id)
       .eq("tenant_id", active.tenantId)
@@ -203,8 +201,8 @@ export async function PUT(request: NextRequest) {
     try {
       await logAdminAuditEvent({
         event: "admin_workspace_note_updated",
-        actorUserId: user.id,
-        actorEmail: user.email ?? null,
+        actorUserId: actor.actorUserId,
+        actorEmail: actor.actorEmail,
         tenantId: active.tenantId,
         brandId: active.brandId,
         workspaceId: active.workspaceId,
@@ -229,20 +227,14 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE(request: Request) {
+  const adminAuthError = requireAdmin(request);
+  if (adminAuthError) return adminAuthError;
+
   try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
-
-    const id = request.nextUrl.searchParams.get("id")?.trim() ?? "";
-    const mode = request.nextUrl.searchParams.get("mode")?.trim() ?? "archive";
+    const searchParams = getSearchParams(request);
+    const id = searchParams.get("id")?.trim() ?? "";
+    const mode = searchParams.get("mode")?.trim() ?? "archive";
 
     if (!id) {
       return NextResponse.json({ ok: false, error: "id is required" }, { status: 400 });
@@ -250,6 +242,7 @@ export async function DELETE(request: NextRequest) {
 
     const active = await requireActiveAdminContext();
     const admin = createServiceRoleClient();
+    const actor = getActorFromAdminHeaders(request);
 
     if (mode === "restore") {
       const { data, error } = await admin
@@ -258,8 +251,8 @@ export async function DELETE(request: NextRequest) {
           archived_at: null,
           archived_by_user_id: null,
           archived_by_email: null,
-          updated_by_user_id: user.id,
-          updated_by_email: user.email ?? null,
+          updated_by_user_id: actor.actorUserId,
+          updated_by_email: actor.actorEmail,
         })
         .eq("id", id)
         .eq("tenant_id", active.tenantId)
@@ -275,8 +268,8 @@ export async function DELETE(request: NextRequest) {
       try {
         await logAdminAuditEvent({
           event: "admin_workspace_note_restored",
-          actorUserId: user.id,
-          actorEmail: user.email ?? null,
+          actorUserId: actor.actorUserId,
+          actorEmail: actor.actorEmail,
           tenantId: active.tenantId,
           brandId: active.brandId,
           workspaceId: active.workspaceId,
@@ -296,10 +289,10 @@ export async function DELETE(request: NextRequest) {
       .from("workspace_notes")
       .update({
         archived_at: new Date().toISOString(),
-        archived_by_user_id: user.id,
-        archived_by_email: user.email ?? null,
-        updated_by_user_id: user.id,
-        updated_by_email: user.email ?? null,
+        archived_by_user_id: actor.actorUserId,
+        archived_by_email: actor.actorEmail,
+        updated_by_user_id: actor.actorUserId,
+        updated_by_email: actor.actorEmail,
       })
       .eq("id", id)
       .eq("tenant_id", active.tenantId)
@@ -316,8 +309,8 @@ export async function DELETE(request: NextRequest) {
     try {
       await logAdminAuditEvent({
         event: "admin_workspace_note_archived",
-        actorUserId: user.id,
-        actorEmail: user.email ?? null,
+        actorUserId: actor.actorUserId,
+        actorEmail: actor.actorEmail,
         tenantId: active.tenantId,
         brandId: active.brandId,
         workspaceId: active.workspaceId,
