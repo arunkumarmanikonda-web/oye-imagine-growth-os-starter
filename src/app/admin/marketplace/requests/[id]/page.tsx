@@ -37,6 +37,16 @@ type ProposalRow = {
   created_at: string;
 };
 
+type EventRow = {
+  id: string;
+  request_id: string;
+  proposal_id: string | null;
+  event_type: string;
+  actor: string | null;
+  payload: Record<string, unknown> | null;
+  created_at: string;
+};
+
 function formatInr(value: number) {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -51,6 +61,7 @@ export default function MarketplaceRequestDetailPage() {
 
   const [request, setRequest] = useState<RequestRow | null>(null);
   const [proposals, setProposals] = useState<ProposalRow[]>([]);
+  const [events, setEvents] = useState<EventRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyProposalId, setBusyProposalId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +73,7 @@ export default function MarketplaceRequestDetailPage() {
     setError(null);
 
     try {
-      const [requestRes, proposalsRes] = await Promise.all([
+      const [requestRes, proposalsRes, eventsRes] = await Promise.all([
         fetch("/api/admin/marketplace/requests?id=" + requestId, {
           headers: { "x-admin-secret": ADMIN_SECRET },
           cache: "no-store",
@@ -71,10 +82,15 @@ export default function MarketplaceRequestDetailPage() {
           headers: { "x-admin-secret": ADMIN_SECRET },
           cache: "no-store",
         }),
+        fetch("/api/admin/marketplace/events?requestId=" + requestId, {
+          headers: { "x-admin-secret": ADMIN_SECRET },
+          cache: "no-store",
+        }),
       ]);
 
       const requestJson = await requestRes.json();
       const proposalsJson = await proposalsRes.json();
+      const eventsJson = await eventsRes.json();
 
       if (!requestRes.ok) {
         throw new Error(requestJson?.detail || requestJson?.error || "Failed to load request.");
@@ -84,8 +100,13 @@ export default function MarketplaceRequestDetailPage() {
         throw new Error(proposalsJson?.detail || proposalsJson?.error || "Failed to load proposals.");
       }
 
+      if (!eventsRes.ok) {
+        throw new Error(eventsJson?.detail || eventsJson?.error || "Failed to load events.");
+      }
+
       setRequest(requestJson?.request ?? null);
       setProposals(Array.isArray(proposalsJson?.proposals) ? proposalsJson.proposals : []);
+      setEvents(Array.isArray(eventsJson?.events) ? eventsJson.events : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load request detail.");
     } finally {
@@ -189,6 +210,40 @@ export default function MarketplaceRequestDetailPage() {
               <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">Brief</div>
               {request.brief}
             </div>
+          </section>
+
+          <section className="rounded-2xl border bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-xl font-semibold">Activity</h3>
+              <span className="text-xs text-neutral-500">{events.length} event(s)</span>
+            </div>
+
+            {events.length === 0 ? (
+              <div className="mt-4 rounded-xl border border-dashed p-4 text-sm text-neutral-500">
+                No request activity recorded yet.
+              </div>
+            ) : (
+              <div className="mt-4 space-y-3">
+                {events.map((event) => (
+                  <article key={event.id} className="rounded-xl border p-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium uppercase tracking-wide text-neutral-700">
+                        {event.event_type}
+                      </span>
+                      <span className="text-xs text-neutral-500">
+                        {event.actor || "system"} · {new Date(event.created_at).toLocaleString("en-IN")}
+                      </span>
+                    </div>
+
+                    {event.payload ? (
+                      <pre className="mt-3 overflow-x-auto rounded-lg bg-neutral-50 p-3 text-xs text-neutral-700">
+{JSON.stringify(event.payload, null, 2)}
+                      </pre>
+                    ) : null}
+                  </article>
+                ))}
+              </div>
+            )}
           </section>
 
           <section className="rounded-2xl border bg-white p-6 shadow-sm">
