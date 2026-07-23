@@ -292,7 +292,7 @@ export default function AdminMarketplacePage() {
       ) : null}
 
       <div className="space-y-6">
-        {requests.map((request) => {
+        {filteredRequests.map((request) => {
           const requestProposals = proposalsByRequest.get(request.id) ?? [];
 
           return (
