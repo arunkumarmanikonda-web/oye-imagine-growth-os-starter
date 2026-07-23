@@ -51,6 +51,25 @@ function requireAdmin(request: NextRequest) {
 
   return null;
 }
+async function appendEvent(
+  supabase: ReturnType<typeof getAdminClient>,
+  requestId: string,
+  eventType: string,
+  payload: Record<string, unknown>,
+  proposalId?: string | null,
+) {
+  const { error } = await supabase.from("marketplace_request_events").insert({
+    request_id: requestId,
+    proposal_id: proposalId ?? null,
+    event_type: eventType,
+    actor: "admin",
+    payload,
+  });
+
+  if (error) {
+    throw new Error(`Failed to insert marketplace event: ${error.message}`);
+  }
+}
 
 async function resolveSpecialist(supabase: ReturnType<typeof getAdminClient>, specialistSlug: string | null) {
   if (!specialistSlug) {
@@ -192,6 +211,23 @@ export async function PUT(request: NextRequest) {
         { status: 404, headers: { "Cache-Control": "no-store" } }
       );
     }
+
+    const eventType =
+      data.status === "closed"
+        ? "request_closed"
+        : "request_status_changed";
+
+    await appendEvent(
+      supabase,
+      data.id,
+      eventType,
+      {
+        status: data.status,
+        assigned_specialist_slug: data.assigned_specialist_slug ?? null,
+        assigned_specialist_name: data.assigned_specialist_name ?? null,
+      },
+      null,
+    );
 
     return NextResponse.json(
       { ok: true, request: data },
