@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import './globals.css';
-import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Oye !magine Growth OS Starter',
-  description: 'Starter setup for Vercel + Supabase + Resend + SMS + WhatsApp gateway'
+  title: {
+    default: "Oye !magine",
+    template: "%s | Oye !magine",
+  },
+  description:
+    "AI-first growth operating system for strategy, websites, SEO, paid media, analytics, marketplace delivery, and managed growth execution.",
+  applicationName: "Oye !magine",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
