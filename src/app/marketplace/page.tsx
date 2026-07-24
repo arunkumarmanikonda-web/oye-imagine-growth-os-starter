@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
 type Service = {
@@ -70,14 +71,17 @@ export default function MarketplacePage() {
         ]);
 
         const servicesJson = (await servicesResponse.json()) as ServicesResponse;
-        const specialistsJson = (await specialistsResponse.json()) as SpecialistsResponse;
+        const specialistsJson =
+          (await specialistsResponse.json()) as SpecialistsResponse;
 
         if (!servicesResponse.ok || !servicesJson.ok) {
           throw new Error(servicesJson.error || "Failed to load services.");
         }
 
         if (!specialistsResponse.ok || !specialistsJson.ok) {
-          throw new Error(specialistsJson.error || "Failed to load specialists.");
+          throw new Error(
+            specialistsJson.error || "Failed to load specialists.",
+          );
         }
 
         if (!active) return;
@@ -93,7 +97,11 @@ export default function MarketplacePage() {
         }
       } catch (error) {
         if (!active) return;
-        setLoadError(error instanceof Error ? error.message : "Failed to load marketplace data.");
+        setLoadError(
+          error instanceof Error
+            ? error.message
+            : "Failed to load marketplace data.",
+        );
       } finally {
         if (active) setLoading(false);
       }
@@ -109,6 +117,11 @@ export default function MarketplacePage() {
   const selectedService = useMemo(
     () => services.find((service) => service.slug === serviceSlug) ?? null,
     [services, serviceSlug],
+  );
+
+  const featuredSpecialists = useMemo(
+    () => specialists.slice(0, 6),
+    [specialists],
   );
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -153,39 +166,104 @@ export default function MarketplacePage() {
       setBudgetRange("");
       setBrief("");
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "Failed to submit request.");
+      setSubmitError(
+        error instanceof Error ? error.message : "Failed to submit request.",
+      );
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <main className="min-h-screen bg-neutral-950 text-white">
-      <section className="mx-auto max-w-7xl px-6 py-12">
-        <div className="mb-10">
-          <p className="text-sm font-medium uppercase tracking-[0.2em] text-fuchsia-300">
-            Oye !magine Marketplace
-          </p>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
-            Find execution partners without leaving the Growth OS
-          </h1>
-          <p className="mt-4 max-w-3xl text-base text-neutral-300 sm:text-lg">
-            Browse specialist-led services, discover vetted execution talent, and route demand into a governed
-            marketplace workflow.
-          </p>
+    <main className="min-h-screen text-slate-900">
+      <section className="oi-shell py-10">
+        <div className="oi-card overflow-hidden px-8 py-10 sm:px-10">
+          <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+            <div>
+              <div className="oi-chip px-4 py-2">
+                <span className="h-2 w-2 rounded-full bg-pink-500" />
+                Oye !magine Marketplace
+              </div>
+
+              <h1 className="mt-6 max-w-4xl text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">
+                Find verified growth specialists without leaving{" "}
+                <span className="oi-brand-gradient">Oye !magine</span>
+              </h1>
+
+              <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600">
+                Browse packaged services, submit structured briefs, and route work
+                into a governed marketplace workflow built for scale.
+              </p>
+
+              <div className="mt-8 flex flex-wrap gap-3">
+                <div className="oi-chip px-4 py-2">Governed intake</div>
+                <div className="oi-chip px-4 py-2">Specialist marketplace</div>
+                <div className="oi-chip px-4 py-2">Human accountability</div>
+              </div>
+            </div>
+
+            <div className="oi-card-soft p-6">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-indigo-600">
+                Marketplace snapshot
+              </p>
+              <div className="mt-5 grid gap-4 sm:grid-cols-3">
+                <div className="rounded-2xl bg-white/80 p-4">
+                  <p className="text-2xl font-bold text-slate-950">
+                    {services.length}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">services</p>
+                </div>
+                <div className="rounded-2xl bg-white/80 p-4">
+                  <p className="text-2xl font-bold text-slate-950">
+                    {specialists.length}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">specialists</p>
+                </div>
+                <div className="rounded-2xl bg-white/80 p-4">
+                  <p className="text-2xl font-bold text-slate-950">
+                    {selectedService ? "1" : "0"}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">selected service</p>
+                </div>
+              </div>
+
+              {selectedService ? (
+                <div className="mt-5 rounded-2xl border border-indigo-100 bg-indigo-50/80 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">
+                    Active service
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-slate-950">
+                    {selectedService.title}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    {selectedService.price_label}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          </div>
         </div>
 
         {loadError ? (
-          <div className="mb-8 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+          <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
             {loadError}
           </div>
         ) : null}
 
-        <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-          <section className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-fuchsia-950/20">
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-2xl font-semibold">Service catalog</h2>
-              {loading ? <span className="text-sm text-neutral-400">Loading�</span> : null}
+        <section className="mt-8 grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="oi-card p-6 sm:p-8">
+            <div className="mb-6 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-indigo-600">
+                  Service catalog
+                </p>
+                <h2 className="oi-section-title mt-2 text-2xl">
+                  Choose the right execution lane
+                </h2>
+              </div>
+              {loading ? (
+                <span className="text-sm text-slate-500">Loading...</span>
+              ) : null}
             </div>
 
             <div className="grid gap-4">
@@ -198,77 +276,105 @@ export default function MarketplacePage() {
                     type="button"
                     onClick={() => setServiceSlug(service.slug)}
                     className={[
-                      "rounded-2xl border p-5 text-left transition",
+                      "rounded-3xl border p-5 text-left transition duration-150",
                       active
-                        ? "border-fuchsia-400 bg-fuchsia-500/10"
-                        : "border-white/10 bg-black/20 hover:border-white/25 hover:bg-white/5",
+                        ? "border-indigo-300 bg-indigo-50 shadow-sm"
+                        : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
                     ].join(" ")}
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <p className="text-xs uppercase tracking-[0.18em] text-fuchsia-200">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-pink-600">
                           {service.category}
                         </p>
-                        <h3 className="mt-2 text-xl font-semibold">{service.title}</h3>
+                        <h3 className="mt-2 text-xl font-semibold text-slate-950">
+                          {service.title}
+                        </h3>
                       </div>
-                      <span className="rounded-full border border-white/10 px-3 py-1 text-sm text-neutral-200">
+                      <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
                         {service.price_label}
                       </span>
                     </div>
-                    <p className="mt-3 text-sm leading-6 text-neutral-300">{service.description}</p>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">
+                      {service.description}
+                    </p>
                   </button>
                 );
               })}
 
               {!loading && services.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-white/10 p-6 text-sm text-neutral-400">
+                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
                   No marketplace services found.
                 </div>
               ) : null}
             </div>
-          </section>
+          </div>
 
-          <section className="rounded-3xl border border-white/10 bg-white p-6 text-neutral-900 shadow-2xl">
+          <div className="oi-card p-6 sm:p-8">
             <div className="mb-6">
-              <h2 className="text-2xl font-semibold">Request this service</h2>
-              <p className="mt-2 text-sm text-neutral-600">
-                Submit a structured brief for review and assignment.
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-pink-600">
+                Structured intake
               </p>
-              {selectedService ? (
-                <div className="mt-4 rounded-2xl bg-neutral-100 p-4">
-                  <p className="text-xs uppercase tracking-[0.18em] text-neutral-500">Selected service</p>
-                  <p className="mt-1 text-lg font-semibold">{selectedService.title}</p>
-                  <p className="mt-1 text-sm text-neutral-600">{selectedService.price_label}</p>
-                </div>
-              ) : null}
+              <h2 className="oi-section-title mt-2 text-2xl">
+                Request this service
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Submit a structured brief for review, routing, and specialist
+                assignment.
+              </p>
             </div>
 
             <form className="space-y-4" onSubmit={onSubmit}>
               <div>
-                <label className="mb-1 block text-sm font-medium">Full name</label>
-                <input
-                  className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none ring-0 focus:border-neutral-900"
-                  value={fullName}
-                  onChange={(event) => setFullName(event.target.value)}
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Service
+                </label>
+                <select
+                  className="oi-select px-4 py-3"
+                  value={serviceSlug}
+                  onChange={(event) => setServiceSlug(event.target.value)}
                   required
-                />
+                >
+                  {services.map((service) => (
+                    <option key={service.id} value={service.slug}>
+                      {service.title} — {service.price_label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Full name
+                  </label>
+                  <input
+                    className="oi-input px-4 py-3"
+                    value={fullName}
+                    onChange={(event) => setFullName(event.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    className="oi-input px-4 py-3"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    required
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium">Email</label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Company
+                </label>
                 <input
-                  type="email"
-                  className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none ring-0 focus:border-neutral-900"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium">Company</label>
-                <input
-                  className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none ring-0 focus:border-neutral-900"
+                  className="oi-input px-4 py-3"
                   value={companyName}
                   onChange={(event) => setCompanyName(event.target.value)}
                 />
@@ -276,18 +382,22 @@ export default function MarketplacePage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-sm font-medium">Phone</label>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Phone
+                  </label>
                   <input
-                    className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none ring-0 focus:border-neutral-900"
+                    className="oi-input px-4 py-3"
                     value={phone}
                     onChange={(event) => setPhone(event.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium">Budget range</label>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Budget range
+                  </label>
                   <input
-                    className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none ring-0 focus:border-neutral-900"
-                    placeholder="?50k - ?1L"
+                    className="oi-input px-4 py-3"
+                    placeholder="₹50k - ₹1L"
                     value={budgetRange}
                     onChange={(event) => setBudgetRange(event.target.value)}
                   />
@@ -295,10 +405,12 @@ export default function MarketplacePage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium">Website</label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Website
+                </label>
                 <input
                   type="url"
-                  className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none ring-0 focus:border-neutral-900"
+                  className="oi-input px-4 py-3"
                   placeholder="https://example.com"
                   value={website}
                   onChange={(event) => setWebsite(event.target.value)}
@@ -306,9 +418,11 @@ export default function MarketplacePage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium">Brief</label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Brief
+                </label>
                 <textarea
-                  className="min-h-[140px] w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none ring-0 focus:border-neutral-900"
+                  className="oi-textarea min-h-[150px] px-4 py-3"
                   placeholder="What do you need, for which brand, by when, and what outcome matters most?"
                   value={brief}
                   onChange={(event) => setBrief(event.target.value)}
@@ -317,96 +431,106 @@ export default function MarketplacePage() {
               </div>
 
               {submitMessage ? (
-                <div className="rounded-2xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-800">
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
                   {submitMessage}
                 </div>
               ) : null}
 
               {submitError ? (
-                <div className="rounded-2xl border border-red-300 bg-red-50 p-4 text-sm text-red-700">
+                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                   {submitError}
                 </div>
               ) : null}
 
               <button
                 type="submit"
-                disabled={submitting || !serviceSlug}
-                className="inline-flex w-full items-center justify-center rounded-xl bg-neutral-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={submitting || loading || !serviceSlug}
+                className="oi-button-primary inline-flex w-full items-center justify-center px-6 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {submitting ? "Submitting�" : "Submit marketplace request"}
+                {submitting ? "Submitting..." : "Submit marketplace request"}
               </button>
             </form>
-          </section>
-        </div>
+          </div>
+        </section>
 
-        <section className="mt-10 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-fuchsia-950/20">
-          <div className="mb-6">
-            <p className="text-sm uppercase tracking-[0.2em] text-fuchsia-300">Specialists</p>
-            <h2 className="mt-2 text-3xl font-bold">Meet the execution bench</h2>
-            <p className="mt-3 max-w-3xl text-neutral-300">
-              Discover category specialists who can be assigned through the Oye !magine marketplace workflow.
-            </p>
+        <section className="mt-8 oi-card p-6 sm:p-8">
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-indigo-600">
+                Specialist directory
+              </p>
+              <h2 className="oi-section-title mt-2 text-2xl">
+                Meet verified operators
+              </h2>
+            </div>
+            <div className="oi-chip px-4 py-2">
+              {specialists.length} listed
+            </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {specialists.map((specialist) => (
-              <div
+            {featuredSpecialists.map((specialist) => (
+              <Link
                 key={specialist.id}
-                className="rounded-2xl border border-white/10 bg-black/20 p-5"
+                href={`/marketplace/specialists/${specialist.slug}`}
+                className="oi-card-soft block p-5 transition hover:-translate-y-0.5 hover:shadow-lg"
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-fuchsia-200">
-                      {specialist.primary_category}
+                    <p className="text-lg font-semibold text-slate-950">
+                      {specialist.full_name}
                     </p>
-                    <h3 className="mt-2 text-xl font-semibold">{specialist.full_name}</h3>
-                    <p className="mt-1 text-sm text-neutral-300">{specialist.title}</p>
+                    <p className="mt-1 text-sm text-slate-600">
+                      {specialist.title}
+                    </p>
                   </div>
-                  {specialist.verified ? (
-                    <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-emerald-200">
-                      Verified
-                    </span>
-                  ) : (
-                    <span className="rounded-full border border-white/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-neutral-400">
-                      Emerging
-                    </span>
-                  )}
+                  <span
+                    className={[
+                      "rounded-full px-3 py-1 text-xs font-semibold",
+                      specialist.verified
+                        ? "bg-emerald-100 text-emerald-700"
+                        : "bg-slate-100 text-slate-600",
+                    ].join(" ")}
+                  >
+                    {specialist.verified ? "Verified" : "Profile"}
+                  </span>
                 </div>
 
-                <p className="mt-4 text-sm leading-6 text-neutral-300">{specialist.bio}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
+                    {specialist.primary_category}
+                  </span>
+                  {specialist.languages.slice(0, 2).map((language) => (
+                    <span
+                      key={language}
+                      className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600"
+                    >
+                      {language}
+                    </span>
+                  ))}
+                </div>
 
-                <div className="mt-4">
-                  <p className="mb-2 text-xs uppercase tracking-[0.18em] text-neutral-400">Skills</p>
-                  <div className="flex flex-wrap gap-2">
-                    {specialist.skills.map((skill) => (
+                <p className="mt-4 text-sm leading-6 text-slate-600">
+                  {specialist.bio}
+                </p>
+
+                {specialist.skills.length > 0 ? (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {specialist.skills.slice(0, 4).map((skill) => (
                       <span
                         key={skill}
-                        className="rounded-full border border-white/10 px-3 py-1 text-xs text-neutral-200"
+                        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600"
                       >
                         {skill}
                       </span>
                     ))}
                   </div>
-                </div>
-
-                <div className="mt-4">
-                  <p className="mb-2 text-xs uppercase tracking-[0.18em] text-neutral-400">Languages</p>
-                  <div className="flex flex-wrap gap-2">
-                    {specialist.languages.map((language) => (
-                      <span
-                        key={language}
-                        className="rounded-full bg-white/5 px-3 py-1 text-xs text-neutral-300"
-                      >
-                        {language}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
+                ) : null}
+              </Link>
             ))}
 
-            {!loading && specialists.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-white/10 p-6 text-sm text-neutral-400">
+            {!loading && featuredSpecialists.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
                 No specialists found.
               </div>
             ) : null}
