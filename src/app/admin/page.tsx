@@ -86,7 +86,11 @@ export default function AdminPage() {
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState("");
   const [auditItems, setAuditItems] = useState<AuditItem[]>([]);
   const [auditActionFilter, setAuditActionFilter] = useState("");
-  const [summary, setSummary] = useState<{ tenants: number; brands: number; workspaces: number } | null>(null);
+  const [summary, setSummary] = useState<{
+    tenants: number;
+    brands: number;
+    workspaces: number;
+  } | null>(null);
   const [notes, setNotes] = useState<WorkspaceNote[]>([]);
   const [editingNoteId, setEditingNoteId] = useState("");
   const [noteTitle, setNoteTitle] = useState("");
@@ -113,6 +117,7 @@ export default function AdminPage() {
   async function loadAudit(actionFilter?: string) {
     const qs = new URLSearchParams();
     qs.set("limit", "25");
+
     if (actionFilter && actionFilter.trim()) {
       qs.set("action", actionFilter.trim());
     }
@@ -146,14 +151,21 @@ export default function AdminPage() {
     setSummary(json.counts || null);
   }
 
-  async function loadNotes(nextSearch?: string, nextIncludeArchived?: boolean) {
+  async function loadNotes(
+    nextSearch?: string,
+    nextIncludeArchived?: boolean,
+  ) {
     const qs = new URLSearchParams();
     const q = typeof nextSearch === "string" ? nextSearch : noteSearch;
-    const include = typeof nextIncludeArchived === "boolean" ? nextIncludeArchived : includeArchived;
+    const include =
+      typeof nextIncludeArchived === "boolean"
+        ? nextIncludeArchived
+        : includeArchived;
 
     if (q.trim()) {
       qs.set("q", q.trim());
     }
+
     if (include) {
       qs.set("includeArchived", "true");
     }
@@ -172,7 +184,11 @@ export default function AdminPage() {
     setNotes(json.items || []);
   }
 
-  async function loadAll(nextAuditFilter?: string, nextSearch?: string, nextIncludeArchived?: boolean) {
+  async function loadAll(
+    nextAuditFilter?: string,
+    nextSearch?: string,
+    nextIncludeArchived?: boolean,
+  ) {
     setLoading(true);
     setError("");
 
@@ -200,7 +216,9 @@ export default function AdminPage() {
   }, [active]);
 
   const latestSwitchEvent = useMemo(() => {
-    return auditItems.find((item) => item.action === "admin_context_switched") ?? null;
+    return (
+      auditItems.find((item) => item.action === "admin_context_switched") ?? null
+    );
   }, [auditItems]);
 
   async function onSwitchContext() {
@@ -246,10 +264,13 @@ export default function AdminPage() {
   async function applyAuditFilter() {
     setLoading(true);
     setError("");
+
     try {
       await loadAudit(auditActionFilter);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to filter admin audit");
+      setError(
+        err instanceof Error ? err.message : "Failed to filter admin audit",
+      );
     } finally {
       setLoading(false);
     }
@@ -259,10 +280,13 @@ export default function AdminPage() {
     setAuditActionFilter("");
     setLoading(true);
     setError("");
+
     try {
       await loadAudit("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to clear admin audit filter");
+      setError(
+        err instanceof Error ? err.message : "Failed to clear admin audit filter",
+      );
     } finally {
       setLoading(false);
     }
@@ -271,10 +295,13 @@ export default function AdminPage() {
   async function applyNoteFilter() {
     setLoading(true);
     setError("");
+
     try {
       await loadNotes(noteSearch, includeArchived);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to filter workspace notes");
+      setError(
+        err instanceof Error ? err.message : "Failed to filter workspace notes",
+      );
     } finally {
       setLoading(false);
     }
@@ -285,10 +312,15 @@ export default function AdminPage() {
     setIncludeArchived(false);
     setLoading(true);
     setError("");
+
     try {
       await loadNotes("", false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to clear workspace note filter");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to clear workspace note filter",
+      );
     } finally {
       setLoading(false);
     }
@@ -345,7 +377,9 @@ export default function AdminPage() {
         loadAudit(auditActionFilter),
       ]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save workspace note");
+      setError(
+        err instanceof Error ? err.message : "Failed to save workspace note",
+      );
     } finally {
       setNoteSaving(false);
     }
@@ -354,11 +388,15 @@ export default function AdminPage() {
   async function archiveNote(noteId: string) {
     setNoteSaving(true);
     setError("");
+
     try {
-      const response = await fetch(`/api/admin/workspace-notes?id=${encodeURIComponent(noteId)}&mode=archive`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      const response = await fetch(
+        `/api/admin/workspace-notes?id=${encodeURIComponent(noteId)}&mode=archive`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
 
       const json = await response.json();
 
@@ -377,7 +415,9 @@ export default function AdminPage() {
         loadAudit(auditActionFilter),
       ]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to archive workspace note");
+      setError(
+        err instanceof Error ? err.message : "Failed to archive workspace note",
+      );
     } finally {
       setNoteSaving(false);
     }
@@ -386,11 +426,15 @@ export default function AdminPage() {
   async function restoreNote(noteId: string) {
     setNoteSaving(true);
     setError("");
+
     try {
-      const response = await fetch(`/api/admin/workspace-notes?id=${encodeURIComponent(noteId)}&mode=restore`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      const response = await fetch(
+        `/api/admin/workspace-notes?id=${encodeURIComponent(noteId)}&mode=restore`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
 
       const json = await response.json();
 
@@ -403,336 +447,483 @@ export default function AdminPage() {
         loadAudit(auditActionFilter),
       ]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to restore workspace note");
+      setError(
+        err instanceof Error ? err.message : "Failed to restore workspace note",
+      );
     } finally {
       setNoteSaving(false);
     }
   }
 
   return (
-    <main style={{ padding: 24, fontFamily: "Arial, sans-serif" }}>
-      <h1>Platform Admin</h1>
-
-      {loading ? <p>Loading admin context...</p> : null}
-      {error ? <p style={{ color: "crimson" }}>{error}</p> : null}
-
-      <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, marginBottom: 16 }}>
-        <h2>Admin Identity</h2>
-        <p><strong>Email:</strong> {userEmail || "Unknown"}</p>
-      </section>
-
-      <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, marginBottom: 16 }}>
-        <h2>Active Context</h2>
-        {active ? (
-          <>
-            <p><strong>Tenant:</strong> {active.tenantDisplayName}</p>
-            <p><strong>Brand:</strong> {active.brandName}</p>
-            <p><strong>Workspace:</strong> {active.workspaceName}</p>
-            <p><strong>Summary:</strong> {activeLabel}</p>
-          </>
-        ) : (
-          <p>No active context.</p>
-        )}
-      </section>
-
-      <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, marginBottom: 16 }}>
-        <h2>Context-Scoped Summary</h2>
-        {summary ? (
-          <>
-            <p><strong>Tenants in scope:</strong> {summary.tenants}</p>
-            <p><strong>Brands in scope:</strong> {summary.brands}</p>
-            <p><strong>Workspaces in scope:</strong> {summary.workspaces}</p>
-          </>
-        ) : (
-          <p>No summary available.</p>
-        )}
-      </section>
-
-      <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, marginBottom: 16 }}>
-        <h2>Switch Workspace</h2>
-        <label htmlFor="workspaceId"><strong>Workspace</strong></label>
-        <br />
-        <select
-          id="workspaceId"
-          value={selectedWorkspaceId}
-          onChange={(e) => setSelectedWorkspaceId(e.target.value)}
-          style={{ minWidth: 420, padding: 8, marginTop: 8, marginBottom: 12 }}
-        >
-          {options.map((item) => (
-            <option key={item.workspaceId} value={item.workspaceId}>
-              {`${item.tenantDisplayName} / ${item.brandName} / ${item.workspaceName}`}
-            </option>
-          ))}
-        </select>
-        <br />
-        <button
-          type="button"
-          onClick={onSwitchContext}
-          disabled={saving || !selectedWorkspaceId}
-          style={{ padding: "8px 14px", cursor: "pointer" }}
-        >
-          {saving ? "Switching..." : "Switch Context"}
-        </button>
-      </section>
-
-      <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, marginBottom: 16 }}>
-        <h2>Workspace Notes</h2>
-        <p><strong>Scoped to:</strong> {activeLabel}</p>
-
-        <label htmlFor="noteSearch"><strong>Search</strong></label>
-        <br />
-        <input
-          id="noteSearch"
-          value={noteSearch}
-          onChange={(e) => setNoteSearch(e.target.value)}
-          placeholder="Search title or body"
-          style={{ minWidth: 320, padding: 8, marginTop: 8, marginBottom: 12 }}
-        />
-        <br />
-
-        <label style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-          <input
-            type="checkbox"
-            checked={includeArchived}
-            onChange={(e) => setIncludeArchived(e.target.checked)}
-          />
-          Include archived
-        </label>
-        <br />
-
-        <button type="button" onClick={applyNoteFilter} style={{ padding: "8px 14px", cursor: "pointer", marginRight: 8 }}>
-          Apply Note Filter
-        </button>
-        <button type="button" onClick={clearNoteFilter} style={{ padding: "8px 14px", cursor: "pointer", marginBottom: 16 }}>
-          Clear Note Filter
-        </button>
-
-        <hr style={{ margin: "16px 0" }} />
-
-        <label htmlFor="noteTitle"><strong>Title</strong></label>
-        <br />
-        <input
-          id="noteTitle"
-          value={noteTitle}
-          onChange={(e) => setNoteTitle(e.target.value)}
-          style={{ minWidth: 420, padding: 8, marginTop: 8, marginBottom: 12 }}
-        />
-        <br />
-
-        <label htmlFor="noteBody"><strong>Body</strong></label>
-        <br />
-        <textarea
-          id="noteBody"
-          value={noteBody}
-          onChange={(e) => setNoteBody(e.target.value)}
-          rows={5}
-          style={{ minWidth: 420, width: "100%", maxWidth: 700, padding: 8, marginTop: 8, marginBottom: 12 }}
-        />
-        <br />
-
-        <button
-          type="button"
-          onClick={saveNote}
-          disabled={noteSaving}
-          style={{ padding: "8px 14px", cursor: "pointer", marginRight: 8 }}
-        >
-          {noteSaving ? "Saving..." : editingNoteId ? "Update Note" : "Create Note"}
-        </button>
-
-        <button
-          type="button"
-          onClick={startCreateNote}
-          style={{ padding: "8px 14px", cursor: "pointer" }}
-        >
-          New Note
-        </button>
-
-        <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
-          {notes.length === 0 ? (
-            <p>No notes for this workspace yet.</p>
-          ) : (
-            notes.map((note) => (
-              <div
-                key={note.id}
-                style={{
-                  border: "1px solid #eee",
-                  borderRadius: 6,
-                  padding: 12,
-                  background: note.archived_at ? "#f3f3f3" : "#fafafa",
-                  opacity: note.archived_at ? 0.8 : 1,
-                }}
-              >
-                <p><strong>Title:</strong> {note.title}</p>
-                <p><strong>Updated:</strong> {note.updated_at}</p>
-                <p><strong>Archived:</strong> {note.archived_at || "No"}</p>
-                <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0, fontSize: 12 }}>
-                  {note.body}
-                </pre>
-                <div style={{ marginTop: 12 }}>
-                  <button
-                    type="button"
-                    onClick={() => startEditNote(note)}
-                    style={{ padding: "8px 14px", cursor: "pointer", marginRight: 8 }}
-                  >
-                    Edit
-                  </button>
-
-                  {note.archived_at ? (
-                    <button
-                      type="button"
-                      onClick={() => restoreNote(note.id)}
-                      style={{ padding: "8px 14px", cursor: "pointer" }}
-                    >
-                      Restore
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => archiveNote(note.id)}
-                      style={{ padding: "8px 14px", cursor: "pointer" }}
-                    >
-                      Archive
-                    </button>
-                  )}
-                </div>
+    <main className="min-h-screen text-slate-900">
+      <section className="oi-shell py-10">
+        <div className="oi-card overflow-hidden px-8 py-10 sm:px-10">
+          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <div>
+              <div className="oi-chip px-4 py-2">
+                <span className="h-2 w-2 rounded-full bg-indigo-500" />
+                Admin control plane
               </div>
-            ))
-          )}
-        </div>
-      </section>
 
-      <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, marginBottom: 16 }}>
-        <h2>Latest Context Switch</h2>
-        {latestSwitchEvent ? (
-          <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0, fontSize: 12 }}>
-            {JSON.stringify(latestSwitchEvent, null, 2)}
-          </pre>
-        ) : (
-          <p>No context switch audit found yet.</p>
-        )}
-      </section>
+              <h1 className="mt-6 text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">
+                Operate workspaces inside <span className="oi-brand-gradient">Oye !magine</span>
+              </h1>
 
-      <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, marginBottom: 16 }}>
-        <h2>Audit Filter</h2>
-        <label htmlFor="auditAction"><strong>Action</strong></label>
-        <br />
-        <input
-          id="auditAction"
-          value={auditActionFilter}
-          onChange={(e) => setAuditActionFilter(e.target.value)}
-          placeholder="admin_context_switched"
-          style={{ minWidth: 320, padding: 8, marginTop: 8, marginBottom: 12 }}
-        />
-        <br />
-        <button type="button" onClick={applyAuditFilter} style={{ padding: "8px 14px", cursor: "pointer", marginRight: 8 }}>
-          Apply Filter
-        </button>
-        <button type="button" onClick={clearAuditFilter} style={{ padding: "8px 14px", cursor: "pointer" }}>
-          Clear Filter
-        </button>
-      </section>
+              <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600">
+                Manage context, review audit activity, work with notes, and move
+                between onboarding, strategy, execution, and summary workflows.
+              </p>
 
-      <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16 }}>
-        <h2>Recent Admin Audit</h2>
-        {auditItems.length === 0 ? (
-          <p>No audit rows found.</p>
-        ) : (
-          <div style={{ display: "grid", gap: 12 }}>
-            {auditItems.map((item, index) => {
-              const createdAt = item.created_at || "n/a";
-              const action = item.action || "n/a";
-
-              return (
-                <div
-                  key={`${createdAt}-${index}`}
-                  style={{
-                    border: "1px solid #eee",
-                    borderRadius: 6,
-                    padding: 12,
-                    background: "#fafafa",
-                  }}
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a
+                  href="/admin/onboarding"
+                  className="oi-button-primary inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold"
                 >
-                  <p><strong>Created:</strong> {createdAt}</p>
-                  <p><strong>Action:</strong> {action}</p>
-                  <p><strong>Actor:</strong> {item.actor_email || item.actor_user_id || "n/a"}</p>
-                  <p><strong>Target:</strong> {item.target_type || "n/a"} / {item.target_id || "n/a"}</p>
-                  <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0, fontSize: 12 }}>
-                    {JSON.stringify(item, null, 2)}
-                  </pre>
+                  Open onboarding
+                </a>
+                <a
+                  href="/admin/marketplace"
+                  className="oi-button-secondary inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold"
+                >
+                  Open marketplace admin
+                </a>
+              </div>
+            </div>
+
+            <div className="oi-card-soft p-6">
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-indigo-600">
+                Admin identity
+              </p>
+              <p className="mt-3 text-lg font-semibold text-slate-950">
+                {userEmail || "Unknown"}
+              </p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Active context:
+              </p>
+              <div className="mt-3 rounded-2xl bg-slate-100 px-4 py-3 text-sm font-medium text-slate-700">
+                {activeLabel}
+              </div>
+
+              {loading ? (
+                <p className="mt-4 text-sm text-slate-500">Loading admin context...</p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        {error ? (
+          <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+            {error}
+          </div>
+        ) : null}
+
+        <section className="mt-8 grid gap-6 md:grid-cols-3">
+          <div className="oi-card p-6">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-indigo-600">
+              Tenants
+            </p>
+            <p className="mt-3 text-4xl font-bold text-slate-950">
+              {summary?.tenants ?? 0}
+            </p>
+            <p className="mt-2 text-sm text-slate-500">in current scope</p>
+          </div>
+
+          <div className="oi-card p-6">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-pink-600">
+              Brands
+            </p>
+            <p className="mt-3 text-4xl font-bold text-slate-950">
+              {summary?.brands ?? 0}
+            </p>
+            <p className="mt-2 text-sm text-slate-500">in current scope</p>
+          </div>
+
+          <div className="oi-card p-6">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-600">
+              Workspaces
+            </p>
+            <p className="mt-3 text-4xl font-bold text-slate-950">
+              {summary?.workspaces ?? 0}
+            </p>
+            <p className="mt-2 text-sm text-slate-500">available now</p>
+          </div>
+        </section>
+
+        <section className="mt-8 grid gap-6 xl:grid-cols-[1fr_1fr]">
+          <section className="oi-card p-6">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-indigo-600">
+              Active context
+            </p>
+            <h2 className="oi-section-title mt-2 text-2xl">
+              Workspace switching
+            </h2>
+
+            <div className="mt-5 grid gap-3 text-sm text-slate-700">
+              <div className="oi-card-soft p-4">
+                <strong>Tenant:</strong> {active?.tenantDisplayName || "No active context"}
+              </div>
+              <div className="oi-card-soft p-4">
+                <strong>Brand:</strong> {active?.brandName || "No active context"}
+              </div>
+              <div className="oi-card-soft p-4">
+                <strong>Workspace:</strong> {active?.workspaceName || "No active context"}
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Workspace
+              </label>
+              <select
+                value={selectedWorkspaceId}
+                onChange={(event) => setSelectedWorkspaceId(event.target.value)}
+                className="oi-select px-4 py-3"
+              >
+                {options.map((item) => (
+                  <option key={item.workspaceId} value={item.workspaceId}>
+                    {`${item.tenantDisplayName} / ${item.brandName} / ${item.workspaceName}`}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                type="button"
+                onClick={onSwitchContext}
+                disabled={saving || !selectedWorkspaceId}
+                className="oi-button-primary mt-4 inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {saving ? "Switching..." : "Switch context"}
+              </button>
+            </div>
+          </section>
+
+          <section className="oi-card p-6">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-pink-600">
+              Latest context switch
+            </p>
+            <h2 className="oi-section-title mt-2 text-2xl">
+              Recent switch event
+            </h2>
+
+            {latestSwitchEvent ? (
+              <pre className="mt-5 overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs leading-6 text-slate-700">
+                {JSON.stringify(latestSwitchEvent, null, 2)}
+              </pre>
+            ) : (
+              <div className="oi-card-soft mt-5 p-4 text-sm text-slate-600">
+                No context switch audit found yet.
+              </div>
+            )}
+          </section>
+        </section>
+
+        <section className="mt-8 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+          <section className="oi-card p-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-indigo-600">
+                  Workspace notes
+                </p>
+                <h2 className="oi-section-title mt-2 text-2xl">
+                  Capture operating context
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Scoped to: {activeLabel}
+                </p>
+              </div>
+              <div className="oi-chip px-4 py-2">{notes.length} notes</div>
+            </div>
+
+            <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_auto_auto]">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Search
+                </label>
+                <input
+                  value={noteSearch}
+                  onChange={(event) => setNoteSearch(event.target.value)}
+                  placeholder="Search title or body"
+                  className="oi-input px-4 py-3"
+                />
+              </div>
+
+              <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={includeArchived}
+                  onChange={(event) => setIncludeArchived(event.target.checked)}
+                />
+                Include archived
+              </label>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={applyNoteFilter}
+                  className="oi-button-secondary inline-flex items-center justify-center px-4 py-3 text-sm font-semibold"
+                >
+                  Apply
+                </button>
+                <button
+                  type="button"
+                  onClick={clearNoteFilter}
+                  className="oi-button-secondary inline-flex items-center justify-center px-4 py-3 text-sm font-semibold"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-4">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Title
+                </label>
+                <input
+                  value={noteTitle}
+                  onChange={(event) => setNoteTitle(event.target.value)}
+                  className="oi-input px-4 py-3"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Body
+                </label>
+                <textarea
+                  value={noteBody}
+                  onChange={(event) => setNoteBody(event.target.value)}
+                  rows={6}
+                  className="oi-textarea px-4 py-3"
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={saveNote}
+                  disabled={noteSaving}
+                  className="oi-button-primary inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {noteSaving ? "Saving..." : editingNoteId ? "Update note" : "Create note"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={startCreateNote}
+                  className="oi-button-secondary inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold"
+                >
+                  New note
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-4">
+              {notes.length === 0 ? (
+                <div className="oi-card-soft p-4 text-sm text-slate-600">
+                  No notes for this workspace yet.
                 </div>
-              );
-            })}
-          </div>
-        )}
+              ) : (
+                notes.map((note) => (
+                  <div
+                    key={note.id}
+                    className={[
+                      "rounded-3xl border p-5",
+                      note.archived_at
+                        ? "border-slate-200 bg-slate-50 opacity-80"
+                        : "border-slate-200 bg-white",
+                    ].join(" ")}
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-lg font-semibold text-slate-950">
+                          {note.title}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-500">
+                          Updated: {note.updated_at}
+                        </p>
+                      </div>
+                      <span
+                        className={[
+                          "rounded-full px-3 py-1 text-xs font-semibold",
+                          note.archived_at
+                            ? "bg-slate-200 text-slate-700"
+                            : "bg-emerald-100 text-emerald-700",
+                        ].join(" ")}
+                      >
+                        {note.archived_at ? "Archived" : "Active"}
+                      </span>
+                    </div>
+
+                    <pre className="mt-4 whitespace-pre-wrap break-words rounded-2xl bg-slate-50 p-4 text-xs leading-6 text-slate-700">
+                      {note.body}
+                    </pre>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => startEditNote(note)}
+                        className="oi-button-secondary inline-flex items-center justify-center px-4 py-2 text-sm font-semibold"
+                      >
+                        Edit
+                      </button>
+
+                      {note.archived_at ? (
+                        <button
+                          type="button"
+                          onClick={() => restoreNote(note.id)}
+                          className="oi-button-secondary inline-flex items-center justify-center px-4 py-2 text-sm font-semibold"
+                        >
+                          Restore
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => archiveNote(note.id)}
+                          className="oi-button-secondary inline-flex items-center justify-center px-4 py-2 text-sm font-semibold"
+                        >
+                          Archive
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className="grid gap-6">
+            <section className="oi-card p-6">
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-pink-600">
+                Audit filter
+              </p>
+              <h2 className="oi-section-title mt-2 text-2xl">
+                Recent admin audit
+              </h2>
+
+              <div className="mt-5">
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Action
+                </label>
+                <input
+                  value={auditActionFilter}
+                  onChange={(event) => setAuditActionFilter(event.target.value)}
+                  placeholder="admin_context_switched"
+                  className="oi-input px-4 py-3"
+                />
+              </div>
+
+              <div className="mt-4 flex gap-2">
+                <button
+                  type="button"
+                  onClick={applyAuditFilter}
+                  className="oi-button-secondary inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold"
+                >
+                  Apply filter
+                </button>
+                <button
+                  type="button"
+                  onClick={clearAuditFilter}
+                  className="oi-button-secondary inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold"
+                >
+                  Clear filter
+                </button>
+              </div>
+
+              <div className="mt-6 grid gap-4">
+                {auditItems.length === 0 ? (
+                  <div className="oi-card-soft p-4 text-sm text-slate-600">
+                    No audit rows found.
+                  </div>
+                ) : (
+                  auditItems.map((item, index) => {
+                    const createdAt = item.created_at || "n/a";
+                    const action = item.action || "n/a";
+
+                    return (
+                      <div
+                        key={`${createdAt}-${index}`}
+                        className="rounded-3xl border border-slate-200 bg-white p-5"
+                      >
+                        <div className="grid gap-1 text-sm text-slate-700">
+                          <p><strong>Created:</strong> {createdAt}</p>
+                          <p><strong>Action:</strong> {action}</p>
+                          <p><strong>Actor:</strong> {item.actor_email || item.actor_user_id || "n/a"}</p>
+                          <p><strong>Target:</strong> {item.target_type || "n/a"} / {item.target_id || "n/a"}</p>
+                        </div>
+                        <pre className="mt-4 overflow-x-auto rounded-2xl bg-slate-50 p-4 text-xs leading-6 text-slate-700">
+                          {JSON.stringify(item, null, 2)}
+                        </pre>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </section>
+
+            <section className="oi-card p-6">
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-600">
+                Admin workstreams
+              </p>
+              <h2 className="oi-section-title mt-2 text-2xl">
+                Continue execution
+              </h2>
+
+              <div className="mt-5 grid gap-4">
+                {[
+                  {
+                    eyebrow: "Onboarding",
+                    title: "Workspace onboarding",
+                    body: "Capture workspace profile, goals, channels, and brand inputs.",
+                    href: "/admin/onboarding",
+                    cta: "Open onboarding",
+                  },
+                  {
+                    eyebrow: "Strategy",
+                    title: "Workspace strategy",
+                    body: "Generate a working growth strategy from onboarding inputs, channels, messaging, and 90-day priorities.",
+                    href: "/admin/strategy",
+                    cta: "Open strategy",
+                  },
+                  {
+                    eyebrow: "Execution",
+                    title: "Weekly execution workspace",
+                    body: "Turn strategy into weekly tasks, owners, statuses, priorities, and execution notes.",
+                    href: "/admin/execution",
+                    cta: "Open execution",
+                  },
+                  {
+                    eyebrow: "Summary",
+                    title: "Workspace summary",
+                    body: "Review onboarding, strategy, execution, counts, and recent audit activity.",
+                    href: "/admin/summary",
+                    cta: "Open summary",
+                  },
+                ].map((item) => (
+                  <div key={item.href} className="oi-card-soft p-5">
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      {item.eyebrow}
+                    </p>
+                    <h3 className="mt-2 text-xl font-semibold text-slate-950">
+                      {item.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      {item.body}
+                    </p>
+                    <a
+                      href={item.href}
+                      className="oi-button-secondary mt-4 inline-flex items-center justify-center px-4 py-2 text-sm font-semibold"
+                    >
+                      {item.cta}
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </section>
+        </section>
       </section>
-          <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Onboarding</p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-900">Workspace onboarding</h2>
-            <p className="mt-2 max-w-2xl text-sm text-slate-600">
-              Capture workspace profile, goals, channels, and brand inputs.
-            </p>
-          </div>
-          <a
-            className="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-            href="/admin/onboarding"
-          >
-            Open onboarding
-          </a>
-        </div>
-      </section>
-      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Strategy</p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-900">Workspace strategy</h2>
-            <p className="mt-2 max-w-2xl text-sm text-slate-600">
-              Generate a working growth strategy from onboarding inputs, channels, messaging, and 90-day priorities.
-            </p>
-          </div>
-          <a
-            className="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-            href="/admin/strategy"
-          >
-            Open strategy
-          </a>
-        </div>
-      </section>
-      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Execution</p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-900">Weekly execution workspace</h2>
-            <p className="mt-2 max-w-2xl text-sm text-slate-600">
-              Turn strategy into weekly tasks, owners, statuses, priorities, and execution notes.
-            </p>
-          </div>
-          <a
-            className="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-            href="/admin/execution"
-          >
-            Open execution
-          </a>
-        </div>
-      </section>
-      <section className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-[0.18em] text-neutral-500">Summary</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">Workspace summary</h2>
-            <p className="mt-3 max-w-2xl text-sm text-neutral-600">
-              Review onboarding, strategy, execution, counts, and recent audit activity.
-            </p>
-          </div>
-          <a
-            href="/admin/summary"
-            className="inline-flex items-center justify-center rounded-full bg-black px-5 py-2 text-sm font-medium text-white"
-          >
-            Open summary
-          </a>
-        </div>
-      </section>
-</main>
+    </main>
   );
 }
