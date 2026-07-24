@@ -65,11 +65,19 @@ function formatJson(value: unknown) {
   return JSON.stringify(value, null, 2);
 }
 
-function actionBadgeColor(action: SettingVersionItem["action"]) {
-  if (action === "created") return "#065f46";
-  if (action === "updated") return "#1d4ed8";
-  if (action === "deleted") return "#b91c1c";
-  return "#7c3aed";
+function formatDateTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  return date.toLocaleString();
+}
+
+function actionTone(action: SettingVersionItem["action"]) {
+  if (action === "created") return "bg-emerald-100 text-emerald-700";
+  if (action === "updated") return "bg-sky-100 text-sky-700";
+  if (action === "deleted") return "bg-rose-100 text-rose-700";
+  return "bg-violet-100 text-violet-700";
 }
 
 export default function AdminWorkspaceSettingsPage() {
@@ -92,7 +100,7 @@ export default function AdminWorkspaceSettingsPage() {
   const [versionsLimit, setVersionsLimit] = useState("30");
 
   const activeLabel = useMemo(() => {
-    if (!active) return "";
+    if (!active) return "No active context";
     return [active.tenantName, active.brandName, active.workspaceName].filter(Boolean).join(" / ");
   }, [active]);
 
@@ -199,9 +207,7 @@ export default function AdminWorkspaceSettingsPage() {
 
   async function deleteSetting(item: SettingItem) {
     const confirmed = window.confirm('Delete setting "' + item.key + '"?');
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     setDeletingId(item.id);
     setError("");
@@ -240,9 +246,7 @@ export default function AdminWorkspaceSettingsPage() {
 
   async function restoreVersion(item: SettingVersionItem) {
     const confirmed = window.confirm('Restore version for "' + item.key + '"?');
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     setRestoringVersionId(item.id);
     setError("");
@@ -279,135 +283,77 @@ export default function AdminWorkspaceSettingsPage() {
     window.open("/api/admin/exports?kind=" + kind, "_blank");
   }
 
+  const statCards = [
+    { label: "Visible settings", value: items.length },
+    { label: "Visible versions", value: recentVersions.length },
+    { label: "Settings limit", value: settingsLimit },
+    { label: "Versions limit", value: versionsLimit },
+  ];
+
   return (
-    <main style={{ padding: 24, maxWidth: 1320, margin: "0 auto", fontFamily: "Arial, sans-serif" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: 16,
-          marginBottom: 20,
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <h1 style={{ margin: 0, fontSize: 32 }}>Workspace Settings Admin</h1>
-          <p style={{ marginTop: 8, color: "#555", maxWidth: 820 }}>
-            Manage tenant-scoped workspace settings, inspect version history, restore prior versions,
-            export operational data, and work with larger data sets more efficiently.
-          </p>
-        </div>
+    <main className="oi-shell mx-auto max-w-7xl px-6 py-10">
+      <section className="oi-card rounded-[32px] p-8 lg:p-10">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <p className="oi-kicker">Workspace settings</p>
+            <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
+              Workspace settings control
+            </h1>
+            <p className="mt-4 text-base leading-7 text-slate-600">
+              Manage tenant-scoped settings, inspect version history, restore previous states, and export operational snapshots from a unified premium workspace.
+            </p>
 
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <a
-            href="/admin"
-            style={{
-              color: "#2563eb",
-              textDecoration: "none",
-              fontWeight: 600,
-              padding: "10px 14px",
-              border: "1px solid #cbd5e1",
-              borderRadius: 10,
-              background: "#fff",
-            }}
-          >
-            Back to /admin
-          </a>
-        </div>
-      </div>
-
-      <section
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: 12,
-          marginBottom: 20,
-        }}
-      >
-        <div style={{ border: "1px solid #e5e7eb", borderRadius: 14, padding: 16, background: "#fafafa" }}>
-          <div style={{ fontSize: 12, color: "#666", textTransform: "uppercase", letterSpacing: 0.5 }}>Active Context</div>
-          <div style={{ marginTop: 8, fontWeight: 700 }}>{active ? activeLabel : "No active context"}</div>
-        </div>
-
-        <div style={{ border: "1px solid #e5e7eb", borderRadius: 14, padding: 16, background: "#fafafa" }}>
-          <div style={{ fontSize: 12, color: "#666", textTransform: "uppercase", letterSpacing: 0.5 }}>Visible Settings</div>
-          <div style={{ marginTop: 8, fontWeight: 700, fontSize: 24 }}>{items.length}</div>
-        </div>
-
-        <div style={{ border: "1px solid #e5e7eb", borderRadius: 14, padding: 16, background: "#fafafa" }}>
-          <div style={{ fontSize: 12, color: "#666", textTransform: "uppercase", letterSpacing: 0.5 }}>Visible Versions</div>
-          <div style={{ marginTop: 8, fontWeight: 700, fontSize: 24 }}>{recentVersions.length}</div>
-        </div>
-      </section>
-
-      <section
-        style={{
-          border: "1px solid #e5e7eb",
-          borderRadius: 14,
-          padding: 16,
-          marginBottom: 20,
-          background: "#fff",
-        }}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <div>
-            <h2 style={{ margin: 0 }}>Exports</h2>
-            <p style={{ marginTop: 6, color: "#666" }}>Download CSV snapshots for settings, versions, and audit activity.</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <a href="/admin" className="oi-button-primary">
+                Back to admin
+              </a>
+              <button type="button" onClick={() => exportCsv("settings")} className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white">
+                Export settings CSV
+              </button>
+              <button type="button" onClick={() => exportCsv("versions")} className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white">
+                Export versions CSV
+              </button>
+              <button type="button" onClick={() => exportCsv("audit")} className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white">
+                Export audit CSV
+              </button>
+            </div>
           </div>
 
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button
-              onClick={() => exportCsv("settings")}
-              type="button"
-              style={{ padding: "10px 14px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer" }}
-            >
-              Export Settings CSV
-            </button>
-            <button
-              onClick={() => exportCsv("versions")}
-              type="button"
-              style={{ padding: "10px 14px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer" }}
-            >
-              Export Versions CSV
-            </button>
-            <button
-              onClick={() => exportCsv("audit")}
-              type="button"
-              style={{ padding: "10px 14px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer" }}
-            >
-              Export Audit CSV
-            </button>
+          <div className="min-w-[300px] rounded-[28px] border border-white/70 bg-white/85 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur">
+            <div className="oi-brand-gradient h-2 w-24 rounded-full" />
+            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Active context</p>
+            <p className="mt-3 text-sm font-medium leading-6 text-slate-900">{activeLabel}</p>
           </div>
         </div>
       </section>
 
-      <section
-        style={{
-          border: "1px solid #e5e7eb",
-          borderRadius: 14,
-          padding: 16,
-          marginBottom: 20,
-          background: "#fff",
-        }}
-      >
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr auto auto", gap: 12, alignItems: "end" }}>
-          <label style={{ display: "grid", gap: 6 }}>
-            <span>Search key</span>
+      <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {statCards.map((card) => (
+          <div key={card.label} className="oi-card rounded-[28px] p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{card.label}</p>
+            <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">{card.value}</p>
+          </div>
+        ))}
+      </section>
+
+      <section className="mt-6 oi-card rounded-[28px] p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
+          <label className="grid flex-1 gap-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Search key</span>
             <input
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="ui.theme"
-              style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #cbd5e1" }}
+              className="oi-input"
             />
           </label>
 
-          <label style={{ display: "grid", gap: 6 }}>
-            <span>Version action</span>
+          <label className="grid min-w-[180px] gap-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Version action</span>
             <select
               value={versionAction}
               onChange={(e) => setVersionAction(e.target.value as "" | "created" | "updated" | "deleted" | "restored")}
-              style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff" }}
+              className="oi-select"
             >
               <option value="">All</option>
               <option value="created">created</option>
@@ -417,13 +363,9 @@ export default function AdminWorkspaceSettingsPage() {
             </select>
           </label>
 
-          <label style={{ display: "grid", gap: 6 }}>
-            <span>Settings limit</span>
-            <select
-              value={settingsLimit}
-              onChange={(e) => setSettingsLimit(e.target.value)}
-              style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff" }}
-            >
+          <label className="grid min-w-[150px] gap-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Settings limit</span>
+            <select value={settingsLimit} onChange={(e) => setSettingsLimit(e.target.value)} className="oi-select">
               <option value="10">10</option>
               <option value="25">25</option>
               <option value="50">50</option>
@@ -431,13 +373,9 @@ export default function AdminWorkspaceSettingsPage() {
             </select>
           </label>
 
-          <label style={{ display: "grid", gap: 6 }}>
-            <span>Versions limit</span>
-            <select
-              value={versionsLimit}
-              onChange={(e) => setVersionsLimit(e.target.value)}
-              style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff" }}
-            >
+          <label className="grid min-w-[150px] gap-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Versions limit</span>
+            <select value={versionsLimit} onChange={(e) => setVersionsLimit(e.target.value)} className="oi-select">
               <option value="10">10</option>
               <option value="30">30</option>
               <option value="50">50</option>
@@ -445,186 +383,118 @@ export default function AdminWorkspaceSettingsPage() {
             </select>
           </label>
 
-          <button
-            onClick={() => setQuery(searchInput.trim())}
-            type="button"
-            style={{ padding: "10px 14px", borderRadius: 10, border: 0, background: "#111827", color: "#fff", cursor: "pointer" }}
-          >
-            Apply
-          </button>
-
-          <button
-            onClick={clearFilters}
-            type="button"
-            style={{ padding: "10px 14px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer" }}
-          >
-            Clear
-          </button>
+          <div className="flex gap-3">
+            <button type="button" onClick={() => setQuery(searchInput.trim())} className="oi-button-primary">
+              Apply
+            </button>
+            <button type="button" onClick={clearFilters} className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white">
+              Clear
+            </button>
+          </div>
         </div>
       </section>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(320px, 420px) minmax(0, 1fr)",
-          gap: 20,
-          alignItems: "start",
-        }}
-      >
-        <section
-          style={{
-            border: "1px solid #e5e7eb",
-            borderRadius: 14,
-            padding: 16,
-            background: "#fff",
-            position: "sticky",
-            top: 16,
-          }}
-        >
-          <h2 style={{ marginTop: 0 }}>{selected ? "Edit Setting" : "Create Setting"}</h2>
+      <section className="mt-6 grid gap-6 xl:grid-cols-[400px_minmax(0,1fr)]">
+        <section className="oi-card rounded-[28px] p-6 xl:sticky xl:top-6">
+          <p className="oi-kicker">Editor</p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+            {selected ? "Update setting" : "Create setting"}
+          </h2>
 
-          <div style={{ display: "grid", gap: 12 }}>
-            <label style={{ display: "grid", gap: 6 }}>
-              <span>Key</span>
+          <div className="mt-6 grid gap-4">
+            <label className="grid gap-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Key</span>
               <input
                 value={keyInput}
                 onChange={(e) => setKeyInput(e.target.value)}
                 placeholder="ui.theme"
                 disabled={Boolean(selected)}
-                style={{ padding: 10, borderRadius: 10, border: "1px solid #cbd5e1" }}
+                className="oi-input"
               />
             </label>
 
-            <label style={{ display: "grid", gap: 6 }}>
-              <span>JSON Value</span>
+            <label className="grid gap-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">JSON value</span>
               <textarea
                 value={valueInput}
                 onChange={(e) => setValueInput(e.target.value)}
                 rows={14}
-                style={{
-                  padding: 10,
-                  borderRadius: 10,
-                  border: "1px solid #cbd5e1",
-                  fontFamily: "Consolas, monospace",
-                }}
+                className="oi-textarea"
               />
             </label>
 
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button
-                onClick={() => void saveSetting()}
-                disabled={saving}
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: 10,
-                  border: 0,
-                  background: "#111827",
-                  color: "#fff",
-                  cursor: "pointer",
-                }}
-              >
-                {saving ? "Saving..." : selected ? "Update Setting" : "Create Setting"}
+            <div className="flex flex-wrap gap-3">
+              <button type="button" onClick={() => void saveSetting()} disabled={saving} className="oi-button-primary">
+                {saving ? "Saving..." : selected ? "Update setting" : "Create setting"}
               </button>
-
-              <button
-                onClick={resetForm}
-                type="button"
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: 10,
-                  border: "1px solid #cbd5e1",
-                  background: "#fff",
-                  cursor: "pointer",
-                }}
-              >
+              <button type="button" onClick={resetForm} className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white">
                 Reset
               </button>
             </div>
 
             {message ? (
-              <div style={{ color: "#065f46", fontWeight: 600, background: "#ecfdf5", padding: 10, borderRadius: 10 }}>
+              <div className="rounded-[20px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
                 {message}
               </div>
             ) : null}
 
             {error ? (
-              <div style={{ color: "#b91c1c", fontWeight: 600, background: "#fef2f2", padding: 10, borderRadius: 10 }}>
+              <div className="rounded-[20px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
                 {error}
               </div>
             ) : null}
           </div>
         </section>
 
-        <section style={{ display: "grid", gap: 20 }}>
-          <section
-            style={{
-              border: "1px solid #e5e7eb",
-              borderRadius: 14,
-              padding: 16,
-              background: "#fff",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
-              <h2 style={{ margin: 0 }}>Current Settings</h2>
-              <button
-                onClick={() => void loadSettings()}
-                type="button"
-                style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer" }}
-              >
+        <div className="space-y-6">
+          <section className="oi-card rounded-[28px] p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="oi-kicker">Current state</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Current settings</h2>
+              </div>
+              <button type="button" onClick={() => void loadSettings()} className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white">
                 Refresh
               </button>
             </div>
 
-            {loading ? <div>Loading...</div> : null}
+            {loading ? <p className="mt-6 text-sm text-slate-500">Loading settings…</p> : null}
 
             {!loading && items.length === 0 ? (
-              <div style={{ padding: 16, borderRadius: 12, background: "#f8fafc", color: "#475569" }}>
+              <div className="mt-6 rounded-[24px] border border-dashed border-slate-300 p-6 text-sm text-slate-500">
                 No settings matched the current filters.
               </div>
             ) : null}
 
             {!loading && items.length > 0 ? (
-              <div style={{ display: "grid", gap: 12 }}>
+              <div className="mt-6 grid gap-4">
                 {items.map((item) => (
-                  <article
-                    key={item.id}
-                    style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 14, background: "#fff" }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", flexWrap: "wrap" }}>
-                      <div style={{ flex: 1, minWidth: 280 }}>
-                        <div style={{ fontWeight: 700, fontSize: 16 }}>{item.key}</div>
-                        <div style={{ color: "#666", fontSize: 13, marginTop: 4 }}>
-                          updated by {item.updated_by_email ?? "unknown"} at {new Date(item.updated_at).toLocaleString()}
+                  <article key={item.id} className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <h3 className="text-lg font-semibold text-slate-950">{item.key}</h3>
+                          <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm">
+                            updated {formatDateTime(item.updated_at)}
+                          </span>
                         </div>
-                        <pre
-                          style={{
-                            marginTop: 10,
-                            padding: 12,
-                            borderRadius: 10,
-                            background: "#0f172a",
-                            color: "#e5e7eb",
-                            overflowX: "auto",
-                            fontSize: 12,
-                          }}
-                        >
+                        <p className="mt-2 text-sm text-slate-600">
+                          updated by {item.updated_by_email ?? "unknown"}
+                        </p>
+                        <pre className="mt-4 overflow-x-auto rounded-[20px] bg-slate-950 p-4 text-xs leading-6 text-slate-100">
 {formatJson(item.value)}
                         </pre>
                       </div>
 
-                      <div style={{ display: "grid", gap: 8 }}>
-                        <button
-                          onClick={() => startEdit(item)}
-                          type="button"
-                          style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer" }}
-                        >
+                      <div className="flex flex-wrap gap-3 lg:flex-col">
+                        <button type="button" onClick={() => startEdit(item)} className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white">
                           Edit
                         </button>
-
                         <button
+                          type="button"
                           onClick={() => void deleteSetting(item)}
                           disabled={deletingId === item.id}
-                          type="button"
-                          style={{ padding: "8px 12px", borderRadius: 10, border: 0, background: "#b91c1c", color: "#fff", cursor: "pointer" }}
+                          className="rounded-full bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           {deletingId === item.id ? "Deleting..." : "Delete"}
                         </button>
@@ -636,83 +506,48 @@ export default function AdminWorkspaceSettingsPage() {
             ) : null}
           </section>
 
-          <section
-            style={{
-              border: "1px solid #e5e7eb",
-              borderRadius: 14,
-              padding: 16,
-              background: "#fff",
-            }}
-          >
-            <h2 style={{ marginTop: 0 }}>Recent Setting Versions</h2>
+          <section className="oi-card rounded-[28px] p-6">
+            <div>
+              <p className="oi-kicker">Version history</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Restore version history</h2>
+            </div>
 
-            {loading ? <div>Loading...</div> : null}
+            {loading ? <p className="mt-6 text-sm text-slate-500">Loading versions…</p> : null}
 
             {!loading && recentVersions.length === 0 ? (
-              <div style={{ padding: 16, borderRadius: 12, background: "#f8fafc", color: "#475569" }}>
+              <div className="mt-6 rounded-[24px] border border-dashed border-slate-300 p-6 text-sm text-slate-500">
                 No version history matched the current filters.
               </div>
             ) : null}
 
             {!loading && recentVersions.length > 0 ? (
-              <div style={{ display: "grid", gap: 12 }}>
+              <div className="mt-6 grid gap-4">
                 {recentVersions.map((item) => (
-                  <article
-                    key={item.id}
-                    style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 14, background: "#fff" }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", flexWrap: "wrap" }}>
-                      <div style={{ flex: 1, minWidth: 280 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                          <span style={{ fontWeight: 700 }}>{item.key}</span>
-                          <span
-                            style={{
-                              fontSize: 12,
-                              fontWeight: 700,
-                              color: "#fff",
-                              background: actionBadgeColor(item.action),
-                              borderRadius: 999,
-                              padding: "4px 8px",
-                              textTransform: "uppercase",
-                              letterSpacing: 0.3,
-                            }}
-                          >
+                  <article key={item.id} className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <h3 className="text-lg font-semibold text-slate-950">{item.key}</h3>
+                          <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${actionTone(item.action)}`}>
                             {item.action}
                           </span>
                         </div>
-                        <div style={{ color: "#666", fontSize: 13, marginTop: 4 }}>
-                          {item.actor_email ?? "unknown"} at {new Date(item.created_at).toLocaleString()}
-                        </div>
-                        <pre
-                          style={{
-                            marginTop: 10,
-                            padding: 12,
-                            borderRadius: 10,
-                            background: "#111827",
-                            color: "#e5e7eb",
-                            overflowX: "auto",
-                            fontSize: 12,
-                          }}
-                        >
+                        <p className="mt-2 text-sm text-slate-600">
+                          {item.actor_email ?? "unknown"} at {formatDateTime(item.created_at)}
+                        </p>
+                        <pre className="mt-4 overflow-x-auto rounded-[20px] bg-slate-950 p-4 text-xs leading-6 text-slate-100">
 {formatJson(item.value)}
                         </pre>
                       </div>
 
                       <div>
                         <button
+                          type="button"
                           onClick={() => void restoreVersion(item)}
                           disabled={restoringVersionId === item.id}
-                          type="button"
-                          style={{
-                            padding: "8px 12px",
-                            borderRadius: 10,
-                            border: 0,
-                            background: "#2563eb",
-                            color: "#fff",
-                            cursor: "pointer",
-                          }}
+                          className="oi-button-primary"
                         >
-                          {restoringVersionId === item.id ? "Restoring..." : "Restore This Version"}
+                          {restoringVersionId === item.id ? "Restoring..." : "Restore version"}
                         </button>
                       </div>
                     </div>
@@ -721,8 +556,8 @@ export default function AdminWorkspaceSettingsPage() {
               </div>
             ) : null}
           </section>
-        </section>
-      </div>
+        </div>
+      </section>
     </main>
   );
 }

@@ -42,14 +42,14 @@ function badgeClass(value: boolean): string {
 
 function formatValue(value: string | number | null): string {
   if (value === null || typeof value === "undefined") {
-    return "â€”";
+    return "—";
   }
   return String(value);
 }
 
 function formatDateTime(value: string | null): string {
   if (!value) {
-    return "â€”";
+    return "—";
   }
 
   const date = new Date(value);
@@ -132,123 +132,137 @@ export default function AdminOpsPage() {
   }, []);
 
   const exportLinks = [
-    { label: "Export Settings CSV", href: "/api/admin/exports?kind=settings" },
-    { label: "Export Versions CSV", href: "/api/admin/exports?kind=versions" },
-    { label: "Export Audit CSV", href: "/api/admin/exports?kind=audit" },
+    { label: "Export settings CSV", href: "/api/admin/exports?kind=settings" },
+    { label: "Export versions CSV", href: "/api/admin/exports?kind=versions" },
+    { label: "Export audit CSV", href: "/api/admin/exports?kind=audit" },
   ];
 
   const statCards = data
     ? [
-        { label: "Active Notes", value: formatValue(data.counts.activeNotes) },
-        { label: "Archived Notes", value: formatValue(data.counts.archivedNotes) },
-        { label: "Workspace Settings", value: formatValue(data.counts.workspaceSettings) },
-        { label: "Setting Versions", value: formatValue(data.counts.settingVersions) },
-        { label: "Recent Audit Events", value: formatValue(data.counts.recentAuditEvents) },
+        { label: "Active notes", value: formatValue(data.counts.activeNotes) },
+        { label: "Archived notes", value: formatValue(data.counts.archivedNotes) },
+        { label: "Workspace settings", value: formatValue(data.counts.workspaceSettings) },
+        { label: "Setting versions", value: formatValue(data.counts.settingVersions) },
+        { label: "Recent audit events", value: formatValue(data.counts.recentAuditEvents) },
       ]
     : [];
 
   const latestCards = data
     ? [
-        { label: "Latest Notes Activity", value: formatDateTime(data.latestActivity.notes) },
-        { label: "Latest Settings Activity", value: formatDateTime(data.latestActivity.settings) },
-        { label: "Latest Version Snapshot", value: formatDateTime(data.latestActivity.versions) },
-        { label: "Latest Audit Event", value: formatDateTime(data.latestActivity.audit) },
+        { label: "Latest notes activity", value: formatDateTime(data.latestActivity.notes) },
+        { label: "Latest settings activity", value: formatDateTime(data.latestActivity.settings) },
+        { label: "Latest version snapshot", value: formatDateTime(data.latestActivity.versions) },
+        { label: "Latest audit event", value: formatDateTime(data.latestActivity.audit) },
       ]
     : [];
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8">
-      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">Admin Ops</p>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Release readiness dashboard</h1>
-          <p className="mt-2 max-w-3xl text-sm text-slate-600">
-            Operational view for admin routes, safe environment checks, activity visibility, CSV exports, and release smoke validation.
-          </p>
+    <main className="oi-shell mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-10">
+      <section className="oi-card rounded-[32px] p-8 lg:p-10">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <p className="oi-kicker">Operations console</p>
+            <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
+              Release readiness dashboard
+            </h1>
+            <p className="mt-4 text-base leading-7 text-slate-600">
+              Premium operational view for safe environment checks, recent activity, release gates, and export readiness across the admin surface.
+            </p>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link className="oi-button-primary" href="/admin">
+                Open admin
+              </Link>
+              <Link className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white" href="/admin/settings">
+                Open settings
+              </Link>
+            </div>
+          </div>
+
+          <div className="min-w-[300px] rounded-[28px] border border-white/70 bg-white/85 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur">
+            <div className="oi-brand-gradient h-2 w-24 rounded-full" />
+            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Release readiness</p>
+            <p className="mt-3 text-sm leading-6 text-slate-700">
+              Generated {data ? formatDateTime(data.generatedAt) : "—"}
+            </p>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <Link className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800" href="/admin">
-            Open Admin
-          </Link>
-          <Link className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50" href="/admin/settings">
-            Open Settings
-          </Link>
-        </div>
-      </div>
+      </section>
 
       {loading ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">Loading release statusâ€¦</div>
+        <section className="oi-card rounded-[28px] p-6 text-sm text-slate-600">Loading release status…</section>
       ) : null}
 
       {error ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">{error}</div>
+        <section className="rounded-[28px] border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">{error}</section>
       ) : null}
 
       {data ? (
         <>
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
             {statCards.map((card) => (
-              <div key={card.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{card.label}</p>
-                <p className="mt-3 text-3xl font-bold text-slate-900">{card.value}</p>
+              <div key={card.label} className="oi-card rounded-[28px] p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{card.label}</p>
+                <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">{card.value}</p>
               </div>
             ))}
           </section>
 
-          <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between gap-3">
+          <section className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
+            <section className="oi-card rounded-[28px] p-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-900">Active context</h2>
-                  <p className="text-sm text-slate-500">Safe context snapshot from production data.</p>
+                  <p className="oi-kicker">Active context</p>
+                  <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Safe context snapshot</h2>
                 </div>
-                <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                  Generated {formatDateTime(data.generatedAt)}
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">
+                  live
                 </span>
               </div>
 
-              <div className="mt-5 grid gap-4 md:grid-cols-2">
-                <div className="rounded-xl bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Tenant ID</p>
-                  <p className="mt-2 break-all text-sm font-medium text-slate-900">{formatValue(data.activeContext.tenantId)}</p>
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                <div className="rounded-[24px] bg-slate-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Tenant ID</p>
+                  <p className="mt-2 break-all text-sm font-medium text-slate-950">{formatValue(data.activeContext.tenantId)}</p>
                 </div>
-                <div className="rounded-xl bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Brand ID</p>
-                  <p className="mt-2 break-all text-sm font-medium text-slate-900">{formatValue(data.activeContext.brandId)}</p>
+                <div className="rounded-[24px] bg-slate-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Brand ID</p>
+                  <p className="mt-2 break-all text-sm font-medium text-slate-950">{formatValue(data.activeContext.brandId)}</p>
                 </div>
-                <div className="rounded-xl bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Workspace ID</p>
-                  <p className="mt-2 break-all text-sm font-medium text-slate-900">{formatValue(data.activeContext.workspaceId)}</p>
+                <div className="rounded-[24px] bg-slate-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Workspace ID</p>
+                  <p className="mt-2 break-all text-sm font-medium text-slate-950">{formatValue(data.activeContext.workspaceId)}</p>
                 </div>
-                <div className="rounded-xl bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Source</p>
-                  <p className="mt-2 break-all text-sm font-medium text-slate-900">{formatValue(data.activeContext.source)}</p>
+                <div className="rounded-[24px] bg-slate-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Source</p>
+                  <p className="mt-2 break-all text-sm font-medium text-slate-950">{formatValue(data.activeContext.source)}</p>
                 </div>
               </div>
 
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 {latestCards.map((card) => (
-                  <div key={card.label} className="rounded-xl border border-slate-200 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{card.label}</p>
-                    <p className="mt-2 text-sm font-medium text-slate-900">{card.value}</p>
+                  <div key={card.label} className="rounded-[24px] border border-slate-200 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{card.label}</p>
+                    <p className="mt-2 text-sm font-medium text-slate-950">{card.value}</p>
                   </div>
                 ))}
               </div>
 
               {data.warnings && data.warnings.length > 0 ? (
-                <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                <div className="mt-6 rounded-[24px] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                   {data.warnings.join(" ")}
                 </div>
               ) : null}
-            </div>
+            </section>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-slate-900">Environment flags</h2>
-              <p className="mt-1 text-sm text-slate-500">Presence only. No secret values are displayed.</p>
+            <section className="oi-card rounded-[28px] p-6">
+              <p className="oi-kicker">Environment flags</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Environment flags</h2>
+              <p className="mt-3 text-sm text-slate-600">Presence only. No secret values are displayed.</p>
 
-              <div className="mt-5 space-y-3">
+              <div className="mt-6 space-y-3">
                 {Object.entries(data.env).map(([key, present]) => (
-                  <div key={key} className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3">
+                  <div key={key} className="flex items-center justify-between gap-4 rounded-[22px] border border-slate-200 px-4 py-3">
                     <span className="text-sm font-medium text-slate-900">{key}</span>
                     <span className={badgeClass(Boolean(present))}>{present ? "Present" : "Missing"}</span>
                   </div>
@@ -256,57 +270,60 @@ export default function AdminOpsPage() {
               </div>
 
               <div className="mt-6">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Quick links</h3>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Quick links</p>
                 <div className="mt-3 flex flex-col gap-2">
-                  <a className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href={data.links.admin}>
+                  <a className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white" href={data.links.admin}>
                     /admin
                   </a>
-                  <a className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href={data.links.settings}>
+                  <a className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white" href={data.links.settings}>
                     /admin/settings
                   </a>
-                  <a className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href={data.links.ops}>
+                  <a className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white" href={data.links.ops}>
                     /admin/ops
                   </a>
                 </div>
               </div>
-            </div>
+            </section>
           </section>
 
           <section className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-slate-900">Smoke-test checklist</h2>
-              <div className="mt-4 space-y-3">
+            <section className="oi-card rounded-[28px] p-6">
+              <p className="oi-kicker">Smoke test</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Smoke test checklist</h2>
+              <div className="mt-6 space-y-3">
                 {smokeChecklist.map((item) => (
-                  <label key={item} className="flex items-start gap-3 rounded-xl border border-slate-200 p-3">
+                  <label key={item} className="flex items-start gap-3 rounded-[22px] border border-slate-200 p-4">
                     <input className="mt-1 h-4 w-4 rounded border-slate-300" type="checkbox" />
                     <span className="text-sm text-slate-700">{item}</span>
                   </label>
                 ))}
               </div>
-            </div>
+            </section>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-slate-900">Release-readiness checklist</h2>
-              <div className="mt-4 space-y-3">
+            <section className="oi-card rounded-[28px] p-6">
+              <p className="oi-kicker">Readiness</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Release readiness checklist</h2>
+              <div className="mt-6 space-y-3">
                 {readinessChecklist.map((item) => (
-                  <label key={item} className="flex items-start gap-3 rounded-xl border border-slate-200 p-3">
+                  <label key={item} className="flex items-start gap-3 rounded-[22px] border border-slate-200 p-4">
                     <input className="mt-1 h-4 w-4 rounded border-slate-300" type="checkbox" />
                     <span className="text-sm text-slate-700">{item}</span>
                   </label>
                 ))}
               </div>
-            </div>
+            </section>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">CSV exports</h2>
-            <p className="mt-1 text-sm text-slate-500">Use the current admin export endpoints for downloadable release artifacts.</p>
+          <section className="oi-card rounded-[28px] p-6">
+            <p className="oi-kicker">Exports</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">CSV exports</h2>
+            <p className="mt-3 text-sm text-slate-600">Use the current admin export endpoints for downloadable release artifacts.</p>
 
-            <div className="mt-5 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-wrap gap-3">
               {exportLinks.map((item) => (
                 <a
                   key={item.href}
-                  className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                  className="oi-button-primary"
                   href={item.href}
                   rel="noreferrer"
                   target="_blank"

@@ -46,6 +46,18 @@ type SummaryPayload = {
   };
 };
 
+function formatDateTime(value: string | null | undefined) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString();
+}
+
+function asString(value: unknown) {
+  if (value === null || typeof value === "undefined" || value === "") return "—";
+  return String(value);
+}
+
 export default function AdminSummaryPage() {
   const [data, setData] = useState<SummaryPayload | null>(null);
   const [error, setError] = useState("");
@@ -61,7 +73,10 @@ export default function AdminSummaryPage() {
         cache: "no-store",
       });
 
-      const payload = await response.json();
+      const payload = (await response.json()) as SummaryPayload & {
+        detail?: string;
+        error?: string;
+      };
 
       if (!response.ok || !payload.ok) {
         throw new Error(payload.detail || payload.error || "Failed to load admin summary");
@@ -76,12 +91,11 @@ export default function AdminSummaryPage() {
   }
 
   useEffect(() => {
-    load();
+    void load();
   }, []);
 
   const channels = useMemo(() => {
-    if (!data?.onboarding?.channels) return [];
-    return data.onboarding.channels;
+    return Array.isArray(data?.onboarding?.channels) ? data.onboarding.channels : [];
   }, [data]);
 
   const priorities = useMemo(() => {
@@ -101,28 +115,27 @@ export default function AdminSummaryPage() {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-7xl px-6 py-10">
-        <div className="rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
-          <p className="text-sm text-neutral-500">Loading admin summary…</p>
-        </div>
+      <main className="oi-shell mx-auto max-w-7xl px-6 py-10">
+        <section className="oi-card rounded-[32px] p-8">
+          <p className="oi-kicker">Executive summary</p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">Summary control center</h1>
+          <p className="mt-3 text-sm text-slate-600">Loading workspace intelligence…</p>
+        </section>
       </main>
     );
   }
 
   if (error || !data) {
     return (
-      <main className="mx-auto max-w-7xl px-6 py-10">
-        <div className="rounded-3xl border border-red-200 bg-red-50 p-8 shadow-sm">
-          <h1 className="text-xl font-semibold text-red-700">Admin summary unavailable</h1>
-          <p className="mt-2 text-sm text-red-600">{error || "Unknown error"}</p>
-          <button
-            type="button"
-            onClick={load}
-            className="mt-4 rounded-full bg-black px-4 py-2 text-sm font-medium text-white"
-          >
-            Retry
+      <main className="oi-shell mx-auto max-w-7xl px-6 py-10">
+        <section className="rounded-[32px] border border-rose-200 bg-rose-50 p-8 shadow-sm">
+          <p className="oi-kicker text-rose-600">Executive summary</p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-rose-900">Summary control center unavailable</h1>
+          <p className="mt-3 text-sm text-rose-700">{error || "Unknown error"}</p>
+          <button type="button" onClick={() => void load()} className="oi-button-primary mt-6">
+            Retry summary
           </button>
-        </div>
+        </section>
       </main>
     );
   }
@@ -131,198 +144,259 @@ export default function AdminSummaryPage() {
   const goals = (data.onboarding.goals ?? {}) as Record<string, unknown>;
   const brand = (data.onboarding.brand ?? {}) as Record<string, unknown>;
 
+  const statCards = [
+    { label: "Settings", value: data.counts.settings, tone: "from-fuchsia-500/15 via-white to-white" },
+    { label: "Versions", value: data.counts.versions, tone: "from-sky-500/15 via-white to-white" },
+    { label: "Audit", value: data.counts.audit, tone: "from-amber-500/15 via-white to-white" },
+    { label: "Tasks", value: data.executionSummary.total, tone: "from-violet-500/15 via-white to-white" },
+    { label: "Doing", value: data.executionSummary.doing, tone: "from-cyan-500/15 via-white to-white" },
+    { label: "Blocked", value: data.executionSummary.blocked, tone: "from-rose-500/15 via-white to-white" },
+  ];
+
   return (
-    <main className="mx-auto max-w-7xl px-6 py-10">
-      <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-neutral-500">Admin summary</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-neutral-950">Workspace summary dashboard</h1>
-          <p className="mt-3 max-w-3xl text-sm text-neutral-600">
-            Review onboarding, strategy, execution, counts, and recent audit activity in one place.
-          </p>
-        </div>
+    <main className="oi-shell mx-auto max-w-7xl px-6 py-10">
+      <section className="oi-card overflow-hidden rounded-[32px] p-8 lg:p-10">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <p className="oi-kicker">Executive summary</p>
+            <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
+              Summary control center
+            </h1>
+            <p className="mt-4 text-base leading-7 text-slate-600">
+              One premium surface for onboarding context, strategic priorities, execution pulse, and the most recent admin activity.
+            </p>
 
-        <div className="flex flex-wrap gap-3">
-          <a href={data.links.admin} className="rounded-full border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
-            Admin home
-          </a>
-          <a href={data.links.onboarding} className="rounded-full border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
-            Onboarding
-          </a>
-          <a href={data.links.strategy} className="rounded-full border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
-            Strategy
-          </a>
-          <a href={data.links.execution} className="rounded-full border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
-            Execution
-          </a>
-        </div>
-      </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <a href={data.links.admin} className="oi-button-primary">
+                Admin home
+              </a>
+              <a href={data.links.onboarding} className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white">
+                Onboarding
+              </a>
+              <a href={data.links.strategy} className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white">
+                Strategy
+              </a>
+              <a href={data.links.execution} className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white">
+                Execution
+              </a>
+            </div>
+          </div>
 
-      <div className="mb-6 grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <p className="text-xs uppercase tracking-wide text-neutral-500">Settings</p>
-          <p className="mt-2 text-2xl font-semibold text-neutral-950">{data.counts.settings}</p>
-        </div>
-        <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <p className="text-xs uppercase tracking-wide text-neutral-500">Versions</p>
-          <p className="mt-2 text-2xl font-semibold text-neutral-950">{data.counts.versions}</p>
-        </div>
-        <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <p className="text-xs uppercase tracking-wide text-neutral-500">Audit</p>
-          <p className="mt-2 text-2xl font-semibold text-neutral-950">{data.counts.audit}</p>
-        </div>
-        <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <p className="text-xs uppercase tracking-wide text-neutral-500">Tasks</p>
-          <p className="mt-2 text-2xl font-semibold text-neutral-950">{data.executionSummary.total}</p>
-        </div>
-        <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <p className="text-xs uppercase tracking-wide text-neutral-500">Doing</p>
-          <p className="mt-2 text-2xl font-semibold text-neutral-950">{data.executionSummary.doing}</p>
-        </div>
-        <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <p className="text-xs uppercase tracking-wide text-neutral-500">Blocked</p>
-          <p className="mt-2 text-2xl font-semibold text-neutral-950">{data.executionSummary.blocked}</p>
-        </div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <section className="space-y-6">
-          <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-neutral-950">Workspace context</h2>
-            <dl className="mt-4 grid gap-4 md:grid-cols-2 text-sm">
-              <div>
-                <dt className="font-medium text-neutral-500">Business</dt>
-                <dd className="text-neutral-900">{String(company.businessName ?? "—")}</dd>
+          <div className="min-w-[280px] rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur">
+            <div className="oi-brand-gradient h-2 w-24 rounded-full" />
+            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Workspace status</p>
+            <dl className="mt-4 space-y-3 text-sm text-slate-700">
+              <div className="flex items-center justify-between gap-4">
+                <dt>Latest update</dt>
+                <dd className="font-medium text-slate-950">{formatDateTime(data.latestUpdatedAt)}</dd>
               </div>
-              <div>
-                <dt className="font-medium text-neutral-500">Industry</dt>
-                <dd className="text-neutral-900">{String(company.industry ?? "—")}</dd>
+              <div className="flex items-center justify-between gap-4">
+                <dt>Completed</dt>
+                <dd className="font-medium text-emerald-700">{data.executionSummary.done}</dd>
               </div>
-              <div>
-                <dt className="font-medium text-neutral-500">Primary objective</dt>
-                <dd className="text-neutral-900">{String(goals.primaryObjective ?? "—")}</dd>
-              </div>
-              <div>
-                <dt className="font-medium text-neutral-500">Revenue target</dt>
-                <dd className="text-neutral-900">{String(goals.monthlyRevenueTarget ?? "—")}</dd>
-              </div>
-              <div>
-                <dt className="font-medium text-neutral-500">Audience</dt>
-                <dd className="text-neutral-900">{String(brand.audience ?? "—")}</dd>
-              </div>
-              <div>
-                <dt className="font-medium text-neutral-500">Last updated</dt>
-                <dd className="text-neutral-900">{data.latestUpdatedAt ?? "—"}</dd>
+              <div className="flex items-center justify-between gap-4">
+                <dt>To do</dt>
+                <dd className="font-medium text-slate-950">{data.executionSummary.todo}</dd>
               </div>
             </dl>
           </div>
+        </div>
+      </section>
 
-          <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-neutral-950">Channel and strategy highlights</h2>
+      <section className="mt-6 grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+        {statCards.map((card) => (
+          <div key={card.label} className={`oi-card rounded-[28px] bg-gradient-to-br ${card.tone} p-5`}>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{card.label}</p>
+            <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">{card.value}</p>
+          </div>
+        ))}
+      </section>
 
-            <div className="mt-4">
-              <p className="text-xs uppercase tracking-wide text-neutral-500">Channels</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {channels.length > 0 ? channels.map((channel) => (
-                  <span key={channel} className="rounded-full bg-neutral-100 px-3 py-1 text-sm text-neutral-700">
-                    {channel}
-                  </span>
-                )) : <span className="text-sm text-neutral-500">No channels</span>}
+      <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_380px]">
+        <div className="space-y-6">
+          <section className="oi-card rounded-[28px] p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="oi-kicker">Workspace context</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Operating snapshot</h2>
+              </div>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">
+                live
+              </span>
+            </div>
+
+            <dl className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="rounded-[24px] bg-slate-50 p-4">
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Business</dt>
+                <dd className="mt-2 text-sm font-medium text-slate-950">{asString(company.businessName)}</dd>
+              </div>
+              <div className="rounded-[24px] bg-slate-50 p-4">
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Industry</dt>
+                <dd className="mt-2 text-sm font-medium text-slate-950">{asString(company.industry)}</dd>
+              </div>
+              <div className="rounded-[24px] bg-slate-50 p-4">
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Primary objective</dt>
+                <dd className="mt-2 text-sm font-medium text-slate-950">{asString(goals.primaryObjective)}</dd>
+              </div>
+              <div className="rounded-[24px] bg-slate-50 p-4">
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Revenue target</dt>
+                <dd className="mt-2 text-sm font-medium text-slate-950">{asString(goals.monthlyRevenueTarget)}</dd>
+              </div>
+              <div className="rounded-[24px] bg-slate-50 p-4">
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Audience</dt>
+                <dd className="mt-2 text-sm font-medium text-slate-950">{asString(brand.audience)}</dd>
+              </div>
+              <div className="rounded-[24px] bg-slate-50 p-4">
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Updated</dt>
+                <dd className="mt-2 text-sm font-medium text-slate-950">{formatDateTime(data.latestUpdatedAt)}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section className="oi-card rounded-[28px] p-6">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="oi-kicker">Strategy signals</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Channel and planning highlights</h2>
+              </div>
+              <span className="rounded-full bg-fuchsia-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-fuchsia-700">
+                aligned
+              </span>
+            </div>
+
+            <div className="mt-6 grid gap-6 lg:grid-cols-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Channels</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {channels.length > 0 ? (
+                    channels.map((channel) => (
+                      <span key={channel} className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700">
+                        {channel}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-sm text-slate-500">No channels</span>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Priorities</p>
+                <ul className="mt-3 space-y-2 text-sm text-slate-700">
+                  {priorities.length > 0 ? (
+                    priorities.map((priority, index) => <li key={index}>• {String(priority)}</li>)
+                  ) : (
+                    <li className="text-slate-500">No priorities</li>
+                  )}
+                </ul>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Metrics</p>
+                <ul className="mt-3 space-y-2 text-sm text-slate-700">
+                  {metrics.length > 0 ? (
+                    metrics.map((metric, index) => <li key={index}>• {String(metric)}</li>)
+                  ) : (
+                    <li className="text-slate-500">No metrics</li>
+                  )}
+                </ul>
               </div>
             </div>
+          </section>
 
-            <div className="mt-6">
-              <p className="text-xs uppercase tracking-wide text-neutral-500">Priorities</p>
-              <ul className="mt-3 space-y-2 text-sm text-neutral-800">
-                {priorities.length > 0 ? priorities.map((priority, index) => (
-                  <li key={index}>• {String(priority)}</li>
-                )) : <li className="text-neutral-500">No priorities</li>}
-              </ul>
-            </div>
-
-            <div className="mt-6">
-              <p className="text-xs uppercase tracking-wide text-neutral-500">Metrics</p>
-              <ul className="mt-3 space-y-2 text-sm text-neutral-800">
-                {metrics.length > 0 ? metrics.map((metric, index) => (
-                  <li key={index}>• {String(metric)}</li>
-                )) : <li className="text-neutral-500">No metrics</li>}
-              </ul>
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-neutral-950">Execution tasks</h2>
-              <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700">
+          <section className="oi-card rounded-[28px] p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="oi-kicker">Execution pulse</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Execution pulse</h2>
+              </div>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">
                 {data.executionSummary.total} tasks
               </span>
             </div>
 
-            <div className="space-y-4">
-              {tasks.length > 0 ? tasks.map((task, index) => {
-                const row = task as Record<string, unknown>;
-                return (
-                  <div key={index} className="rounded-2xl border border-neutral-200 p-4">
-                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                      <div>
-                        <h3 className="text-base font-semibold text-neutral-950">{String(row.title ?? "Untitled task")}</h3>
-                        <p className="mt-1 text-sm text-neutral-600">{String(row.notes ?? "—")}</p>
+            <div className="mt-6 space-y-4">
+              {tasks.length > 0 ? (
+                tasks.map((task, index) => {
+                  const row = task as Record<string, unknown>;
+                  return (
+                    <article key={index} className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0">
+                          <h3 className="text-lg font-semibold text-slate-950">{asString(row.title)}</h3>
+                          <p className="mt-2 text-sm leading-6 text-slate-600">{asString(row.notes)}</p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm">
+                            {asString(row.owner)}
+                          </span>
+                          <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm">
+                            {asString(row.priority)}
+                          </span>
+                          <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm">
+                            {asString(row.status)}
+                          </span>
+                          <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm">
+                            {asString(row.week)}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-700">{String(row.owner ?? "—")}</span>
-                        <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-700">{String(row.priority ?? "—")}</span>
-                        <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-700">{String(row.status ?? "—")}</span>
-                        <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-700">{String(row.week ?? "—")}</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }) : (
-                <div className="rounded-2xl border border-dashed border-neutral-300 p-6 text-sm text-neutral-500">
+                    </article>
+                  );
+                })
+              ) : (
+                <div className="rounded-[24px] border border-dashed border-slate-300 p-6 text-sm text-slate-500">
                   No execution tasks available.
                 </div>
               )}
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
         <aside className="space-y-6">
-          <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-neutral-950">Active IDs</h2>
-            <dl className="mt-4 space-y-3 text-sm break-all">
-              <div>
-                <dt className="font-medium text-neutral-500">Tenant</dt>
-                <dd className="text-neutral-900">{data.activeContext.tenantId ?? "—"}</dd>
+          <section className="oi-card rounded-[28px] p-6">
+            <p className="oi-kicker">Active context</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Reference IDs</h2>
+
+            <dl className="mt-6 space-y-4 break-all text-sm">
+              <div className="rounded-[22px] bg-slate-50 p-4">
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Tenant</dt>
+                <dd className="mt-2 font-medium text-slate-950">{asString(data.activeContext.tenantId)}</dd>
               </div>
-              <div>
-                <dt className="font-medium text-neutral-500">Brand</dt>
-                <dd className="text-neutral-900">{data.activeContext.brandId ?? "—"}</dd>
+              <div className="rounded-[22px] bg-slate-50 p-4">
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Brand</dt>
+                <dd className="mt-2 font-medium text-slate-950">{asString(data.activeContext.brandId)}</dd>
               </div>
-              <div>
-                <dt className="font-medium text-neutral-500">Workspace</dt>
-                <dd className="text-neutral-900">{data.activeContext.workspaceId ?? "—"}</dd>
+              <div className="rounded-[22px] bg-slate-50 p-4">
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Workspace</dt>
+                <dd className="mt-2 font-medium text-slate-950">{asString(data.activeContext.workspaceId)}</dd>
               </div>
             </dl>
-          </div>
+          </section>
 
-          <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-neutral-950">Recent audit</h2>
-            <div className="mt-4 space-y-3">
-              {data.recentAudit.length > 0 ? data.recentAudit.map((event) => (
-                <div key={event.id} className="rounded-2xl bg-neutral-50 p-4">
-                  <p className="text-sm font-medium text-neutral-900">{event.action}</p>
-                  <p className="mt-1 text-xs text-neutral-500">target: {event.target_type ?? "—"}</p>
-                  <p className="mt-1 text-xs text-neutral-500">{event.created_at ?? "—"}</p>
-                </div>
-              )) : (
-                <div className="rounded-2xl bg-neutral-50 p-4 text-sm text-neutral-500">
-                  No recent audit events.
-                </div>
+          <section className="oi-card rounded-[28px] p-6">
+            <p className="oi-kicker">Recent audit</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Latest admin activity</h2>
+
+            <div className="mt-6 space-y-3">
+              {data.recentAudit.length > 0 ? (
+                data.recentAudit.map((event) => (
+                  <article key={event.id} className="rounded-[22px] bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-slate-950">{event.action}</p>
+                    <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-500">
+                      target {event.target_type ?? "—"}
+                    </p>
+                    <p className="mt-2 text-sm text-slate-600">{formatDateTime(event.created_at)}</p>
+                  </article>
+                ))
+              ) : (
+                <div className="rounded-[22px] bg-slate-50 p-4 text-sm text-slate-500">No recent audit events.</div>
               )}
             </div>
-          </div>
+          </section>
         </aside>
-      </div>
+      </section>
     </main>
   );
 }
