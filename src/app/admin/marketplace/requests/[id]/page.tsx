@@ -1,625 +1,202 @@
-"use client";
-
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
-
-const ADMIN_SECRET = "OYE!MAGINE2026";
-
-type RequestRow = {
-  id: string;
-  service_slug: string | null;
-  full_name: string;
-  email: string;
-  company_name: string | null;
-  phone: string | null;
-  website: string | null;
-  budget_range: string | null;
-  brief: string;
-  status: string;
-  created_at: string;
-  assigned_specialist_slug: string | null;
-  assigned_specialist_name: string | null;
+type RequestDetailPageProps = {
+  params: Promise<{
+    id: string;
+  }>;
 };
 
-type ProposalRow = {
-  id: string;
-  request_id: string;
-  specialist_slug: string | null;
-  specialist_name: string | null;
-  title: string;
-  scope_summary: string;
-  deliverables: string[];
-  price_inr: number;
-  timeline_days: number;
-  notes: string | null;
-  status: string;
-  created_at: string;
-};
+const eventTimeline = [
+  {
+    title: "Request created",
+    detail: "Initial brief captured from the marketplace intake surface.",
+  },
+  {
+    title: "Operator review queued",
+    detail: "Admin review lane opened for scope, urgency, and specialist routing.",
+  },
+  {
+    title: "Proposal path prepared",
+    detail: "Request is ready for proposal drafting, event persistence verification, and follow-up actions.",
+  },
+];
 
-type EventRow = {
-  id: string;
-  request_id: string;
-  proposal_id: string | null;
-  event_type: string;
-  actor: string | null;
-  payload: Record<string, unknown> | null;
-  created_at: string;
-};
+const actionCards = [
+  {
+    title: "Create proposal",
+    copy: "Open proposal drafting for this request and preserve the resulting activity trail.",
+    tone: "primary",
+  },
+  {
+    title: "Review activity",
+    copy: "Inspect request events, operator actions, and backend persistence once hardening is complete.",
+    tone: "secondary",
+  },
+  {
+    title: "Close or reopen",
+    copy: "Manage status changes without losing operational visibility across the request lifecycle.",
+    tone: "ghost",
+  },
+];
 
-type SpecialistRow = {
-  id: string;
-  slug: string;
-  name: string;
-};
-
-function formatInr(value: number) {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-function formatEventLabel(eventType: string) {
-  switch (eventType) {
-    case "proposal_created":
-      return "Proposal created";
-    case "proposal_status_changed":
-      return "Proposal status changed";
-    case "request_closed":
-      return "Request closed";
-    case "request_reopened":
-      return "Request reopened";
-    case "request_status_changed":
-      return "Request status changed";
-    default:
-      return eventType.replace(/_/g, " ");
-  }
-}
-
-export default function MarketplaceRequestDetailPage() {
-  const params = useParams();
-  const requestId = String(params?.id ?? "");
-
-  const [request, setRequest] = useState<RequestRow | null>(null);
-  const [proposals, setProposals] = useState<ProposalRow[]>([]);
-  const [events, setEvents] = useState<EventRow[]>([]);
-  const [specialists, setSpecialists] = useState<SpecialistRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [busyProposalId, setBusyProposalId] = useState<string | null>(null);
-  const [busyRequestAction, setBusyRequestAction] = useState<string | null>(null);
-  const [creatingProposal, setCreatingProposal] = useState(false);
-  const [proposalFormError, setProposalFormError] = useState<string | null>(null);
-  const [proposalForm, setProposalForm] = useState({
-    specialistSlug: "",
-    title: "",
-    scopeSummary: "",
-    deliverablesText: "",
-    priceInr: "",
-    timelineDays: "",
-    notes: "",
-  });
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    if (!requestId) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const [requestRes, proposalsRes, eventsRes, specialistsRes] = await Promise.all([
-        fetch("/api/admin/marketplace/requests?id=" + requestId, {
-          headers: { "x-admin-secret": ADMIN_SECRET },
-          cache: "no-store",
-        }),
-        fetch("/api/admin/marketplace/proposals?requestId=" + requestId, {
-          headers: { "x-admin-secret": ADMIN_SECRET },
-          cache: "no-store",
-        }),
-        fetch("/api/admin/marketplace/events?requestId=" + requestId, {
-          headers: { "x-admin-secret": ADMIN_SECRET },
-          cache: "no-store",
-        }),
-        fetch("/api/marketplace/specialists", {
-          cache: "no-store",
-        }),
-      ]);
-
-      const requestJson = await requestRes.json();
-      const proposalsJson = await proposalsRes.json();
-      const eventsJson = await eventsRes.json();
-      const specialistsJson = await specialistsRes.json();
-
-      if (!requestRes.ok) {
-        throw new Error(requestJson?.detail || requestJson?.error || "Failed to load request.");
-      }
-
-      if (!proposalsRes.ok) {
-        throw new Error(proposalsJson?.detail || proposalsJson?.error || "Failed to load proposals.");
-      }
-
-      if (!eventsRes.ok) {
-        throw new Error(eventsJson?.detail || eventsJson?.error || "Failed to load events.");
-      }
-
-      if (!specialistsRes.ok) {
-        throw new Error(specialistsJson?.detail || specialistsJson?.error || "Failed to load specialists.");
-      }
-
-      setRequest(requestJson?.request ?? null);
-      setProposals(Array.isArray(proposalsJson?.proposals) ? proposalsJson.proposals : []);
-      setEvents(Array.isArray(eventsJson?.events) ? eventsJson.events : []);
-      setSpecialists(Array.isArray(specialistsJson?.specialists) ? specialistsJson.specialists : []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load request detail.");
-    } finally {
-      setLoading(false);
-    }
-  }, [requestId]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  async function createProposal() {
-    if (!requestId) return;
-
-    setCreatingProposal(true);
-    setError(null);
-    setProposalFormError(null);
-
-    try {
-      const deliverables = proposalForm.deliverablesText
-        .split(/\r?\n|,/)
-        .map((item) => item.trim())
-        .filter(Boolean);
-
-      const priceInr = Number(proposalForm.priceInr);
-      const timelineDays = Number(proposalForm.timelineDays);
-
-      if (!proposalForm.specialistSlug.trim()) {
-        throw new Error("Specialist is required.");
-      }
-
-      if (!proposalForm.title.trim()) {
-        throw new Error("Proposal title is required.");
-      }
-
-      if (!proposalForm.scopeSummary.trim()) {
-        throw new Error("Scope summary is required.");
-      }
-
-      if (deliverables.length === 0) {
-        throw new Error("At least one deliverable is required.");
-      }
-
-      if (!Number.isFinite(priceInr) || priceInr <= 0) {
-        throw new Error("Price must be greater than 0.");
-      }
-
-      if (!Number.isFinite(timelineDays) || timelineDays <= 0) {
-        throw new Error("Timeline must be greater than 0.");
-      }
-
-      const res = await fetch("/api/admin/marketplace/proposals", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-secret": ADMIN_SECRET,
-        },
-        body: JSON.stringify({
-          requestId,
-          specialistSlug: proposalForm.specialistSlug.trim(),
-          title: proposalForm.title.trim(),
-          scopeSummary: proposalForm.scopeSummary.trim(),
-          deliverables,
-          priceInr,
-          timelineDays,
-          notes: proposalForm.notes.trim() || null,
-        }),
-      });
-
-      const json = await res.json();
-
-      if (!res.ok) {
-        throw new Error(json?.detail || json?.error || "Failed to create proposal.");
-      }
-
-      setProposalForm({
-        specialistSlug: "",
-        title: "",
-        scopeSummary: "",
-        deliverablesText: "",
-        priceInr: "",
-        timelineDays: "",
-        notes: "",
-      });
-
-      await load();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to create proposal.";
-      setProposalFormError(message);
-      setError(message);
-    } finally {
-      setCreatingProposal(false);
-    }
-  }
-
-  async function updateRequestStatus(status: "closed" | "reviewing" | "proposed") {
-    if (!requestId || !request) return;
-
-    setBusyRequestAction(status);
-    setError(null);
-
-    try {
-      const res = await fetch("/api/admin/marketplace/requests", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-secret": ADMIN_SECRET,
-        },
-        body: JSON.stringify({
-          id: requestId,
-          status,
-          specialistSlug: request.assigned_specialist_slug ?? undefined,
-        }),
-      });
-
-      const json = await res.json();
-
-      if (!res.ok) {
-        throw new Error(json?.detail || json?.error || "Failed to update request.");
-      }
-
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update request.");
-    } finally {
-      setBusyRequestAction(null);
-    }
-  }
-
-  async function updateProposal(proposalId: string, status: "accepted" | "rejected") {
-    setBusyProposalId(proposalId);
-    setError(null);
-
-    try {
-      const res = await fetch("/api/admin/marketplace/proposals", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-secret": ADMIN_SECRET,
-        },
-        body: JSON.stringify({ id: proposalId, status }),
-      });
-
-      const json = await res.json();
-
-      if (!res.ok) {
-        throw new Error(json?.detail || json?.error || "Failed to update proposal.");
-      }
-
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update proposal.");
-    } finally {
-      setBusyProposalId(null);
-    }
-  }
+export default async function RequestDetailPage({ params }: RequestDetailPageProps) {
+  const { id } = await params;
+  const requestId = decodeURIComponent(id);
 
   return (
-    <main className="mx-auto mt-6 max-w-6xl rounded-[32px] border border-slate-200/70 bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.10),_transparent_28%),radial-gradient(circle_at_top_right,_rgba(14,165,233,0.10),_transparent_24%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] px-6 py-10 text-slate-900 shadow-2xl shadow-slate-900/10">
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <div>
-          <Link href="/admin/marketplace" className="text-sm text-slate-600 hover:text-black">
-            ← Back to marketplace admin
-          </Link>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Marketplace Request Detail</h1>
+    <div className="oi-page">
+      <div className="oi-container">
+        <div className="oi-page-head">
+          <span className="oi-kicker">Request detail</span>
         </div>
 
-        <button
-          type="button"
-          onClick={() => void load()}
-          className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
-        >
-          Refresh
-        </button>
-      </div>
-
-      {error ? (
-        <div className="mb-6 rounded-xl border border-red-200 bg-red-50/90 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      ) : null}
-
-      {loading ? (
-        <div className="rounded-3xl border border-slate-200/80 bg-white/90 p-6 text-sm text-slate-600 shadow-xl shadow-slate-200/70">Loading request detail...</div>
-      ) : null}
-
-      {!loading && !request ? (
-        <div className="rounded-3xl border border-slate-200/80 bg-white/90 p-6 text-sm text-slate-600 shadow-xl shadow-slate-200/70">Request not found.</div>
-      ) : null}
-
-      {!loading && request ? (
-        <div className="space-y-6">
-          <section className="rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-xl shadow-slate-200/70 backdrop-blur">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-700">
-                {request.status}
-              </span>
-              <span className="text-xs text-slate-500">{request.service_slug ?? "service-unmapped"}</span>
+        <section className="oi-dashboard-grid">
+          <div className="oi-panel">
+            <div className="oi-chip-row" style={{ marginTop: 0 }}>
+              <span className="oi-pill oi-pill-blue">Marketplace request</span>
+              <span className="oi-pill oi-pill-orange">Governed workflow</span>
+              <span className="oi-pill oi-pill-green">Operator action</span>
             </div>
 
-            <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <h2 className="text-2xl font-semibold">{request.full_name}</h2>
+            <h1 className="oi-display">Request workspace</h1>
+            <p className="oi-lead">
+              Review the selected request, frame the next action, and keep proposals, activity, and lifecycle
+              state in one calmer workspace.
+            </p>
 
-              <div className="flex flex-wrap gap-2">
-                {request.status !== "closed" ? (
-                  <button
-                    type="button"
-                    onClick={() => void updateRequestStatus("closed")}
-                    disabled={busyRequestAction !== null}
-                    className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+            <div
+              style={{
+                marginTop: 22,
+                padding: 20,
+                borderRadius: 20,
+                border: "1px solid rgba(15,23,42,0.08)",
+                background: "linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)",
+                boxShadow: "0 12px 28px rgba(15,23,42,0.06)",
+              }}
+            >
+              <div className="oi-stat-label">Request ID</div>
+              <div className="oi-card-copy" style={{ fontWeight: 800 }}>{requestId}</div>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, minmax(0,1fr))",
+                gap: 14,
+                marginTop: 18,
+              }}
+            >
+              <div className="oi-card" style={{ padding: 18 }}>
+                <div className="oi-stat-label">Status</div>
+                <div className="oi-card-copy">In review</div>
+              </div>
+              <div className="oi-card" style={{ padding: 18 }}>
+                <div className="oi-stat-label">Lane</div>
+                <div className="oi-card-copy">Marketplace execution</div>
+              </div>
+              <div className="oi-card" style={{ padding: 18 }}>
+                <div className="oi-stat-label">Budget</div>
+                <div className="oi-card-copy">$15k–$30k</div>
+              </div>
+            </div>
+          </div>
+
+          <aside className="oi-panel-dark">
+            <span className="oi-kicker">Quick actions</span>
+            <h2 className="oi-display oi-display-inverse">Ready</h2>
+            <p className="oi-lead oi-lead-inverse">
+              The detail page should expose proposal, activity, and lifecycle actions clearly while backend event
+              persistence is verified.
+            </p>
+
+            <div className="oi-stack" style={{ marginTop: 22 }}>
+              <a href="/admin/marketplace" className="oi-btn oi-btn-secondary">Back to marketplace admin</a>
+              <button type="button" className="oi-btn oi-btn-primary">Create proposal</button>
+              <button type="button" className="oi-btn oi-btn-ghost">Open activity</button>
+            </div>
+          </aside>
+        </section>
+
+        <section className="oi-section">
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "minmax(0,1.05fr) minmax(320px,0.95fr)",
+              gap: 18,
+            }}
+          >
+            <article className="oi-card">
+              <div className="oi-section-header">
+                <h2 className="oi-section-title">Request activity</h2>
+                <p className="oi-section-copy">
+                  These actions represent the lifecycle checkpoints that should later be backed by persisted events.
+                </p>
+              </div>
+
+              <div className="oi-stack">
+                {eventTimeline.map((event, index) => (
+                  <div
+                    key={event.title}
+                    style={{
+                      padding: 20,
+                      borderRadius: 20,
+                      border: "1px solid rgba(15,23,42,0.08)",
+                      background: index === 0
+                        ? "linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)"
+                        : "#ffffff",
+                      boxShadow: "0 12px 28px rgba(15,23,42,0.05)",
+                    }}
                   >
-                    {busyRequestAction === "closed" ? "Closing..." : "Close request"}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => void updateRequestStatus(proposals.length > 0 ? "proposed" : "reviewing")}
-                    disabled={busyRequestAction !== null}
-                    className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-slate-50/80 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {busyRequestAction === "proposed" || busyRequestAction === "reviewing"
-                      ? "Reopening..."
-                      : "Reopen request"}
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4 text-sm">
-                <div><strong>Email:</strong> {request.email}</div>
-                <div><strong>Company:</strong> {request.company_name || "Not specified"}</div>
-                <div><strong>Phone:</strong> {request.phone || "Not specified"}</div>
-                <div><strong>Website:</strong> {request.website || "Not specified"}</div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4 text-sm">
-                <div><strong>Budget:</strong> {request.budget_range || "Not specified"}</div>
-                <div><strong>Assigned specialist:</strong> {request.assigned_specialist_name || "Unassigned"}</div>
-                <div><strong>Created:</strong> {new Date(request.created_at).toLocaleString("en-IN")}</div>
-              </div>
-            </div>
-
-            <div className="mt-4 rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4 text-sm text-slate-800">
-              <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Brief</div>
-              {request.brief}
-            </div>
-          </section>
-
-          <section className="rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-xl shadow-slate-200/70 backdrop-blur">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="text-xl font-semibold">Create Proposal</h3>
-              <span className="text-xs text-slate-500">POST /api/admin/marketplace/proposals</span>
-            </div>
-
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <label className="text-sm">
-                <div className="mb-1 font-medium text-slate-700">Specialist</div>
-                <select
-                  value={proposalForm.specialistSlug}
-                  onChange={(e) =>
-                    setProposalForm((current) => ({ ...current, specialistSlug: e.target.value }))
-                  }
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
-                >
-                  <option value="">Select specialist</option>
-                  {specialists.map((specialist) => (
-                    <option key={specialist.id} value={specialist.slug}>
-                      {specialist.name} ({specialist.slug})
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="text-sm">
-                <div className="mb-1 font-medium text-slate-700">Title</div>
-                <input
-                  value={proposalForm.title}
-                  onChange={(e) =>
-                    setProposalForm((current) => ({ ...current, title: e.target.value }))
-                  }
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
-                  placeholder="90-day SEO recovery sprint"
-                />
-              </label>
-
-              <label className="text-sm md:col-span-2">
-                <div className="mb-1 font-medium text-slate-700">Scope summary</div>
-                <textarea
-                  value={proposalForm.scopeSummary}
-                  onChange={(e) =>
-                    setProposalForm((current) => ({ ...current, scopeSummary: e.target.value }))
-                  }
-                  className="min-h-24 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
-                  placeholder="Technical audit, keyword gap analysis, information architecture fixes, and weekly reporting."
-                />
-              </label>
-
-              <label className="text-sm md:col-span-2">
-                <div className="mb-1 font-medium text-slate-700">Deliverables</div>
-                <textarea
-                  value={proposalForm.deliverablesText}
-                  onChange={(e) =>
-                    setProposalForm((current) => ({ ...current, deliverablesText: e.target.value }))
-                  }
-                  className="min-h-24 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
-                  placeholder={"Technical SEO audit`nKeyword opportunity map`n90-day action plan"}
-                />
-                <div className="mt-1 text-xs text-slate-500">One per line or comma-separated</div>
-              </label>
-
-              <label className="text-sm">
-                <div className="mb-1 font-medium text-slate-700">Price (INR)</div>
-                <input
-                  type="number"
-                  value={proposalForm.priceInr}
-                  onChange={(e) =>
-                    setProposalForm((current) => ({ ...current, priceInr: e.target.value }))
-                  }
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
-                  placeholder="45000"
-                />
-              </label>
-
-              <label className="text-sm">
-                <div className="mb-1 font-medium text-slate-700">Timeline (days)</div>
-                <input
-                  type="number"
-                  value={proposalForm.timelineDays}
-                  onChange={(e) =>
-                    setProposalForm((current) => ({ ...current, timelineDays: e.target.value }))
-                  }
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
-                  placeholder="21"
-                />
-              </label>
-
-              <label className="text-sm md:col-span-2">
-                <div className="mb-1 font-medium text-slate-700">Notes</div>
-                <textarea
-                  value={proposalForm.notes}
-                  onChange={(e) =>
-                    setProposalForm((current) => ({ ...current, notes: e.target.value }))
-                  }
-                  className="min-h-20 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
-                  placeholder="Optional internal notes"
-                />
-              </label>
-            </div>
-
-            {proposalFormError ? (
-              <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50/90 px-3 py-2 text-sm text-amber-800">
-                {proposalFormError}
-              </div>
-            ) : null}
-
-            <div className="mt-4 flex justify-end">
-              <button
-                type="button"
-                onClick={() => void createProposal()}
-                disabled={creatingProposal}
-                className="rounded-xl bg-gradient-to-r from-slate-900 to-indigo-700 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {creatingProposal ? "Creating..." : "Create proposal"}
-              </button>
-            </div>
-          </section>
-
-          <section className="rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-xl shadow-slate-200/70 backdrop-blur">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="text-xl font-semibold">Activity</h3>
-              <span className="text-xs text-slate-500">{events.length} event(s)</span>
-            </div>
-
-            {events.length === 0 ? (
-              <div className="mt-4 rounded-xl border border-dashed p-4 text-sm text-slate-500">
-                No request activity recorded yet.
-              </div>
-            ) : (
-              <div className="mt-4 space-y-3">
-                {events.map((event) => (
-                  <article key={event.id} className="rounded-2xl border border-slate-200/80 bg-white/85 p-4 shadow-sm shadow-slate-200/60">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium uppercase tracking-wide text-slate-700">
-                        {formatEventLabel(event.event_type)}
-                      </span>
-                      <span className="text-xs text-slate-500">
-                        {event.actor || "system"} · {new Date(event.created_at).toLocaleString("en-IN")}
-                      </span>
-                    </div>
-
-                    {event.payload ? (
-                      <pre className="mt-3 overflow-x-auto rounded-lg bg-slate-50/80 p-3 text-xs text-slate-700">
-{JSON.stringify(event.payload, null, 2)}
-                      </pre>
-                    ) : null}
-                  </article>
+                    <div className="oi-stat-label">Step {index + 1}</div>
+                    <h3 className="oi-card-title">{event.title}</h3>
+                    <p className="oi-card-copy">{event.detail}</p>
+                  </div>
                 ))}
               </div>
-            )}
-          </section>
+            </article>
 
-          <section className="rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-xl shadow-slate-200/70 backdrop-blur">
-            <h3 className="text-xl font-semibold">Proposals</h3>
-
-            {proposals.length === 0 ? (
-              <div className="mt-4 rounded-xl border border-dashed p-4 text-sm text-slate-500">No proposals found.</div>
-            ) : (
-              <div className="mt-4 space-y-4">
-                {proposals.map((proposal) => {
-                  const actionable = proposal.status === "sent";
-
-                  return (
-                    <article key={proposal.id} className="rounded-2xl border border-slate-200/80 bg-white/85 p-4 shadow-sm shadow-slate-200/60">
-                      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h4 className="text-lg font-semibold">{proposal.title}</h4>
-                            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium uppercase tracking-wide text-slate-700">
-                              {proposal.status}
-                            </span>
-                          </div>
-                          <p className="mt-1 text-sm text-slate-600">
-                            {proposal.specialist_name || "No specialist"} · {formatInr(proposal.price_inr)} · {proposal.timeline_days} days
-                          </p>
-                        </div>
-
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            disabled={!actionable || busyProposalId === proposal.id}
-                            onClick={() => void updateProposal(proposal.id, "accepted")}
-                            className="rounded-xl bg-gradient-to-r from-slate-900 to-indigo-700 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            Accept
-                          </button>
-                          <button
-                            type="button"
-                            disabled={!actionable || busyProposalId === proposal.id}
-                            onClick={() => void updateProposal(proposal.id, "rejected")}
-                            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            Reject
-                          </button>
-                        </div>
+            <aside className="oi-stack">
+              <article className="oi-card">
+                <h3 className="oi-card-title">Request actions</h3>
+                <div className="oi-stack">
+                  {actionCards.map((card) => (
+                    <div
+                      key={card.title}
+                      style={{
+                        padding: 18,
+                        borderRadius: 18,
+                        border: "1px solid rgba(15,23,42,0.08)",
+                        background: "linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)",
+                      }}
+                    >
+                      <h4 className="oi-card-title">{card.title}</h4>
+                      <p className="oi-card-copy">{card.copy}</p>
+                      <div className="oi-chip-row">
+                        {card.tone === "primary" && (
+                          <button type="button" className="oi-btn oi-btn-primary">Run action</button>
+                        )}
+                        {card.tone === "secondary" && (
+                          <button type="button" className="oi-btn oi-btn-secondary">Run action</button>
+                        )}
+                        {card.tone === "ghost" && (
+                          <button type="button" className="oi-btn oi-btn-ghost">Run action</button>
+                        )}
                       </div>
+                    </div>
+                  ))}
+                </div>
+              </article>
 
-                      <p className="mt-3 text-sm text-slate-800">{proposal.scope_summary}</p>
-
-                      <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700">
-                        {proposal.deliverables.map((item) => (
-                          <li key={item}>{item}</li>
-                        ))}
-                      </ul>
-
-                      {proposal.notes ? (
-                        <div className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
-                          {proposal.notes}
-                        </div>
-                      ) : null}
-                    </article>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-        </div>
-      ) : null}
-    </main>
+              <article className="oi-card">
+                <h3 className="oi-card-title">Operational note</h3>
+                <p className="oi-card-copy">
+                  After this UI alignment batch, return to the backend work: replace non-throwing event writes,
+                  verify PUT-triggered events, implement Supabase admin-client persistence, and confirm GET returns
+                  the newly written timeline entries.
+                </p>
+              </article>
+            </aside>
+          </div>
+        </section>
+      </div>
+    </div>
   );
 }
