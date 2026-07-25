@@ -1,3 +1,4 @@
+import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
 import { adminError, adminJson, adminUnauthorized } from "@/lib/admin-api";
 import { requireAdmin } from "@/lib/admin-route";
 import { NextResponse } from "next/server";

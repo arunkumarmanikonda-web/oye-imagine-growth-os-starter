@@ -1,3 +1,4 @@
+import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
 import { requireAdmin } from "@/lib/admin-route";
 import { adminJson, adminError, adminUnauthorized } from "@/lib/admin-api";
 import { createClient } from "@supabase/supabase-js";

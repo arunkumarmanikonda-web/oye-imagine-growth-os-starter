@@ -1,3 +1,4 @@
+import { getWorkspaceDisplayName, getWorkspaceSurfaceLabel } from "@/lib/admin/workspace-branding";
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -330,7 +331,7 @@ export default function AdminExecutionPage() {
                     Workspace ID
                   </p>
                   <p className="mt-2 break-all text-sm font-medium text-slate-800">
-                    {data?.workspaceId ?? "—"}
+                    {data?.workspaceId ?? "â€”"}
                   </p>
                 </div>
 
@@ -348,7 +349,7 @@ export default function AdminExecutionPage() {
                     Active channels
                   </p>
                   <p className="mt-2 text-sm font-medium text-slate-800">
-                    {channels.length > 0 ? channels.join(", ") : "—"}
+                    {channels.length > 0 ? channels.join(", ") : "â€”"}
                   </p>
                 </div>
               </div>
@@ -680,31 +681,31 @@ export default function AdminExecutionPage() {
                 <div>
                   <dt className="font-medium text-slate-500">Business</dt>
                   <dd className="text-slate-900">
-                    {String(company.businessName ?? "—")}
+                    {String(company.businessName ?? "â€”")}
                   </dd>
                 </div>
                 <div>
                   <dt className="font-medium text-slate-500">Industry</dt>
                   <dd className="text-slate-900">
-                    {String(company.industry ?? "—")}
+                    {String(company.industry ?? "â€”")}
                   </dd>
                 </div>
                 <div>
                   <dt className="font-medium text-slate-500">Primary objective</dt>
                   <dd className="text-slate-900">
-                    {String(goals.primaryObjective ?? "—")}
+                    {String(goals.primaryObjective ?? "â€”")}
                   </dd>
                 </div>
                 <div>
                   <dt className="font-medium text-slate-500">Revenue target</dt>
                   <dd className="text-slate-900">
-                    {String(goals.monthlyRevenueTarget ?? "—")}
+                    {String(goals.monthlyRevenueTarget ?? "â€”")}
                   </dd>
                 </div>
                 <div>
                   <dt className="font-medium text-slate-500">Channels</dt>
                   <dd className="text-slate-900">
-                    {channels.length > 0 ? channels.join(", ") : "—"}
+                    {channels.length > 0 ? channels.join(", ") : "â€”"}
                   </dd>
                 </div>
               </dl>
@@ -713,11 +714,11 @@ export default function AdminExecutionPage() {
             <div className="oi-card p-6">
               <h2 className="oi-section-title text-xl">Save checklist</h2>
               <ul className="mt-4 space-y-3 text-sm text-slate-700">
-                <li>• Headline and summary reflect the current strategy</li>
-                <li>• Focus areas are clear and limited</li>
-                <li>• Every task has an owner and a week/cadence</li>
-                <li>• Status values are current before review</li>
-                <li>• Notes capture blockers and operator context</li>
+                <li>â€¢ Headline and summary reflect the current strategy</li>
+                <li>â€¢ Focus areas are clear and limited</li>
+                <li>â€¢ Every task has an owner and a week/cadence</li>
+                <li>â€¢ Status values are current before review</li>
+                <li>â€¢ Notes capture blockers and operator context</li>
               </ul>
             </div>
           </aside>

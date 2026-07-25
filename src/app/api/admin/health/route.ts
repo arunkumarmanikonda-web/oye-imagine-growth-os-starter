@@ -1,3 +1,4 @@
+import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
 import { createClient } from "@supabase/supabase-js";
 import { adminError, adminJson, adminUnauthorized } from "@/lib/admin-api";
 import {
@@ -55,9 +56,12 @@ export async function GET(request: Request) {
     const latestWorkspaceSetting =
       Array.isArray(data) && data.length > 0 ? data[0] : null;
 
+    const workspaceDisplayName = getWorkspaceDisplayName();
+
     return adminJson({
       ok: true,
-      timestamp,
+      
+      workspaceDisplayName,timestamp,
       auth: {
         ok: true,
         matchedHeader: auth.matchedHeader,

@@ -1,3 +1,4 @@
+import { getWorkspaceDisplayName, getWorkspaceSurfaceLabel } from "@/lib/admin/workspace-branding";
 "use client";
 
 import Link from "next/link";
@@ -42,14 +43,14 @@ function badgeClass(value: boolean): string {
 
 function formatValue(value: string | number | null): string {
   if (value === null || typeof value === "undefined") {
-    return "—";
+    return "â€”";
   }
   return String(value);
 }
 
 function formatDateTime(value: string | null): string {
   if (!value) {
-    return "—";
+    return "â€”";
   }
 
   const date = new Date(value);
@@ -183,14 +184,14 @@ export default function AdminOpsPage() {
             <div className="oi-brand-gradient h-2 w-24 rounded-full" />
             <p className="mt-4 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Release readiness</p>
             <p className="mt-3 text-sm leading-6 text-slate-700">
-              Generated {data ? formatDateTime(data.generatedAt) : "—"}
+              Generated {data ? formatDateTime(data.generatedAt) : "â€”"}
             </p>
           </div>
         </div>
       </section>
 
       {loading ? (
-        <section className="oi-card rounded-[28px] p-6 text-sm text-slate-600">Loading release status…</section>
+        <section className="oi-card rounded-[28px] p-6 text-sm text-slate-600">Loading release statusâ€¦</section>
       ) : null}
 
       {error ? (

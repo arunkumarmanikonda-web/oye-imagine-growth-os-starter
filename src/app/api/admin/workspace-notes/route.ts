@@ -1,3 +1,4 @@
+import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { env } from "@/lib/env";
@@ -71,12 +72,17 @@ export async function GET(request: Request) {
     const { data, error } = await query;
 
     if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+      const workspaceDisplayName = getWorkspaceDisplayName();
+
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
     }
+
+    const workspaceDisplayName = getWorkspaceDisplayName();
 
     return NextResponse.json({
       ok: true,
-      active,
+      
+      workspaceDisplayName,active,
       filters: {
         q,
         includeArchived,
@@ -101,7 +107,9 @@ export async function POST(request: Request) {
     const noteBody = body.body?.trim() ?? "";
 
     if (!title) {
-      return NextResponse.json({ ok: false, error: "title is required" }, { status: 400 });
+      const workspaceDisplayName = getWorkspaceDisplayName();
+
+    return NextResponse.json({ ok: false, error: "title is required" }, { status: 400 });
     }
 
     const active = await requireActiveAdminContext();
@@ -125,7 +133,9 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+      const workspaceDisplayName = getWorkspaceDisplayName();
+
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
     }
 
     try {
@@ -144,6 +154,8 @@ export async function POST(request: Request) {
     } catch (auditError) {
       console.error("Failed to write workspace note create audit event", auditError);
     }
+
+    const workspaceDisplayName = getWorkspaceDisplayName();
 
     return NextResponse.json({
       ok: true,
@@ -168,11 +180,15 @@ export async function PUT(request: Request) {
     const noteBody = body.body?.trim() ?? "";
 
     if (!id) {
-      return NextResponse.json({ ok: false, error: "id is required" }, { status: 400 });
+      const workspaceDisplayName = getWorkspaceDisplayName();
+
+    return NextResponse.json({ ok: false, error: "id is required" }, { status: 400 });
     }
 
     if (!title) {
-      return NextResponse.json({ ok: false, error: "title is required" }, { status: 400 });
+      const workspaceDisplayName = getWorkspaceDisplayName();
+
+    return NextResponse.json({ ok: false, error: "title is required" }, { status: 400 });
     }
 
     const active = await requireActiveAdminContext();
@@ -195,7 +211,9 @@ export async function PUT(request: Request) {
       .single();
 
     if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+      const workspaceDisplayName = getWorkspaceDisplayName();
+
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
     }
 
     try {
@@ -214,6 +232,8 @@ export async function PUT(request: Request) {
     } catch (auditError) {
       console.error("Failed to write workspace note update audit event", auditError);
     }
+
+    const workspaceDisplayName = getWorkspaceDisplayName();
 
     return NextResponse.json({
       ok: true,
@@ -237,7 +257,9 @@ export async function DELETE(request: Request) {
     const mode = searchParams.get("mode")?.trim() ?? "archive";
 
     if (!id) {
-      return NextResponse.json({ ok: false, error: "id is required" }, { status: 400 });
+      const workspaceDisplayName = getWorkspaceDisplayName();
+
+    return NextResponse.json({ ok: false, error: "id is required" }, { status: 400 });
     }
 
     const active = await requireActiveAdminContext();
@@ -262,7 +284,9 @@ export async function DELETE(request: Request) {
         .single();
 
       if (error) {
-        return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+        const workspaceDisplayName = getWorkspaceDisplayName();
+
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
       }
 
       try {
@@ -282,7 +306,9 @@ export async function DELETE(request: Request) {
         console.error("Failed to write workspace note restore audit event", auditError);
       }
 
-      return NextResponse.json({ ok: true, item: data });
+      const workspaceDisplayName = getWorkspaceDisplayName();
+
+    return NextResponse.json({ ok: true, item: data });
     }
 
     const { data, error } = await admin
@@ -303,7 +329,9 @@ export async function DELETE(request: Request) {
       .single();
 
     if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+      const workspaceDisplayName = getWorkspaceDisplayName();
+
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
     }
 
     try {
@@ -322,6 +350,8 @@ export async function DELETE(request: Request) {
     } catch (auditError) {
       console.error("Failed to write workspace note archive audit event", auditError);
     }
+
+    const workspaceDisplayName = getWorkspaceDisplayName();
 
     return NextResponse.json({ ok: true, item: data });
   } catch (error) {

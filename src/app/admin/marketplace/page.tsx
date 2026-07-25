@@ -1,3 +1,4 @@
+import { getWorkspaceDisplayName, getWorkspaceSurfaceLabel } from "@/lib/admin/workspace-branding";
 const requestCards = [
   {
     id: "req-demo-enterprise-rebrand",
@@ -5,7 +6,7 @@ const requestCards = [
     company: "Northstar Health",
     status: "New",
     lane: "Brand strategy",
-    budget: "$25k–$40k",
+    budget: "$25kÃ¢â‚¬â€œ$40k",
     updated: "Updated 2h ago",
     summary: "Repositioning project covering website refresh, acquisition cleanup, and executive messaging alignment.",
   },
@@ -15,7 +16,7 @@ const requestCards = [
     company: "Aster Retail",
     status: "In review",
     lane: "Paid media",
-    budget: "$12k–$20k",
+    budget: "$12kÃ¢â‚¬â€œ$20k",
     updated: "Updated 5h ago",
     summary: "Performance decline across search and paid social requires tighter routing, targeting cleanup, and landing page fixes.",
   },
@@ -39,10 +40,12 @@ const pipeline = [
 ];
 
 export default function AdminMarketplacePage() {
+  const workspaceLabel = getWorkspaceSurfaceLabel("marketplace", getWorkspaceDisplayName());
   return (
     <div className="oi-page">
       <div className="oi-container">
         <div className="oi-page-head">
+          <p className="oi-stage-eyebrow">{workspaceLabel}</p>
           <span className="oi-kicker">Marketplace admin</span>
         </div>
 
@@ -144,7 +147,7 @@ export default function AdminMarketplacePage() {
                     </h2>
 
                     <p className="oi-card-copy" style={{ marginTop: 10 }}>
-                      <strong>{request.company}</strong> · {request.summary}
+                      <strong>{request.company}</strong> Ã‚Â· {request.summary}
                     </p>
 
                     <div

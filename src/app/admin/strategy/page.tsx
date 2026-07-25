@@ -1,3 +1,4 @@
+import { getWorkspaceDisplayName, getWorkspaceSurfaceLabel } from "@/lib/admin/workspace-branding";
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -32,7 +33,7 @@ type StrategyResponse = {
   error?: string;
 };
 
-function textValue(value: unknown, fallback = "—"): string {
+function textValue(value: unknown, fallback = "â€”"): string {
   return typeof value === "string" && value.trim().length > 0
     ? value
     : fallback;

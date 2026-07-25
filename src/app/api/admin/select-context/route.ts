@@ -1,3 +1,4 @@
+import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-route";
 import { getAdminContexts } from "@/lib/admin/context";

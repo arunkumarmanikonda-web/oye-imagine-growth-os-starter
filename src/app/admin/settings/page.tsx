@@ -1,3 +1,4 @@
+import { getWorkspaceDisplayName, getWorkspaceSurfaceLabel } from "@/lib/admin/workspace-branding";
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -458,7 +459,7 @@ export default function AdminWorkspaceSettingsPage() {
               </button>
             </div>
 
-            {loading ? <p className="mt-6 text-sm text-slate-500">Loading settings…</p> : null}
+            {loading ? <p className="mt-6 text-sm text-slate-500">Loading settingsâ€¦</p> : null}
 
             {!loading && items.length === 0 ? (
               <div className="mt-6 rounded-[24px] border border-dashed border-slate-300 p-6 text-sm text-slate-500">
@@ -512,7 +513,7 @@ export default function AdminWorkspaceSettingsPage() {
               <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Restore version history</h2>
             </div>
 
-            {loading ? <p className="mt-6 text-sm text-slate-500">Loading versions…</p> : null}
+            {loading ? <p className="mt-6 text-sm text-slate-500">Loading versionsâ€¦</p> : null}
 
             {!loading && recentVersions.length === 0 ? (
               <div className="mt-6 rounded-[24px] border border-dashed border-slate-300 p-6 text-sm text-slate-500">

@@ -22,7 +22,15 @@ export function getWorkspaceDisplayName(value?: string | null): string {
 }
 
 export function getWorkspaceSurfaceLabel(
-  surface: "onboarding" | "brand-intelligence" | "pilot",
+  surface:
+    | "onboarding"
+    | "brand-intelligence"
+    | "pilot"
+    | "settings"
+    | "ops"
+    | "strategy"
+    | "execution"
+    | "marketplace",
   workspaceName?: string | null,
 ): string {
   const name = normalizeWorkspaceDisplayName(workspaceName);
@@ -34,10 +42,21 @@ export function getWorkspaceSurfaceLabel(
       return `${name} brand intelligence workspace`;
     case "pilot":
       return `${name} pilot workspace`;
+    case "settings":
+      return `${name} settings workspace`;
+    case "ops":
+      return `${name} ops workspace`;
+    case "strategy":
+      return `${name} strategy workspace`;
+    case "execution":
+      return `${name} execution workspace`;
+    case "marketplace":
+      return `${name} marketplace workspace`;
     default:
       return `${name} workspace`;
   }
 }
+
 export function getWorkspaceBrandingPayload(value?: string | null): {
   workspaceDisplayName: string;
 } {
