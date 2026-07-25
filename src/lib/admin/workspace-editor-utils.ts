@@ -1,6 +1,6 @@
 export {
   listToMultiline,
-  buildOnboardingPatchFromFormData as buildWorkspaceOnboardingPatchFromFormData,
-  buildBrandIntelligencePatchFromFormData as buildWorkspaceBrandIntelligencePatchFromFormData,
-  buildPilotPatchFromFormData as buildWorkspacePilotPatchFromFormData,
+  buildWorkspaceOnboardingPatch as buildWorkspaceOnboardingPatchFromFormData,
+  buildWorkspaceBrandIntelligencePatch as buildWorkspaceBrandIntelligencePatchFromFormData,
+  buildWorkspacePilotPatch as buildWorkspacePilotPatchFromFormData,
 } from "@/lib/admin/neejee-editor-utils";

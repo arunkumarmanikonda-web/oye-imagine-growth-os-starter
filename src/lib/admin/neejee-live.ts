@@ -491,3 +491,14 @@ export async function saveNeejeePilotControlSnapshotLive(patch: unknown) {
   });
 }
 /* M13E_WRITE_RAILS_END */
+
+/* M13J_GENERIC_LIVE_ALIASES_START */
+export const getOnboardingSnapshotLive = getNeejeeOnboardingSnapshotLive;
+export const saveOnboardingSnapshotLive = saveNeejeeOnboardingSnapshotLive;
+
+export const getBrandIntelligenceSnapshotLive = getNeejeeBrandIntelligenceSnapshotLive;
+export const saveBrandIntelligenceSnapshotLive = saveNeejeeBrandIntelligenceSnapshotLive;
+
+export const getPilotControlSnapshotLive = getNeejeePilotControlSnapshotLive;
+export const savePilotControlSnapshotLive = saveNeejeePilotControlSnapshotLive;
+/* M13J_GENERIC_LIVE_ALIASES_END */

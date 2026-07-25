@@ -119,3 +119,9 @@ export function buildPilotPatchFromFormData(formData: FormData) {
     nextActions,
   };
 }
+
+/* M13J_GENERIC_EDITOR_UTIL_ALIASES_START */
+export const buildWorkspaceOnboardingPatch = buildOnboardingPatchFromFormData;
+export const buildWorkspaceBrandIntelligencePatch = buildBrandIntelligencePatchFromFormData;
+export const buildWorkspacePilotPatch = buildPilotPatchFromFormData;
+/* M13J_GENERIC_EDITOR_UTIL_ALIASES_END */

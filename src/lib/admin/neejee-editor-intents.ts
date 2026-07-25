@@ -41,3 +41,13 @@ export function toEditorErrorSlug(error: unknown): string {
   if (message === PUBLISH_CONFIRMATION_ERROR) return PUBLISH_CONFIRMATION_ERROR;
   return GENERIC_SAVE_ERROR;
 }
+
+/* M13J_GENERIC_EDITOR_INTENT_ALIASES_START */
+export type WorkspaceEditorIntent = EditorIntent;
+
+export const readWorkspaceEditorIntent = readEditorIntent;
+export const readWorkspacePublishConfirmation = readPublishConfirmation;
+export const assertWorkspacePublishConfirmed = assertPublishConfirmed;
+export const buildWorkspaceEditorRedirect = buildEditorRedirect;
+export const toWorkspaceEditorErrorSlug = toEditorErrorSlug;
+/* M13J_GENERIC_EDITOR_INTENT_ALIASES_END */

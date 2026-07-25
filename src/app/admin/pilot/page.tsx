@@ -3,7 +3,7 @@ import { FormFlash } from "@/app/admin/form-flash";
 import { ActionButton } from "@/app/admin/action-button";
 import Link from "next/link";
 import { getWorkspacePilotControlSnapshotLive } from "@/lib/admin/workspace-live";
-import { listToMultiline } from "@/lib/admin/neejee-editor-utils";
+import { listToMultiline } from "@/lib/admin/workspace-editor-utils";
 import AdminSaveButton from "@/app/admin/save-button";
 import { submitPilotEditorAction } from "./actions";
 
