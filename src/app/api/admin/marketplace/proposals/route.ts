@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { env } from "@/lib/env";
+import { requireAdmin } from "@/lib/admin-route";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,62 +23,43 @@ const UpdateProposalSchema = z.object({
   notes: z.string().optional().nullable(),
 });
 
-function getAdminClient() {
-  return createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  });
-}
-
-function requireAdmin(request: NextRequest) {
-  const configured = String(process.env.ADMIN_SECRET ?? "").trim();
-
-  if (!configured) {
-    return NextResponse.json(
-      { ok: false, error: "Unauthorized", detail: "No admin secret configured in environment." },
-      { status: 401, headers: { "Cache-Control": "no-store" } }
-    );
-  }
-
-  const supplied = request.headers.get("x-admin-secret")?.trim();
-
-  if (!supplied || supplied !== configured) {
-    return NextResponse.json(
-      { ok: false, error: "Unauthorized" },
-      { status: 401, headers: { "Cache-Control": "no-store" } }
-    );
-  }
-
-  return null;
-}
+type MarketplaceAdminClient = ReturnType<typeof createSupabaseAdminClient>;
 
 function normalizeDeliverables(value: unknown): string[] {
   if (Array.isArray(value)) {
-    return value.map((item) => String(item ?? "").trim()).filter(Boolean);
+    return value
+      .map((item) => String(item ?? "").trim())
+      .filter(Boolean);
   }
 
   if (typeof value === "string") {
-    return value.split(/\r?\n|,/g).map((item) => item.trim()).filter(Boolean);
+    return value
+      .split(/\r?\n|,/g)
+      .map((item) => item.trim())
+      .filter(Boolean);
   }
 
   return [];
 }
+
 async function appendEvent(
-  supabase: ReturnType<typeof getAdminClient>,
+  supabase: MarketplaceAdminClient,
   requestId: string,
   eventType: string,
   payload: Record<string, unknown>,
   proposalId?: string | null,
 ) {
-  await supabase.from("marketplace_request_events").insert({
+  const { error } = await supabase.from("marketplace_request_events").insert({
     request_id: requestId,
     proposal_id: proposalId ?? null,
     event_type: eventType,
     actor: "admin",
     payload,
   });
+
+  if (error) {
+    throw new Error(`Failed to insert marketplace event: ${error.message}`);
+  }
 }
 
 export async function GET(request: NextRequest) {
@@ -86,7 +67,7 @@ export async function GET(request: NextRequest) {
   if (unauthorized) return unauthorized;
 
   try {
-    const supabase = getAdminClient();
+    const supabase = createSupabaseAdminClient();
     const url = new URL(request.url);
     const requestId = url.searchParams.get("requestId")?.trim();
     const id = url.searchParams.get("id")?.trim();
@@ -166,7 +147,7 @@ export async function POST(request: NextRequest) {
       notes: raw?.notes ?? null,
     });
 
-    const supabase = getAdminClient();
+    const supabase = createSupabaseAdminClient();
 
     const { data: existingRequest, error: requestError } = await supabase
       .from("marketplace_requests")
@@ -267,6 +248,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    await appendEvent(
+      supabase,
+      parsed.requestId,
+      "proposal_created",
+      {
+        proposal_id: createdProposal.id,
+        title: createdProposal.title,
+        status: createdProposal.status,
+        price_inr: createdProposal.price_inr,
+        timeline_days: createdProposal.timeline_days,
+        specialist_slug: createdProposal.specialist_slug ?? null,
+        specialist_name: createdProposal.specialist_name ?? null,
+      },
+      createdProposal.id,
+    );
+
+    await appendEvent(
+      supabase,
+      parsed.requestId,
+      "request_status_changed",
+      {
+        status: "proposed",
+        assigned_specialist_slug: specialistSlug,
+        assigned_specialist_name: specialistName,
+      },
+      createdProposal.id,
+    );
+
     return NextResponse.json(
       { ok: true, proposal: createdProposal },
       { status: 201, headers: { "Cache-Control": "no-store" } }
@@ -303,7 +312,7 @@ export async function PUT(request: NextRequest) {
       notes: raw?.notes ?? null,
     });
 
-    const supabase = getAdminClient();
+    const supabase = createSupabaseAdminClient();
 
     const { data: existingProposal, error: proposalError } = await supabase
       .from("marketplace_proposals")
@@ -325,7 +334,8 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const mergedNotes = [existingProposal.notes, parsed.notes].filter(Boolean).join("\n").trim() || null;
+    const mergedNotes =
+      [existingProposal.notes, parsed.notes].filter(Boolean).join("\n").trim() || null;
 
     const { data: updatedProposal, error: updateProposalError } = await supabase
       .from("marketplace_proposals")
@@ -358,7 +368,7 @@ export async function PUT(request: NextRequest) {
     );
 
     if (parsed.status === "accepted") {
-      await supabase
+      const { error: siblingRejectError } = await supabase
         .from("marketplace_proposals")
         .update({
           status: "rejected",
@@ -367,6 +377,13 @@ export async function PUT(request: NextRequest) {
         .eq("request_id", existingProposal.request_id)
         .neq("id", existingProposal.id)
         .in("status", ["draft", "sent"]);
+
+      if (siblingRejectError) {
+        return NextResponse.json(
+          { ok: false, error: "Proposal accepted but sibling rejection failed.", detail: siblingRejectError.message },
+          { status: 500, headers: { "Cache-Control": "no-store" } }
+        );
+      }
 
       const { error: updateRequestError } = await supabase
         .from("marketplace_requests")
@@ -385,21 +402,43 @@ export async function PUT(request: NextRequest) {
           { status: 500, headers: { "Cache-Control": "no-store" } }
         );
       }
+
+      await appendEvent(
+        supabase,
+        existingProposal.request_id,
+        "request_assigned",
+        {
+          status: "assigned",
+          accepted_proposal_id: existingProposal.id,
+          accepted_proposal_title: existingProposal.title,
+          assigned_specialist_slug: existingProposal.specialist_slug ?? null,
+          assigned_specialist_name: existingProposal.specialist_name ?? null,
+        },
+        existingProposal.id,
+      );
     }
 
     if (parsed.status === "rejected") {
-      const { data: openProposals } = await supabase
+      const { data: openProposals, error: openProposalsError } = await supabase
         .from("marketplace_proposals")
         .select("id")
         .eq("request_id", existingProposal.request_id)
         .in("status", ["draft", "sent", "accepted"]);
 
+      if (openProposalsError) {
+        return NextResponse.json(
+          { ok: false, error: "Failed to refresh remaining proposals.", detail: openProposalsError.message },
+          { status: 500, headers: { "Cache-Control": "no-store" } }
+        );
+      }
+
       const shouldClose = !openProposals || openProposals.length === 0;
+      const nextRequestStatus = shouldClose ? "closed" : "proposed";
 
       const { error: updateRequestError } = await supabase
         .from("marketplace_requests")
         .update({
-          status: shouldClose ? "closed" : "proposed",
+          status: nextRequestStatus,
           updated_at: new Date().toISOString(),
         })
         .eq("id", existingProposal.request_id);
@@ -410,6 +449,18 @@ export async function PUT(request: NextRequest) {
           { status: 500, headers: { "Cache-Control": "no-store" } }
         );
       }
+
+      await appendEvent(
+        supabase,
+        existingProposal.request_id,
+        shouldClose ? "request_closed" : "request_status_changed",
+        {
+          status: nextRequestStatus,
+          proposal_id: existingProposal.id,
+          proposal_title: existingProposal.title,
+        },
+        existingProposal.id,
+      );
     }
 
     return NextResponse.json(

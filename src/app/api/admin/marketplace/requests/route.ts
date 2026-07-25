@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { env } from "@/lib/env";
+import { requireAdmin } from "@/lib/admin-route";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,38 +21,10 @@ const UpdateRequestSchema = z.object({
   specialistSlug: z.string().min(2).optional().nullable(),
 });
 
-function getAdminClient() {
-  return createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  });
-}
+type MarketplaceAdminClient = ReturnType<typeof createSupabaseAdminClient>;
 
-function requireAdmin(request: NextRequest) {
-  const configured = String(process.env.ADMIN_SECRET ?? "").trim();
-
-  if (!configured) {
-    return NextResponse.json(
-      { ok: false, error: "Unauthorized", detail: "No admin secret configured in environment." },
-      { status: 401, headers: { "Cache-Control": "no-store" } }
-    );
-  }
-
-  const supplied = request.headers.get("x-admin-secret")?.trim();
-
-  if (!supplied || supplied !== configured) {
-    return NextResponse.json(
-      { ok: false, error: "Unauthorized" },
-      { status: 401, headers: { "Cache-Control": "no-store" } }
-    );
-  }
-
-  return null;
-}
 async function appendEvent(
-  supabase: ReturnType<typeof getAdminClient>,
+  supabase: MarketplaceAdminClient,
   requestId: string,
   eventType: string,
   payload: Record<string, unknown>,
@@ -71,7 +43,10 @@ async function appendEvent(
   }
 }
 
-async function resolveSpecialist(supabase: ReturnType<typeof getAdminClient>, specialistSlug: string | null) {
+async function resolveSpecialist(
+  supabase: MarketplaceAdminClient,
+  specialistSlug: string | null,
+) {
   if (!specialistSlug) {
     return {
       specialist_id: null,
@@ -107,7 +82,7 @@ export async function GET(request: NextRequest) {
   if (unauthorized) return unauthorized;
 
   try {
-    const supabase = getAdminClient();
+    const supabase = createSupabaseAdminClient();
     const id = new URL(request.url).searchParams.get("id")?.trim();
 
     let query = supabase
@@ -177,9 +152,11 @@ export async function PUT(request: NextRequest) {
       specialistSlug: raw?.specialistSlug ?? null,
     });
 
-    const supabase = getAdminClient();
-
-    const specialistFields = await resolveSpecialist(supabase, parsed.specialistSlug ?? null);
+    const supabase = createSupabaseAdminClient();
+    const specialistFields = await resolveSpecialist(
+      supabase,
+      parsed.specialistSlug ?? null,
+    );
 
     const payload: Record<string, unknown> = {
       status: parsed.status,
@@ -215,7 +192,9 @@ export async function PUT(request: NextRequest) {
     const eventType =
       data.status === "closed"
         ? "request_closed"
-        : "request_status_changed";
+        : data.status === "assigned"
+          ? "request_assigned"
+          : "request_status_changed";
 
     await appendEvent(
       supabase,
