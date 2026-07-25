@@ -8,7 +8,8 @@
     "start": "next start",
     "test:admin-marketplace": "vitest run tests/api/admin-marketplace-lifecycle.test.ts",
     "test:admin-marketplace:watch": "vitest tests/api/admin-marketplace-lifecycle.test.ts",
-    "test:admin-onboarding": "vitest run tests/api/admin-onboarding.test.ts"
+    "test:admin-onboarding": "vitest run tests/api/admin-onboarding.test.ts",
+    "test:admin-brand-intelligence": "vitest run tests/api/admin-brand-intelligence.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
