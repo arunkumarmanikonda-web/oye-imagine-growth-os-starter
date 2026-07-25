@@ -15,7 +15,10 @@ const toneClass: Record<string, string> = {
   ghost: "oi-stage-button-ghost",
 };
 
-export const runtime = "nodejs";`r`nexport const dynamic = "force-dynamic";`r`n`r`nexport default async function AdminPilotPage() {
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export default async function AdminPilotPage() {
   const snapshot = await getNeejeePilotControlSnapshotLive();
 
   return (

@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   const unauthorized = requireAdmin(request);
   if (unauthorized) return unauthorized;
 
-  const snapshot = getNeejeeBrandIntelligenceSnapshot();
+  const snapshot = await getNeejeeBrandIntelligenceSnapshotLive();
 
   return NextResponse.json(
     {

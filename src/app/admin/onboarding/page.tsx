@@ -1,13 +1,13 @@
 import Link from "next/link";
-import {
-  getNeejeeOnboardingSnapshot,
-  type ActivationStep,
-  type BlockerItem,
-  type IntegrationItem,
-  type ReadinessCard,
-  type ReadinessState,
-  type ServiceModule,
-  type TaskItem,
+import { getNeejeeOnboardingSnapshotLive } from "@/lib/admin/neejee-live";
+import type {
+  ActivationStep,
+  BlockerItem,
+  IntegrationItem,
+  ReadinessCard,
+  ReadinessState,
+  ServiceModule,
+  TaskItem,
 } from "@/lib/admin/onboarding-seed";
 
 function stateLabel(state: ReadinessState) {
@@ -77,7 +77,7 @@ function ServiceCard({ item }: { item: ServiceModule }) {
         </span>
       </div>
       <p className="oi-stage-muted">{item.summary}</p>
-      <p className="oi-stage-meta-line">Owner Â· {item.owner}</p>
+      <p className="oi-stage-meta-line">Owner Ãƒâ€šÃ‚Â· {item.owner}</p>
     </article>
   );
 }
@@ -122,13 +122,16 @@ function TaskCard({ item }: { item: TaskItem }) {
         </span>
       </div>
       <p className="oi-stage-meta-line">
-        Owner Â· {item.owner} Â· Due Â· {item.due}
+        Owner Ãƒâ€šÃ‚Â· {item.owner} Ãƒâ€šÃ‚Â· Due Ãƒâ€šÃ‚Â· {item.due}
       </p>
     </article>
   );
 }
 
-export const runtime = "nodejs";`r`nexport const dynamic = "force-dynamic";`r`n`r`nexport default async function AdminOnboardingPage() {
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export default async function AdminOnboardingPage() {
   const snapshot = await getNeejeeOnboardingSnapshotLive();
   const averageScore = readinessAverage(snapshot.readiness);
   const readyServices = countByState(snapshot.services, "ready");
@@ -228,7 +231,7 @@ export const runtime = "nodejs";`r`nexport const dynamic = "force-dynamic";`r`n`
                 <span>/ 100</span>
               </div>
               <p className="oi-stage-muted">{item.summary}</p>
-              <p className="oi-stage-meta-line">Owner Â· {item.owner}</p>
+              <p className="oi-stage-meta-line">Owner Ãƒâ€šÃ‚Â· {item.owner}</p>
             </article>
           ))}
         </div>
@@ -340,7 +343,7 @@ export const runtime = "nodejs";`r`nexport const dynamic = "force-dynamic";`r`n`
                     {blockerLabel(item.severity)}
                   </span>
                 </div>
-                <p className="oi-stage-meta-line">Owner Â· {item.owner}</p>
+                <p className="oi-stage-meta-line">Owner Ãƒâ€šÃ‚Â· {item.owner}</p>
                 <p className="oi-stage-muted">{item.action}</p>
               </article>
             ))}

@@ -1,4 +1,3 @@
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getNeejeeOnboardingSnapshot } from "@/lib/admin/onboarding-seed";
 import { getNeejeeBrandIntelligenceSnapshot } from "@/lib/admin/brand-intelligence-seed";
 import type {
@@ -72,6 +71,7 @@ function normalizeStatus(value: unknown): PilotStatus {
 
 async function readSupabaseRows(): Promise<AnyRecord[]> {
   try {
+    const { createSupabaseAdminClient } = await import("@/lib/supabase/admin");
     const admin = createSupabaseAdminClient();
 
     const groups = await Promise.all(
@@ -152,7 +152,12 @@ export async function getNeejeeOnboardingSnapshotLive() {
 
   return deepMerge(merged, {
     workspace: {
-      updatedAt: updatedAt ?? merged.workspace.updatedAt,
+      updatedAtLabel: String(
+        updatedAt ??
+          ((merged as AnyRecord).workspace?.updatedAtLabel ??
+            (merged as AnyRecord).workspace?.updatedAt ??
+            "")
+      ),
     },
   });
 }
@@ -172,7 +177,12 @@ export async function getNeejeeBrandIntelligenceSnapshotLive() {
 
   return deepMerge(merged, {
     workspace: {
-      updatedAt: updatedAt ?? merged.workspace.updatedAt,
+      updatedAt: String(
+        updatedAt ??
+          ((merged as AnyRecord).workspace?.updatedAt ??
+            (merged as AnyRecord).workspace?.updatedAtLabel ??
+            "")
+      ),
     },
   });
 }

@@ -1,12 +1,12 @@
 import Link from "next/link";
-import {
-  getNeejeeBrandIntelligenceSnapshot,
-  type ApprovalState,
-  type AudienceArchetype,
-  type BrandIdentityCard,
-  type LanguageRule,
-  type ProofGuardrail,
-  type SignalState,
+import { getNeejeeBrandIntelligenceSnapshotLive } from "@/lib/admin/neejee-live";
+import type {
+  ApprovalState,
+  AudienceArchetype,
+  BrandIdentityCard,
+  LanguageRule,
+  ProofGuardrail,
+  SignalState,
 } from "@/lib/admin/brand-intelligence-seed";
 
 function signalLabel(state: SignalState) {
@@ -107,7 +107,10 @@ function AudienceCard({ item }: { item: AudienceArchetype }) {
   );
 }
 
-export const runtime = "nodejs";`r`nexport const dynamic = "force-dynamic";`r`n`r`nexport default async function BrandIntelligencePage() {
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export default async function BrandIntelligencePage() {
   const snapshot = await getNeejeeBrandIntelligenceSnapshotLive();
 
   return (
@@ -276,7 +279,7 @@ export const runtime = "nodejs";`r`nexport const dynamic = "force-dynamic";`r`n`
             {snapshot.competitorSignals.map((item) => (
               <article key={item.brand} className="oi-bi-rule-card" data-tone="neutral">
                 <h3>{item.brand}</h3>
-                <p className="oi-bi-meta-line">Posture Â· {item.posture}</p>
+                <p className="oi-bi-meta-line">Posture ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {item.posture}</p>
                 <p className="oi-bi-muted">{item.signal}</p>
               </article>
             ))}
