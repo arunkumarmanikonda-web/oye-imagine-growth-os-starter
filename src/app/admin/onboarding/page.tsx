@@ -25,8 +25,7 @@ export default async function AdminOnboardingPage() {
         <div className="oi-stage-eyebrow">{workspaceLabel}</div>
         <h1>Onboarding command center</h1>
         <p>
-          Update operational readiness, blockers, services, and integration notes for the live
-          {workspaceLabel} workspace.
+          Update operational readiness, blockers, services, and integration notes for the current onboarding workspace.
         </p>
         <div className="oi-editor-nav">
           <Link href="/admin/brand-intelligence" className="oi-stage-button-secondary">

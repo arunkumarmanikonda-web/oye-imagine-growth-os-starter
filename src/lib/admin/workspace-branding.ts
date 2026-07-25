@@ -13,7 +13,24 @@ function readNestedString(record: UnknownRecord | null | undefined, keys: string
   return "";
 }
 
-export function getWorkspaceDisplayName(snapshot: unknown, fallback = "Workspace"): string {
+function normalizeWorkspaceDisplayName(value: string, fallback: string): string {
+  const candidate = value.trim();
+  if (!candidate) return fallback;
+
+  if (/\bneejee\b/i.test(candidate)) {
+    return fallback;
+  }
+
+  return candidate;
+}
+
+function surfaceLabelText(surface: "onboarding" | "brand-intelligence" | "pilot"): string {
+  if (surface === "onboarding") return "onboarding";
+  if (surface === "brand-intelligence") return "brand intelligence";
+  return "pilot";
+}
+
+export function getWorkspaceDisplayName(snapshot: unknown, fallback = "Current workspace"): string {
   if (!snapshot || typeof snapshot !== "object") return fallback;
 
   const root = snapshot as UnknownRecord;
@@ -22,20 +39,24 @@ export function getWorkspaceDisplayName(snapshot: unknown, fallback = "Workspace
       ? (root.workspace as UnknownRecord)
       : null;
 
-  return (
+  const candidate =
     readString(root.brand) ||
     readNestedString(workspace, ["brand", "name", "label", "title"]) ||
-    fallback
-  );
+    "";
+
+  return normalizeWorkspaceDisplayName(candidate, fallback);
 }
 
 export function getWorkspaceSurfaceLabel(
   snapshot: unknown,
   surface: "onboarding" | "brand-intelligence" | "pilot"
 ): string {
-  const workspaceName = getWorkspaceDisplayName(snapshot);
+  const displayName = getWorkspaceDisplayName(snapshot, "Current workspace");
+  const surfaceText = surfaceLabelText(surface);
 
-  if (surface === "onboarding") return `${workspaceName} onboarding workspace`;
-  if (surface === "brand-intelligence") return `${workspaceName} brand intelligence workspace`;
-  return `${workspaceName} pilot workspace`;
+  if (displayName === "Current workspace") {
+    return `Current ${surfaceText} workspace`;
+  }
+
+  return `${displayName} ${surfaceText} workspace`;
 }
