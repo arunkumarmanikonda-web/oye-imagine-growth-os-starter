@@ -21,8 +21,8 @@ function firstAction(snapshot: any) {
 
 export default async function AdminPilotPage() {
   const snapshot: any = await getWorkspacePilotControlSnapshotLive();
-  const workspaceName = getWorkspaceDisplayName(snapshot);
-  const workspaceLabel = getWorkspaceSurfaceLabel(snapshot, "pilot");
+  const workspaceName = getWorkspaceDisplayName();
+  const workspaceLabel = getWorkspaceSurfaceLabel("pilot", workspaceName);
   const action = firstAction(snapshot);
 
   return (

@@ -1,62 +1,40 @@
-type UnknownRecord = Record<string, unknown>;
+const DEFAULT_WORKSPACE_DISPLAY_NAME = "Oye Imagine";
 
-function readString(value: unknown): string {
-  return typeof value === "string" ? value.trim() : "";
+function cleanValue(value: string | null | undefined): string {
+  return String(value ?? "").trim();
 }
 
-function readNestedString(record: UnknownRecord | null | undefined, keys: string[]): string {
-  if (!record) return "";
-  for (const key of keys) {
-    const value = record[key];
-    if (typeof value === "string" && value.trim()) return value.trim();
-  }
-  return "";
+export function normalizeWorkspaceDisplayName(value?: string | null): string {
+  const explicit = cleanValue(value);
+  if (explicit) return explicit;
+
+  const publicEnv = cleanValue(process.env.NEXT_PUBLIC_WORKSPACE_DISPLAY_NAME);
+  if (publicEnv) return publicEnv;
+
+  const privateEnv = cleanValue(process.env.WORKSPACE_DISPLAY_NAME);
+  if (privateEnv) return privateEnv;
+
+  return DEFAULT_WORKSPACE_DISPLAY_NAME;
 }
 
-function normalizeWorkspaceDisplayName(value: string, fallback: string): string {
-  const candidate = value.trim();
-  if (!candidate) return fallback;
-
-  if (/\bneejee\b/i.test(candidate)) {
-    return fallback;
-  }
-
-  return candidate;
-}
-
-function surfaceLabelText(surface: "onboarding" | "brand-intelligence" | "pilot"): string {
-  if (surface === "onboarding") return "onboarding";
-  if (surface === "brand-intelligence") return "brand intelligence";
-  return "pilot";
-}
-
-export function getWorkspaceDisplayName(snapshot: unknown, fallback = "Current workspace"): string {
-  if (!snapshot || typeof snapshot !== "object") return fallback;
-
-  const root = snapshot as UnknownRecord;
-  const workspace =
-    root.workspace && typeof root.workspace === "object"
-      ? (root.workspace as UnknownRecord)
-      : null;
-
-  const candidate =
-    readString(root.brand) ||
-    readNestedString(workspace, ["brand", "name", "label", "title"]) ||
-    "";
-
-  return normalizeWorkspaceDisplayName(candidate, fallback);
+export function getWorkspaceDisplayName(value?: string | null): string {
+  return normalizeWorkspaceDisplayName(value);
 }
 
 export function getWorkspaceSurfaceLabel(
-  snapshot: unknown,
-  surface: "onboarding" | "brand-intelligence" | "pilot"
+  surface: "onboarding" | "brand-intelligence" | "pilot",
+  workspaceName?: string | null,
 ): string {
-  const displayName = getWorkspaceDisplayName(snapshot, "Current workspace");
-  const surfaceText = surfaceLabelText(surface);
+  const name = normalizeWorkspaceDisplayName(workspaceName);
 
-  if (displayName === "Current workspace") {
-    return `Current ${surfaceText} workspace`;
+  switch (surface) {
+    case "onboarding":
+      return `${name} onboarding workspace`;
+    case "brand-intelligence":
+      return `${name} brand intelligence workspace`;
+    case "pilot":
+      return `${name} pilot workspace`;
+    default:
+      return `${name} workspace`;
   }
-
-  return `${displayName} ${surfaceText} workspace`;
 }

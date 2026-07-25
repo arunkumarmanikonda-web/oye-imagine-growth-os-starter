@@ -15,8 +15,8 @@ function countItems(value: unknown) {
 
 export default async function AdminOnboardingPage() {
   const snapshot: any = await getWorkspaceOnboardingSnapshotLive();
-  const workspaceName = getWorkspaceDisplayName(snapshot);
-  const workspaceLabel = getWorkspaceSurfaceLabel(snapshot, "onboarding");
+  const workspaceName = getWorkspaceDisplayName();
+  const workspaceLabel = getWorkspaceSurfaceLabel("onboarding", workspaceName);
   const workspace = snapshot.workspace ?? {};
 
   return (

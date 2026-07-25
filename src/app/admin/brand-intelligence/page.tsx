@@ -15,8 +15,8 @@ function countItems(value: unknown) {
 
 export default async function BrandIntelligencePage() {
   const snapshot: any = await getWorkspaceBrandIntelligenceSnapshotLive();
-  const workspaceName = getWorkspaceDisplayName(snapshot);
-  const workspaceLabel = getWorkspaceSurfaceLabel(snapshot, "brand-intelligence");
+  const workspaceName = getWorkspaceDisplayName();
+  const workspaceLabel = getWorkspaceSurfaceLabel("brand-intelligence", workspaceName);
 
   return (
     <main className="oi-stage-shell oi-editor-shell">
