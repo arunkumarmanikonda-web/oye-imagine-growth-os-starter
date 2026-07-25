@@ -1,6 +1,8 @@
+import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-route";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+const workspaceDisplayName = getWorkspaceDisplayName();
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,7 +40,8 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { ok: true, events: data ?? [] },
+      { ok: true,
+      workspaceDisplayName, events: data ?? [] },
       { status: 200, headers: { "Cache-Control": "no-store" } }
     );
   } catch (error) {

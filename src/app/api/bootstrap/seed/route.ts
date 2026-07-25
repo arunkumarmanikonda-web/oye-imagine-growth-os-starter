@@ -1,10 +1,13 @@
+import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+const workspaceDisplayName = getWorkspaceDisplayName();
 
 export async function GET() {
   return NextResponse.json({
     ok: true,
+      workspaceDisplayName,
     note: "POST admin credentials plus tenant/brand/workspace payload to seed the first platform context.",
   });
 }

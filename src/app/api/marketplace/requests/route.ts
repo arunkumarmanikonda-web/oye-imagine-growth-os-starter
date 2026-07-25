@@ -1,5 +1,7 @@
+import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+const workspaceDisplayName = getWorkspaceDisplayName();
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -130,6 +132,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: true,
+      workspaceDisplayName,
         request: row,
         message: "Marketplace request submitted.",
       },

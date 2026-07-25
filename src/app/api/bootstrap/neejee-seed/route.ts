@@ -1,6 +1,8 @@
+import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+const workspaceDisplayName = getWorkspaceDisplayName();
 
 async function recordAudit(admin: ReturnType<typeof createSupabaseAdminClient>, payload: {
   actor_user_id: string;
@@ -29,6 +31,7 @@ async function recordAudit(admin: ReturnType<typeof createSupabaseAdminClient>, 
 export async function GET() {
   return NextResponse.json({
     ok: true,
+      workspaceDisplayName,
     note: "POST authenticated platform admin credentials plus Neejee tenant seed payload.",
   });
 }

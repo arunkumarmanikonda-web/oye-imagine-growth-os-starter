@@ -1,8 +1,10 @@
+import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
 import { requireAdmin } from "@/lib/admin-route";
 import { adminJson, adminError, adminUnauthorized } from "@/lib/admin-api";
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+const workspaceDisplayName = getWorkspaceDisplayName();
 
 export const dynamic = "force-dynamic";
 
@@ -336,6 +338,7 @@ function buildPayload(args: {
 }) {
   return {
     ok: true,
+      workspaceDisplayName,
     activeContext: args.activeContext,
     onboarding: args.onboarding,
     strategy: args.strategy,

@@ -1,7 +1,9 @@
+import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { requireAdmin } from "@/lib/admin-route";
 import { getAdminContexts } from "@/lib/admin/context";
+const workspaceDisplayName = getWorkspaceDisplayName();
 
 type ExportContext = {
   workspaceId: string;
@@ -98,7 +100,8 @@ export async function GET(request: Request) {
         .order("updated_at", { ascending: false });
 
       if (error) {
-        return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+        return NextResponse.json({
+      workspaceDisplayName, ok: false, error: error.message }, { status: 500 });
       }
 
       const csv = toCsv(
@@ -122,7 +125,8 @@ export async function GET(request: Request) {
         .order("created_at", { ascending: false });
 
       if (error) {
-        return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+        return NextResponse.json({
+      workspaceDisplayName, ok: false, error: error.message }, { status: 500 });
       }
 
       const csv = toCsv(
@@ -146,7 +150,8 @@ export async function GET(request: Request) {
         .order("created_at", { ascending: false });
 
       if (error) {
-        return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+        return NextResponse.json({
+      workspaceDisplayName, ok: false, error: error.message }, { status: 500 });
       }
 
       const csv = toCsv(
