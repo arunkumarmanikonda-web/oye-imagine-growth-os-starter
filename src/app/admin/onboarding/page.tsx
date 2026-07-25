@@ -1,7 +1,7 @@
 import { FormFlash } from "@/app/admin/form-flash";
 import { ActionButton } from "@/app/admin/action-button";
 import Link from "next/link";
-import { getNeejeeOnboardingSnapshotLive } from "@/lib/admin/neejee-live";
+import { getWorkspaceOnboardingSnapshotLive } from "@/lib/admin/workspace-live";
 import { listToMultiline } from "@/lib/admin/neejee-editor-utils";
 import AdminSaveButton from "@/app/admin/save-button";
 import { submitOnboardingEditorAction } from "./actions";
@@ -14,7 +14,7 @@ function countItems(value: unknown) {
 }
 
 export default async function AdminOnboardingPage() {
-  const snapshot: any = await getNeejeeOnboardingSnapshotLive();
+  const snapshot: any = await getWorkspaceOnboardingSnapshotLive();
   const workspace = snapshot.workspace ?? {};
 
   return (

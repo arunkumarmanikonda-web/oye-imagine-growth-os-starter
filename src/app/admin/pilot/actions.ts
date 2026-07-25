@@ -9,9 +9,9 @@ import {
   buildEditorRedirect,
   readEditorIntent,
   toEditorErrorSlug,
-} from "@/lib/admin/neejee-editor-intents";
-import { buildPilotPatchFromFormData } from "@/lib/admin/neejee-editor-utils";
-import { saveNeejeePilotControlSnapshotLive } from "@/lib/admin/neejee-live";
+} from "@/lib/admin/workspace-editor-intents";
+import { buildWorkspacePilotPatchFromFormData } from "@/lib/admin/workspace-editor-utils";
+import { saveWorkspacePilotControlSnapshotLive } from "@/lib/admin/workspace-live";
 
 export async function submitPilotEditorAction(formData: FormData) {
   let redirectTarget = buildEditorRedirect("/admin/pilot", "saved");
@@ -22,8 +22,8 @@ export async function submitPilotEditorAction(formData: FormData) {
       assertPublishConfirmed(formData);
     }
 
-    const patch = buildPilotPatchFromFormData(formData);
-    await saveNeejeePilotControlSnapshotLive(patch);
+    const patch = buildWorkspacePilotPatchFromFormData(formData);
+    await saveWorkspacePilotControlSnapshotLive(patch);
 
     revalidatePath("/admin/pilot");
     revalidatePath("/api/admin/pilot");

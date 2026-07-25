@@ -1,7 +1,7 @@
 import { FormFlash } from "@/app/admin/form-flash";
 import { ActionButton } from "@/app/admin/action-button";
 import Link from "next/link";
-import { getNeejeePilotControlSnapshotLive } from "@/lib/admin/neejee-live";
+import { getWorkspacePilotControlSnapshotLive } from "@/lib/admin/workspace-live";
 import { listToMultiline } from "@/lib/admin/neejee-editor-utils";
 import AdminSaveButton from "@/app/admin/save-button";
 import { submitPilotEditorAction } from "./actions";
@@ -20,7 +20,7 @@ function firstAction(snapshot: any) {
 }
 
 export default async function AdminPilotPage() {
-  const snapshot: any = await getNeejeePilotControlSnapshotLive();
+  const snapshot: any = await getWorkspacePilotControlSnapshotLive();
   const action = firstAction(snapshot);
 
   return (

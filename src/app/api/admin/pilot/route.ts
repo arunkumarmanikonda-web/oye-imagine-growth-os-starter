@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-route";
 import {
-  getNeejeePilotControlSnapshotLive,
-  saveNeejeePilotControlSnapshotLive,
-} from "@/lib/admin/neejee-live";
+  getWorkspacePilotControlSnapshotLive,
+  saveWorkspacePilotControlSnapshotLive,
+} from "@/lib/admin/workspace-live";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   const unauthorized = requireAdmin(request);
   if (unauthorized) return unauthorized;
 
-  const snapshot = await getNeejeePilotControlSnapshotLive();
+  const snapshot = await getWorkspacePilotControlSnapshotLive();
 
   return NextResponse.json(
     {
@@ -59,7 +59,7 @@ export async function PUT(request: NextRequest) {
     );
   }
 
-  const snapshot = await saveNeejeePilotControlSnapshotLive(body);
+  const snapshot = await saveWorkspacePilotControlSnapshotLive(body);
 
   return NextResponse.json(
     {

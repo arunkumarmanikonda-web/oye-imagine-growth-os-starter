@@ -1,7 +1,7 @@
 import { FormFlash } from "@/app/admin/form-flash";
 import { ActionButton } from "@/app/admin/action-button";
 import Link from "next/link";
-import { getNeejeeBrandIntelligenceSnapshotLive } from "@/lib/admin/neejee-live";
+import { getWorkspaceBrandIntelligenceSnapshotLive } from "@/lib/admin/workspace-live";
 import { listToMultiline } from "@/lib/admin/neejee-editor-utils";
 import AdminSaveButton from "@/app/admin/save-button";
 import { submitBrandIntelligenceEditorAction } from "./actions";
@@ -14,7 +14,7 @@ function countItems(value: unknown) {
 }
 
 export default async function BrandIntelligencePage() {
-  const snapshot: any = await getNeejeeBrandIntelligenceSnapshotLive();
+  const snapshot: any = await getWorkspaceBrandIntelligenceSnapshotLive();
 
   return (
     <main className="oi-stage-shell oi-editor-shell">

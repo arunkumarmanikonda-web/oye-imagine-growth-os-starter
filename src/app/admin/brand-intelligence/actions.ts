@@ -9,9 +9,9 @@ import {
   buildEditorRedirect,
   readEditorIntent,
   toEditorErrorSlug,
-} from "@/lib/admin/neejee-editor-intents";
-import { buildBrandIntelligencePatchFromFormData } from "@/lib/admin/neejee-editor-utils";
-import { saveNeejeeBrandIntelligenceSnapshotLive } from "@/lib/admin/neejee-live";
+} from "@/lib/admin/workspace-editor-intents";
+import { buildWorkspaceBrandIntelligencePatchFromFormData } from "@/lib/admin/workspace-editor-utils";
+import { saveWorkspaceBrandIntelligenceSnapshotLive } from "@/lib/admin/workspace-live";
 
 export async function submitBrandIntelligenceEditorAction(formData: FormData) {
   let redirectTarget = buildEditorRedirect("/admin/brand-intelligence", "saved");
@@ -22,8 +22,8 @@ export async function submitBrandIntelligenceEditorAction(formData: FormData) {
       assertPublishConfirmed(formData);
     }
 
-    const patch = buildBrandIntelligencePatchFromFormData(formData);
-    await saveNeejeeBrandIntelligenceSnapshotLive(patch);
+    const patch = buildWorkspaceBrandIntelligencePatchFromFormData(formData);
+    await saveWorkspaceBrandIntelligenceSnapshotLive(patch);
 
     revalidatePath("/admin/brand-intelligence");
     revalidatePath("/api/admin/brand-intelligence");

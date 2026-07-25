@@ -9,9 +9,9 @@ import {
   buildEditorRedirect,
   readEditorIntent,
   toEditorErrorSlug,
-} from "@/lib/admin/neejee-editor-intents";
-import { buildOnboardingPatchFromFormData } from "@/lib/admin/neejee-editor-utils";
-import { saveNeejeeOnboardingSnapshotLive } from "@/lib/admin/neejee-live";
+} from "@/lib/admin/workspace-editor-intents";
+import { buildWorkspaceOnboardingPatchFromFormData } from "@/lib/admin/workspace-editor-utils";
+import { saveWorkspaceOnboardingSnapshotLive } from "@/lib/admin/workspace-live";
 
 export async function submitOnboardingEditorAction(formData: FormData) {
   let redirectTarget = buildEditorRedirect("/admin/onboarding", "saved");
@@ -22,8 +22,8 @@ export async function submitOnboardingEditorAction(formData: FormData) {
       assertPublishConfirmed(formData);
     }
 
-    const patch = buildOnboardingPatchFromFormData(formData);
-    await saveNeejeeOnboardingSnapshotLive(patch);
+    const patch = buildWorkspaceOnboardingPatchFromFormData(formData);
+    await saveWorkspaceOnboardingSnapshotLive(patch);
 
     revalidatePath("/admin/onboarding");
     revalidatePath("/api/admin/onboarding");

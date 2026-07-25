@@ -14,7 +14,8 @@
     "test:admin-live": "vitest run tests/api/admin-live-snapshots.test.ts",
     "test:admin-live-writes": "vitest run tests/api/admin-live-writes.test.ts",
     "test:admin-editors": "vitest run tests/api/admin-editor-patches.test.ts",
-    "test:admin-editor-intents": "vitest run tests/api/admin-editor-intents.test.ts"
+    "test:admin-editor-intents": "vitest run tests/api/admin-editor-intents.test.ts",
+    "test:admin-workspace-aliases": "vitest run tests/api/admin-workspace-aliases.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
