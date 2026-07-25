@@ -12,7 +12,8 @@
     "test:admin-brand-intelligence": "vitest run tests/api/admin-brand-intelligence.test.ts",
     "test:admin-pilot": "vitest run tests/api/admin-pilot.test.ts",
     "test:admin-live": "vitest run tests/api/admin-live-snapshots.test.ts",
-    "test:admin-live-writes": "vitest run tests/api/admin-live-writes.test.ts"
+    "test:admin-live-writes": "vitest run tests/api/admin-live-writes.test.ts",
+    "test:admin-editors": "vitest run tests/api/admin-editor-patches.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",

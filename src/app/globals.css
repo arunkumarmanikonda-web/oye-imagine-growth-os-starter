@@ -1700,3 +1700,121 @@ img { max-width: 100%; height: auto; display: block; }
   }
 }
 /* M13C_PILOT_CONTROL_END */
+
+/* M13F_EDITOR_SURFACES_START */
+.oi-editor-shell {
+  gap: 22px;
+}
+
+.oi-editor-hero {
+  gap: 16px;
+}
+
+.oi-editor-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.oi-editor-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.1fr);
+  gap: 18px;
+}
+
+.oi-editor-panel {
+  border-radius: 24px;
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03)),
+    rgba(9, 12, 20, 0.82);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+}
+
+.oi-editor-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 16px 0 18px;
+}
+
+.oi-editor-stat {
+  border-radius: 18px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  display: grid;
+  gap: 6px;
+}
+
+.oi-editor-stat span,
+.oi-editor-note,
+.oi-editor-field span {
+  color: rgba(235, 240, 255, 0.74);
+}
+
+.oi-editor-stat strong {
+  font-size: 1.15rem;
+}
+
+.oi-editor-note {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.oi-editor-form {
+  display: grid;
+  gap: 14px;
+}
+
+.oi-editor-field {
+  display: grid;
+  gap: 8px;
+}
+
+.oi-editor-field input,
+.oi-editor-field textarea {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(9, 12, 20, 0.72);
+  color: #eef2ff;
+  padding: 12px 14px;
+  outline: none;
+}
+
+.oi-editor-field input:focus,
+.oi-editor-field textarea:focus {
+  border-color: rgba(154, 215, 255, 0.45);
+  box-shadow: 0 0 0 3px rgba(154, 215, 255, 0.12);
+}
+
+.oi-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 6px;
+}
+
+.oi-editor-submit {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #9ad7ff, #b786ff);
+  color: #09111f;
+  cursor: pointer;
+}
+
+.oi-editor-submit:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+@media (max-width: 980px) {
+  .oi-editor-grid,
+  .oi-editor-stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+/* M13F_EDITOR_SURFACES_END */
