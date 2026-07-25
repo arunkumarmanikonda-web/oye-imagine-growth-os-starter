@@ -23,7 +23,8 @@
                     "test:admin-workspace-branding-surfaces":  "vitest run tests/api/admin-workspace-branding-surfaces.test.ts",
                     "test:admin-workspace-branding-consistency":  "vitest run tests/api/admin-workspace-branding-consistency.test.ts",
                     "smoke:workspace-branding-runtime":  "node scripts/smoke-workspace-branding-runtime.mjs",
-                    "smoke:workspace-branding-ci":  "node scripts/run-workspace-branding-smoke-ci.mjs"
+                    "smoke:workspace-branding-ci":  "node scripts/run-workspace-branding-smoke-ci.mjs",
+                    "test:admin-workspace-branding-health":  "vitest run tests/api/admin-workspace-branding-health.test.ts"
                 },
     "dependencies":  {
                          "@supabase/ssr":  "^0.6.1",

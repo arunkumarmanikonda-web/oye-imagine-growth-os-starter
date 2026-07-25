@@ -1,25 +1,9 @@
 import { spawn } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
-
-const port = process.env.SMOKE_PORT || "3100";
-const baseUrl = process.env.SMOKE_BASE_URL || `http://localhost:${port}`;
+import net from "node:net";
 
 function log(message) {
   console.log(`[branding-ci] ${message}`);
-}
-
-async function waitForUrl(url, timeoutMs = 120000) {
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    try {
-      const response = await fetch(url);
-      if (response.status >= 200 && response.status < 500) {
-        return true;
-      }
-    } catch {}
-    await delay(2000);
-  }
-  return false;
 }
 
 function spawnNpm(args, extraEnv = {}, inherit = true) {
@@ -50,25 +34,82 @@ function runNpm(args, extraEnv = {}) {
   });
 }
 
+function getFreePort() {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.unref();
+    server.on("error", reject);
+    server.listen(0, () => {
+      const address = server.address();
+      const port =
+        address && typeof address === "object" ? address.port : null;
+
+      server.close((error) => {
+        if (error) reject(error);
+        else if (!port) reject(new Error("Failed to resolve free port"));
+        else resolve(port);
+      });
+    });
+  });
+}
+
+async function waitForUrl(url, serverRef, timeoutMs = 120000) {
+  const start = Date.now();
+
+  while (Date.now() - start < timeoutMs) {
+    if (serverRef.exited) {
+      throw new Error(
+        `next start exited early with code ${serverRef.exitCode ?? "unknown"}`
+      );
+    }
+
+    try {
+      const response = await fetch(url);
+      if (response.status >= 200 && response.status < 500) {
+        return true;
+      }
+    } catch {}
+
+    await delay(2000);
+  }
+
+  return false;
+}
+
 async function main() {
   let server = null;
 
   try {
-    log(`starting next start on http://localhost:${port}`);
+    const port = String(process.env.SMOKE_PORT || (await getFreePort()));
+    const baseUrl = process.env.SMOKE_BASE_URL || `http://127.0.0.1:${port}`;
+
+    log(`starting next start on ${baseUrl}`);
     server = spawnNpm(["run", "start", "--", "-p", port], { PORT: port }, true);
 
+    const serverRef = {
+      exited: false,
+      exitCode: null,
+    };
+
     server.on("error", (error) => {
-      console.error(`[branding-ci] server process error: ${error instanceof Error ? error.message : String(error)}`);
+      console.error(
+        `[branding-ci] server process error: ${error instanceof Error ? error.message : String(error)}`
+      );
     });
 
-    const ready = await waitForUrl(`http://localhost:${port}/api/health`, 120000);
+    server.on("exit", (code) => {
+      serverRef.exited = true;
+      serverRef.exitCode = code;
+    });
+
+    const ready = await waitForUrl(`${baseUrl}/api/health`, serverRef, 120000);
     if (!ready) {
-      throw new Error(`server did not become ready at http://localhost:${port}/api/health`);
+      throw new Error(`server did not become ready at ${baseUrl}/api/health`);
     }
 
     log("server ready, running runtime smoke");
     await runNpm(["run", "smoke:workspace-branding-runtime"], {
-      SMOKE_BASE_URL: `http://localhost:${port}`,
+      SMOKE_BASE_URL: baseUrl,
     });
 
     log("workspace branding CI smoke passed");

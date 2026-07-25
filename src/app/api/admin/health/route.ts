@@ -1,4 +1,4 @@
-import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
+import { getWorkspaceBrandingDiagnostics } from "@/lib/admin/workspace-branding";
 import { createClient } from "@supabase/supabase-js";
 import { adminError, adminJson, adminUnauthorized } from "@/lib/admin-api";
 import {
@@ -13,6 +13,7 @@ export async function GET(request: Request) {
   }
 
   const timestamp = new Date().toISOString();
+  const branding = getWorkspaceBrandingDiagnostics();
   const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").trim();
   const serviceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY ?? "").trim();
   const configuredSecretKeys = getConfiguredAdminSecretKeys();
@@ -56,12 +57,14 @@ export async function GET(request: Request) {
     const latestWorkspaceSetting =
       Array.isArray(data) && data.length > 0 ? data[0] : null;
 
-    const workspaceDisplayName = getWorkspaceDisplayName();
+    const workspaceDisplayName = branding.workspaceDisplayName;
 
     return adminJson({
+      branding,
       ok: true,
       
-      workspaceDisplayName,timestamp,
+      workspaceDisplayName,
+      timestamp,
       auth: {
         ok: true,
         matchedHeader: auth.matchedHeader,

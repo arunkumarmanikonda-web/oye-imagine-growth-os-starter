@@ -1,20 +1,51 @@
 const DEFAULT_WORKSPACE_DISPLAY_NAME = "Oye Imagine";
 
+export type WorkspaceBrandingSource =
+  | "explicit"
+  | "NEXT_PUBLIC_WORKSPACE_DISPLAY_NAME"
+  | "WORKSPACE_DISPLAY_NAME"
+  | "default";
+
 function cleanValue(value: string | null | undefined): string {
   return String(value ?? "").trim();
 }
 
-export function normalizeWorkspaceDisplayName(value?: string | null): string {
+export function getWorkspaceBrandingDiagnostics(value?: string | null): {
+  workspaceDisplayName: string;
+  brandingSource: WorkspaceBrandingSource;
+} {
   const explicit = cleanValue(value);
-  if (explicit) return explicit;
+  if (explicit) {
+    return {
+      workspaceDisplayName: explicit,
+      brandingSource: "explicit",
+    };
+  }
 
   const publicEnv = cleanValue(process.env.NEXT_PUBLIC_WORKSPACE_DISPLAY_NAME);
-  if (publicEnv) return publicEnv;
+  if (publicEnv) {
+    return {
+      workspaceDisplayName: publicEnv,
+      brandingSource: "NEXT_PUBLIC_WORKSPACE_DISPLAY_NAME",
+    };
+  }
 
   const privateEnv = cleanValue(process.env.WORKSPACE_DISPLAY_NAME);
-  if (privateEnv) return privateEnv;
+  if (privateEnv) {
+    return {
+      workspaceDisplayName: privateEnv,
+      brandingSource: "WORKSPACE_DISPLAY_NAME",
+    };
+  }
 
-  return DEFAULT_WORKSPACE_DISPLAY_NAME;
+  return {
+    workspaceDisplayName: DEFAULT_WORKSPACE_DISPLAY_NAME,
+    brandingSource: "default",
+  };
+}
+
+export function normalizeWorkspaceDisplayName(value?: string | null): string {
+  return getWorkspaceBrandingDiagnostics(value).workspaceDisplayName;
 }
 
 export function getWorkspaceDisplayName(value?: string | null): string {

@@ -27,6 +27,10 @@ type ReleaseStatus = {
     audit: string | null;
   };
   env: Record<string, boolean>;
+  branding: {
+    workspaceDisplayName: string;
+    brandingSource: string;
+  };
   links: {
     admin: string;
     settings: string;
@@ -43,14 +47,14 @@ function badgeClass(value: boolean): string {
 
 function formatValue(value: string | number | null): string {
   if (value === null || typeof value === "undefined") {
-    return "â€”";
+    return "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â";
   }
   return String(value);
 }
 
 function formatDateTime(value: string | null): string {
   if (!value) {
-    return "â€”";
+    return "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â";
   }
 
   const date = new Date(value);
@@ -159,7 +163,16 @@ export default function AdminOpsPage() {
 
   return (
     <main className="oi-shell mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-10">
-      <section className="oi-card rounded-[32px] p-8 lg:p-10">
+      
+      <div className="oi-admin-card">
+        <div className="oi-admin-card-label">Branding diagnostics</div>
+        <div className="oi-admin-card-value">
+          {data?.branding?.workspaceDisplayName ?? "Loading"}
+        </div>
+        <div className="oi-admin-card-meta">
+          Source: {data?.branding?.brandingSource ?? "unknown"}
+        </div>
+      </div><section className="oi-card rounded-[32px] p-8 lg:p-10">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
             <p className="oi-kicker">Operations console</p>
@@ -184,14 +197,14 @@ export default function AdminOpsPage() {
             <div className="oi-brand-gradient h-2 w-24 rounded-full" />
             <p className="mt-4 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Release readiness</p>
             <p className="mt-3 text-sm leading-6 text-slate-700">
-              Generated {data ? formatDateTime(data.generatedAt) : "â€”"}
+              Generated {data ? formatDateTime(data.generatedAt) : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"}
             </p>
           </div>
         </div>
       </section>
 
       {loading ? (
-        <section className="oi-card rounded-[28px] p-6 text-sm text-slate-600">Loading release statusâ€¦</section>
+        <section className="oi-card rounded-[28px] p-6 text-sm text-slate-600">Loading release statusÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦</section>
       ) : null}
 
       {error ? (
