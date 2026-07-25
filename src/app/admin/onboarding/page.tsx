@@ -1,3 +1,4 @@
+import { getWorkspaceDisplayName, getWorkspaceSurfaceLabel } from "@/lib/admin/workspace-branding";
 import { FormFlash } from "@/app/admin/form-flash";
 import { ActionButton } from "@/app/admin/action-button";
 import Link from "next/link";
@@ -15,16 +16,18 @@ function countItems(value: unknown) {
 
 export default async function AdminOnboardingPage() {
   const snapshot: any = await getWorkspaceOnboardingSnapshotLive();
+  const workspaceName = getWorkspaceDisplayName(snapshot);
+  const workspaceLabel = getWorkspaceSurfaceLabel(snapshot, "onboarding");
   const workspace = snapshot.workspace ?? {};
 
   return (
     <main className="oi-stage-shell oi-editor-shell">
       <section className="oi-stage-hero oi-editor-hero">
-        <div className="oi-stage-eyebrow">Neejee pilot</div>
+        <div className="oi-stage-eyebrow">{workspaceLabel}</div>
         <h1>Onboarding command center</h1>
         <p>
           Update operational readiness, blockers, services, and integration notes for the live
-          Neejee pilot workspace.
+          {workspaceLabel} workspace.
         </p>
         <div className="oi-editor-nav">
           <Link href="/admin/brand-intelligence" className="oi-stage-button-secondary">

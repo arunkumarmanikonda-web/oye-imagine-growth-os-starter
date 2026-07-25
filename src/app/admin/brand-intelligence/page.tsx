@@ -1,3 +1,4 @@
+import { getWorkspaceDisplayName, getWorkspaceSurfaceLabel } from "@/lib/admin/workspace-branding";
 import { FormFlash } from "@/app/admin/form-flash";
 import { ActionButton } from "@/app/admin/action-button";
 import Link from "next/link";
@@ -15,11 +16,13 @@ function countItems(value: unknown) {
 
 export default async function BrandIntelligencePage() {
   const snapshot: any = await getWorkspaceBrandIntelligenceSnapshotLive();
+  const workspaceName = getWorkspaceDisplayName(snapshot);
+  const workspaceLabel = getWorkspaceSurfaceLabel(snapshot, "brand-intelligence");
 
   return (
     <main className="oi-stage-shell oi-editor-shell">
       <section className="oi-stage-hero oi-editor-hero">
-        <div className="oi-stage-eyebrow">Neejee pilot</div>
+        <div className="oi-stage-eyebrow">{workspaceLabel}</div>
         <h1>Brand intelligence workspace</h1>
         <p>
           Refine live positioning, language rules, and audience signals while preserving the

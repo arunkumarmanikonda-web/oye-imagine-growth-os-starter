@@ -1,3 +1,4 @@
+import { getWorkspaceDisplayName, getWorkspaceSurfaceLabel } from "@/lib/admin/workspace-branding";
 import { FormFlash } from "@/app/admin/form-flash";
 import { ActionButton } from "@/app/admin/action-button";
 import Link from "next/link";
@@ -21,12 +22,14 @@ function firstAction(snapshot: any) {
 
 export default async function AdminPilotPage() {
   const snapshot: any = await getWorkspacePilotControlSnapshotLive();
+  const workspaceName = getWorkspaceDisplayName(snapshot);
+  const workspaceLabel = getWorkspaceSurfaceLabel(snapshot, "pilot");
   const action = firstAction(snapshot);
 
   return (
     <main className="oi-stage-shell oi-editor-shell">
       <section className="oi-stage-hero oi-editor-hero">
-        <div className="oi-stage-eyebrow">Neejee pilot</div>
+        <div className="oi-stage-eyebrow">{workspaceLabel}</div>
         <h1>Unified pilot control tower</h1>
         <p>
           Update the live leadership brief and next guided action without breaking the pilot
