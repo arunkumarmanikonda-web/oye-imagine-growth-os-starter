@@ -395,3 +395,99 @@ export async function getNeejeePilotControlSnapshotLive(): Promise<NeejeePilotCo
     brandIntelligence,
   };
 }
+
+/* M13E_WRITE_RAILS_START */
+type NeejeeSnapshotWriteKind = "onboarding" | "brand_intelligence" | "pilot_control";
+
+const NEEJEE_WRITE_TABLE = "workspace_settings";
+const NEEJEE_WORKSPACE_SLUG = "neejee";
+
+async function getNeejeeWriteAdminClient() {
+  const { createSupabaseAdminClient } = await import("@/lib/supabase/admin");
+  return createSupabaseAdminClient();
+}
+
+async function persistNeejeeSnapshot(kind: NeejeeSnapshotWriteKind, snapshot: AnyRecord) {
+  const admin = await getNeejeeWriteAdminClient();
+  const runner: any = admin.from(NEEJEE_WRITE_TABLE);
+
+  const payload = {
+    workspace_slug: NEEJEE_WORKSPACE_SLUG,
+    snapshot_type: kind,
+    snapshot,
+    updated_at: new Date().toISOString(),
+  };
+
+  try {
+    const upsertResult = await runner.upsert(payload);
+    if (!upsertResult?.error) {
+      return payload.updated_at;
+    }
+  } catch {
+    // fall through to insert
+  }
+
+  const insertResult = await runner.insert(payload);
+  if (insertResult?.error) {
+    throw new Error(
+      `Failed to persist ${kind}: ${String(insertResult.error.message ?? "unknown error")}`
+    );
+  }
+
+  return payload.updated_at;
+}
+
+export async function saveNeejeeOnboardingSnapshotLive(patch: unknown) {
+  const current = await getNeejeeOnboardingSnapshotLive();
+  const merged = deepMerge(current, isRecord(patch) ? patch : {});
+
+  const updatedAt = await persistNeejeeSnapshot("onboarding", merged as AnyRecord);
+
+  return deepMerge(merged, {
+    workspace: {
+      updatedAtLabel: String(
+        updatedAt ??
+          ((merged as AnyRecord).workspace?.updatedAtLabel ??
+            (merged as AnyRecord).workspace?.updatedAt ??
+            "")
+      ),
+    },
+  });
+}
+
+export async function saveNeejeeBrandIntelligenceSnapshotLive(patch: unknown) {
+  const current = await getNeejeeBrandIntelligenceSnapshotLive();
+  const merged = deepMerge(current, isRecord(patch) ? patch : {});
+
+  const updatedAt = await persistNeejeeSnapshot("brand_intelligence", merged as AnyRecord);
+
+  return deepMerge(merged, {
+    workspace: {
+      updatedAt: String(
+        updatedAt ??
+          ((merged as AnyRecord).workspace?.updatedAt ??
+            (merged as AnyRecord).workspace?.updatedAtLabel ??
+            "")
+      ),
+    },
+  });
+}
+
+export async function saveNeejeePilotControlSnapshotLive(patch: unknown) {
+  const current = await getNeejeePilotControlSnapshotLive();
+  const merged = deepMerge(current, isRecord(patch) ? patch : {});
+
+  const updatedAt = await persistNeejeeSnapshot("pilot_control", merged as AnyRecord);
+
+  return deepMerge(merged, {
+    workspace: {
+      updatedAt: String(
+        updatedAt ??
+          ((merged as AnyRecord).workspace?.updatedAt ??
+            (merged as AnyRecord).workspace?.updatedAtLabel ??
+            "")
+      ),
+    },
+  });
+}
+/* M13E_WRITE_RAILS_END */
