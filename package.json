@@ -21,7 +21,8 @@
                     "test:admin-workspace-ui-copy":  "vitest run tests/api/admin-workspace-ui-copy.test.ts",
                     "test:admin-workspace-branding-payload":  "vitest run tests/api/admin-workspace-branding-payload.test.ts",
                     "test:admin-workspace-branding-surfaces":  "vitest run tests/api/admin-workspace-branding-surfaces.test.ts",
-                    "test:admin-workspace-branding-consistency":  "vitest run tests/api/admin-workspace-branding-consistency.test.ts"
+                    "test:admin-workspace-branding-consistency":  "vitest run tests/api/admin-workspace-branding-consistency.test.ts",
+                    "smoke:workspace-branding-runtime":  "node scripts/smoke-workspace-branding-runtime.mjs"
                 },
     "dependencies":  {
                          "@supabase/ssr":  "^0.6.1",
