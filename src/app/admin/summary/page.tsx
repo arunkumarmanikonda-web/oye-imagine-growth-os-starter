@@ -1,401 +1,206 @@
-"use client";
+import Link from "next/link";
+import {
+  getNeejeeOnboardingSnapshot,
+  type ReadinessState,
+} from "@/lib/admin/onboarding-seed";
 
-import { useEffect, useMemo, useState } from "react";
-
-type SummaryPayload = {
-  ok: boolean;
-  activeContext: {
-    tenantId: string | null;
-    brandId: string | null;
-    workspaceId: string | null;
-  };
-  onboarding: {
-    company_profile?: Record<string, unknown>;
-    goals?: Record<string, unknown>;
-    channels?: string[];
-    brand?: Record<string, unknown>;
-  };
-  strategy: Record<string, unknown>;
-  execution: Record<string, unknown>;
-  executionSummary: {
-    total: number;
-    todo: number;
-    doing: number;
-    blocked: number;
-    done: number;
-  };
-  counts: {
-    settings: number;
-    versions: number;
-    audit: number;
-  };
-  latestUpdatedAt: string | null;
-  recentAudit: Array<{
-    id: string;
-    action: string;
-    target_type?: string | null;
-    target_id?: string | null;
-    created_at?: string | null;
-  }>;
-  links: {
-    admin: string;
-    onboarding: string;
-    strategy: string;
-    execution: string;
-    summary: string;
-  };
-};
-
-function formatDateTime(value: string | null | undefined) {
-  if (!value) return "—";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString();
+function averageScore(values: number[]) {
+  if (!values.length) return 0;
+  return Math.round(values.reduce((sum, item) => sum + item, 0) / values.length);
 }
 
-function asString(value: unknown) {
-  if (value === null || typeof value === "undefined" || value === "") return "—";
-  return String(value);
+function countState(items: Array<{ state: string }>, state: string) {
+  return items.filter((item) => item.state === state).length;
+}
+
+function toneLabel(state: ReadinessState) {
+  switch (state) {
+    case "ready":
+      return "Ready";
+    case "in_progress":
+      return "In progress";
+    case "blocked":
+      return "Blocked";
+    case "later":
+      return "Later phase";
+    default:
+      return state;
+  }
 }
 
 export default function AdminSummaryPage() {
-  const [data, setData] = useState<SummaryPayload | null>(null);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
+  const snapshot = getNeejeeOnboardingSnapshot();
 
-  async function load() {
-    setLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch("/api/admin/summary", {
-        method: "GET",
-        cache: "no-store",
-      });
-
-      const payload = (await response.json()) as SummaryPayload & {
-        detail?: string;
-        error?: string;
-      };
-
-      if (!response.ok || !payload.ok) {
-        throw new Error(payload.detail || payload.error || "Failed to load admin summary");
-      }
-
-      setData(payload);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load admin summary");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    void load();
-  }, []);
-
-  const channels = useMemo(() => {
-    return Array.isArray(data?.onboarding?.channels) ? data.onboarding.channels : [];
-  }, [data]);
-
-  const priorities = useMemo(() => {
-    const value = data?.strategy?.priorities;
-    return Array.isArray(value) ? value : [];
-  }, [data]);
-
-  const metrics = useMemo(() => {
-    const value = data?.strategy?.metrics;
-    return Array.isArray(value) ? value : [];
-  }, [data]);
-
-  const tasks = useMemo(() => {
-    const value = data?.execution?.tasks;
-    return Array.isArray(value) ? value : [];
-  }, [data]);
-
-  if (loading) {
-    return (
-      <main className="oi-shell mx-auto max-w-7xl px-6 py-10">
-        <section className="oi-card rounded-[32px] p-8">
-          <p className="oi-kicker">Executive summary</p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">Summary control center</h1>
-          <p className="mt-3 text-sm text-slate-600">Loading workspace intelligence…</p>
-        </section>
-      </main>
-    );
-  }
-
-  if (error || !data) {
-    return (
-      <main className="oi-shell mx-auto max-w-7xl px-6 py-10">
-        <section className="rounded-[32px] border border-rose-200 bg-rose-50 p-8 shadow-sm">
-          <p className="oi-kicker text-rose-600">Executive summary</p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-rose-900">Summary control center unavailable</h1>
-          <p className="mt-3 text-sm text-rose-700">{error || "Unknown error"}</p>
-          <button type="button" onClick={() => void load()} className="oi-button-primary mt-6">
-            Retry summary
-          </button>
-        </section>
-      </main>
-    );
-  }
-
-  const company = (data.onboarding.company_profile ?? {}) as Record<string, unknown>;
-  const goals = (data.onboarding.goals ?? {}) as Record<string, unknown>;
-  const brand = (data.onboarding.brand ?? {}) as Record<string, unknown>;
-
-  const statCards = [
-    { label: "Settings", value: data.counts.settings, tone: "from-fuchsia-500/15 via-white to-white" },
-    { label: "Versions", value: data.counts.versions, tone: "from-sky-500/15 via-white to-white" },
-    { label: "Audit", value: data.counts.audit, tone: "from-amber-500/15 via-white to-white" },
-    { label: "Tasks", value: data.executionSummary.total, tone: "from-violet-500/15 via-white to-white" },
-    { label: "Doing", value: data.executionSummary.doing, tone: "from-cyan-500/15 via-white to-white" },
-    { label: "Blocked", value: data.executionSummary.blocked, tone: "from-rose-500/15 via-white to-white" },
-  ];
+  const readinessAverage = averageScore(snapshot.readiness.map((item) => item.score));
+  const blockedCount = countState(snapshot.readiness, "blocked");
+  const readyIntegrations = countState(snapshot.integrations, "ready");
+  const inProgressServices = countState(snapshot.services, "in_progress");
+  const nextPriorities = snapshot.tasks.slice(0, 3);
 
   return (
-    <main className="oi-shell mx-auto max-w-7xl px-6 py-10">
-      <section className="oi-card overflow-hidden rounded-[32px] p-8 lg:p-10">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <p className="oi-kicker">Executive summary</p>
-            <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-              Summary control center
-            </h1>
-            <p className="mt-4 text-base leading-7 text-slate-600">
-              One premium surface for onboarding context, strategic priorities, execution pulse, and the most recent admin activity.
+    <main className="oi-stage-shell oi-stage-shell-summary">
+      <section className="oi-stage-hero oi-stage-hero-summary">
+        <div className="oi-stage-hero-copy">
+          <div className="oi-stage-row oi-stage-row-start">
+            <span className="oi-stage-badge">Executive readiness</span>
+            <span className="oi-stage-badge oi-stage-badge-subtle">
+              {snapshot.workspace.brand}
+            </span>
+          </div>
+          <p className="oi-stage-overline">Oye !magine operator summary</p>
+          <h1>Neejee activation summary</h1>
+          <p className="oi-stage-lead">
+            A calmer executive view of what is ready, what is blocked and what must happen next before Neejee can move into controlled activation.
+          </p>
+
+          <div className="oi-stage-actions">
+            <Link href="/admin/onboarding" className="oi-stage-button oi-stage-button-primary">
+              Open onboarding command center
+            </Link>
+            <a href="/api/admin/onboarding" className="oi-stage-button oi-stage-button-secondary">
+              Inspect structured readiness JSON
+            </a>
+          </div>
+        </div>
+
+        <aside className="oi-stage-hero-side">
+          <article className="oi-stage-panel oi-stage-scoreboard">
+            <p className="oi-stage-overline">Overall readiness</p>
+            <h2>{readinessAverage}%</h2>
+            <p className="oi-stage-muted">
+              A single operator-grade view of how close the Neejee pilot is to a safe, explainable and approval-driven activation state.
             </p>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <a href={data.links.admin} className="oi-button-primary">
-                Admin home
-              </a>
-              <a href={data.links.onboarding} className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white">
-                Onboarding
-              </a>
-              <a href={data.links.strategy} className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white">
-                Strategy
-              </a>
-              <a href={data.links.execution} className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white">
-                Execution
-              </a>
-            </div>
-          </div>
-
-          <div className="min-w-[280px] rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur">
-            <div className="oi-brand-gradient h-2 w-24 rounded-full" />
-            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Workspace status</p>
-            <dl className="mt-4 space-y-3 text-sm text-slate-700">
-              <div className="flex items-center justify-between gap-4">
-                <dt>Latest update</dt>
-                <dd className="font-medium text-slate-950">{formatDateTime(data.latestUpdatedAt)}</dd>
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <dt>Completed</dt>
-                <dd className="font-medium text-emerald-700">{data.executionSummary.done}</dd>
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <dt>To do</dt>
-                <dd className="font-medium text-slate-950">{data.executionSummary.todo}</dd>
-              </div>
-            </dl>
-          </div>
-        </div>
-      </section>
-
-      <section className="mt-6 grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-        {statCards.map((card) => (
-          <div key={card.label} className={`oi-card rounded-[28px] bg-gradient-to-br ${card.tone} p-5`}>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{card.label}</p>
-            <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">{card.value}</p>
-          </div>
-        ))}
-      </section>
-
-      <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_380px]">
-        <div className="space-y-6">
-          <section className="oi-card rounded-[28px] p-6">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="oi-kicker">Workspace context</p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Operating snapshot</h2>
-              </div>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">
-                live
-              </span>
-            </div>
-
-            <dl className="mt-6 grid gap-4 md:grid-cols-2">
-              <div className="rounded-[24px] bg-slate-50 p-4">
-                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Business</dt>
-                <dd className="mt-2 text-sm font-medium text-slate-950">{asString(company.businessName)}</dd>
-              </div>
-              <div className="rounded-[24px] bg-slate-50 p-4">
-                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Industry</dt>
-                <dd className="mt-2 text-sm font-medium text-slate-950">{asString(company.industry)}</dd>
-              </div>
-              <div className="rounded-[24px] bg-slate-50 p-4">
-                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Primary objective</dt>
-                <dd className="mt-2 text-sm font-medium text-slate-950">{asString(goals.primaryObjective)}</dd>
-              </div>
-              <div className="rounded-[24px] bg-slate-50 p-4">
-                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Revenue target</dt>
-                <dd className="mt-2 text-sm font-medium text-slate-950">{asString(goals.monthlyRevenueTarget)}</dd>
-              </div>
-              <div className="rounded-[24px] bg-slate-50 p-4">
-                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Audience</dt>
-                <dd className="mt-2 text-sm font-medium text-slate-950">{asString(brand.audience)}</dd>
-              </div>
-              <div className="rounded-[24px] bg-slate-50 p-4">
-                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Updated</dt>
-                <dd className="mt-2 text-sm font-medium text-slate-950">{formatDateTime(data.latestUpdatedAt)}</dd>
-              </div>
-            </dl>
-          </section>
-
-          <section className="oi-card rounded-[28px] p-6">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="oi-kicker">Strategy signals</p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Channel and planning highlights</h2>
-              </div>
-              <span className="rounded-full bg-fuchsia-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-fuchsia-700">
-                aligned
-              </span>
-            </div>
-
-            <div className="mt-6 grid gap-6 lg:grid-cols-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Channels</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {channels.length > 0 ? (
-                    channels.map((channel) => (
-                      <span key={channel} className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700">
-                        {channel}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-sm text-slate-500">No channels</span>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Priorities</p>
-                <ul className="mt-3 space-y-2 text-sm text-slate-700">
-                  {priorities.length > 0 ? (
-                    priorities.map((priority, index) => <li key={index}>• {String(priority)}</li>)
-                  ) : (
-                    <li className="text-slate-500">No priorities</li>
-                  )}
-                </ul>
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Metrics</p>
-                <ul className="mt-3 space-y-2 text-sm text-slate-700">
-                  {metrics.length > 0 ? (
-                    metrics.map((metric, index) => <li key={index}>• {String(metric)}</li>)
-                  ) : (
-                    <li className="text-slate-500">No metrics</li>
-                  )}
-                </ul>
-              </div>
-            </div>
-          </section>
-
-          <section className="oi-card rounded-[28px] p-6">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="oi-kicker">Execution pulse</p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Execution pulse</h2>
-              </div>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">
-                {data.executionSummary.total} tasks
-              </span>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              {tasks.length > 0 ? (
-                tasks.map((task, index) => {
-                  const row = task as Record<string, unknown>;
-                  return (
-                    <article key={index} className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="min-w-0">
-                          <h3 className="text-lg font-semibold text-slate-950">{asString(row.title)}</h3>
-                          <p className="mt-2 text-sm leading-6 text-slate-600">{asString(row.notes)}</p>
-                        </div>
-
-                        <div className="flex flex-wrap gap-2">
-                          <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm">
-                            {asString(row.owner)}
-                          </span>
-                          <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm">
-                            {asString(row.priority)}
-                          </span>
-                          <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm">
-                            {asString(row.status)}
-                          </span>
-                          <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm">
-                            {asString(row.week)}
-                          </span>
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })
-              ) : (
-                <div className="rounded-[24px] border border-dashed border-slate-300 p-6 text-sm text-slate-500">
-                  No execution tasks available.
-                </div>
-              )}
-            </div>
-          </section>
-        </div>
-
-        <aside className="space-y-6">
-          <section className="oi-card rounded-[28px] p-6">
-            <p className="oi-kicker">Active context</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Reference IDs</h2>
-
-            <dl className="mt-6 space-y-4 break-all text-sm">
-              <div className="rounded-[22px] bg-slate-50 p-4">
-                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Tenant</dt>
-                <dd className="mt-2 font-medium text-slate-950">{asString(data.activeContext.tenantId)}</dd>
-              </div>
-              <div className="rounded-[22px] bg-slate-50 p-4">
-                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Brand</dt>
-                <dd className="mt-2 font-medium text-slate-950">{asString(data.activeContext.brandId)}</dd>
-              </div>
-              <div className="rounded-[22px] bg-slate-50 p-4">
-                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Workspace</dt>
-                <dd className="mt-2 font-medium text-slate-950">{asString(data.activeContext.workspaceId)}</dd>
-              </div>
-            </dl>
-          </section>
-
-          <section className="oi-card rounded-[28px] p-6">
-            <p className="oi-kicker">Recent audit</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Latest admin activity</h2>
-
-            <div className="mt-6 space-y-3">
-              {data.recentAudit.length > 0 ? (
-                data.recentAudit.map((event) => (
-                  <article key={event.id} className="rounded-[22px] bg-slate-50 p-4">
-                    <p className="text-sm font-semibold text-slate-950">{event.action}</p>
-                    <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-500">
-                      target {event.target_type ?? "—"}
-                    </p>
-                    <p className="mt-2 text-sm text-slate-600">{formatDateTime(event.created_at)}</p>
-                  </article>
-                ))
-              ) : (
-                <div className="rounded-[22px] bg-slate-50 p-4 text-sm text-slate-500">No recent audit events.</div>
-              )}
-            </div>
-          </section>
+          </article>
         </aside>
+      </section>
+
+      <section className="oi-stage-grid oi-stage-grid-4">
+        <article className="oi-stage-panel oi-stage-kpi">
+          <p className="oi-stage-overline">Blocked scorecards</p>
+          <h2>{blockedCount}</h2>
+          <p className="oi-stage-muted">Critical readiness areas still preventing clean activation.</p>
+        </article>
+
+        <article className="oi-stage-panel oi-stage-kpi">
+          <p className="oi-stage-overline">Ready integrations</p>
+          <h2>{readyIntegrations}</h2>
+          <p className="oi-stage-muted">Connected systems that can support the next delivery lane today.</p>
+        </article>
+
+        <article className="oi-stage-panel oi-stage-kpi">
+          <p className="oi-stage-overline">Services in progress</p>
+          <h2>{inProgressServices}</h2>
+          <p className="oi-stage-muted">Modules currently moving from design readiness into operating readiness.</p>
+        </article>
+
+        <article className="oi-stage-panel oi-stage-kpi">
+          <p className="oi-stage-overline">Last update</p>
+          <h2>{snapshot.workspace.updatedAtLabel}</h2>
+          <p className="oi-stage-muted">Current checkpoint for this seeded pilot summary.</p>
+        </article>
+      </section>
+
+      <section className="oi-stage-dual-grid">
+        <article className="oi-stage-panel">
+          <div className="oi-stage-section-head oi-stage-section-head-compact">
+            <div>
+              <p className="oi-stage-overline">Executive interpretation</p>
+              <h2>What this means right now</h2>
+            </div>
+          </div>
+
+          <div className="oi-stage-stack">
+            <p className="oi-stage-muted">
+              The Neejee pilot is strong enough to move confidently through brand-led planning, premium creative direction and draft-mode execution design.
+            </p>
+            <p className="oi-stage-muted">
+              The main constraints are not shell quality anymore; they are connector verification, finance and contract controls, and readiness for governed activation.
+            </p>
+            <p className="oi-stage-muted">
+              The next product priority is to turn this command layer into a true onboarding engine backed by live integration states, approval logic and commercial workflows.
+            </p>
+          </div>
+        </article>
+
+        <article className="oi-stage-panel">
+          <div className="oi-stage-section-head oi-stage-section-head-compact">
+            <div>
+              <p className="oi-stage-overline">Immediate priorities</p>
+              <h2>The next three operating moves</h2>
+            </div>
+          </div>
+
+          <div className="oi-stage-stack">
+            {nextPriorities.map((item) => (
+              <article key={item.title} className="oi-stage-task" data-state={item.state}>
+                <div className="oi-stage-row oi-stage-row-start">
+                  <h3>{item.title}</h3>
+                  <span className="oi-stage-pill" data-task-state={item.state}>
+                    {item.state}
+                  </span>
+                </div>
+                <p className="oi-stage-meta-line">
+                  Owner · {item.owner} · Due · {item.due}
+                </p>
+              </article>
+            ))}
+          </div>
+        </article>
+      </section>
+
+      <section className="oi-stage-grid oi-stage-grid-2">
+        <article className="oi-stage-panel">
+          <div className="oi-stage-section-head oi-stage-section-head-compact">
+            <div>
+              <p className="oi-stage-overline">Readiness by lane</p>
+              <h2>Which areas are strong and which need executive attention</h2>
+            </div>
+          </div>
+
+          <div className="oi-stage-stack">
+            {snapshot.readiness.map((item) => (
+              <article key={item.slug} className="oi-stage-readiness-row" data-state={item.state}>
+                <div className="oi-stage-row oi-stage-row-start">
+                  <div>
+                    <h3>{item.title}</h3>
+                    <p className="oi-stage-meta-line">{item.owner}</p>
+                  </div>
+                  <span className="oi-stage-pill" data-state={item.state}>
+                    {toneLabel(item.state)}
+                  </span>
+                </div>
+                <div className="oi-stage-progress-track">
+                  <span className="oi-stage-progress-fill" style={{ width: `${item.score}%` }} />
+                </div>
+                <p className="oi-stage-muted">{item.summary}</p>
+              </article>
+            ))}
+          </div>
+        </article>
+
+        <article className="oi-stage-panel">
+          <div className="oi-stage-section-head oi-stage-section-head-compact">
+            <div>
+              <p className="oi-stage-overline">Decision pressure points</p>
+              <h2>Questions that must be settled before activation</h2>
+            </div>
+          </div>
+
+          <ul className="oi-stage-bullet-list">
+            {snapshot.decisions.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+
+          <div className="oi-stage-divider" />
+
+          <p className="oi-stage-overline">Brand posture reminder</p>
+          <ul className="oi-stage-bullet-list oi-stage-bullet-list-tight">
+            {snapshot.brandContext.slice(0, 3).map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </article>
       </section>
     </main>
   );
