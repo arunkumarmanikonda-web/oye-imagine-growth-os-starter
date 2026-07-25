@@ -1818,3 +1818,89 @@ img { max-width: 100%; height: auto; display: block; }
   }
 }
 /* M13F_EDITOR_SURFACES_END */
+
+/* M13G_EDITOR_GUARDS_START */
+.admin-form-flash {
+  margin: 0 0 1rem;
+  border-radius: 16px;
+  padding: 0.875rem 1rem;
+  border: 1px solid transparent;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.admin-form-flash--success {
+  background: rgba(24, 160, 88, 0.12);
+  border-color: rgba(24, 160, 88, 0.35);
+  color: #0f7a3f;
+}
+
+.admin-form-flash--error {
+  background: rgba(208, 48, 48, 0.12);
+  border-color: rgba(208, 48, 48, 0.35);
+  color: #9e1f1f;
+}
+
+.admin-action-row {
+  display: grid;
+  gap: 0.875rem;
+  margin-top: 1.25rem;
+}
+
+.admin-action-row__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.admin-publish-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(17, 24, 39, 0.82);
+}
+
+.admin-publish-confirm input {
+  margin-top: 0.2rem;
+}
+
+.admin-action-button {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.8rem 1.1rem;
+  min-width: 160px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 120ms ease, opacity 120ms ease, background 120ms ease;
+}
+
+.admin-action-button:hover {
+  transform: translateY(-1px);
+}
+
+.admin-action-button:disabled,
+.admin-action-button[aria-disabled="true"] {
+  opacity: 0.65;
+  cursor: wait;
+  transform: none;
+}
+
+.admin-action-button--primary {
+  background: #111827;
+  color: #ffffff;
+}
+
+.admin-action-button--secondary {
+  background: rgba(17, 24, 39, 0.08);
+  color: #111827;
+}
+
+.admin-action-button--danger {
+  background: #b91c1c;
+  color: #ffffff;
+}
+/* M13G_EDITOR_GUARDS_END */

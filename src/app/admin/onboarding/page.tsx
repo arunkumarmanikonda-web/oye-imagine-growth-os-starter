@@ -1,8 +1,10 @@
+import { FormFlash } from "@/app/admin/form-flash";
+import { ActionButton } from "@/app/admin/action-button";
 import Link from "next/link";
 import { getNeejeeOnboardingSnapshotLive } from "@/lib/admin/neejee-live";
 import { listToMultiline } from "@/lib/admin/neejee-editor-utils";
 import AdminSaveButton from "@/app/admin/save-button";
-import { saveOnboardingFormAction } from "./actions";
+import { submitOnboardingEditorAction } from "./actions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -65,7 +67,8 @@ export default async function AdminOnboardingPage() {
           <div className="oi-stage-eyebrow">Live edit</div>
           <h2>Update onboarding workspace</h2>
 
-          <form action={saveOnboardingFormAction} className="oi-editor-form">
+          <FormFlash />
+<form action={submitOnboardingEditorAction} className="oi-editor-form">
             <label className="oi-editor-field">
               <span>Workspace owner</span>
               <input name="owner" defaultValue={String(workspace.owner ?? "")} />
@@ -117,7 +120,29 @@ export default async function AdminOnboardingPage() {
             </label>
 
             <div className="oi-editor-actions">
-              <AdminSaveButton idleLabel="Save onboarding" pendingLabel="Saving onboarding..." />
+              <div className="admin-action-row">
+  <label className="admin-publish-confirm">
+    <input type="checkbox" name="confirmPublish" value="yes" />
+    <span>Publishing confirms this workspace is ready for downstream admin use.</span>
+  </label>
+
+  <div className="admin-action-row__buttons">
+    <ActionButton
+      label="Save draft"
+      pendingLabel="Saving draft..."
+      variant="secondary"
+      name="intent"
+      value="save"
+    />
+    <ActionButton
+      label="Publish"
+      pendingLabel="Publishing..."
+      variant="primary"
+      name="intent"
+      value="publish"
+    />
+  </div>
+</div>
             </div>
           </form>
         </article>
