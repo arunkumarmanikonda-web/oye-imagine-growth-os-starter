@@ -77,7 +77,7 @@ function ServiceCard({ item }: { item: ServiceModule }) {
         </span>
       </div>
       <p className="oi-stage-muted">{item.summary}</p>
-      <p className="oi-stage-meta-line">Owner · {item.owner}</p>
+      <p className="oi-stage-meta-line">Owner Â· {item.owner}</p>
     </article>
   );
 }
@@ -122,14 +122,14 @@ function TaskCard({ item }: { item: TaskItem }) {
         </span>
       </div>
       <p className="oi-stage-meta-line">
-        Owner · {item.owner} · Due · {item.due}
+        Owner Â· {item.owner} Â· Due Â· {item.due}
       </p>
     </article>
   );
 }
 
-export default function AdminOnboardingPage() {
-  const snapshot = getNeejeeOnboardingSnapshot();
+export const runtime = "nodejs";`r`nexport const dynamic = "force-dynamic";`r`n`r`nexport default async function AdminOnboardingPage() {
+  const snapshot = await getNeejeeOnboardingSnapshotLive();
   const averageScore = readinessAverage(snapshot.readiness);
   const readyServices = countByState(snapshot.services, "ready");
   const blockedIntegrations = countByState(snapshot.integrations, "blocked");
@@ -228,7 +228,7 @@ export default function AdminOnboardingPage() {
                 <span>/ 100</span>
               </div>
               <p className="oi-stage-muted">{item.summary}</p>
-              <p className="oi-stage-meta-line">Owner · {item.owner}</p>
+              <p className="oi-stage-meta-line">Owner Â· {item.owner}</p>
             </article>
           ))}
         </div>
@@ -340,7 +340,7 @@ export default function AdminOnboardingPage() {
                     {blockerLabel(item.severity)}
                   </span>
                 </div>
-                <p className="oi-stage-meta-line">Owner · {item.owner}</p>
+                <p className="oi-stage-meta-line">Owner Â· {item.owner}</p>
                 <p className="oi-stage-muted">{item.action}</p>
               </article>
             ))}

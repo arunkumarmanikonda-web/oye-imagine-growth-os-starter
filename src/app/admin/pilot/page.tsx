@@ -1,6 +1,6 @@
 import type { Route } from "next";
 import Link from "next/link";
-import { getNeejeePilotControlSnapshot } from "@/lib/admin/neejee-pilot";
+import { getNeejeePilotControlSnapshotLive } from "@/lib/admin/neejee-live";
 
 const statusLabel: Record<string, string> = {
   blocked: "Blocked",
@@ -15,8 +15,8 @@ const toneClass: Record<string, string> = {
   ghost: "oi-stage-button-ghost",
 };
 
-export default function AdminPilotPage() {
-  const snapshot = getNeejeePilotControlSnapshot();
+export const runtime = "nodejs";`r`nexport const dynamic = "force-dynamic";`r`n`r`nexport default async function AdminPilotPage() {
+  const snapshot = await getNeejeePilotControlSnapshotLive();
 
   return (
     <main className="oi-stage-shell oi-pilot-shell">

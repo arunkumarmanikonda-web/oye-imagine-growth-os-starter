@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-route";
-import { getNeejeeBrandIntelligenceSnapshot } from "@/lib/admin/brand-intelligence-seed";
+import { getNeejeeBrandIntelligenceSnapshotLive } from "@/lib/admin/neejee-live";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

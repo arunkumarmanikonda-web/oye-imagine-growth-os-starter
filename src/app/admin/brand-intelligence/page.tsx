@@ -107,8 +107,8 @@ function AudienceCard({ item }: { item: AudienceArchetype }) {
   );
 }
 
-export default function BrandIntelligencePage() {
-  const snapshot = getNeejeeBrandIntelligenceSnapshot();
+export const runtime = "nodejs";`r`nexport const dynamic = "force-dynamic";`r`n`r`nexport default async function BrandIntelligencePage() {
+  const snapshot = await getNeejeeBrandIntelligenceSnapshotLive();
 
   return (
     <main className="oi-bi-shell">
@@ -276,7 +276,7 @@ export default function BrandIntelligencePage() {
             {snapshot.competitorSignals.map((item) => (
               <article key={item.brand} className="oi-bi-rule-card" data-tone="neutral">
                 <h3>{item.brand}</h3>
-                <p className="oi-bi-meta-line">Posture · {item.posture}</p>
+                <p className="oi-bi-meta-line">Posture Â· {item.posture}</p>
                 <p className="oi-bi-muted">{item.signal}</p>
               </article>
             ))}

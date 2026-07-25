@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-route";
-import { getNeejeePilotControlSnapshot } from "@/lib/admin/neejee-pilot";
+import { getNeejeePilotControlSnapshotLive } from "@/lib/admin/neejee-live";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   return NextResponse.json(
     {
       ok: true,
-      snapshot: getNeejeePilotControlSnapshot(),
+      snapshot: await getNeejeePilotControlSnapshotLive(),
     },
     {
       headers: {
