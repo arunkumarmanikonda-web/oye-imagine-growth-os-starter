@@ -4,7 +4,6 @@ import { ActionButton } from "@/app/admin/action-button";
 import Link from "next/link";
 import { getWorkspaceBrandIntelligenceSnapshotLive } from "@/lib/admin/workspace-live";
 import { listToMultiline } from "@/lib/admin/workspace-editor-utils";
-import AdminSaveButton from "@/app/admin/save-button";
 import { submitBrandIntelligenceEditorAction } from "./actions";
 
 export const runtime = "nodejs";
