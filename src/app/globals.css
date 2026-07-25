@@ -1454,3 +1454,249 @@ img { max-width: 100%; height: auto; display: block; }
   }
 }
 /* M13B_BRAND_INTELLIGENCE_END */
+
+/* M13C_PILOT_CONTROL_START */
+.oi-pilot-shell {
+  gap: 24px;
+}
+
+.oi-pilot-hero {
+  gap: 20px;
+}
+
+.oi-pilot-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.oi-pilot-signal-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.oi-pilot-signal-card,
+.oi-pilot-panel,
+.oi-pilot-surface-card,
+.oi-pilot-action-card,
+.oi-pilot-stage-card {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03)),
+    rgba(9, 12, 20, 0.82);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+}
+
+.oi-pilot-signal-card {
+  border-radius: 20px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.oi-pilot-signal-card strong {
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.oi-pilot-signal-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.oi-pilot-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.9fr);
+  gap: 18px;
+}
+
+.oi-pilot-panel {
+  border-radius: 24px;
+  padding: 22px;
+}
+
+.oi-pilot-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.oi-pilot-panel-head h2 {
+  margin: 6px 0 0;
+  font-size: 1.35rem;
+}
+
+.oi-pilot-stage-list,
+.oi-pilot-action-list,
+.oi-pilot-brief-list,
+.oi-pilot-list,
+.oi-pilot-surface-grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oi-pilot-stage-list,
+.oi-pilot-action-list {
+  display: grid;
+  gap: 14px;
+}
+
+.oi-pilot-stage-card {
+  border-radius: 20px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 14px;
+}
+
+.oi-pilot-stage-index {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.oi-pilot-stage-body {
+  display: grid;
+  gap: 12px;
+}
+
+.oi-pilot-stage-topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.oi-pilot-stage-topline h3,
+.oi-pilot-action-card h3,
+.oi-pilot-surface-title {
+  margin: 0;
+}
+
+.oi-pilot-stage-topline p,
+.oi-pilot-action-card p,
+.oi-pilot-surface-copy,
+.oi-pilot-stage-summary,
+.oi-pilot-brief-list li {
+  margin: 0;
+  color: rgba(235, 240, 255, 0.74);
+}
+
+.oi-pilot-status {
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.oi-pilot-status-blocked {
+  background: rgba(255, 109, 109, 0.16);
+  color: #ffb0b0;
+}
+
+.oi-pilot-status-review_required {
+  background: rgba(255, 193, 92, 0.16);
+  color: #ffd889;
+}
+
+.oi-pilot-status-in_progress {
+  background: rgba(109, 183, 255, 0.16);
+  color: #b6dcff;
+}
+
+.oi-pilot-status-ready {
+  background: rgba(90, 215, 154, 0.16);
+  color: #b6ffd5;
+}
+
+.oi-pilot-list,
+.oi-pilot-brief-list {
+  display: grid;
+  gap: 10px;
+}
+
+.oi-pilot-list li,
+.oi-pilot-brief-list li {
+  position: relative;
+  padding-left: 18px;
+}
+
+.oi-pilot-list li::before,
+.oi-pilot-brief-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62rem;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #9ad7ff, #b786ff);
+}
+
+.oi-pilot-action-card {
+  border-radius: 18px;
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.oi-pilot-surface-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.oi-pilot-surface-card {
+  border-radius: 18px;
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+.oi-pilot-surface-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(154, 215, 255, 0.28);
+}
+
+@media (max-width: 1080px) {
+  .oi-pilot-signal-row,
+  .oi-pilot-grid,
+  .oi-pilot-surface-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .oi-pilot-stage-card {
+    grid-template-columns: 1fr;
+  }
+
+  .oi-pilot-stage-index {
+    width: 44px;
+    height: 44px;
+  }
+
+  .oi-pilot-panel {
+    padding: 18px;
+  }
+}
+/* M13C_PILOT_CONTROL_END */
