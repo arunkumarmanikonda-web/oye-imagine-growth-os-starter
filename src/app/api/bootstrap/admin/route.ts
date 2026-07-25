@@ -1,9 +1,13 @@
+import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function GET() {
+  const workspaceDisplayName = getWorkspaceDisplayName();
   return NextResponse.json({
     ok: true,
+    
+    workspaceDisplayName,
     ready: Boolean(process.env.BOOTSTRAP_SECRET),
     note: "POST with x-bootstrap-secret header to create first admin user.",
   });

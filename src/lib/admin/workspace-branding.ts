@@ -38,3 +38,10 @@ export function getWorkspaceSurfaceLabel(
       return `${name} workspace`;
   }
 }
+export function getWorkspaceBrandingPayload(value?: string | null): {
+  workspaceDisplayName: string;
+} {
+  return {
+    workspaceDisplayName: getWorkspaceDisplayName(value),
+  };
+}

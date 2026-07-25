@@ -1,3 +1,4 @@
+import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
 import Link from "next/link";
 import {
   getNeejeeOnboardingSnapshot,
@@ -30,6 +31,7 @@ function toneLabel(state: ReadinessState) {
 
 export default function AdminSummaryPage() {
   const snapshot = getNeejeeOnboardingSnapshot();
+  const workspaceDisplayName = getWorkspaceDisplayName();
 
   const readinessAverage = averageScore(snapshot.readiness.map((item) => item.score));
   const blockedCount = countState(snapshot.readiness, "blocked");
@@ -49,6 +51,7 @@ export default function AdminSummaryPage() {
           </div>
           <p className="oi-stage-overline">Oye !magine operator summary</p>
           <h1>Neejee activation summary</h1>
+          <p className="oi-stage-eyebrow">Workspace: {workspaceDisplayName}</p>
           <p className="oi-stage-lead">
             A calmer executive view of what is ready, what is blocked and what must happen next before Neejee can move into controlled activation.
           </p>
@@ -140,7 +143,7 @@ export default function AdminSummaryPage() {
                   </span>
                 </div>
                 <p className="oi-stage-meta-line">
-                  Owner · {item.owner} · Due · {item.due}
+                  Owner Ãƒâ€šÃ‚Â· {item.owner} Ãƒâ€šÃ‚Â· Due Ãƒâ€šÃ‚Â· {item.due}
                 </p>
               </article>
             ))}

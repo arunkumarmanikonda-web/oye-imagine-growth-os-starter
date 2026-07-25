@@ -1,3 +1,4 @@
+import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
 const surfaces = [
   {
     title: "Executive summary",
@@ -33,10 +34,12 @@ const operatorChecklist = [
 ];
 
 export default function AdminHomePage() {
+  const workspaceDisplayName = getWorkspaceDisplayName();
   return (
     <div className="oi-page">
       <div className="oi-container">
         <div className="oi-page-head">
+          <p className="oi-stage-eyebrow">Workspace: {workspaceDisplayName}</p>
           <span className="oi-kicker">Admin workspace</span>
         </div>
 

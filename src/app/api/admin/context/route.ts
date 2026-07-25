@@ -1,3 +1,4 @@
+import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
 import { adminError, adminJson } from "@/lib/admin-api";
 import { requireAdmin } from "@/lib/admin-route";
 import { getAdminContexts } from "@/lib/admin/context";
@@ -8,9 +9,12 @@ export async function GET(request: Request) {
 
   try {
     const { active, options } = await getAdminContexts();
+    const workspaceDisplayName = getWorkspaceDisplayName();
 
     return adminJson({
       ok: true,
+      
+      workspaceDisplayName,
       user: null,
       active,
       options,

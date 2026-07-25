@@ -1,3 +1,4 @@
+import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { env } from "@/lib/env";
@@ -31,6 +32,7 @@ export async function GET() {
     }
 
     const active = await requireActiveAdminContext();
+    const workspaceDisplayName = getWorkspaceDisplayName();
     const admin = createServiceRoleClient();
 
     const [{ count: tenantCount, error: tenantError }, { count: brandCount, error: brandError }, { count: workspaceCount, error: workspaceError }] = await Promise.all([
@@ -63,7 +65,8 @@ export async function GET() {
 
     return NextResponse.json({
       ok: true,
-      active,
+      
+      workspaceDisplayName,active,
       counts: {
         tenants: tenantCount ?? 0,
         brands: brandCount ?? 0,

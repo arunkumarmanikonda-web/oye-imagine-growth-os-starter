@@ -1,3 +1,4 @@
+import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
 import { requireAdmin } from "@/lib/admin-route";
 import { adminJson, adminError, adminUnauthorized } from "@/lib/admin-api";
 import { cookies } from "next/headers";
@@ -206,9 +207,12 @@ export async function GET(request: NextRequest) {
     const activeContext = await resolveActiveContext(supabase);
 
     if (!activeContext.workspaceId) {
-      return adminJson({
+      const workspaceDisplayName = getWorkspaceDisplayName();
+
+    return adminJson({
         ok: true,
-        activeContext,
+        
+      workspaceDisplayName,activeContext,
         onboarding: {},
         strategy: {},
         execution: {},
@@ -255,6 +259,8 @@ export async function GET(request: NextRequest) {
       .filter(Boolean)
       .sort()
       .reverse()[0] ?? null;
+
+    const workspaceDisplayName = getWorkspaceDisplayName();
 
     return adminJson({
       ok: true,
