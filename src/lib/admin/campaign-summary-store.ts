@@ -2,6 +2,16 @@ import {
   createCampaignSummaryDraftRecord,
   type CampaignSummaryDraftRecord,
 } from "@/lib/admin/campaign-summary-schema";
+function getNextTimestamp(previous?: string) {
+  const now = new Date();
+  const previousTime = previous ? new Date(previous).getTime() : Number.NaN;
+  const nextTime =
+    Number.isFinite(previousTime) && now.getTime() <= previousTime
+      ? previousTime + 1
+      : now.getTime();
+
+  return new Date(nextTime).toISOString();
+}
 import { campaignSummaryDraftFixture } from "@/lib/admin/campaign-summary-fixtures";
 
 let campaignSummaryDraftState: CampaignSummaryDraftRecord =
@@ -20,15 +30,15 @@ export function createCampaignSummaryDraft(
 export function saveCampaignSummaryDraft(
   input: Partial<CampaignSummaryDraftRecord>,
 ) {
-  const previousGeneratedAt =
-    campaignSummaryDraftState?.generatedAt ??
+  const generatedAt =
     input.generatedAt ??
-    new Date().toISOString();
+    campaignSummaryDraftState?.generatedAt ??
+    getNextTimestamp();
 
   campaignSummaryDraftState = createCampaignSummaryDraftRecord({
     ...input,
-    generatedAt: previousGeneratedAt,
-    lastUpdatedAt: new Date().toISOString(),
+    generatedAt,
+    lastUpdatedAt: getNextTimestamp(campaignSummaryDraftState?.lastUpdatedAt),
   });
 
   return campaignSummaryDraftState;
@@ -41,7 +51,7 @@ export function updateCampaignSummaryDraft(
     ...campaignSummaryDraftState,
     ...updates,
     generatedAt: campaignSummaryDraftState.generatedAt,
-    lastUpdatedAt: new Date().toISOString(),
+    lastUpdatedAt: getNextTimestamp(campaignSummaryDraftState.lastUpdatedAt),
   });
 
   return campaignSummaryDraftState;
