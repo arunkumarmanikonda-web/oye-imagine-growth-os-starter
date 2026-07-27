@@ -108,7 +108,7 @@ function truncateSms(value: string, maxLength = 160): string {
     return normalized;
   }
 
-  return `${normalized.slice(0, maxLength - 1).trimEnd()}…`;
+  return `${normalized.slice(0, maxLength - 1).trimEnd()}â€¦`;
 }
 
 export function buildSmsDraftFromPilot(
@@ -226,7 +226,7 @@ export function buildSmsDraftFromPilot(
   const proofPoint =
     adDescriptions[0] ?? subheadline ?? desiredOutcome;
   const followUpAngle =
-    emailSubjects[1] ?? adHeadlines[1] ?? `Keep every campaign asset aligned`;
+    adHeadlines[1] ?? emailSubjects[1] ?? `Keep every campaign asset aligned`;
 
   return createSmsDraftRecord({
     pilotId,
