@@ -1,39 +1,42 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const getPilot = vi.fn();
-const getStrategyDraft = vi.fn();
-const getLandingPageDraft = vi.fn();
-const getGoogleAdsDraft = vi.fn();
-const getEmailSequenceDraft = vi.fn();
-const getSmsDraft = vi.fn();
-const saveWhatsappDraft = vi.fn((draft) => draft);
+const mocks = vi.hoisted(() => ({
+  getPilot: vi.fn(),
+  getStrategyDraft: vi.fn(),
+  getLandingPageDraft: vi.fn(),
+  getGoogleAdsDraft: vi.fn(),
+  getEmailSequenceDraft: vi.fn(),
+  getSmsDraft: vi.fn(),
+  saveWhatsappDraft: vi.fn((draft) => draft),
+}));
 
 vi.mock("@/lib/admin/pilot-store", () => ({
-  getPilot,
+  getPilot: mocks.getPilot,
 }));
 
 vi.mock("@/lib/admin/strategy-store", () => ({
-  getStrategyDraft,
+  getStrategy: mocks.getStrategyDraft,
+  getStrategyDraft: mocks.getStrategyDraft,
 }));
 
 vi.mock("@/lib/admin/landing-page-store", () => ({
-  getLandingPageDraft,
+  getLandingPageDraft: mocks.getLandingPageDraft,
 }));
 
 vi.mock("@/lib/admin/google-ads-store", () => ({
-  getGoogleAdsDraft,
+  getGoogleAdsDraft: mocks.getGoogleAdsDraft,
 }));
 
 vi.mock("@/lib/admin/email-sequence-store", () => ({
-  getEmailSequenceDraft,
+  getEmailSequenceDraft: mocks.getEmailSequenceDraft,
 }));
 
 vi.mock("@/lib/admin/sms-store", () => ({
-  getSmsDraft,
+  getSmsDraft: mocks.getSmsDraft,
 }));
 
 vi.mock("@/lib/admin/whatsapp-store", () => ({
-  saveWhatsappDraft,
+  saveWhatsappDraft: mocks.saveWhatsappDraft,
 }));
 
 import {
@@ -45,7 +48,7 @@ describe("whatsapp-generator", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    getPilot.mockReturnValue({
+    mocks.getPilot.mockReturnValue({
       id: "pilot-1",
       pilotId: "pilot-1",
       workspaceId: "workspace-1",
@@ -53,7 +56,7 @@ describe("whatsapp-generator", () => {
       contactName: "Jordan",
     });
 
-    getStrategyDraft.mockReturnValue({
+    mocks.getStrategyDraft.mockReturnValue({
       pilotId: "pilot-1",
       workspaceId: "workspace-1",
       audience: "growth teams",
@@ -61,18 +64,18 @@ describe("whatsapp-generator", () => {
       cta: "Open to a quick reply?",
     });
 
-    getLandingPageDraft.mockReturnValue({
+    mocks.getLandingPageDraft.mockReturnValue({
       pilotId: "pilot-1",
       headline: "Turn more traffic into qualified pipeline",
       subheadline: "A tighter landing page story helps the right buyers self-select faster.",
     });
 
-    getGoogleAdsDraft.mockReturnValue({
+    mocks.getGoogleAdsDraft.mockReturnValue({
       pilotId: "pilot-1",
       headlines: ["High-intent campaigns with clearer conversion paths"],
     });
 
-    getEmailSequenceDraft.mockReturnValue({
+    mocks.getEmailSequenceDraft.mockReturnValue({
       pilotId: "pilot-1",
       messages: [
         {
@@ -82,11 +85,10 @@ describe("whatsapp-generator", () => {
       ],
     });
 
-    getSmsDraft.mockReturnValue({
+    mocks.getSmsDraft.mockReturnValue({
       pilotId: "pilot-1",
       messages: [
         {
-          delay: "Immediately",
           body: "Short SMS follow-up keeps the same conversion message in front of buyers.",
         },
       ],
@@ -99,7 +101,6 @@ describe("whatsapp-generator", () => {
 
     expect(first.pilotId).toBe("pilot-1");
     expect(first.senderName).toBe("Jordan at Acme AI");
-    expect(first.audience).toBe("growth teams");
     expect(first.goal).toBe("Book more qualified demos");
 
     expect(first.messages.map((message: { body: string }) => message.body)).toEqual(
@@ -108,6 +109,7 @@ describe("whatsapp-generator", () => {
 
     expect(first.messages).toHaveLength(3);
     expect(first.messages[0].body).toContain("Turn more traffic into qualified pipeline");
+    expect(first.messages[0].body).toContain("growth teams");
     expect(first.messages[1].body).toContain("High-intent campaigns with clearer conversion paths");
     expect(first.messages[1].body).toContain("A sharper follow-up for high-intent leads");
     expect(first.messages[2].body).toContain("Open to a quick reply?");
@@ -116,17 +118,17 @@ describe("whatsapp-generator", () => {
   it("persists the generated draft to the WhatsApp store", () => {
     const draft = generateWhatsappDraft("pilot-1");
 
-    expect(saveWhatsappDraft).toHaveBeenCalledTimes(1);
-    expect(saveWhatsappDraft).toHaveBeenCalledWith(draft);
+    expect(mocks.saveWhatsappDraft).toHaveBeenCalledTimes(1);
+    expect(mocks.saveWhatsappDraft).toHaveBeenCalledWith(draft);
     expect(draft.messages).toHaveLength(3);
   });
 
   it("throws when the pilot is missing", () => {
-    getPilot.mockReturnValueOnce(null);
+    mocks.getPilot.mockReturnValueOnce(null);
 
     expect(() => buildWhatsappDraftFromPilot("missing-pilot")).toThrow(
       /Pilot not found/i,
     );
-    expect(saveWhatsappDraft).not.toHaveBeenCalled();
+    expect(mocks.saveWhatsappDraft).not.toHaveBeenCalled();
   });
 });

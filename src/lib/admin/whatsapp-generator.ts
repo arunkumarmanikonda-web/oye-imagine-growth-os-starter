@@ -14,7 +14,14 @@ function resolveGetter(moduleValue: unknown, names: string[]): Getter {
   const table = moduleValue as LooseRecord;
 
   for (const name of names) {
-    const candidate = table[name];
+    let candidate: unknown;
+
+    try {
+      candidate = table[name];
+    } catch {
+      candidate = undefined;
+    }
+
     if (typeof candidate === "function") {
       return candidate as Getter;
     }
@@ -76,7 +83,7 @@ function truncate(value: string, maxLength: number): string {
     return normalized;
   }
 
-  return `${normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
+  return `${normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd()}ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦`;
 }
 
 const getPilot = resolveGetter(pilotStore, [
@@ -216,27 +223,24 @@ export function buildWhatsappDraftFromPilot(pilotId: string) {
     workspaceId,
     status: "draft",
     senderName,
-    audience,
     goal,
     messages: [
       {
         id: `${pilotId}-whatsapp-1`,
-        delay: "Immediately",
         body: messageOne,
       },
       {
         id: `${pilotId}-whatsapp-2`,
-        delay: "1 day later",
         body: messageTwo,
       },
       {
         id: `${pilotId}-whatsapp-3`,
-        delay: "3 days later",
         body: messageThree,
       },
     ],
-    notes:
+    notes: [
       "Generated from pilot, strategy, landing page, Google Ads, email sequence, and SMS assets for cross-channel consistency.",
+    ],
   });
 }
 
