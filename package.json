@@ -56,7 +56,8 @@
                     "test:admin-whatsapp-store":  "vitest run tests/api/admin-whatsapp-store.test.ts",
                     "test:admin-whatsapp-generator":  "vitest run tests/api/admin-whatsapp-generator.test.ts",
                     "test:admin-whatsapp-generate-route":  "vitest run tests/api/admin-whatsapp-generate-route.test.ts",
-                    "test:admin-whatsapp-page":  "vitest run tests/api/admin-whatsapp-page.test.ts"
+                    "test:admin-whatsapp-page":  "vitest run tests/api/admin-whatsapp-page.test.ts",
+                    "test:admin-campaign-summary-store":  "vitest run tests/api/admin-campaign-summary-store.test.ts"
                 },
     "dependencies":  {
                          "@supabase/ssr":  "^0.6.1",
