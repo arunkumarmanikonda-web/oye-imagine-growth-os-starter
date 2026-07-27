@@ -1,8 +1,7 @@
-import { getWorkspaceDisplayName, getWorkspaceSurfaceLabel } from "@/lib/admin/workspace-branding";
 "use client";
 
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
 
 type ReleaseStatus = {
   ok: boolean;
@@ -39,22 +38,46 @@ type ReleaseStatus = {
   warnings?: string[];
 };
 
+export type PilotStatusSummary = {
+  ok: boolean;
+  workspaceDisplayName: string;
+  pilotId: string;
+  status: string;
+  completedFields: number;
+  totalFields: number;
+  completionPercent: number;
+  missingFields: string[];
+  lastUpdatedAt: string | null;
+};
+
 function badgeClass(value: boolean): string {
   return value
     ? "inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700"
     : "inline-flex items-center rounded-full bg-rose-100 px-2.5 py-1 text-xs font-semibold text-rose-700";
 }
 
+function completionClass(percent: number): string {
+  if (percent >= 80) {
+    return "inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700";
+  }
+
+  if (percent >= 50) {
+    return "inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-amber-700";
+  }
+
+  return "inline-flex items-center rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-rose-700";
+}
+
 function formatValue(value: string | number | null): string {
   if (value === null || typeof value === "undefined") {
-    return "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â";
+    return "-";
   }
   return String(value);
 }
 
 function formatDateTime(value: string | null): string {
   if (!value) {
-    return "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â";
+    return "-";
   }
 
   const date = new Date(value);
@@ -65,10 +88,164 @@ function formatDateTime(value: string | null): string {
   return date.toLocaleString();
 }
 
+function formatPilotFieldLabel(value: string): string {
+  return value
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, (character) => character.toUpperCase());
+}
+
+export function PilotStatusCard(props: {
+  pilotStatus: PilotStatusSummary | null;
+  loading: boolean;
+  error: string | null;
+}) {
+  const { pilotStatus, loading, error } = props;
+
+  if (loading) {
+    return (
+      <section className="oi-card rounded-[28px] p-6">
+        <p className="oi-kicker">Pilot readiness</p>
+        <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+          Neejee pilot status
+        </h2>
+        <p className="mt-3 text-sm text-slate-600">Loading pilot readiness...</p>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="rounded-[28px] border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
+        Pilot readiness unavailable. {error}
+      </section>
+    );
+  }
+
+  if (!pilotStatus) {
+    return (
+      <section className="oi-card rounded-[28px] p-6">
+        <p className="oi-kicker">Pilot readiness</p>
+        <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+          Neejee pilot status
+        </h2>
+        <p className="mt-3 text-sm text-slate-600">Pilot readiness unavailable.</p>
+      </section>
+    );
+  }
+
+  const visibleMissingFields = pilotStatus.missingFields.slice(0, 4);
+  const additionalMissingCount = Math.max(
+    pilotStatus.missingFields.length - visibleMissingFields.length,
+    0,
+  );
+
+  return (
+    <section className="oi-card rounded-[28px] p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="oi-kicker">Pilot readiness</p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+            Neejee pilot status
+          </h2>
+          <p className="mt-3 text-sm text-slate-600">
+            {pilotStatus.workspaceDisplayName} pilot completion snapshot.
+          </p>
+        </div>
+
+        <span className={completionClass(pilotStatus.completionPercent)}>
+          {pilotStatus.completionPercent}% complete
+        </span>
+      </div>
+
+      <div className="mt-6 grid gap-4 md:grid-cols-2">
+        <div className="rounded-[24px] bg-slate-50 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Pilot ID
+          </p>
+          <p className="mt-2 text-sm font-medium text-slate-950">
+            {pilotStatus.pilotId}
+          </p>
+        </div>
+
+        <div className="rounded-[24px] bg-slate-50 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Status
+          </p>
+          <p className="mt-2 text-sm font-medium text-slate-950">
+            {pilotStatus.status}
+          </p>
+        </div>
+
+        <div className="rounded-[24px] bg-slate-50 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Completed fields
+          </p>
+          <p className="mt-2 text-sm font-medium text-slate-950">
+            {pilotStatus.completedFields} / {pilotStatus.totalFields}
+          </p>
+        </div>
+
+        <div className="rounded-[24px] bg-slate-50 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Last updated
+          </p>
+          <p className="mt-2 text-sm font-medium text-slate-950">
+            {formatDateTime(pilotStatus.lastUpdatedAt)}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-6 rounded-[24px] border border-slate-200 p-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+          Missing fields
+        </p>
+
+        {pilotStatus.missingFields.length > 0 ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {visibleMissingFields.map((field) => (
+              <span
+                key={field}
+                className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700"
+              >
+                {formatPilotFieldLabel(field)}
+              </span>
+            ))}
+
+            {additionalMissingCount > 0 ? (
+              <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                +{additionalMissingCount} more
+              </span>
+            ) : null}
+          </div>
+        ) : (
+          <p className="mt-2 text-sm font-medium text-emerald-700">
+            All required pilot fields are filled.
+          </p>
+        )}
+      </div>
+
+      <div className="mt-6 flex flex-wrap gap-3">
+        <a className="oi-button-primary" href="/admin/pilot">
+          Review pilot
+        </a>
+        <a
+          className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white"
+          href="/admin/onboarding"
+        >
+          Open onboarding
+        </a>
+      </div>
+    </section>
+  );
+}
+
 export default function AdminOpsPage() {
   const [data, setData] = useState<ReleaseStatus | null>(null);
+  const [pilotStatus, setPilotStatus] = useState<PilotStatusSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pilotStatusLoading, setPilotStatusLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pilotStatusError, setPilotStatusError] = useState<string | null>(null);
 
   const smokeChecklist = useMemo(
     () => [
@@ -102,21 +279,39 @@ export default function AdminOpsPage() {
     async function load() {
       try {
         setLoading(true);
+        setPilotStatusLoading(true);
         setError(null);
+        setPilotStatusError(null);
 
-        const response = await fetch("/api/admin/release-status", {
-          cache: "no-store",
-          credentials: "include",
-        });
+        const [releaseResponse, pilotResponse] = await Promise.all([
+          fetch("/api/admin/release-status", {
+            cache: "no-store",
+            credentials: "include",
+          }),
+          fetch("/api/admin/pilot/status", {
+            cache: "no-store",
+            credentials: "include",
+          }),
+        ]);
 
-        if (!response.ok) {
+        if (!releaseResponse.ok) {
           throw new Error("Failed to load release status.");
         }
 
-        const json = (await response.json()) as ReleaseStatus;
+        const releaseJson = (await releaseResponse.json()) as ReleaseStatus;
+        let nextPilotStatus: PilotStatusSummary | null = null;
+        let nextPilotStatusError: string | null = null;
+
+        if (pilotResponse.ok) {
+          nextPilotStatus = (await pilotResponse.json()) as PilotStatusSummary;
+        } else {
+          nextPilotStatusError = "Failed to load pilot readiness.";
+        }
 
         if (!cancelled) {
-          setData(json);
+          setData(releaseJson);
+          setPilotStatus(nextPilotStatus);
+          setPilotStatusError(nextPilotStatusError);
         }
       } catch (err) {
         if (!cancelled) {
@@ -125,6 +320,7 @@ export default function AdminOpsPage() {
       } finally {
         if (!cancelled) {
           setLoading(false);
+          setPilotStatusLoading(false);
         }
       }
     }
@@ -163,16 +359,25 @@ export default function AdminOpsPage() {
 
   return (
     <main className="oi-shell mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-10">
-      
-      <div className="oi-admin-card">
-        <div className="oi-admin-card-label">Branding diagnostics</div>
-        <div className="oi-admin-card-value">
-          {data?.branding?.workspaceDisplayName ?? "Loading"}
+      <section className="grid gap-4 lg:grid-cols-2">
+        <div className="oi-admin-card">
+          <div className="oi-admin-card-label">Branding diagnostics</div>
+          <div className="oi-admin-card-value">
+            {data?.branding?.workspaceDisplayName ?? "Loading"}
+          </div>
+          <div className="oi-admin-card-meta">
+            Source: {data?.branding?.brandingSource ?? "unknown"}
+          </div>
         </div>
-        <div className="oi-admin-card-meta">
-          Source: {data?.branding?.brandingSource ?? "unknown"}
-        </div>
-      </div><section className="oi-card rounded-[32px] p-8 lg:p-10">
+
+        <PilotStatusCard
+          error={pilotStatusError}
+          loading={pilotStatusLoading}
+          pilotStatus={pilotStatus}
+        />
+      </section>
+
+      <section className="oi-card rounded-[32px] p-8 lg:p-10">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
             <p className="oi-kicker">Operations console</p>
@@ -180,14 +385,17 @@ export default function AdminOpsPage() {
               Release readiness dashboard
             </h1>
             <p className="mt-4 text-base leading-7 text-slate-600">
-              Premium operational view for safe environment checks, recent activity, release gates, and export readiness across the admin surface.
+              Premium operational view for safe environment checks, pilot completion, recent activity, release gates, and export readiness across the admin surface.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
               <Link className="oi-button-primary" href="/admin">
                 Open admin
               </Link>
-              <Link className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white" href="/admin/settings">
+              <Link
+                className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white"
+                href="/admin/settings"
+              >
                 Open settings
               </Link>
             </div>
@@ -195,20 +403,26 @@ export default function AdminOpsPage() {
 
           <div className="min-w-[300px] rounded-[28px] border border-white/70 bg-white/85 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur">
             <div className="oi-brand-gradient h-2 w-24 rounded-full" />
-            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Release readiness</p>
+            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+              Release readiness
+            </p>
             <p className="mt-3 text-sm leading-6 text-slate-700">
-              Generated {data ? formatDateTime(data.generatedAt) : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"}
+              Generated {data ? formatDateTime(data.generatedAt) : "-"}
             </p>
           </div>
         </div>
       </section>
 
       {loading ? (
-        <section className="oi-card rounded-[28px] p-6 text-sm text-slate-600">Loading release statusÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦</section>
+        <section className="oi-card rounded-[28px] p-6 text-sm text-slate-600">
+          Loading release status...
+        </section>
       ) : null}
 
       {error ? (
-        <section className="rounded-[28px] border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">{error}</section>
+        <section className="rounded-[28px] border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
+          {error}
+        </section>
       ) : null}
 
       {data ? (
@@ -216,8 +430,12 @@ export default function AdminOpsPage() {
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
             {statCards.map((card) => (
               <div key={card.label} className="oi-card rounded-[28px] p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{card.label}</p>
-                <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">{card.value}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  {card.label}
+                </p>
+                <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
+                  {card.value}
+                </p>
               </div>
             ))}
           </section>
@@ -227,7 +445,9 @@ export default function AdminOpsPage() {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="oi-kicker">Active context</p>
-                  <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Safe context snapshot</h2>
+                  <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+                    Safe context snapshot
+                  </h2>
                 </div>
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">
                   live
@@ -236,28 +456,48 @@ export default function AdminOpsPage() {
 
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 <div className="rounded-[24px] bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Tenant ID</p>
-                  <p className="mt-2 break-all text-sm font-medium text-slate-950">{formatValue(data.activeContext.tenantId)}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Tenant ID
+                  </p>
+                  <p className="mt-2 break-all text-sm font-medium text-slate-950">
+                    {formatValue(data.activeContext.tenantId)}
+                  </p>
                 </div>
                 <div className="rounded-[24px] bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Brand ID</p>
-                  <p className="mt-2 break-all text-sm font-medium text-slate-950">{formatValue(data.activeContext.brandId)}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Brand ID
+                  </p>
+                  <p className="mt-2 break-all text-sm font-medium text-slate-950">
+                    {formatValue(data.activeContext.brandId)}
+                  </p>
                 </div>
                 <div className="rounded-[24px] bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Workspace ID</p>
-                  <p className="mt-2 break-all text-sm font-medium text-slate-950">{formatValue(data.activeContext.workspaceId)}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Workspace ID
+                  </p>
+                  <p className="mt-2 break-all text-sm font-medium text-slate-950">
+                    {formatValue(data.activeContext.workspaceId)}
+                  </p>
                 </div>
                 <div className="rounded-[24px] bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Source</p>
-                  <p className="mt-2 break-all text-sm font-medium text-slate-950">{formatValue(data.activeContext.source)}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Source
+                  </p>
+                  <p className="mt-2 break-all text-sm font-medium text-slate-950">
+                    {formatValue(data.activeContext.source)}
+                  </p>
                 </div>
               </div>
 
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 {latestCards.map((card) => (
                   <div key={card.label} className="rounded-[24px] border border-slate-200 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{card.label}</p>
-                    <p className="mt-2 text-sm font-medium text-slate-950">{card.value}</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      {card.label}
+                    </p>
+                    <p className="mt-2 text-sm font-medium text-slate-950">
+                      {card.value}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -271,28 +511,48 @@ export default function AdminOpsPage() {
 
             <section className="oi-card rounded-[28px] p-6">
               <p className="oi-kicker">Environment flags</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Environment flags</h2>
-              <p className="mt-3 text-sm text-slate-600">Presence only. No secret values are displayed.</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+                Environment flags
+              </h2>
+              <p className="mt-3 text-sm text-slate-600">
+                Presence only. No secret values are displayed.
+              </p>
 
               <div className="mt-6 space-y-3">
                 {Object.entries(data.env).map(([key, present]) => (
-                  <div key={key} className="flex items-center justify-between gap-4 rounded-[22px] border border-slate-200 px-4 py-3">
+                  <div
+                    key={key}
+                    className="flex items-center justify-between gap-4 rounded-[22px] border border-slate-200 px-4 py-3"
+                  >
                     <span className="text-sm font-medium text-slate-900">{key}</span>
-                    <span className={badgeClass(Boolean(present))}>{present ? "Present" : "Missing"}</span>
+                    <span className={badgeClass(Boolean(present))}>
+                      {present ? "Present" : "Missing"}
+                    </span>
                   </div>
                 ))}
               </div>
 
               <div className="mt-6">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Quick links</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Quick links
+                </p>
                 <div className="mt-3 flex flex-col gap-2">
-                  <a className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white" href={data.links.admin}>
+                  <a
+                    className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white"
+                    href={data.links.admin}
+                  >
                     /admin
                   </a>
-                  <a className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white" href={data.links.settings}>
+                  <a
+                    className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white"
+                    href={data.links.settings}
+                  >
                     /admin/settings
                   </a>
-                  <a className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white" href={data.links.ops}>
+                  <a
+                    className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white"
+                    href={data.links.ops}
+                  >
                     /admin/ops
                   </a>
                 </div>
@@ -303,10 +563,15 @@ export default function AdminOpsPage() {
           <section className="grid gap-6 lg:grid-cols-2">
             <section className="oi-card rounded-[28px] p-6">
               <p className="oi-kicker">Smoke test</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Smoke test checklist</h2>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+                Smoke test checklist
+              </h2>
               <div className="mt-6 space-y-3">
                 {smokeChecklist.map((item) => (
-                  <label key={item} className="flex items-start gap-3 rounded-[22px] border border-slate-200 p-4">
+                  <label
+                    key={item}
+                    className="flex items-start gap-3 rounded-[22px] border border-slate-200 p-4"
+                  >
                     <input className="mt-1 h-4 w-4 rounded border-slate-300" type="checkbox" />
                     <span className="text-sm text-slate-700">{item}</span>
                   </label>
@@ -316,10 +581,15 @@ export default function AdminOpsPage() {
 
             <section className="oi-card rounded-[28px] p-6">
               <p className="oi-kicker">Readiness</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Release readiness checklist</h2>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+                Release readiness checklist
+              </h2>
               <div className="mt-6 space-y-3">
                 {readinessChecklist.map((item) => (
-                  <label key={item} className="flex items-start gap-3 rounded-[22px] border border-slate-200 p-4">
+                  <label
+                    key={item}
+                    className="flex items-start gap-3 rounded-[22px] border border-slate-200 p-4"
+                  >
                     <input className="mt-1 h-4 w-4 rounded border-slate-300" type="checkbox" />
                     <span className="text-sm text-slate-700">{item}</span>
                   </label>
@@ -330,8 +600,12 @@ export default function AdminOpsPage() {
 
           <section className="oi-card rounded-[28px] p-6">
             <p className="oi-kicker">Exports</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">CSV exports</h2>
-            <p className="mt-3 text-sm text-slate-600">Use the current admin export endpoints for downloadable release artifacts.</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+              CSV exports
+            </h2>
+            <p className="mt-3 text-sm text-slate-600">
+              Use the current admin export endpoints for downloadable release artifacts.
+            </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
               {exportLinks.map((item) => (

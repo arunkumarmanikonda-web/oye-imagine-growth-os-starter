@@ -30,7 +30,8 @@
                     "test:admin-pilot-id-route":  "vitest run tests/api/admin-pilot-id-route.test.ts",
                     "test:admin-pilot-status":  "vitest run tests/api/admin-pilot-status.test.ts",
                     "test:admin-pilot-api":  "vitest run tests/api/admin-pilot-route.test.ts tests/api/admin-pilot-id-route.test.ts tests/api/admin-pilot-status.test.ts",
-                    "test:admin-pilot-page":  "vitest run tests/api/admin-pilot-page.test.ts"
+                    "test:admin-pilot-page":  "vitest run tests/api/admin-pilot-page.test.ts",
+                    "test:admin-ops-page":  "vitest run tests/api/admin-ops-page.test.ts"
                 },
     "dependencies":  {
                          "@supabase/ssr":  "^0.6.1",
