@@ -68,8 +68,9 @@ describe("landing-page-generator", () => {
     expect(record.pilotId).toBe("neejee-pilot");
     expect(record.brandName).toBe("Neejee Clinics");
     expect(record.hero.headline).toContain("Neejee Clinics");
+    expect(record.hero.primaryCta).toBe("Book a consultation");
     expect(record.sections.length).toBeGreaterThanOrEqual(4);
-    expect(record.seo.title).toContain("Hair Transplant");
+    expect(record.sections[0].description).toContain("Neejee Clinics");
   });
 
   it("persists a generated landing page brief in the store", () => {
