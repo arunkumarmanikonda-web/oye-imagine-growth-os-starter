@@ -2,7 +2,7 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { PilotStatusCard, type PilotStatusSummary } from "@/app/admin/ops/page";
+import { PilotStatusCard, type PilotStatusSummary } from "@/app/admin/ops/pilot-status-card";
 
 describe("PilotStatusCard", () => {
   it("renders pilot readiness details", () => {
