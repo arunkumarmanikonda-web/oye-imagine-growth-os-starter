@@ -52,7 +52,8 @@
                     "test:admin-sms-store":  "vitest run tests/api/admin-sms-store.test.ts",
                     "test:admin-sms-generator":  "vitest run tests/api/admin-sms-generator.test.ts",
                     "test:admin-sms-generate-route":  "vitest run tests/api/admin-sms-generate-route.test.ts",
-                    "test:admin-sms-page":  "vitest run tests/api/admin-sms-page.test.ts"
+                    "test:admin-sms-page":  "vitest run tests/api/admin-sms-page.test.ts",
+                    "test:admin-whatsapp-store":  "vitest run tests/api/admin-whatsapp-store.test.ts"
                 },
     "dependencies":  {
                          "@supabase/ssr":  "^0.6.1",
