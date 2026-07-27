@@ -1,3 +1,4 @@
+import React from "react";
 import { generateWhatsappDraft } from "@/lib/admin/whatsapp-generator";
 import { getWhatsappDraft } from "@/lib/admin/whatsapp-store";
 
@@ -10,7 +11,7 @@ type WhatsappDraftPageProps = {
 };
 
 function resolveDraft(pilotId: string) {
-  const existingDraft = getWhatsappDraft(pilotId);
+  const existingDraft = getWhatsappDraft();
 
   if (existingDraft && existingDraft.pilotId === pilotId) {
     return existingDraft;
