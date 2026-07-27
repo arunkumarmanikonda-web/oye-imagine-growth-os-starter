@@ -47,7 +47,8 @@
                     "test:admin-google-ads-page":  "vitest run tests/api/admin-google-ads-page.test.ts",
                     "test:admin-email-sequence-store":  "vitest run tests/api/admin-email-sequence-store.test.ts",
                     "test:admin-email-sequence-generator":  "vitest run tests/api/admin-email-sequence-generator.test.ts",
-                    "test:admin-email-sequence-generate-route":  "vitest run tests/api/admin-email-sequence-generate-route.test.ts"
+                    "test:admin-email-sequence-generate-route":  "vitest run tests/api/admin-email-sequence-generate-route.test.ts",
+                    "test:admin-email-sequence-page":  "vitest run tests/api/admin-email-sequence-page.test.ts"
                 },
     "dependencies":  {
                          "@supabase/ssr":  "^0.6.1",
