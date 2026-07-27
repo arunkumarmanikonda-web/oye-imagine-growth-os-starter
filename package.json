@@ -62,7 +62,8 @@
                     "test:admin-campaign-summary-generate-route":  "vitest run tests/api/admin-campaign-summary-generate-route.test.ts",
                     "test:admin-campaign-summary-page":  "vitest run tests/api/admin-campaign-summary-page.test.ts",
                     "test:admin-execution-plan-store":  "vitest run tests/api/admin-execution-plan-store.test.ts",
-                    "test:admin-execution-plan-generator":  "vitest run tests/api/admin-execution-plan-generator.test.ts"
+                    "test:admin-execution-plan-generator":  "vitest run tests/api/admin-execution-plan-generator.test.ts",
+                    "test:admin-execution-plan-generate-route":  "vitest run tests/api/admin-execution-plan-generate-route.test.ts"
                 },
     "dependencies":  {
                          "@supabase/ssr":  "^0.6.1",
