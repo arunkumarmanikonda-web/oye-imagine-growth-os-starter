@@ -223,9 +223,10 @@ export function buildLandingPageBriefFromPilot(
   const pillars = pickPillars(strategy);
   const channels = pickChannels(strategy);
 
-  const brief = createDefaultLandingPageBrief(pilotId);
+  const brief = createDefaultLandingPageBrief();
   const record = brief as unknown as Record<string, any>;
 
+  record.pilotId = pilotId;
   record.workspaceId = workspaceId;
   record.workspaceDisplayName = workspaceDisplayName;
   record.status = "draft";
@@ -320,18 +321,24 @@ export function generateLandingPageBrief(
   const pilotId = options.pilotId ?? "neejee-pilot";
 
   if (!options.forceRegenerate) {
-    const existing = getLandingPageBrief(pilotId);
-    if (existing) {
+    const existing = getLandingPageBrief();
+    if (existing && (existing as unknown as Record<string, unknown>).pilotId === pilotId) {
       return existing;
     }
   }
 
-  const pilot = getPilot(pilotId);
-  if (!pilot) {
+  const pilot = getPilot();
+  if (!pilot || (pilot as unknown as Record<string, unknown>).pilotId !== pilotId) {
     throw new Error(`Pilot not found: ${pilotId}`);
   }
 
-  const strategy = getStrategyBrief(pilotId);
+
+  const strategyCandidate = getStrategyBrief();
+  const strategy =
+    strategyCandidate &&
+    (strategyCandidate as unknown as Record<string, unknown>).pilotId === pilotId
+      ? strategyCandidate
+      : null;
   const brief = buildLandingPageBriefFromPilot(pilot, strategy);
   return saveLandingPageBrief(brief);
 }
