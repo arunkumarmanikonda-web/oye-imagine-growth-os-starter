@@ -10,8 +10,10 @@ import {
 import type { NeejeePilotRecord } from "@/lib/admin/pilot-schema";
 import type { StrategyBriefRecord } from "@/lib/admin/strategy-schema";
 
-const getPilotMock = vi.fn();
-const getStrategyBriefMock = vi.fn();
+const { getPilotMock, getStrategyBriefMock } = vi.hoisted(() => ({
+  getPilotMock: vi.fn(),
+  getStrategyBriefMock: vi.fn(),
+}));
 
 vi.mock("@/lib/admin/pilot-store", () => ({
   getPilot: getPilotMock,

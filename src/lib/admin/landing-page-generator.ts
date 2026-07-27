@@ -235,16 +235,8 @@ export function buildLandingPageBriefFromPilot(
       eyebrow: `${brandName} landing page brief`,
       headline: `Book a confident next step with ${brandName}`,
       subheadline: `Turn high-intent visitors into consultation bookings with a focused page for ${primaryService.toLowerCase()}.`,
-      primaryCta: {
-        label: "Book a consultation",
-        href: "/contact",
-        variant: "primary",
-      },
-      secondaryCta: {
-        label: "Speak to the team",
-        href: "/contact?intent=talk",
-        variant: "secondary",
-      },
+      primaryCta: "Book a consultation",
+      secondaryCta: "Speak to the team",
     },
     ctas: [
       {
