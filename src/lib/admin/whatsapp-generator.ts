@@ -83,7 +83,7 @@ function truncate(value: string, maxLength: number): string {
     return normalized;
   }
 
-  return `${normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd()}ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦`;
+  return `${normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd()}ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦`;
 }
 
 const getPilot = resolveGetter(pilotStore, [
@@ -100,6 +100,7 @@ const getStrategy = resolveGetter(strategyStore, [
 ]);
 
 const getLandingPage = resolveGetter(landingPageStore, [
+  "getLandingPageBrief",
   "getLandingPageDraft",
   "getLandingPage",
 ]);
