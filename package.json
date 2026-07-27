@@ -36,7 +36,8 @@
                     "test:admin-strategy-generator":  "vitest run tests/api/admin-strategy-generator.test.ts",
                     "test:admin-strategy-generate-route":  "vitest run tests/api/admin-strategy-generate-route.test.ts",
                     "test:admin-strategy-page":  "vitest run tests/api/admin-strategy-page.test.ts",
-                    "test:ai-model-gateway":  "vitest run tests/api/model-gateway.test.ts"
+                    "test:ai-model-gateway":  "vitest run tests/api/model-gateway.test.ts",
+                    "test:admin-landing-page-store":  "vitest run tests/api/admin-landing-page-store.test.ts"
                 },
     "dependencies":  {
                          "@supabase/ssr":  "^0.6.1",
