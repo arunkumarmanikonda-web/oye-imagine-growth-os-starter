@@ -1,42 +1,209 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-import { type NeejeePilotInput } from "@/lib/admin/pilot-schema";
+import { requireAdmin } from "@/lib/admin-route";
+import { type NeejeePilotInput, type PilotStatus } from "@/lib/admin/pilot-schema";
 import { getPilot, savePilot } from "@/lib/admin/pilot-store";
+import {
+  getWorkspacePilotControlSnapshotLive,
+  saveWorkspacePilotControlSnapshotLive,
+} from "@/lib/admin/workspace-live";
 import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
 
-export async function GET() {
-  const pilot = getPilot();
-  const workspaceDisplayName = getWorkspaceDisplayName();
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-  return NextResponse.json({
-    ok: true,
-    workspaceDisplayName,
-    pilot,
-  });
+const pilotStatuses = new Set<PilotStatus>([
+  "draft",
+  "in_progress",
+  "ready_for_review",
+  "approved",
+]);
+
+const pilotKeys = new Set([
+  "id",
+  "workspaceDisplayName",
+  "brandName",
+  "website",
+  "industry",
+  "geo",
+  "targetAudience",
+  "offer",
+  "monthlyBudget",
+  "primaryChannels",
+  "competitors",
+  "goals",
+  "successMetrics",
+  "status",
+  "lastUpdatedAt",
+]);
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value);
 }
 
-export async function POST(request: Request) {
-  let body: NeejeePilotInput = {};
+function hasOwn(source: Record<string, unknown>, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(source, key);
+}
 
-  try {
-    const parsed = await request.json();
-    body =
-      parsed && typeof parsed === "object" ? (parsed as NeejeePilotInput) : {};
-  } catch {
-    body = {};
+function normalizeLines(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => (typeof item === "string" ? item.trim() : ""))
+      .filter(Boolean);
   }
 
-  const pilot = savePilot({
-    ...body,
-    workspaceDisplayName: body.workspaceDisplayName ?? getWorkspaceDisplayName(),
-  });
+  if (typeof value === "string") {
+    return value
+      .split(/\r?\n|,/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function toPilotPatch(source: Record<string, unknown>): NeejeePilotInput {
+  const patch: NeejeePilotInput = {};
+
+  if (hasOwn(source, "id")) patch.id = String(source.id ?? "");
+  if (hasOwn(source, "workspaceDisplayName")) {
+    patch.workspaceDisplayName = String(source.workspaceDisplayName ?? "");
+  }
+  if (hasOwn(source, "brandName")) patch.brandName = String(source.brandName ?? "");
+  if (hasOwn(source, "website")) patch.website = String(source.website ?? "");
+  if (hasOwn(source, "industry")) patch.industry = String(source.industry ?? "");
+  if (hasOwn(source, "geo")) patch.geo = String(source.geo ?? "");
+  if (hasOwn(source, "targetAudience")) {
+    patch.targetAudience = String(source.targetAudience ?? "");
+  }
+  if (hasOwn(source, "offer")) patch.offer = String(source.offer ?? "");
+  if (hasOwn(source, "monthlyBudget")) {
+    patch.monthlyBudget = String(source.monthlyBudget ?? "");
+  }
+  if (hasOwn(source, "primaryChannels")) {
+    patch.primaryChannels = normalizeLines(source.primaryChannels);
+  }
+  if (hasOwn(source, "competitors")) {
+    patch.competitors = normalizeLines(source.competitors);
+  }
+  if (hasOwn(source, "goals")) {
+    patch.goals = normalizeLines(source.goals);
+  }
+  if (hasOwn(source, "successMetrics")) {
+    patch.successMetrics = normalizeLines(source.successMetrics);
+  }
+  if (hasOwn(source, "status")) {
+    const status = String(source.status ?? "") as PilotStatus;
+    if (pilotStatuses.has(status)) {
+      patch.status = status;
+    }
+  }
+  if (hasOwn(source, "lastUpdatedAt")) {
+    patch.lastUpdatedAt = String(source.lastUpdatedAt ?? "");
+  }
+
+  return patch;
+}
+
+function extractSnapshotPatch(source: Record<string, unknown>): Record<string, unknown> {
+  const patch: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(source)) {
+    if (key === "pilot") continue;
+    if (pilotKeys.has(key)) continue;
+    patch[key] = value;
+  }
+
+  return patch;
+}
+
+function hasPilotPatch(source: NeejeePilotInput): boolean {
+  return Object.keys(source).length > 0;
+}
+
+export async function GET(request: NextRequest) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
+  const snapshot = await getWorkspacePilotControlSnapshotLive();
+  const pilot = getPilot();
 
   return NextResponse.json(
     {
       ok: true,
       workspaceDisplayName: getWorkspaceDisplayName(),
+      snapshot,
       pilot,
     },
-    { status: 201 },
+    {
+      status: 200,
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    },
+  );
+}
+
+export async function PUT(request: NextRequest) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
+  let body: unknown;
+
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "Invalid JSON body",
+      },
+      { status: 400 },
+    );
+  }
+
+  if (!isRecord(body)) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "Expected an object body",
+      },
+      { status: 400 },
+    );
+  }
+
+  const snapshotPatch = extractSnapshotPatch(body);
+  const explicitPilotPatch = isRecord(body.pilot) ? toPilotPatch(body.pilot) : {};
+  const topLevelPilotPatch = toPilotPatch(body);
+  const pilotPatch = hasPilotPatch(explicitPilotPatch)
+    ? explicitPilotPatch
+    : topLevelPilotPatch;
+
+  const snapshot =
+    Object.keys(snapshotPatch).length > 0
+      ? await saveWorkspacePilotControlSnapshotLive(snapshotPatch)
+      : await getWorkspacePilotControlSnapshotLive();
+
+  const pilot = hasPilotPatch(pilotPatch)
+    ? savePilot({
+        ...pilotPatch,
+        workspaceDisplayName:
+          pilotPatch.workspaceDisplayName ?? getWorkspaceDisplayName(),
+      })
+    : getPilot();
+
+  return NextResponse.json(
+    {
+      ok: true,
+      workspaceDisplayName: getWorkspaceDisplayName(),
+      snapshot,
+      pilot,
+    },
+    {
+      status: 200,
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    },
   );
 }
