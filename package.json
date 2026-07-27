@@ -41,7 +41,8 @@
                     "test:admin-landing-page-generator":  "vitest run tests/api/admin-landing-page-generator.test.ts",
                     "test:admin-landing-page-generate-route":  "vitest run tests/api/admin-landing-page-generate-route.test.ts",
                     "test:admin-landing-page-page":  "vitest run tests/api/admin-landing-page-page.test.ts",
-                    "test:admin-google-ads-store":  "vitest run tests/api/admin-google-ads-store.test.ts"
+                    "test:admin-google-ads-store":  "vitest run tests/api/admin-google-ads-store.test.ts",
+                    "test:admin-google-ads-generator":  "vitest run tests/api/admin-google-ads-generator.test.ts"
                 },
     "dependencies":  {
                          "@supabase/ssr":  "^0.6.1",
