@@ -54,7 +54,7 @@ describe("admin pilot store", () => {
     expect(pilot.workspaceDisplayName).toBe("Neejee Workspace");
   });
 
-  it("saves pilot arrays and refreshes lastUpdatedAt", async () => {
+  it("saves pilot arrays and refreshes lastUpdatedAt", () => {
     const before = getPilot().lastUpdatedAt;
 
     const saved = savePilot({
@@ -62,8 +62,7 @@ describe("admin pilot store", () => {
       website: "https://neejee.example",
       primaryChannels: ["seo", "meta-ads"],
       goals: "Qualified leads, Demo bookings",
-      successMetrics: "CPL
-CAC",
+      successMetrics: ["CPL", "CAC"],
       status: "in_progress",
     });
 
