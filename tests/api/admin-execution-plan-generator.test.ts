@@ -110,7 +110,7 @@ describe("execution-plan-generator", () => {
       messages: [
         {
           message:
-            "Hi Jordan — here is the rollout plan to turn more traffic into booked demos.",
+            "Hi Jordan â€” here is the rollout plan to turn more traffic into booked demos.",
         },
       ],
     });
@@ -138,7 +138,7 @@ describe("execution-plan-generator", () => {
       owners: input.owners ?? [],
       blockers: input.blockers ?? [],
       checklist: input.checklist ?? [],
-      notes: input.notes ?? "",
+      notes: input.notes ?? [],
     }));
 
     mocks.saveExecutionPlanDraft.mockImplementation((draft) => draft);
@@ -155,7 +155,9 @@ describe("execution-plan-generator", () => {
       status: "draft",
       campaignName: "Acme Health Consultation Push",
       launchWindow: "Next 14 days",
-      notes: expect.stringContaining("Primary goal: Book more consultations."),
+      notes: expect.arrayContaining([
+        expect.stringContaining("Primary goal: Book more consultations."),
+      ]),
     });
 
     expect(draft.milestones).toEqual(

@@ -361,7 +361,7 @@ export function buildExecutionPlanDraftFromPilot(pilotId = "pilot-demo") {
     smsProof[0] ? `SMS proof: ${smsProof[0]}.` : "",
     whatsappProof[0] ? `WhatsApp proof: ${whatsappProof[0]}.` : "",
     pickFirst(campaignSummaryRecord["notes"]),
-  ]).join(" ");
+  ]);
 
   const stableTimestamp = deriveTimestamp(
     campaignSummaryRecord,
