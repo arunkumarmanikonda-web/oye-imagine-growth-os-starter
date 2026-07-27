@@ -19,6 +19,9 @@ vi.mock("@/lib/admin/pilot-store", () => ({
 
 vi.mock("@/lib/admin/strategy-store", () => ({
   getStrategy: mocks.getStrategy,
+  getStrategyDraft: mocks.getStrategy,
+  getStrategyBrief: mocks.getStrategy,
+  getSelectedStrategy: mocks.getStrategy,
 }));
 
 vi.mock("@/lib/admin/landing-page-store", () => ({
@@ -110,7 +113,7 @@ describe("execution-plan-generator", () => {
       messages: [
         {
           message:
-            "Hi Jordan â€” here is the rollout plan to turn more traffic into booked demos.",
+            "Hi Jordan Ã¢â‚¬â€ here is the rollout plan to turn more traffic into booked demos.",
         },
       ],
     });

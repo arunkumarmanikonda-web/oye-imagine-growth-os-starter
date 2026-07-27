@@ -33,6 +33,13 @@ const getPilot = resolveGetter(pilotStore as Record<string, unknown>, [
   "getPilotById",
 ]);
 
+const getStrategy = resolveGetter(strategyStore, [
+  "getStrategy",
+  "getStrategyRecord",
+  "getStrategyBrief",
+  "getStrategyDraft",
+]);
+
 
 
 const getLandingPage = resolveGetter(
