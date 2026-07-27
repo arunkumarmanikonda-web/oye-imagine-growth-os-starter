@@ -1,4 +1,4 @@
-import { getPilot, type NeejeePilotRecord } from "@/lib/admin/pilot-store";
+import { getPilot } from "@/lib/admin/pilot-store";`r`nimport type { NeejeePilotRecord } from "@/lib/admin/pilot-schema";
 
 import { saveStrategyBrief } from "./strategy-store";
 import type {
