@@ -34,7 +34,8 @@
                     "test:admin-ops-page":  "vitest run tests/api/admin-ops-page.test.ts",
                     "test:admin-strategy-store":  "vitest run tests/api/admin-strategy-store.test.ts",
                     "test:admin-strategy-generator":  "vitest run tests/api/admin-strategy-generator.test.ts",
-                    "test:admin-strategy-generate-route":  "vitest run tests/api/admin-strategy-generate-route.test.ts"
+                    "test:admin-strategy-generate-route":  "vitest run tests/api/admin-strategy-generate-route.test.ts",
+                    "test:admin-strategy-page":  "vitest run tests/api/admin-strategy-page.test.ts"
                 },
     "dependencies":  {
                          "@supabase/ssr":  "^0.6.1",
