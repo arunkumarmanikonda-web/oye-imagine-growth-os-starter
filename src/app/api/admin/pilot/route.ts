@@ -1,76 +1,42 @@
-import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-route";
-import {
-  getWorkspacePilotControlSnapshotLive,
-  saveWorkspacePilotControlSnapshotLive,
-} from "@/lib/admin/workspace-live";
+import { NextResponse } from "next/server";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+import { type NeejeePilotInput } from "@/lib/admin/pilot-schema";
+import { getPilot, savePilot } from "@/lib/admin/pilot-store";
+import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object" && !Array.isArray(value);
+export async function GET() {
+  const pilot = getPilot();
+  const workspaceDisplayName = getWorkspaceDisplayName();
+
+  return NextResponse.json({
+    ok: true,
+    workspaceDisplayName,
+    pilot,
+  });
 }
 
-export async function GET(request: NextRequest) {
-  const unauthorized = requireAdmin(request);
-  if (unauthorized) return unauthorized;
-
-  const snapshot = await getWorkspacePilotControlSnapshotLive();
-
-  return NextResponse.json(
-    {
-      ok: true,
-      snapshot,
-    },
-    {
-      headers: {
-        "Cache-Control": "no-store",
-      },
-    }
-  );
-}
-
-export async function PUT(request: NextRequest) {
-  const unauthorized = requireAdmin(request);
-  if (unauthorized) return unauthorized;
-
-  let body: unknown;
+export async function POST(request: Request) {
+  let body: NeejeePilotInput = {};
 
   try {
-    body = await request.json();
+    const parsed = await request.json();
+    body =
+      parsed && typeof parsed === "object" ? (parsed as NeejeePilotInput) : {};
   } catch {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: "Invalid JSON body",
-      },
-      { status: 400 }
-    );
+    body = {};
   }
 
-  if (!isRecord(body)) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: "Expected an object body",
-      },
-      { status: 400 }
-    );
-  }
-
-  const snapshot = await saveWorkspacePilotControlSnapshotLive(body);
+  const pilot = savePilot({
+    ...body,
+    workspaceDisplayName: body.workspaceDisplayName ?? getWorkspaceDisplayName(),
+  });
 
   return NextResponse.json(
     {
       ok: true,
-      snapshot,
+      workspaceDisplayName: getWorkspaceDisplayName(),
+      pilot,
     },
-    {
-      status: 200,
-      headers: {
-        "Cache-Control": "no-store",
-      },
-    }
+    { status: 201 },
   );
 }
