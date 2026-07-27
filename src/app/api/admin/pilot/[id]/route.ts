@@ -5,12 +5,12 @@ import { getPilot, updatePilot } from "@/lib/admin/pilot-store";
 import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
 
 type RouteContext = {
-  params: Promise<{ id: string }> | { id: string };
+  params: Promise<{ id: string }>;
 };
 
 async function resolveId(context: RouteContext): Promise<string> {
-  const params = await context.params;
-  return params.id;
+  const { id } = await context.params;
+  return id;
 }
 
 export async function GET(_request: Request, context: RouteContext) {
