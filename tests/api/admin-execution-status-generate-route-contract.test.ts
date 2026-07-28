@@ -60,12 +60,12 @@ describe("admin execution status generate route contract cases", () => {
     });
   });
 
-  it("falls back to default generation when pilotId is blank after trimming", async () => {
+  it('falls back to "pilot-demo" when pilotId is blank after trimming', async () => {
     mocks.generateExecutionStatusDraft.mockReturnValue({
-      pilotId: "pilot-default",
+      pilotId: "pilot-demo",
       generatedAt: "2026-01-01T00:15:00.000Z",
       summary: {
-        pilotId: "pilot-default",
+        pilotId: "pilot-demo",
         campaignName: "Default rollout",
         overallStatus: "Execution active.",
         completedCount: 1,
@@ -73,10 +73,10 @@ describe("admin execution status generate route contract cases", () => {
         blockedCount: 0,
         upcomingCount: 1,
         lastUpdatedAt: "2026-01-01T00:15:00.000Z",
-        detailHref: "/admin/execution-status/pilot-default",
+        detailHref: "/admin/execution-status/pilot-demo",
       },
       draft: {
-        pilotId: "pilot-default",
+        pilotId: "pilot-demo",
         campaignName: "Default rollout",
         overallStatus: "Execution active.",
         generatedAt: "2026-01-01T00:15:00.000Z",
@@ -98,10 +98,10 @@ describe("admin execution status generate route contract cases", () => {
     expect(response.status).toBe(200);
     expect(mocks.generateExecutionStatusDraft).toHaveBeenCalledTimes(1);
     expect(mocks.generateExecutionStatusDraft).toHaveBeenCalledWith({
-      pilotId: undefined,
+      pilotId: "pilot-demo",
     });
     expect(json).toMatchObject({
-      pilotId: "pilot-default",
+      pilotId: "pilot-demo",
     });
   });
 });
