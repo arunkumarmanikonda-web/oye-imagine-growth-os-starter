@@ -1,5 +1,7 @@
 import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
+import { ExecutionStatusSummaryCard } from "./execution-status-summary-card";
 import Link from "next/link";
+import { ExecutionStatusSummaryCard } from "./execution-status-summary-card";
 import {
   getNeejeeOnboardingSnapshot,
   type ReadinessState,
@@ -143,7 +145,7 @@ export default function AdminSummaryPage() {
                   </span>
                 </div>
                 <p className="oi-stage-meta-line">
-                  Owner Ãƒâ€šÃ‚Â· {item.owner} Ãƒâ€šÃ‚Â· Due Ãƒâ€šÃ‚Â· {item.due}
+                  Owner ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {item.owner} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Due ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {item.due}
                 </p>
               </article>
             ))}
@@ -205,6 +207,7 @@ export default function AdminSummaryPage() {
           </ul>
         </article>
       </section>
-    </main>
+      <ExecutionStatusSummaryCard />
+</main>
   );
 }
