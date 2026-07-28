@@ -1,7 +1,7 @@
 import { getWorkspaceDisplayName, getWorkspaceSurfaceLabel } from "@/lib/admin/workspace-branding";
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { generateExecutionStatusDraft } from "@/lib/admin/execution-status-generator";
@@ -385,7 +385,7 @@ export default function AdminExecutionPage() {
                     Workspace ID
                   </p>
                   <p className="mt-2 break-all text-sm font-medium text-slate-800">
-                    {data?.workspaceId ?? "â”œÃ³Î“Ã©Â¼Î“Ã‡Â¥"}
+                    {data?.workspaceId ?? "Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼ÃŽâ€œÃƒâ€¡Ã‚Â¥"}
                   </p>
                 </div>
 
@@ -403,7 +403,7 @@ export default function AdminExecutionPage() {
                     Active channels
                   </p>
                   <p className="mt-2 text-sm font-medium text-slate-800">
-                    {channels.length > 0 ? channels.join(", ") : "â”œÃ³Î“Ã©Â¼Î“Ã‡Â¥"}
+                    {channels.length > 0 ? channels.join(", ") : "Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼ÃŽâ€œÃƒâ€¡Ã‚Â¥"}
                   </p>
                 </div>
               </div>
@@ -735,31 +735,31 @@ export default function AdminExecutionPage() {
                 <div>
                   <dt className="font-medium text-slate-500">Business</dt>
                   <dd className="text-slate-900">
-                    {String(company.businessName ?? "â”œÃ³Î“Ã©Â¼Î“Ã‡Â¥")}
+                    {String(company.businessName ?? "Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼ÃŽâ€œÃƒâ€¡Ã‚Â¥")}
                   </dd>
                 </div>
                 <div>
                   <dt className="font-medium text-slate-500">Industry</dt>
                   <dd className="text-slate-900">
-                    {String(company.industry ?? "â”œÃ³Î“Ã©Â¼Î“Ã‡Â¥")}
+                    {String(company.industry ?? "Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼ÃŽâ€œÃƒâ€¡Ã‚Â¥")}
                   </dd>
                 </div>
                 <div>
                   <dt className="font-medium text-slate-500">Primary objective</dt>
                   <dd className="text-slate-900">
-                    {String(goals.primaryObjective ?? "â”œÃ³Î“Ã©Â¼Î“Ã‡Â¥")}
+                    {String(goals.primaryObjective ?? "Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼ÃŽâ€œÃƒâ€¡Ã‚Â¥")}
                   </dd>
                 </div>
                 <div>
                   <dt className="font-medium text-slate-500">Revenue target</dt>
                   <dd className="text-slate-900">
-                    {String(goals.monthlyRevenueTarget ?? "â”œÃ³Î“Ã©Â¼Î“Ã‡Â¥")}
+                    {String(goals.monthlyRevenueTarget ?? "Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼ÃŽâ€œÃƒâ€¡Ã‚Â¥")}
                   </dd>
                 </div>
                 <div>
                   <dt className="font-medium text-slate-500">Channels</dt>
                   <dd className="text-slate-900">
-                    {channels.length > 0 ? channels.join(", ") : "â”œÃ³Î“Ã©Â¼Î“Ã‡Â¥"}
+                    {channels.length > 0 ? channels.join(", ") : "Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼ÃŽâ€œÃƒâ€¡Ã‚Â¥"}
                   </dd>
                 </div>
               </dl>
@@ -768,11 +768,11 @@ export default function AdminExecutionPage() {
             <div className="oi-card p-6">
               <h2 className="oi-section-title text-xl">Save checklist</h2>
               <ul className="mt-4 space-y-3 text-sm text-slate-700">
-                <li>â”œÃ³Î“Ã©Â¼â”¬Ã³ Headline and summary reflect the current strategy</li>
-                <li>â”œÃ³Î“Ã©Â¼â”¬Ã³ Focus areas are clear and limited</li>
-                <li>â”œÃ³Î“Ã©Â¼â”¬Ã³ Every task has an owner and a week/cadence</li>
-                <li>â”œÃ³Î“Ã©Â¼â”¬Ã³ Status values are current before review</li>
-                <li>â”œÃ³Î“Ã©Â¼â”¬Ã³ Notes capture blockers and operator context</li>
+                <li>Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼Ã¢â€Â¬ÃƒÂ³ Headline and summary reflect the current strategy</li>
+                <li>Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼Ã¢â€Â¬ÃƒÂ³ Focus areas are clear and limited</li>
+                <li>Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼Ã¢â€Â¬ÃƒÂ³ Every task has an owner and a week/cadence</li>
+                <li>Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼Ã¢â€Â¬ÃƒÂ³ Status values are current before review</li>
+                <li>Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼Ã¢â€Â¬ÃƒÂ³ Notes capture blockers and operator context</li>
               </ul>
             </div>
           </aside>
