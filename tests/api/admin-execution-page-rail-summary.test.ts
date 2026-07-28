@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { getExecutionStatusDetailRailSummary } from "@/app/admin/execution/page";
+import { getExecutionStatusDetailRailSummary } from "@/app/admin/execution/execution-status-detail-rail-summary";
 import type { ExecutionStatusDetailRailSummary } from "@/app/admin/execution/execution-status-detail-rail";
 
 describe("admin execution page rail summary helper", () => {
   it("returns null when execution status summary is absent", () => {
-    const result = getExecutionStatusDetailRailSummary({} as never);
+    const result = getExecutionStatusDetailRailSummary({});
 
     expect(result).toBeNull();
   });
@@ -25,7 +25,7 @@ describe("admin execution page rail summary helper", () => {
 
     const result = getExecutionStatusDetailRailSummary({
       executionStatusSummary: summary,
-    } as never);
+    });
 
     expect(result).toEqual(summary);
   });
