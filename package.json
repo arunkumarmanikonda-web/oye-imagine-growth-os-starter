@@ -65,7 +65,8 @@
                     "test:admin-execution-plan-generator":  "vitest run tests/api/admin-execution-plan-generator.test.ts",
                     "test:admin-execution-plan-generate-route":  "vitest run tests/api/admin-execution-plan-generate-route.test.ts",
                     "test:admin-execution-plan-page":  "vitest run tests/api/admin-execution-plan-page.test.ts",
-                    "test:admin-execution-status-store":  "vitest run tests/api/admin-execution-status-store.test.ts"
+                    "test:admin-execution-status-store":  "vitest run tests/api/admin-execution-status-store.test.ts",
+                    "test:admin-execution-status-generator":  "vitest run tests/api/admin-execution-status-generator.test.ts"
                 },
     "dependencies":  {
                          "@supabase/ssr":  "^0.6.1",
