@@ -1,3 +1,4 @@
+import { ExecutionStatusDetailRail } from "./execution-status-detail-rail";
 import { getWorkspaceDisplayName, getWorkspaceSurfaceLabel } from "@/lib/admin/workspace-branding";
 "use client";
 
@@ -283,7 +284,8 @@ export default function AdminExecutionPage() {
           </div>
         </section>
             <ExecutionStatusSummaryCard />
-    </main>
+      <ExecutionStatusDetailRail />
+</main>
     );
   }
 
@@ -306,7 +308,8 @@ export default function AdminExecutionPage() {
           </div>
         </section>
             <ExecutionStatusSummaryCard />
-    </main>
+      <ExecutionStatusDetailRail />
+</main>
     );
   }
 
@@ -385,7 +388,7 @@ export default function AdminExecutionPage() {
                     Workspace ID
                   </p>
                   <p className="mt-2 break-all text-sm font-medium text-slate-800">
-                    {data?.workspaceId ?? "Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼ÃŽâ€œÃƒâ€¡Ã‚Â¥"}
+                    {data?.workspaceId ?? "ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÆ’Ã‚Â³ÃƒÅ½Ã¢â‚¬Å“ÃƒÆ’Ã‚Â©Ãƒâ€šÃ‚Â¼ÃƒÅ½Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Â¡Ãƒâ€šÃ‚Â¥"}
                   </p>
                 </div>
 
@@ -403,7 +406,7 @@ export default function AdminExecutionPage() {
                     Active channels
                   </p>
                   <p className="mt-2 text-sm font-medium text-slate-800">
-                    {channels.length > 0 ? channels.join(", ") : "Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼ÃŽâ€œÃƒâ€¡Ã‚Â¥"}
+                    {channels.length > 0 ? channels.join(", ") : "ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÆ’Ã‚Â³ÃƒÅ½Ã¢â‚¬Å“ÃƒÆ’Ã‚Â©Ãƒâ€šÃ‚Â¼ÃƒÅ½Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Â¡Ãƒâ€šÃ‚Â¥"}
                   </p>
                 </div>
               </div>
@@ -735,31 +738,31 @@ export default function AdminExecutionPage() {
                 <div>
                   <dt className="font-medium text-slate-500">Business</dt>
                   <dd className="text-slate-900">
-                    {String(company.businessName ?? "Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼ÃŽâ€œÃƒâ€¡Ã‚Â¥")}
+                    {String(company.businessName ?? "ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÆ’Ã‚Â³ÃƒÅ½Ã¢â‚¬Å“ÃƒÆ’Ã‚Â©Ãƒâ€šÃ‚Â¼ÃƒÅ½Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Â¡Ãƒâ€šÃ‚Â¥")}
                   </dd>
                 </div>
                 <div>
                   <dt className="font-medium text-slate-500">Industry</dt>
                   <dd className="text-slate-900">
-                    {String(company.industry ?? "Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼ÃŽâ€œÃƒâ€¡Ã‚Â¥")}
+                    {String(company.industry ?? "ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÆ’Ã‚Â³ÃƒÅ½Ã¢â‚¬Å“ÃƒÆ’Ã‚Â©Ãƒâ€šÃ‚Â¼ÃƒÅ½Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Â¡Ãƒâ€šÃ‚Â¥")}
                   </dd>
                 </div>
                 <div>
                   <dt className="font-medium text-slate-500">Primary objective</dt>
                   <dd className="text-slate-900">
-                    {String(goals.primaryObjective ?? "Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼ÃŽâ€œÃƒâ€¡Ã‚Â¥")}
+                    {String(goals.primaryObjective ?? "ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÆ’Ã‚Â³ÃƒÅ½Ã¢â‚¬Å“ÃƒÆ’Ã‚Â©Ãƒâ€šÃ‚Â¼ÃƒÅ½Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Â¡Ãƒâ€šÃ‚Â¥")}
                   </dd>
                 </div>
                 <div>
                   <dt className="font-medium text-slate-500">Revenue target</dt>
                   <dd className="text-slate-900">
-                    {String(goals.monthlyRevenueTarget ?? "Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼ÃŽâ€œÃƒâ€¡Ã‚Â¥")}
+                    {String(goals.monthlyRevenueTarget ?? "ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÆ’Ã‚Â³ÃƒÅ½Ã¢â‚¬Å“ÃƒÆ’Ã‚Â©Ãƒâ€šÃ‚Â¼ÃƒÅ½Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Â¡Ãƒâ€šÃ‚Â¥")}
                   </dd>
                 </div>
                 <div>
                   <dt className="font-medium text-slate-500">Channels</dt>
                   <dd className="text-slate-900">
-                    {channels.length > 0 ? channels.join(", ") : "Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼ÃŽâ€œÃƒâ€¡Ã‚Â¥"}
+                    {channels.length > 0 ? channels.join(", ") : "ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÆ’Ã‚Â³ÃƒÅ½Ã¢â‚¬Å“ÃƒÆ’Ã‚Â©Ãƒâ€šÃ‚Â¼ÃƒÅ½Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Â¡Ãƒâ€šÃ‚Â¥"}
                   </dd>
                 </div>
               </dl>
@@ -768,17 +771,18 @@ export default function AdminExecutionPage() {
             <div className="oi-card p-6">
               <h2 className="oi-section-title text-xl">Save checklist</h2>
               <ul className="mt-4 space-y-3 text-sm text-slate-700">
-                <li>Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼Ã¢â€Â¬ÃƒÂ³ Headline and summary reflect the current strategy</li>
-                <li>Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼Ã¢â€Â¬ÃƒÂ³ Focus areas are clear and limited</li>
-                <li>Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼Ã¢â€Â¬ÃƒÂ³ Every task has an owner and a week/cadence</li>
-                <li>Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼Ã¢â€Â¬ÃƒÂ³ Status values are current before review</li>
-                <li>Ã¢â€Å“ÃƒÂ³ÃŽâ€œÃƒÂ©Ã‚Â¼Ã¢â€Â¬ÃƒÂ³ Notes capture blockers and operator context</li>
+                <li>ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÆ’Ã‚Â³ÃƒÅ½Ã¢â‚¬Å“ÃƒÆ’Ã‚Â©Ãƒâ€šÃ‚Â¼ÃƒÂ¢Ã¢â‚¬ÂÃ‚Â¬ÃƒÆ’Ã‚Â³ Headline and summary reflect the current strategy</li>
+                <li>ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÆ’Ã‚Â³ÃƒÅ½Ã¢â‚¬Å“ÃƒÆ’Ã‚Â©Ãƒâ€šÃ‚Â¼ÃƒÂ¢Ã¢â‚¬ÂÃ‚Â¬ÃƒÆ’Ã‚Â³ Focus areas are clear and limited</li>
+                <li>ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÆ’Ã‚Â³ÃƒÅ½Ã¢â‚¬Å“ÃƒÆ’Ã‚Â©Ãƒâ€šÃ‚Â¼ÃƒÂ¢Ã¢â‚¬ÂÃ‚Â¬ÃƒÆ’Ã‚Â³ Every task has an owner and a week/cadence</li>
+                <li>ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÆ’Ã‚Â³ÃƒÅ½Ã¢â‚¬Å“ÃƒÆ’Ã‚Â©Ãƒâ€šÃ‚Â¼ÃƒÂ¢Ã¢â‚¬ÂÃ‚Â¬ÃƒÆ’Ã‚Â³ Status values are current before review</li>
+                <li>ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÆ’Ã‚Â³ÃƒÅ½Ã¢â‚¬Å“ÃƒÆ’Ã‚Â©Ãƒâ€šÃ‚Â¼ÃƒÂ¢Ã¢â‚¬ÂÃ‚Â¬ÃƒÆ’Ã‚Â³ Notes capture blockers and operator context</li>
               </ul>
             </div>
           </aside>
         </div>
       </section>
           <ExecutionStatusSummaryCard />
-    </main>
+      <ExecutionStatusDetailRail />
+</main>
   );
 }
