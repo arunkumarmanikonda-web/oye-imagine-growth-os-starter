@@ -20,8 +20,12 @@ describe("admin execution-status generate route edge cases", () => {
       Object.assign(new Error("Pilot not found"), { code: "NOT_FOUND" })
     );
 
-    const request = new Request("http://localhost/api/admin/execution-status/generate?pilotId=pilot-missing", {
+    const request = new Request("http://localhost/api/admin/execution-status/generate", {
       method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ pilotId: "pilot-missing" }),
     });
 
     const response = await POST(request);
@@ -38,8 +42,12 @@ describe("admin execution-status generate route edge cases", () => {
       new Error("database offline")
     );
 
-    const request = new Request("http://localhost/api/admin/execution-status/generate?pilotId=pilot-123", {
+    const request = new Request("http://localhost/api/admin/execution-status/generate", {
       method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ pilotId: "pilot-123" }),
     });
 
     const response = await POST(request);
