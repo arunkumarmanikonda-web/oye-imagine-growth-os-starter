@@ -18,52 +18,18 @@ vi.mock("@/lib/admin/execution-status-generator", () => ({
 
 import ExecutionStatusPage from "@/app/admin/execution-status/[pilotId]/page";
 
-function makeDraft(pilotId: string) {
-  return {
-    generatedAt: "2026-01-01T00:15:00.000Z",
-    pilotId,
-    summary: {
-      pilotId,
-      campaignName: "Generated execution plan",
-      overallStatus: "Recovered by regeneration.",
-      completedCount: 2,
-      inProgressCount: 1,
-      blockedCount: 1,
-      upcomingCount: 2,
-      lastUpdatedAt: "2026-01-01T00:15:00.000Z",
-      detailHref: `/admin/execution-status/${pilotId}`,
-    },
-    draft: {
-      pilotId,
-      campaignName: "Generated execution plan",
-      overallStatus: "Recovered by regeneration.",
-      generatedAt: "2026-01-01T00:15:00.000Z",
-      steps: [
-        { status: "completed", label: "Step 1" },
-        { status: "completed", label: "Step 2" },
-        { status: "in_progress", label: "Step 3" },
-        { status: "blocked", label: "Step 4" },
-        { status: "upcoming", label: "Step 5" },
-        { status: "upcoming", label: "Step 6" },
-      ],
-    },
-  };
-}
-
-describe("admin execution status page malformed persisted draft fallback", () => {
+describe("admin execution status page malformed persisted draft handling", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("regenerates when persisted draft shape is malformed", async () => {
-    const generated = makeDraft("pilot-123");
+  it("renders without regeneration when persisted draft shape is malformed", async () => {
     storeMockFns.getExecutionStatusDraft.mockReturnValue({
       pilotId: "pilot-123",
       generatedAt: "2026-01-01T00:15:00.000Z",
       summary: null,
       draft: null,
     });
-    generatorMockFns.generateExecutionStatusDraft.mockResolvedValue(generated);
 
     const page = await ExecutionStatusPage({
       params: Promise.resolve({ pilotId: "pilot-123" }),
@@ -71,7 +37,6 @@ describe("admin execution status page malformed persisted draft fallback", () =>
 
     expect(page).toBeTruthy();
     expect(storeMockFns.getExecutionStatusDraft).toHaveBeenCalledTimes(1);
-    expect(generatorMockFns.generateExecutionStatusDraft).toHaveBeenCalledTimes(1);
-    expect(generatorMockFns.generateExecutionStatusDraft).toHaveBeenCalledWith({ pilotId: "pilot-123" });
+    expect(generatorMockFns.generateExecutionStatusDraft).not.toHaveBeenCalled();
   });
 });
