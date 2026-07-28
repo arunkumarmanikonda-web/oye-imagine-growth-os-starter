@@ -87,7 +87,7 @@ export function ExecutionStatusSummaryCard() {
           <h2 className="text-lg font-semibold text-slate-900">
             Execution status
           </h2>
-          <p className="text-sm text-slate-600">Loading execution status…</p>
+          <p className="text-sm text-slate-600">Loading execution statusâ€¦</p>
         </div>
       </section>
     );
@@ -136,7 +136,7 @@ export function ExecutionStatusSummaryCard() {
         </div>
 
         <Link
-          href={summary.detailHref}
+          href={summary.detailHref as `/admin/execution-status/${string}`}
           className="inline-flex items-center rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
         >
           View detail
