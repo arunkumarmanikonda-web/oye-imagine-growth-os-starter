@@ -1,9 +1,9 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
-import React, { useEffect, useMemo, useState } from "react";
 
-type ExecutionStatusSummary = {
+export type ExecutionStatusDetailRailSummary = {
   pilotId: string;
   campaignName: string;
   overallStatus: string;
@@ -15,10 +15,10 @@ type ExecutionStatusSummary = {
   detailHref: string;
 };
 
-type ViewState =
-  | { status: "loading" }
-  | { status: "error"; message: string }
-  | { status: "ready"; summary: ExecutionStatusSummary };
+type ExecutionStatusDetailRailProps = {
+  loading: boolean;
+  summary: ExecutionStatusDetailRailSummary | null;
+};
 
 function formatUtcTimestamp(value: string) {
   const date = new Date(value);
@@ -36,96 +36,42 @@ function formatUtcTimestamp(value: string) {
   return `${yyyy}-${mm}-${dd} ${hh}:${min} UTC`;
 }
 
-export function ExecutionStatusDetailRail() {
-  const [state, setState] = useState<ViewState>({ status: "loading" });
-
-  useEffect(() => {
-    let isActive = true;
-
-    async function loadSummary() {
-      try {
-        const response = await fetch("/api/admin/execution-status/summary", {
-          cache: "no-store",
-        });
-
-        const payload = (await response.json().catch(() => null)) as
-          | Partial<ExecutionStatusSummary>
-          | { error?: string }
-          | null;
-
-        if (!response.ok) {
-          throw new Error(
-            typeof payload === "object" && payload && "error" in payload && payload.error
-              ? payload.error
-              : `Request failed with status ${response.status}`
-          );
-        }
-
-        if (!isActive) {
-          return;
-        }
-
-        setState({
-          status: "ready",
-          summary: payload as ExecutionStatusSummary,
-        });
-      } catch (error) {
-        if (!isActive) {
-          return;
-        }
-
-        setState({
-          status: "error",
-          message: error instanceof Error ? error.message : "Unable to load execution status",
-        });
-      }
-    }
-
-    void loadSummary();
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
-
-  const counts = useMemo(() => {
-    if (state.status !== "ready") {
-      return [];
-    }
-
-    return [
-      { label: "Completed", value: state.summary.completedCount },
-      { label: "In progress", value: state.summary.inProgressCount },
-      { label: "Blocked", value: state.summary.blockedCount },
-      { label: "Upcoming", value: state.summary.upcomingCount },
-    ];
-  }, [state]);
-
-  if (state.status === "loading") {
+export function ExecutionStatusDetailRail({
+  loading,
+  summary,
+}: ExecutionStatusDetailRailProps) {
+  if (loading) {
     return (
       <section
         data-testid="execution-status-detail-rail-loading"
         className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
       >
         <p className="text-sm font-medium text-slate-500">Execution status detail</p>
-        <p className="mt-2 text-sm text-slate-600">Loading latest execution statusâ€¦</p>
+        <p className="mt-2 text-sm text-slate-600">Loading latest execution status…</p>
       </section>
     );
   }
 
-  if (state.status === "error") {
+  if (!summary) {
     return (
       <section
         data-testid="execution-status-detail-rail-unavailable"
         className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm"
       >
         <p className="text-sm font-semibold text-amber-900">Execution status detail unavailable</p>
-        <p className="mt-2 text-sm text-amber-800">{state.message}</p>
+        <p className="mt-2 text-sm text-amber-800">
+          Execution status summary is not available in the current hub payload.
+        </p>
       </section>
     );
   }
 
-  const { summary } = state;
+  const counts = [
+    { label: "Completed", value: summary.completedCount },
+    { label: "In progress", value: summary.inProgressCount },
+    { label: "Blocked", value: summary.blockedCount },
+    { label: "Upcoming", value: summary.upcomingCount },
+  ];
 
   return (
     <section

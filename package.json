@@ -73,7 +73,8 @@
     "test:admin-execution-page": "vitest run tests/api/admin-execution-page.test.ts",
     "test:admin-execution-status-route": "vitest run tests/api/admin-execution-status-route.test.ts",
     "test:admin-summary-page": "vitest run tests/api/admin-summary-page.test.ts",
-    "test:admin-execution-hub-detail-rail": "vitest run tests/api/admin-execution-hub-detail-rail.test.ts"
+    "test:admin-execution-hub-detail-rail": "vitest run tests/api/admin-execution-hub-detail-rail.test.ts",
+    "test:admin-execution-status-detail-rail": "vitest run tests/api/admin-execution-status-detail-rail.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
