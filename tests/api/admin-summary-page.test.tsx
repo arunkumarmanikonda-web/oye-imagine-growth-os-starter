@@ -89,6 +89,7 @@ describe("admin summary execution status card", () => {
     vi.mocked(fetch).mockImplementation(
       () =>
         new Promise(() => {
+          // intentionally unresolved
         }) as Promise<Response>,
     );
 

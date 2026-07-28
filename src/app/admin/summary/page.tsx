@@ -145,7 +145,7 @@ export default function AdminSummaryPage() {
                   </span>
                 </div>
                 <p className="oi-stage-meta-line">
-                  Owner ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {item.owner} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Due ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {item.due}
+                  Owner ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {item.owner} ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Due ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {item.due}
                 </p>
               </article>
             ))}
