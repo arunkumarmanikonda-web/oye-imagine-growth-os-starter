@@ -95,6 +95,33 @@ function getTenantOrThrow(tenantId: string): Tenant {
   return tenant
 }
 
+function getSubscriptionOrThrow(subscriptionId: string): Subscription {
+  const subscription = getState().subscriptions.find((item) => item.id === subscriptionId)
+  if (!subscription) {
+    throw new Error(`Subscription not found for id ${subscriptionId}`)
+  }
+
+  return subscription
+}
+
+function getContractOrThrow(contractId: string): Contract {
+  const contract = getState().contracts.find((item) => item.id === contractId)
+  if (!contract) {
+    throw new Error(`Contract not found for id ${contractId}`)
+  }
+
+  return contract
+}
+
+function getInvoiceOrThrow(invoiceId: string): Invoice {
+  const invoice = getState().invoices.find((item) => item.id === invoiceId)
+  if (!invoice) {
+    throw new Error(`Invoice not found for id ${invoiceId}`)
+  }
+
+  return invoice
+}
+
 function getMediaBalanceAccountOrThrow(tenantId: string): MediaBalanceAccount {
   const account = getState().mediaBalanceAccounts.find((item) => item.tenantId === tenantId)
   if (!account) {
@@ -663,6 +690,110 @@ export function resolveApprovalRequest(input: {
     mediaBalanceAccount: appliedAccount ? clone(appliedAccount) : undefined,
     ledgerEntry: appliedLedgerEntry ? clone(appliedLedgerEntry) : undefined,
   }
+}
+
+export function activateContract(input: {
+  contractId: string
+  activatedByUserId: string
+  effectiveAt?: string | null
+}): Contract {
+  const contract = getContractOrThrow(input.contractId)
+  const before = clone(contract)
+
+  if (contract.status === "active") {
+    throw new Error(`Contract ${contract.id} is already active`)
+  }
+
+  if (contract.status === "cancelled") {
+    throw new Error(`Cancelled contract ${contract.id} cannot be activated`)
+  }
+
+  contract.status = "active"
+  contract.effectiveAt = input.effectiveAt ?? nowIso()
+  contract.updatedAt = nowIso()
+
+  recordAuditEvent({
+    tenantId: contract.tenantId,
+    action: "commercial.contract.activated",
+    resourceType: "contract",
+    resourceId: contract.id,
+    beforeState: before,
+    afterState: clone(contract),
+    metadata: {
+      activatedByUserId: input.activatedByUserId,
+      effectiveAt: contract.effectiveAt,
+    },
+  })
+
+  return clone(contract)
+}
+
+export function markInvoicePaid(input: {
+  invoiceId: string
+  paidByUserId: string
+  paidAt?: string | null
+}): Invoice {
+  const invoice = getInvoiceOrThrow(input.invoiceId)
+  const before = clone(invoice)
+
+  if (invoice.status === "paid") {
+    throw new Error(`Invoice ${invoice.id} is already paid`)
+  }
+
+  if (invoice.status === "void") {
+    throw new Error(`Void invoice ${invoice.id} cannot be marked paid`)
+  }
+
+  invoice.status = "paid"
+  invoice.paidAt = input.paidAt ?? nowIso()
+  invoice.updatedAt = nowIso()
+
+  recordAuditEvent({
+    tenantId: invoice.tenantId,
+    action: "commercial.invoice.paid",
+    resourceType: "invoice",
+    resourceId: invoice.id,
+    beforeState: before,
+    afterState: clone(invoice),
+    metadata: {
+      paidByUserId: input.paidByUserId,
+      paidAt: invoice.paidAt,
+    },
+  })
+
+  return clone(invoice)
+}
+
+export function renewSubscription(input: {
+  subscriptionId: string
+  renewedByUserId: string
+  renewedAt?: string | null
+}): Subscription {
+  const subscription = getSubscriptionOrThrow(input.subscriptionId)
+  const before = clone(subscription)
+
+  if (subscription.status === "cancelled") {
+    throw new Error(`Cancelled subscription ${subscription.id} cannot be renewed`)
+  }
+
+  subscription.status = "active"
+  subscription.renewedAt = input.renewedAt ?? nowIso()
+  subscription.updatedAt = nowIso()
+
+  recordAuditEvent({
+    tenantId: subscription.tenantId,
+    action: "commercial.subscription.renewed",
+    resourceType: "subscription",
+    resourceId: subscription.id,
+    beforeState: before,
+    afterState: clone(subscription),
+    metadata: {
+      renewedByUserId: input.renewedByUserId,
+      renewedAt: subscription.renewedAt,
+    },
+  })
+
+  return clone(subscription)
 }
 
 export function getTenantCommercialSnapshot(tenantId: string): {
