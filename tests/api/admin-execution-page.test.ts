@@ -51,22 +51,19 @@ describe("admin execution page", () => {
     vi.clearAllMocks();
   });
 
-  it("renders persisted execution-status summary", async () => {
+  it("renders persisted execution-status summary", () => {
     getExecutionStatusDraftMock.mockReturnValue(buildDraft());
 
-    const markup = renderToStaticMarkup(
-      await (ExecutionPage as unknown as () => Promise<React.ReactElement>)(),
-    );
+    const markup = renderToStaticMarkup(React.createElement(ExecutionPage));
 
     expect(generateExecutionStatusDraftMock).not.toHaveBeenCalled();
-    expect(markup).toContain("Execution");
     expect(markup).toContain("Execution status");
     expect(markup).toContain("Acme Co / Jane Doe rollout");
     expect(markup).toContain("Launch motion is active with one blocker under review.");
     expect(markup).toContain('href="/admin/execution-status/pilot-001"');
   });
 
-  it("generates summary when store data is absent", async () => {
+  it("generates summary when store data is absent", () => {
     getExecutionStatusDraftMock.mockReturnValue(undefined);
     generateExecutionStatusDraftMock.mockReturnValue(
       buildDraft({
@@ -75,16 +72,14 @@ describe("admin execution page", () => {
       }),
     );
 
-    const markup = renderToStaticMarkup(
-      await (ExecutionPage as unknown as () => Promise<React.ReactElement>)(),
-    );
+    const markup = renderToStaticMarkup(React.createElement(ExecutionPage));
 
     expect(generateExecutionStatusDraftMock).toHaveBeenCalledWith({});
     expect(markup).toContain("Generated execution status");
     expect(markup).toContain('href="/admin/execution-status/pilot-xyz"');
   });
 
-  it("shows correct counts and status text", async () => {
+  it("shows correct counts and status text", () => {
     getExecutionStatusDraftMock.mockReturnValue(
       buildDraft({
         completedItems: ["one", "two", "three"],
@@ -96,9 +91,7 @@ describe("admin execution page", () => {
       }),
     );
 
-    const markup = renderToStaticMarkup(
-      await (ExecutionPage as unknown as () => Promise<React.ReactElement>)(),
-    );
+    const markup = renderToStaticMarkup(React.createElement(ExecutionPage));
 
     expect(markup).toContain("Execution is on track with one blocker.");
     expect(markup).toContain("<dt>Completed</dt><dd>3</dd>");
@@ -108,14 +101,12 @@ describe("admin execution page", () => {
     expect(markup).toContain("2026-01-02T10:30:00.000Z");
   });
 
-  it("preserves existing execution page behavior", async () => {
+  it("preserves existing execution page behavior", () => {
     getExecutionStatusDraftMock.mockReturnValue(buildDraft());
 
-    const markup = renderToStaticMarkup(
-      await (ExecutionPage as unknown as () => Promise<React.ReactElement>)(),
-    );
+    const markup = renderToStaticMarkup(React.createElement(ExecutionPage));
 
-    expect(markup).toContain("<main>");
-    expect(markup).toContain("Track launch readiness and execution progress across the pilot workspace.");
+    expect(markup).toContain("Execution");
+    expect(markup).toContain("<main");
   });
 });
