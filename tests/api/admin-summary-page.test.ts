@@ -1,6 +1,8 @@
+/** @vitest-environment jsdom */
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
 
 import { ExecutionStatusSummaryCard } from "@/app/admin/summary/execution-status-summary-card";
 
@@ -21,12 +23,28 @@ vi.mock("next/link", () => ({
     ),
 }));
 
+async function flushUi() {
+  await Promise.resolve();
+  await Promise.resolve();
+}
+
 describe("admin summary execution status card", () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn());
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await act(async () => {
+      root.unmount();
+    });
+
+    container.remove();
     vi.unstubAllGlobals();
     vi.clearAllMocks();
   });
@@ -47,23 +65,25 @@ describe("admin summary execution status card", () => {
       }),
     } as Response);
 
-    render(React.createElement(ExecutionStatusSummaryCard));
-
-    await waitFor(() => {
-      expect(
-        screen.getByTestId("execution-status-summary-card"),
-      ).toBeTruthy();
+    await act(async () => {
+      root.render(React.createElement(ExecutionStatusSummaryCard));
+      await flushUi();
     });
 
-    expect(screen.getByText("Neejee Activation Sprint")).toBeTruthy();
-    expect(screen.getByText("In progress")).toBeTruthy();
-    expect(screen.getByText("3")).toBeTruthy();
-    expect(screen.getByText("2")).toBeTruthy();
-    expect(screen.getByText("1")).toBeTruthy();
-    expect(screen.getByText("4")).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="execution-status-summary-card"]')
+    ).toBeTruthy();
 
-    const link = screen.getByRole("link", { name: "View detail" });
-    expect(link.getAttribute("href")).toBe("/admin/execution-status/pilot-123");
+    expect(container.textContent).toContain("Neejee Activation Sprint");
+    expect(container.textContent).toContain("In progress");
+    expect(container.textContent).toContain("3");
+    expect(container.textContent).toContain("2");
+    expect(container.textContent).toContain("1");
+    expect(container.textContent).toContain("4");
+
+    const link = container.querySelector('a[href="/admin/execution-status/pilot-123"]');
+    expect(link).toBeTruthy();
+    expect(link?.textContent).toContain("View detail");
   });
 
   it("renders an unavailable state when the endpoint fails", async () => {
@@ -73,31 +93,32 @@ describe("admin summary execution status card", () => {
       json: async () => ({ error: "Not found" }),
     } as Response);
 
-    render(React.createElement(ExecutionStatusSummaryCard));
-
-    await waitFor(() => {
-      expect(
-        screen.getByTestId("execution-status-summary-card-unavailable"),
-      ).toBeTruthy();
+    await act(async () => {
+      root.render(React.createElement(ExecutionStatusSummaryCard));
+      await flushUi();
     });
 
     expect(
-      screen.getByText(/Request failed with status 404/i),
+      container.querySelector('[data-testid="execution-status-summary-card-unavailable"]')
     ).toBeTruthy();
+
+    expect(container.textContent).toMatch(/Request failed with status 404/i);
   });
 
-  it("renders a loading state before data resolves", () => {
+  it("renders a loading state before data resolves", async () => {
     vi.mocked(fetch).mockImplementation(
       () =>
         new Promise(() => {
           // intentionally unresolved
-        }) as Promise<Response>,
+        }) as Promise<Response>
     );
 
-    render(React.createElement(ExecutionStatusSummaryCard));
+    await act(async () => {
+      root.render(React.createElement(ExecutionStatusSummaryCard));
+    });
 
     expect(
-      screen.getByTestId("execution-status-summary-card-loading"),
+      container.querySelector('[data-testid="execution-status-summary-card-loading"]')
     ).toBeTruthy();
   });
 });
