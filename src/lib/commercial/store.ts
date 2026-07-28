@@ -10,6 +10,8 @@ import type {
   CommercialState,
   Contract,
   FeatureEntitlement,
+  Invoice,
+  InvoiceLineItem,
   LedgerEntry,
   LegalEntity,
   MediaBalanceAccount,
@@ -45,6 +47,7 @@ function createInitialCommercialState(): CommercialState {
     featureEntitlements: [],
     subscriptions: [],
     contracts: [],
+    invoices: [],
     mediaBalanceAccounts: [],
     ledgerEntries: [],
     approvalPolicies: [],
@@ -174,6 +177,7 @@ export function seedNeejeeCommercialState(): {
   plan: Plan
   subscription: Subscription
   contract: Contract
+  invoice: Invoice
   mediaBalanceAccount: MediaBalanceAccount
   approvalPolicy: ApprovalPolicy
   featureEntitlements: FeatureEntitlement[]
@@ -189,6 +193,7 @@ export function seedNeejeeCommercialState(): {
     const workspace = state.workspaces.find((item) => item.tenantId === existingTenant.id)!
     const subscription = state.subscriptions.find((item) => item.tenantId === existingTenant.id)!
     const contract = state.contracts.find((item) => item.tenantId === existingTenant.id)!
+    const invoice = state.invoices.find((item) => item.tenantId === existingTenant.id)!
     const mediaBalanceAccount = state.mediaBalanceAccounts.find((item) => item.tenantId === existingTenant.id)!
     const approvalPolicy = state.approvalPolicies.find((item) => item.tenantId === existingTenant.id)!
     const plan = state.plans.find((item) => item.id === subscription.planId)!
@@ -203,6 +208,7 @@ export function seedNeejeeCommercialState(): {
       plan: clone(plan),
       subscription: clone(subscription),
       contract: clone(contract),
+      invoice: clone(invoice),
       mediaBalanceAccount: clone(mediaBalanceAccount),
       approvalPolicy: clone(approvalPolicy),
       featureEntitlements: clone(featureEntitlements),
@@ -322,6 +328,34 @@ export function seedNeejeeCommercialState(): {
     updatedAt: createdAt,
   }
 
+  const invoiceLineItems: InvoiceLineItem[] = [
+    {
+      id: createId("invoice_line"),
+      description: "Growth plan monthly subscription",
+      quantity: 1,
+      unitAmount: 75000,
+      lineTotal: 75000,
+    },
+  ]
+
+  const invoice: Invoice = {
+    id: createId("invoice"),
+    tenantId: tenant.id,
+    subscriptionId: subscription.id,
+    contractId: contract.id,
+    invoiceNumber: "INV-2026-0001",
+    status: "issued",
+    currency: "INR",
+    subtotal: 75000,
+    total: 75000,
+    issuedAt: createdAt,
+    dueAt: createdAt,
+    paidAt: null,
+    lineItems: invoiceLineItems,
+    createdAt,
+    updatedAt: createdAt,
+  }
+
   const mediaBalanceAccount: MediaBalanceAccount = {
     id: createId("mba"),
     tenantId: tenant.id,
@@ -352,6 +386,7 @@ export function seedNeejeeCommercialState(): {
   state.featureEntitlements.push(...featureEntitlements)
   state.subscriptions.push(subscription)
   state.contracts.push(contract)
+  state.invoices.push(invoice)
   state.mediaBalanceAccounts.push(mediaBalanceAccount)
   state.approvalPolicies.push(approvalPolicy)
 
@@ -369,6 +404,7 @@ export function seedNeejeeCommercialState(): {
       plan,
       subscription,
       contract,
+      invoice,
       mediaBalanceAccount,
       approvalPolicy,
       featureEntitlements,
@@ -387,6 +423,7 @@ export function seedNeejeeCommercialState(): {
     plan: clone(plan),
     subscription: clone(subscription),
     contract: clone(contract),
+    invoice: clone(invoice),
     mediaBalanceAccount: clone(mediaBalanceAccount),
     approvalPolicy: clone(approvalPolicy),
     featureEntitlements: clone(featureEntitlements),
@@ -436,6 +473,38 @@ export function getCommercialOverview(): CommercialOverview {
 
 export function listPendingApprovalRequests(): ApprovalRequest[] {
   return clone(getState().approvalRequests.filter((item) => item.status === "pending"))
+}
+
+export function listSubscriptions(tenantId?: string): Subscription[] {
+  const items = tenantId
+    ? getState().subscriptions.filter((item) => item.tenantId === tenantId)
+    : getState().subscriptions
+
+  return clone(items)
+}
+
+export function listContracts(tenantId?: string): Contract[] {
+  const items = tenantId
+    ? getState().contracts.filter((item) => item.tenantId === tenantId)
+    : getState().contracts
+
+  return clone(items)
+}
+
+export function listInvoices(tenantId?: string): Invoice[] {
+  const items = tenantId
+    ? getState().invoices.filter((item) => item.tenantId === tenantId)
+    : getState().invoices
+
+  return clone(items)
+}
+
+export function listLedgerEntries(tenantId?: string): LedgerEntry[] {
+  const items = tenantId
+    ? getState().ledgerEntries.filter((item) => item.tenantId === tenantId)
+    : getState().ledgerEntries
+
+  return clone(items)
 }
 
 export function requestMediaBalanceAdjustment(input: {
@@ -600,6 +669,9 @@ export function getTenantCommercialSnapshot(tenantId: string): {
   tenant: Tenant
   mediaBalanceAccount: MediaBalanceAccount | null
   pendingApprovalCount: number
+  subscriptions: Subscription[]
+  contracts: Contract[]
+  invoices: Invoice[]
   ledgerEntries: LedgerEntry[]
   auditEvents: AuditEvent[]
 } {
@@ -614,6 +686,9 @@ export function getTenantCommercialSnapshot(tenantId: string): {
     pendingApprovalCount: state.approvalRequests.filter(
       (item) => item.tenantId === tenantId && item.status === "pending",
     ).length,
+    subscriptions: clone(state.subscriptions.filter((item) => item.tenantId === tenantId)),
+    contracts: clone(state.contracts.filter((item) => item.tenantId === tenantId)),
+    invoices: clone(state.invoices.filter((item) => item.tenantId === tenantId)),
     ledgerEntries: clone(state.ledgerEntries.filter((item) => item.tenantId === tenantId)),
     auditEvents: clone(state.auditEvents.filter((item) => item.tenantId === tenantId)),
   }

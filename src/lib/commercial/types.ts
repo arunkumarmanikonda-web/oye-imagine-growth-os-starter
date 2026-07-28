@@ -2,6 +2,7 @@ export type CurrencyCode = "INR" | "USD"
 export type TenantStatus = "draft" | "active" | "suspended"
 export type SubscriptionStatus = "trialing" | "active" | "past_due" | "cancelled"
 export type ContractStatus = "draft" | "awaiting_signature" | "active" | "expired" | "cancelled"
+export type InvoiceStatus = "draft" | "issued" | "paid" | "void"
 export type ApprovalRequestStatus = "pending" | "approved" | "rejected"
 export type ApprovalDecisionValue = "approve" | "reject"
 export type LedgerEntryDirection = "credit" | "debit"
@@ -92,6 +93,32 @@ export interface Contract {
   contractType: "subscription_order" | "msa" | "sow"
   status: ContractStatus
   effectiveAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface InvoiceLineItem {
+  id: string
+  description: string
+  quantity: number
+  unitAmount: number
+  lineTotal: number
+}
+
+export interface Invoice {
+  id: string
+  tenantId: string
+  subscriptionId: string | null
+  contractId: string | null
+  invoiceNumber: string
+  status: InvoiceStatus
+  currency: CurrencyCode
+  subtotal: number
+  total: number
+  issuedAt: string | null
+  dueAt: string | null
+  paidAt: string | null
+  lineItems: InvoiceLineItem[]
   createdAt: string
   updatedAt: string
 }
@@ -196,6 +223,7 @@ export interface CommercialState {
   featureEntitlements: FeatureEntitlement[]
   subscriptions: Subscription[]
   contracts: Contract[]
+  invoices: Invoice[]
   mediaBalanceAccounts: MediaBalanceAccount[]
   ledgerEntries: LedgerEntry[]
   approvalPolicies: ApprovalPolicy[]
