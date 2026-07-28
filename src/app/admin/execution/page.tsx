@@ -1,3 +1,7 @@
+import { getExecutionStatusDraft } from "@/lib/admin/execution-status-store";
+import { generateExecutionStatusDraft } from "@/lib/admin/execution-status-generator";
+import Link from "next/link";
+import React from "react";
 import { getWorkspaceDisplayName, getWorkspaceSurfaceLabel } from "@/lib/admin/workspace-branding";
 "use client";
 
@@ -86,7 +90,27 @@ function priorityClasses(priority: TaskPriority) {
   }
 }
 
-export default function AdminExecutionPage() {
+
+async function loadExecutionStatusDraft() {
+  const storedDraft = await Promise.resolve(getExecutionStatusDraft());
+
+  if (storedDraft) {
+    return storedDraft;
+  }
+
+  return await Promise.resolve(generateExecutionStatusDraft({}));
+}
+
+function countExecutionStatusItems(items: unknown) {
+  return Array.isArray(items) ? items.filter(Boolean).length : 0;
+}
+export default async function AdminExecutionPage() {
+  const executionStatusDraft = await loadExecutionStatusDraft();
+  const executionStatusHref = `/admin/execution-status/${executionStatusDraft.pilotId}`;
+  const completedCount = countExecutionStatusItems(executionStatusDraft.completedItems);
+  const inProgressCount = countExecutionStatusItems(executionStatusDraft.inProgressItems);
+  const blockedCount = countExecutionStatusItems(executionStatusDraft.blockedItems);
+  const upcomingCount = countExecutionStatusItems(executionStatusDraft.upcomingItems);
   const [data, setData] = useState<ApiPayload | null>(null);
   const [plan, setPlan] = useState<ExecutionPlan>(emptyPlan);
   const [loading, setLoading] = useState(true);
@@ -230,7 +254,35 @@ export default function AdminExecutionPage() {
             </p>
           </div>
         </section>
-      </main>
+            <section>
+        <h2>Execution status</h2>
+        <p>{executionStatusDraft.campaignName}</p>
+        <p>{executionStatusDraft.overallStatus}</p>
+        <dl>
+          <div>
+            <dt>Completed</dt>
+            <dd>{completedCount}</dd>
+          </div>
+          <div>
+            <dt>In progress</dt>
+            <dd>{inProgressCount}</dd>
+          </div>
+          <div>
+            <dt>Blocked</dt>
+            <dd>{blockedCount}</dd>
+          </div>
+          <div>
+            <dt>Upcoming</dt>
+            <dd>{upcomingCount}</dd>
+          </div>
+          <div>
+            <dt>Last updated</dt>
+            <dd>{executionStatusDraft.lastUpdatedAt}</dd>
+          </div>
+        </dl>
+        <Link href={executionStatusHref}>Open execution status draft</Link>
+      </section>
+</main>
     );
   }
 
@@ -252,7 +304,35 @@ export default function AdminExecutionPage() {
             </button>
           </div>
         </section>
-      </main>
+            <section>
+        <h2>Execution status</h2>
+        <p>{executionStatusDraft.campaignName}</p>
+        <p>{executionStatusDraft.overallStatus}</p>
+        <dl>
+          <div>
+            <dt>Completed</dt>
+            <dd>{completedCount}</dd>
+          </div>
+          <div>
+            <dt>In progress</dt>
+            <dd>{inProgressCount}</dd>
+          </div>
+          <div>
+            <dt>Blocked</dt>
+            <dd>{blockedCount}</dd>
+          </div>
+          <div>
+            <dt>Upcoming</dt>
+            <dd>{upcomingCount}</dd>
+          </div>
+          <div>
+            <dt>Last updated</dt>
+            <dd>{executionStatusDraft.lastUpdatedAt}</dd>
+          </div>
+        </dl>
+        <Link href={executionStatusHref}>Open execution status draft</Link>
+      </section>
+</main>
     );
   }
 
@@ -331,7 +411,7 @@ export default function AdminExecutionPage() {
                     Workspace ID
                   </p>
                   <p className="mt-2 break-all text-sm font-medium text-slate-800">
-                    {data?.workspaceId ?? "â€”"}
+                    {data?.workspaceId ?? "Ã¢â‚¬â€"}
                   </p>
                 </div>
 
@@ -349,7 +429,7 @@ export default function AdminExecutionPage() {
                     Active channels
                   </p>
                   <p className="mt-2 text-sm font-medium text-slate-800">
-                    {channels.length > 0 ? channels.join(", ") : "â€”"}
+                    {channels.length > 0 ? channels.join(", ") : "Ã¢â‚¬â€"}
                   </p>
                 </div>
               </div>
@@ -681,31 +761,31 @@ export default function AdminExecutionPage() {
                 <div>
                   <dt className="font-medium text-slate-500">Business</dt>
                   <dd className="text-slate-900">
-                    {String(company.businessName ?? "â€”")}
+                    {String(company.businessName ?? "Ã¢â‚¬â€")}
                   </dd>
                 </div>
                 <div>
                   <dt className="font-medium text-slate-500">Industry</dt>
                   <dd className="text-slate-900">
-                    {String(company.industry ?? "â€”")}
+                    {String(company.industry ?? "Ã¢â‚¬â€")}
                   </dd>
                 </div>
                 <div>
                   <dt className="font-medium text-slate-500">Primary objective</dt>
                   <dd className="text-slate-900">
-                    {String(goals.primaryObjective ?? "â€”")}
+                    {String(goals.primaryObjective ?? "Ã¢â‚¬â€")}
                   </dd>
                 </div>
                 <div>
                   <dt className="font-medium text-slate-500">Revenue target</dt>
                   <dd className="text-slate-900">
-                    {String(goals.monthlyRevenueTarget ?? "â€”")}
+                    {String(goals.monthlyRevenueTarget ?? "Ã¢â‚¬â€")}
                   </dd>
                 </div>
                 <div>
                   <dt className="font-medium text-slate-500">Channels</dt>
                   <dd className="text-slate-900">
-                    {channels.length > 0 ? channels.join(", ") : "â€”"}
+                    {channels.length > 0 ? channels.join(", ") : "Ã¢â‚¬â€"}
                   </dd>
                 </div>
               </dl>
@@ -714,16 +794,44 @@ export default function AdminExecutionPage() {
             <div className="oi-card p-6">
               <h2 className="oi-section-title text-xl">Save checklist</h2>
               <ul className="mt-4 space-y-3 text-sm text-slate-700">
-                <li>â€¢ Headline and summary reflect the current strategy</li>
-                <li>â€¢ Focus areas are clear and limited</li>
-                <li>â€¢ Every task has an owner and a week/cadence</li>
-                <li>â€¢ Status values are current before review</li>
-                <li>â€¢ Notes capture blockers and operator context</li>
+                <li>Ã¢â‚¬Â¢ Headline and summary reflect the current strategy</li>
+                <li>Ã¢â‚¬Â¢ Focus areas are clear and limited</li>
+                <li>Ã¢â‚¬Â¢ Every task has an owner and a week/cadence</li>
+                <li>Ã¢â‚¬Â¢ Status values are current before review</li>
+                <li>Ã¢â‚¬Â¢ Notes capture blockers and operator context</li>
               </ul>
             </div>
           </aside>
         </div>
       </section>
-    </main>
+          <section>
+        <h2>Execution status</h2>
+        <p>{executionStatusDraft.campaignName}</p>
+        <p>{executionStatusDraft.overallStatus}</p>
+        <dl>
+          <div>
+            <dt>Completed</dt>
+            <dd>{completedCount}</dd>
+          </div>
+          <div>
+            <dt>In progress</dt>
+            <dd>{inProgressCount}</dd>
+          </div>
+          <div>
+            <dt>Blocked</dt>
+            <dd>{blockedCount}</dd>
+          </div>
+          <div>
+            <dt>Upcoming</dt>
+            <dd>{upcomingCount}</dd>
+          </div>
+          <div>
+            <dt>Last updated</dt>
+            <dd>{executionStatusDraft.lastUpdatedAt}</dd>
+          </div>
+        </dl>
+        <Link href={executionStatusHref}>Open execution status draft</Link>
+      </section>
+</main>
   );
 }
