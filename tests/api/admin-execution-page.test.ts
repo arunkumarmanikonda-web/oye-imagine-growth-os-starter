@@ -59,10 +59,11 @@ describe("admin execution page", () => {
     );
 
     expect(generateExecutionStatusDraftMock).not.toHaveBeenCalled();
+    expect(markup).toContain("Execution");
     expect(markup).toContain("Execution status");
     expect(markup).toContain("Acme Co / Jane Doe rollout");
     expect(markup).toContain("Launch motion is active with one blocker under review.");
-    expect(markup).toContain("/admin/execution-status/pilot-001");
+    expect(markup).toContain('href="/admin/execution-status/pilot-001"');
   });
 
   it("generates summary when store data is absent", async () => {
@@ -80,7 +81,7 @@ describe("admin execution page", () => {
 
     expect(generateExecutionStatusDraftMock).toHaveBeenCalledWith({});
     expect(markup).toContain("Generated execution status");
-    expect(markup).toContain("/admin/execution-status/pilot-xyz");
+    expect(markup).toContain('href="/admin/execution-status/pilot-xyz"');
   });
 
   it("shows correct counts and status text", async () => {
@@ -114,7 +115,7 @@ describe("admin execution page", () => {
       await (ExecutionPage as unknown as () => Promise<React.ReactElement>)(),
     );
 
-    expect(markup).toContain("Execution");
-    expect(markup).toContain("<main");
+    expect(markup).toContain("<main>");
+    expect(markup).toContain("Track launch readiness and execution progress across the pilot workspace.");
   });
 });
