@@ -13,11 +13,12 @@ vi.mock("next/link", () => ({
     href: string;
     children: React.ReactNode;
     className?: string;
-  }) => (
-    <a href={href} className={className}>
-      {children}
-    </a>
-  ),
+  }) =>
+    React.createElement(
+      "a",
+      { href, className },
+      children,
+    ),
 }));
 
 describe("admin summary execution status card", () => {
@@ -46,7 +47,7 @@ describe("admin summary execution status card", () => {
       }),
     } as Response);
 
-    render(<ExecutionStatusSummaryCard />);
+    render(React.createElement(ExecutionStatusSummaryCard));
 
     await waitFor(() => {
       expect(
@@ -72,7 +73,7 @@ describe("admin summary execution status card", () => {
       json: async () => ({ error: "Not found" }),
     } as Response);
 
-    render(<ExecutionStatusSummaryCard />);
+    render(React.createElement(ExecutionStatusSummaryCard));
 
     await waitFor(() => {
       expect(
@@ -93,7 +94,7 @@ describe("admin summary execution status card", () => {
         }) as Promise<Response>,
     );
 
-    render(<ExecutionStatusSummaryCard />);
+    render(React.createElement(ExecutionStatusSummaryCard));
 
     expect(
       screen.getByTestId("execution-status-summary-card-loading"),
