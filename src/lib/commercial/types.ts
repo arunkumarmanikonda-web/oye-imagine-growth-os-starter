@@ -141,7 +141,7 @@ export interface LedgerEntry {
   amount: number
   balanceAfter: number
   reason: string
-  source: "direct_adjustment" | "approval_adjustment"
+  source: "direct_adjustment" | "approval_adjustment" | "campaign_spend"
   createdByUserId: string
   createdAt: string
 }

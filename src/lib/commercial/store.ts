@@ -86,6 +86,12 @@ function recordAuditEvent(input: Omit<AuditEvent, "id" | "createdAt">): AuditEve
   return event
 }
 
+function ensurePositiveAmount(amount: number): void {
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new Error("amount must be a positive number.")
+  }
+}
+
 function getTenantOrThrow(tenantId: string): Tenant {
   const tenant = getState().tenants.find((item) => item.id === tenantId)
   if (!tenant) {
@@ -534,6 +540,14 @@ export function listLedgerEntries(tenantId?: string): LedgerEntry[] {
   return clone(items)
 }
 
+export function listMediaBalanceAccounts(tenantId?: string): MediaBalanceAccount[] {
+  const items = tenantId
+    ? getState().mediaBalanceAccounts.filter((item) => item.tenantId === tenantId)
+    : getState().mediaBalanceAccounts
+
+  return clone(items)
+}
+
 export function requestMediaBalanceAdjustment(input: {
   tenantId: string
   amount: number
@@ -794,6 +808,154 @@ export function renewSubscription(input: {
   })
 
   return clone(subscription)
+}
+
+export function reserveMediaBalance(input: {
+  tenantId: string
+  amount: number
+  reservedByUserId: string
+  reason: string
+}): MediaBalanceAccount {
+  ensurePositiveAmount(input.amount)
+  getTenantOrThrow(input.tenantId)
+
+  const account = getMediaBalanceAccountOrThrow(input.tenantId)
+  if (account.availableBalance < input.amount) {
+    throw new Error("Insufficient available media balance.")
+  }
+
+  const before = clone(account)
+
+  account.availableBalance -= input.amount
+  account.reservedBalance += input.amount
+  account.updatedAt = nowIso()
+
+  recordAuditEvent({
+    tenantId: input.tenantId,
+    action: "commercial.media_balance.reserved",
+    resourceType: "media_balance_account",
+    resourceId: account.id,
+    beforeState: before,
+    afterState: clone(account),
+    metadata: {
+      amount: input.amount,
+      reason: input.reason,
+      reservedByUserId: input.reservedByUserId,
+    },
+  })
+
+  return clone(account)
+}
+
+export function releaseMediaBalance(input: {
+  tenantId: string
+  amount: number
+  releasedByUserId: string
+  reason: string
+}): MediaBalanceAccount {
+  ensurePositiveAmount(input.amount)
+  getTenantOrThrow(input.tenantId)
+
+  const account = getMediaBalanceAccountOrThrow(input.tenantId)
+  if (account.reservedBalance < input.amount) {
+    throw new Error("Insufficient reserved media balance.")
+  }
+
+  const before = clone(account)
+
+  account.reservedBalance -= input.amount
+  account.availableBalance += input.amount
+  account.updatedAt = nowIso()
+
+  recordAuditEvent({
+    tenantId: input.tenantId,
+    action: "commercial.media_balance.released",
+    resourceType: "media_balance_account",
+    resourceId: account.id,
+    beforeState: before,
+    afterState: clone(account),
+    metadata: {
+      amount: input.amount,
+      reason: input.reason,
+      releasedByUserId: input.releasedByUserId,
+    },
+  })
+
+  return clone(account)
+}
+
+export function spendReservedMediaBalance(input: {
+  tenantId: string
+  amount: number
+  spentByUserId: string
+  reason: string
+}): { mediaBalanceAccount: MediaBalanceAccount; ledgerEntry: LedgerEntry } {
+  ensurePositiveAmount(input.amount)
+  getTenantOrThrow(input.tenantId)
+
+  const state = getState()
+  const account = getMediaBalanceAccountOrThrow(input.tenantId)
+  if (account.reservedBalance < input.amount) {
+    throw new Error("Insufficient reserved media balance.")
+  }
+
+  const before = clone(account)
+
+  account.reservedBalance -= input.amount
+  account.updatedAt = nowIso()
+
+  const ledgerEntry: LedgerEntry = {
+    id: createId("ledger"),
+    tenantId: input.tenantId,
+    mediaBalanceAccountId: account.id,
+    direction: "debit",
+    amount: input.amount,
+    balanceAfter: account.availableBalance,
+    reason: input.reason,
+    source: "campaign_spend",
+    createdByUserId: input.spentByUserId,
+    createdAt: nowIso(),
+  }
+
+  state.ledgerEntries.push(ledgerEntry)
+
+  recordAuditEvent({
+    tenantId: input.tenantId,
+    action: "commercial.media_balance.spent",
+    resourceType: "media_balance_account",
+    resourceId: account.id,
+    beforeState: before,
+    afterState: clone(account),
+    metadata: {
+      amount: input.amount,
+      reason: input.reason,
+      spentByUserId: input.spentByUserId,
+      ledgerEntryId: ledgerEntry.id,
+    },
+  })
+
+  return {
+    mediaBalanceAccount: clone(account),
+    ledgerEntry: clone(ledgerEntry),
+  }
+}
+
+export function getMediaBalanceAccountSnapshot(tenantId: string): {
+  tenant: Tenant
+  mediaBalanceAccount: MediaBalanceAccount
+  ledgerEntries: LedgerEntry[]
+  auditEvents: AuditEvent[]
+} {
+  const tenant = getTenantOrThrow(tenantId)
+  const state = getState()
+  const mediaBalanceAccount = getMediaBalanceAccountOrThrow(tenantId)
+
+  return {
+    tenant: clone(tenant),
+    mediaBalanceAccount: clone(mediaBalanceAccount),
+    ledgerEntries: clone(state.ledgerEntries.filter((item) => item.tenantId === tenantId)),
+    auditEvents: clone(state.auditEvents.filter((item) => item.tenantId === tenantId)),
+  }
 }
 
 export function getTenantCommercialSnapshot(tenantId: string): {
