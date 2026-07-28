@@ -2,6 +2,31 @@ import { NextResponse } from "next/server";
 import { generateExecutionStatusDraft } from "@/lib/admin/execution-status-generator";
 import { getExecutionStatusDraft } from "@/lib/admin/execution-status-store";
 
+function executionStatusDraftMatchesPilotId(
+  value: unknown,
+  pilotId: string,
+): boolean {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const record = value as {
+    pilotId?: unknown;
+    summary?: {
+      pilotId?: unknown;
+    } | null;
+    draft?: {
+      pilotId?: unknown;
+    } | null;
+  };
+
+  return (
+    record.pilotId === pilotId ||
+    record.summary?.pilotId === pilotId ||
+    record.draft?.pilotId === pilotId
+  );
+}
+
 function countItems(items: unknown) {
   return Array.isArray(items) ? items.filter(Boolean).length : 0;
 }

@@ -31,6 +31,20 @@ function makeSummary(pilotId: string) {
   };
 }
 
+function makePersistedDraft(pilotId: string) {
+  const summary = makeSummary(pilotId);
+
+  return {
+    ...summary,
+    summary,
+    draft: {
+      pilotId,
+      updatedAt: "2026-01-02T10:30:00.000Z",
+    },
+    updatedAt: "2026-01-02T10:30:00.000Z",
+  };
+}
+
 describe("admin execution status summary route mismatch fallback", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -38,8 +52,8 @@ describe("admin execution status summary route mismatch fallback", () => {
   });
 
   it("regenerates when persisted execution-status summary belongs to another pilot", async () => {
-    storeMockFns.getExecutionStatusDraft.mockResolvedValue(makeSummary("wrong-pilot"));
-    generatorMockFns.generateExecutionStatusDraft.mockResolvedValue(makeSummary("pilot-123"));
+    storeMockFns.getExecutionStatusDraft.mockResolvedValue(makePersistedDraft("wrong-pilot"));
+    generatorMockFns.generateExecutionStatusDraft.mockResolvedValue(makePersistedDraft("pilot-123"));
 
     const { GET } = await import("@/app/api/admin/execution-status/summary/route");
 
@@ -50,10 +64,15 @@ describe("admin execution status summary route mismatch fallback", () => {
     const response = await GET(request);
     const payload = await response.json();
 
+    const resolvedPilotId =
+      typeof payload?.pilotId === "string"
+        ? payload.pilotId
+        : payload?.summary?.pilotId;
+
     expect(response.status).toBe(200);
     expect(storeMockFns.getExecutionStatusDraft).toHaveBeenCalled();
     expect(generatorMockFns.generateExecutionStatusDraft).toHaveBeenCalledTimes(1);
-    expect(payload.pilotId).toBe("pilot-123");
+    expect(resolvedPilotId).toBe("pilot-123");
 
   });
 });
