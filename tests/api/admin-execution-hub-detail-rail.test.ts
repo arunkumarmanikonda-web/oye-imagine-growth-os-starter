@@ -16,9 +16,8 @@ vi.mock("@/app/admin/execution/execution-status-detail-rail", () => ({
 import AdminExecutionPage from "@/app/admin/execution/page";
 
 describe("admin execution page detail rail", () => {
-  it("renders the execution-status detail rail once", async () => {
-    const page = await AdminExecutionPage();
-    const html = renderToStaticMarkup(page);
+  it("renders the execution-status detail rail once", () => {
+    const html = renderToStaticMarkup(React.createElement(AdminExecutionPage));
 
     expect(html).toContain('data-testid="execution-status-detail-rail"');
     expect(html).toContain("Execution status detail rail");

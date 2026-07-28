@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 type ExecutionStatusSummary = {
   pilotId: string;
@@ -108,7 +108,7 @@ export function ExecutionStatusDetailRail() {
         className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
       >
         <p className="text-sm font-medium text-slate-500">Execution status detail</p>
-        <p className="mt-2 text-sm text-slate-600">Loading latest execution status…</p>
+        <p className="mt-2 text-sm text-slate-600">Loading latest execution statusâ€¦</p>
       </section>
     );
   }
