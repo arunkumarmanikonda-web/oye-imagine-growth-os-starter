@@ -27,7 +27,7 @@ function makeSummary(pilotId: string) {
     blockedCount: 0,
     upcomingCount: 3,
     lastUpdatedAt: "2026-01-02T10:30:00.000Z",
-    detailHref: \/admin/execution-status/\\,
+    detailHref: "/admin/execution-status/" + pilotId,
   };
 }
 
@@ -48,9 +48,12 @@ describe("admin execution status summary route mismatch fallback", () => {
     );
 
     const response = await GET(request);
+    const payload = await response.json();
 
     expect(response.status).toBe(200);
     expect(storeMockFns.getExecutionStatusDraft).toHaveBeenCalled();
     expect(generatorMockFns.generateExecutionStatusDraft).toHaveBeenCalledTimes(1);
+    expect(payload.pilotId).toBe("pilot-123");
+
   });
 });
