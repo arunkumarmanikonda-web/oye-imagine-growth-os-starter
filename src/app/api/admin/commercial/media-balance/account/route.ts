@@ -1,28 +1,79 @@
-import { NextResponse } from "next/server"
+import { NextResponse } from 'next/server';
+import {
+  getCommercialPersistenceMode,
+  getMediaBalanceAccountSnapshotRuntime,
+} from '@/lib/commercial/runtime';
+import { getMediaBalanceRuntimeState } from '@/lib/commercial/media-balance-runtime-state';
 
-import { getMediaBalanceAccountSnapshot } from "@/lib/commercial/store"
+type JsonObject = Record<string, unknown>;
+
+function asObject(value: unknown): JsonObject {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as JsonObject)
+    : {};
+}
+
+function asArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
+function readString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
+}
+
+function getTenantId(request: Request): string | undefined {
+  const url = new URL(request.url);
+  return readString(url.searchParams.get('tenantId'));
+}
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const tenantId = searchParams.get("tenantId")?.trim() ?? ""
-
-  if (!tenantId) {
-    return NextResponse.json(
-      { error: "tenantId is required." },
-      { status: 400 },
-    )
-  }
-
   try {
-    return NextResponse.json(getMediaBalanceAccountSnapshot(tenantId))
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unable to load media balance account."
+    const tenantId = getTenantId(request);
 
-    if (message.includes("not found")) {
-      return NextResponse.json({ error: message }, { status: 404 })
+    if (!tenantId) {
+      return NextResponse.json({ error: 'tenantId is required.' }, { status: 400 });
     }
 
-    return NextResponse.json({ error: message }, { status: 500 })
+    const snapshot = await getMediaBalanceAccountSnapshotRuntime(tenantId);
+    const snapshotObject = asObject(snapshot);
+
+    const baseAccount = asObject(
+      snapshotObject.mediaBalanceAccount ?? snapshotObject.account ?? snapshotObject,
+    );
+
+    const reservations = asArray<JsonObject>(
+      snapshotObject.reservations ??
+      snapshotObject.mediaBalanceReservations ??
+      baseAccount.reservations,
+    );
+
+    const baseLedgerEntries = asArray<JsonObject>(
+      snapshotObject.ledgerEntries ??
+      snapshotObject.mediaBalanceLedgerEntries ??
+      baseAccount.ledgerEntries,
+    );
+
+    const runtimeState = getMediaBalanceRuntimeState(tenantId);
+
+    const mediaBalanceAccount = runtimeState?.mediaBalanceAccount
+      ? { ...baseAccount, ...runtimeState.mediaBalanceAccount }
+      : baseAccount;
+
+    const ledgerEntries = runtimeState?.ledgerEntries ?? baseLedgerEntries;
+
+    return NextResponse.json(
+      {
+        ok: true,
+        mode: getCommercialPersistenceMode(),
+        mediaBalanceAccount,
+        reservations,
+        ledgerEntries,
+      },
+      { status: 200 },
+    );
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Unexpected media-balance account error.';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

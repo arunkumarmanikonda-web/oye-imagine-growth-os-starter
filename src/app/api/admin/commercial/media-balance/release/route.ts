@@ -1,68 +1,99 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from 'next/server';
 
-import { releaseMediaBalance } from "@/lib/commercial/store"
+import {
+  getCommercialPersistenceMode,
+  releaseMediaBalanceRuntime,
+} from '@/lib/commercial/runtime';
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value)
-}
-
-async function readJsonObject(request: Request): Promise<Record<string, unknown>> {
-  const value: unknown = await request.json()
-  if (!isRecord(value)) {
-    throw new Error("Request body must be a JSON object.")
+function asRecord(value: unknown): Record<string, unknown> {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
   }
 
-  return value
+  return {};
 }
 
-export async function POST(request: Request) {
+function asNumber(value: unknown): number {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string' && value.trim() !== '') return Number(value);
+  return Number.NaN;
+}
+
+function normalizeMediaBalanceAccount(value: unknown): Record<string, unknown> {
+  const root = asRecord(value);
+  const candidate = Object.keys(asRecord(root.mediaBalanceAccount)).length > 0
+    ? asRecord(root.mediaBalanceAccount)
+    : Object.keys(asRecord(root.account)).length > 0
+      ? asRecord(root.account)
+      : root;
+
+  const availableBalance = Number(candidate.availableBalance ?? candidate.available ?? 0);
+  const reservedBalance = Number(candidate.reservedBalance ?? candidate.reserved ?? 0);
+  const spentBalance = Number(candidate.spentBalance ?? candidate.spent ?? 0);
+
+  return {
+    ...candidate,
+    available: availableBalance,
+    reserved: reservedBalance,
+    spent: spentBalance,
+    availableBalance,
+    reservedBalance,
+    spentBalance,
+  };
+}
+
+function buildOperationKey(explicitKey: unknown, tenantId: string, prefix: string): string {
+  if (typeof explicitKey === 'string' && explicitKey.trim().length > 0) {
+    return explicitKey.trim();
+  }
+
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `${prefix}:${tenantId}:${crypto.randomUUID()}`;
+  }
+
+  return `${prefix}:${tenantId}:${Date.now()}`;
+}
+
+export async function POST(request: NextRequest) {
+  const rawBody = await request.json().catch(() => null);
+  const body = asRecord(rawBody);
+
+  if (Object.keys(body).length === 0) {
+    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+  }
+
+  const tenantId = typeof body.tenantId === 'string' ? body.tenantId.trim() : '';
+  if (!tenantId) {
+    return NextResponse.json({ error: 'tenantId is required' }, { status: 400 });
+  }
+
+  const amount = asNumber(body.amount);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return NextResponse.json({ error: 'amount must be positive' }, { status: 400 });
+  }
+
   try {
-    const body = await readJsonObject(request)
-    const tenantId = typeof body.tenantId === "string" ? body.tenantId.trim() : ""
-    const amount = typeof body.amount === "number" ? body.amount : Number.NaN
-    const releasedByUserId =
-      typeof body.releasedByUserId === "string" && body.releasedByUserId.trim()
-        ? body.releasedByUserId.trim()
-        : "system"
-    const reason =
-      typeof body.reason === "string" && body.reason.trim()
-        ? body.reason.trim()
-        : "Release media balance"
-
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "tenantId is required." },
-        { status: 400 },
-      )
-    }
-
-    if (!Number.isFinite(amount) || amount <= 0) {
-      return NextResponse.json(
-        { error: "amount must be a positive number." },
-        { status: 400 },
-      )
-    }
-
-    const mediaBalanceAccount = releaseMediaBalance({
+    const raw = await releaseMediaBalanceRuntime({
       tenantId,
       amount,
-      releasedByUserId,
-      reason,
-    })
+      currency: typeof body.currency === 'string' && body.currency.trim() ? body.currency.trim() : 'INR',
+      operationKey: buildOperationKey(body.operationKey, tenantId, 'release'),
+      actorId: typeof body.actorId === 'string' ? body.actorId : undefined,
+      reference: typeof body.reference === 'string' ? body.reference : undefined,
+      payload: asRecord(body.payload),
+    });
 
-    return NextResponse.json({ mediaBalanceAccount })
+    const root = asRecord(raw);
+    const mediaBalanceAccount = normalizeMediaBalanceAccount(raw);
+
+    return NextResponse.json({
+      ...root,
+      mediaBalanceAccount,
+      mode: getCommercialPersistenceMode(),
+    });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unable to release media balance."
-
-    if (message.includes("Insufficient reserved media balance")) {
-      return NextResponse.json({ error: message }, { status: 409 })
-    }
-
-    if (message.includes("not found")) {
-      return NextResponse.json({ error: message }, { status: 404 })
-    }
-
-    return NextResponse.json({ error: message }, { status: 500 })
+    const message = error instanceof Error ? error.message : 'Failed to release media balance';
+    const status = /insufficient/i.test(message) ? 409 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }
