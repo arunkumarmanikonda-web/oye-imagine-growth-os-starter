@@ -7,14 +7,8 @@ type RouteParams = {
 };
 
 type PageProps = {
-  params: RouteParams | Promise<RouteParams>;
+  params: Promise<RouteParams>;
 };
-
-async function resolveRouteParams(
-  params: RouteParams | Promise<RouteParams>,
-): Promise<RouteParams> {
-  return await Promise.resolve(params);
-}
 
 async function loadExecutionStatusDraft(pilotId: string) {
   const storedDraft = await Promise.resolve(getExecutionStatusDraft());
@@ -74,7 +68,7 @@ function renderNotes(notes: unknown) {
 }
 
 export default async function ExecutionStatusPage({ params }: PageProps) {
-  const { pilotId } = await resolveRouteParams(params);
+  const { pilotId } = await params;
   const draft = await loadExecutionStatusDraft(pilotId);
 
   return (

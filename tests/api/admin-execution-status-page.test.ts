@@ -11,16 +11,24 @@ vi.mock("@/lib/admin/execution-status-generator", () => ({
 }));
 
 vi.mock("@/app/admin/execution-status/[pilotId]/regenerate-button", () => ({
-  RegenerateButton: ({ pilotId }: { pilotId: string }) => (
-    <button data-testid="regenerate-button" data-pilot-id={pilotId}>
-      Regenerate draft
-    </button>
-  ),
-  default: ({ pilotId }: { pilotId: string }) => (
-    <button data-testid="regenerate-button" data-pilot-id={pilotId}>
-      Regenerate draft
-    </button>
-  ),
+  RegenerateButton: ({ pilotId }: { pilotId: string }) =>
+    React.createElement(
+      "button",
+      {
+        "data-testid": "regenerate-button",
+        "data-pilot-id": pilotId,
+      },
+      "Regenerate draft",
+    ),
+  default: ({ pilotId }: { pilotId: string }) =>
+    React.createElement(
+      "button",
+      {
+        "data-testid": "regenerate-button",
+        "data-pilot-id": pilotId,
+      },
+      "Regenerate draft",
+    ),
 }));
 
 import ExecutionStatusPage from "@/app/admin/execution-status/[pilotId]/page";
@@ -61,7 +69,7 @@ describe("admin execution status page", () => {
 
     const markup = renderToStaticMarkup(
       await ExecutionStatusPage({
-        params: { pilotId: "pilot-123" },
+        params: Promise.resolve({ pilotId: "pilot-123" }),
       }),
     );
 
@@ -89,7 +97,7 @@ describe("admin execution status page", () => {
 
     const markup = renderToStaticMarkup(
       await ExecutionStatusPage({
-        params: { pilotId: "pilot-456" },
+        params: Promise.resolve({ pilotId: "pilot-456" }),
       }),
     );
 
@@ -116,7 +124,7 @@ describe("admin execution status page", () => {
 
     const markup = renderToStaticMarkup(
       await ExecutionStatusPage({
-        params: { pilotId: "pilot-789" },
+        params: Promise.resolve({ pilotId: "pilot-789" }),
       }),
     );
 
