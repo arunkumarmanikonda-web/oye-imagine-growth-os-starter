@@ -8,7 +8,7 @@ type RouteParams = {
 };
 
 type RouteContext = {
-  params: Promise<RouteParams> | RouteParams;
+  params: Promise<RouteParams>;
 };
 
 function isMissingPilotError(error: unknown) {
@@ -30,7 +30,7 @@ async function loadExecutionStatusDraft(pilotId: string) {
 }
 
 export async function GET(_request: Request, context: RouteContext) {
-  const { pilotId } = await Promise.resolve(context.params);
+  const { pilotId } = await context.params;
 
   if (!pilotId?.trim()) {
     return NextResponse.json(
