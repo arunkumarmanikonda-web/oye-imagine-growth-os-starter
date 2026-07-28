@@ -70,12 +70,21 @@ function isMissingPilotError(error: unknown) {
   );
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const storedDraft = await Promise.resolve(getExecutionStatusDraft());
+    const pilotId = new URL(request.url).searchParams.get("pilotId");
+
+    const storedDraftCandidate = await Promise.resolve(getExecutionStatusDraft());
+    const storedDraft =
+      pilotId && !executionStatusDraftMatchesPilotId(storedDraftCandidate, pilotId)
+        ? null
+        : storedDraftCandidate;
+
     const draft =
       storedDraft ??
-      (await Promise.resolve(generateExecutionStatusDraft({})));
+      (await Promise.resolve(
+        generateExecutionStatusDraft(pilotId ? { pilotId } : {}),
+      ));
 
     return NextResponse.json(buildSummary(draft));
   } catch (error) {

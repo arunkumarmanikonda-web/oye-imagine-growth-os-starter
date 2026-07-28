@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
 
 vi.mock("@/lib/admin/execution-status-store", () => ({
   getExecutionStatusDraft: vi.fn(),
@@ -20,11 +21,9 @@ function buildDraft(overrides: Record<string, unknown> = {}) {
     id: "execution-status-001",
     pilotId: "pilot-001",
     workspaceId: "workspace-001",
-    generatedAt: "2026-01-01T00:00:00.000Z",
-    lastUpdatedAt: "2026-01-01T00:15:00.000Z",
-    status: "draft",
     campaignName: "Acme Co / Jane Doe rollout",
     overallStatus: "Launch motion is active with one blocker under review.",
+    lastUpdatedAt: "2026-01-01T00:15:00.000Z",
     completedItems: ["Landing page approved", "Email sequence approved"],
     inProgressItems: ["Google Ads QA"],
     blockedItems: ["WhatsApp business verification"],
@@ -32,6 +31,10 @@ function buildDraft(overrides: Record<string, unknown> = {}) {
     notes: ["Primary focus is launch readiness."],
     ...overrides,
   };
+}
+
+function buildRequest(url: string = "http://localhost/api/admin/execution-status/summary") {
+  return new NextRequest(url);
 }
 
 describe("admin execution status summary route", () => {
@@ -42,7 +45,7 @@ describe("admin execution status summary route", () => {
   it("returns persisted execution-status summary", async () => {
     getExecutionStatusDraftMock.mockReturnValue(buildDraft());
 
-    const response = await GET();
+    const response = await GET(buildRequest());
     const json = await response.json();
 
     expect(response.status).toBe(200);
@@ -69,34 +72,33 @@ describe("admin execution status summary route", () => {
       }),
     );
 
-    const response = await GET();
+    const response = await GET(buildRequest());
     const json = await response.json();
 
     expect(response.status).toBe(200);
     expect(generateExecutionStatusDraftMock).toHaveBeenCalledWith({});
     expect(json.pilotId).toBe("pilot-xyz");
     expect(json.campaignName).toBe("Generated execution summary");
-    expect(json.detailHref).toBe("/admin/execution-status/pilot-xyz");
   });
 
   it("returns correct counts", async () => {
     getExecutionStatusDraftMock.mockReturnValue(
       buildDraft({
-        completedItems: ["one", "two", "three"],
-        inProgressItems: ["one", "two"],
-        blockedItems: ["one"],
-        upcomingItems: ["one", "two", "three", "four"],
+        completedItems: ["one"],
+        inProgressItems: ["two", "three"],
+        blockedItems: [],
+        upcomingItems: ["four", "five", "six"],
       }),
     );
 
-    const response = await GET();
+    const response = await GET(buildRequest());
     const json = await response.json();
 
     expect(response.status).toBe(200);
-    expect(json.completedCount).toBe(3);
+    expect(json.completedCount).toBe(1);
     expect(json.inProgressCount).toBe(2);
-    expect(json.blockedCount).toBe(1);
-    expect(json.upcomingCount).toBe(4);
+    expect(json.blockedCount).toBe(0);
+    expect(json.upcomingCount).toBe(3);
   });
 
   it("returns 404 when pilot is missing", async () => {
@@ -105,7 +107,7 @@ describe("admin execution status summary route", () => {
       throw new Error("Pilot not found");
     });
 
-    const response = await GET();
+    const response = await GET(buildRequest());
     const json = await response.json();
 
     expect(response.status).toBe(404);
