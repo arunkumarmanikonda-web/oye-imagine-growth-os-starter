@@ -34,6 +34,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'tenantId is required.' }, { status: 400 });
     }
 
+    const mode = getCommercialPersistenceMode();
     const snapshot = await getMediaBalanceAccountSnapshotRuntime(tenantId);
     const snapshotObject = asObject(snapshot);
 
@@ -53,7 +54,7 @@ export async function GET(request: Request) {
       baseAccount.ledgerEntries,
     );
 
-    const runtimeState = getMediaBalanceRuntimeState(tenantId);
+    const runtimeState = mode === 'store' ? getMediaBalanceRuntimeState(tenantId) : undefined;
 
     const mediaBalanceAccount = runtimeState?.mediaBalanceAccount
       ? { ...baseAccount, ...runtimeState.mediaBalanceAccount }
@@ -64,7 +65,7 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         ok: true,
-        mode: getCommercialPersistenceMode(),
+        mode,
         mediaBalanceAccount,
         reservations,
         ledgerEntries,

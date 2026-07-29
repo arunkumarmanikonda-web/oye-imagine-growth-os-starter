@@ -142,13 +142,6 @@ export async function POST(request: Request) {
         reference,
       );
 
-      const existingState = getMediaBalanceRuntimeState(tenantId);
-      const ledgerEntries = [ledgerEntry, ...(existingState?.ledgerEntries ?? [])];
-      setMediaBalanceRuntimeState(tenantId, {
-        mediaBalanceAccount,
-        ledgerEntries,
-      });
-
       return NextResponse.json(
         {
           ok: true,

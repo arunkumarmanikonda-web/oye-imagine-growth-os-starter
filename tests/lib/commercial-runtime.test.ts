@@ -82,6 +82,7 @@ const persistenceService = vi.hoisted(() => ({
     },
     ledgerEntry: {
       id: 'ledger-supabase-1',
+      direction: 'debit',
       source: 'campaign_spend',
       amount: input.amount,
       currency: input.currency ?? 'USD',
@@ -95,7 +96,7 @@ vi.mock('@/lib/commercial/store', () => ({
   releaseMediaBalance: storeMocks.releaseMediaBalance,
 }));
 
-vi.mock('@/lib/commercial/persistence-service', () => ({
+vi.mock('@/lib/commercial/persistence-runtime', () => ({
   getPersistenceService: vi.fn(() => persistenceService),
 }));
 

@@ -3,7 +3,7 @@ import {
   releaseMediaBalance as releaseStoreMediaBalance,
   reserveMediaBalance as reserveStoreMediaBalance,
 } from './store';
-import * as persistenceServiceModule from './persistence-service';
+import { getPersistenceService } from './persistence-runtime';
 
 export type CommercialPersistenceMode = 'store' | 'supabase';
 
@@ -15,13 +15,6 @@ type RuntimeMutationInput = {
   actorId?: string;
   reference?: string;
   payload?: Record<string, unknown>;
-};
-
-type PersistenceServiceLike = {
-  getMediaBalanceAccountSnapshot: (tenantId: string) => unknown | Promise<unknown>;
-  reserveMediaBalance: (input: RuntimeMutationInput) => unknown | Promise<unknown>;
-  releaseMediaBalance: (input: RuntimeMutationInput) => unknown | Promise<unknown>;
-  spendMediaBalance: (input: RuntimeMutationInput) => unknown | Promise<unknown>;
 };
 
 function readEnv(names: string[]): string | undefined {
@@ -49,62 +42,33 @@ export function getCommercialPersistenceMode(): CommercialPersistenceMode {
   return url && key ? 'supabase' : 'store';
 }
 
-function getPersistenceServiceCompat(): PersistenceServiceLike {
-  const moduleRecord = persistenceServiceModule as Record<string, unknown>;
-
-  const factoryNames = [
-    'getPersistenceService',
-    'getCommercialPersistenceService',
-    'createPersistenceService',
-    'createCommercialPersistenceService',
-  ];
-
-  for (const name of factoryNames) {
-    const candidate = moduleRecord[name];
-    if (typeof candidate === 'function') {
-      return (candidate as () => PersistenceServiceLike)();
-    }
-  }
-
-  const singletonNames = [
-    'persistenceService',
-    'commercialPersistenceService',
-  ];
-
-  for (const name of singletonNames) {
-    const candidate = moduleRecord[name];
-    if (candidate && typeof candidate === 'object') {
-      return candidate as PersistenceServiceLike;
-    }
-  }
-
-  throw new Error('No compatible persistence-service export found.');
-}
-
 export async function getMediaBalanceAccountSnapshotRuntime(tenantId: string) {
   if (getCommercialPersistenceMode() === 'supabase') {
-    return getPersistenceServiceCompat().getMediaBalanceAccountSnapshot(tenantId);
+    return getPersistenceService().getMediaBalanceAccountSnapshot(tenantId);
   }
+
   return getStoreMediaBalanceAccountSnapshot(tenantId);
 }
 
 export async function reserveMediaBalanceRuntime(input: RuntimeMutationInput) {
   if (getCommercialPersistenceMode() === 'supabase') {
-    return getPersistenceServiceCompat().reserveMediaBalance(input);
+    return getPersistenceService().reserveMediaBalance(input as any);
   }
+
   return (reserveStoreMediaBalance as unknown as (value: RuntimeMutationInput) => unknown)(input);
 }
 
 export async function releaseMediaBalanceRuntime(input: RuntimeMutationInput) {
   if (getCommercialPersistenceMode() === 'supabase') {
-    return getPersistenceServiceCompat().releaseMediaBalance(input);
+    return getPersistenceService().releaseMediaBalance(input as any);
   }
+
   return (releaseStoreMediaBalance as unknown as (value: RuntimeMutationInput) => unknown)(input);
 }
 
 export async function spendMediaBalanceRuntime(input: RuntimeMutationInput) {
   if (getCommercialPersistenceMode() === 'supabase') {
-    return getPersistenceServiceCompat().spendMediaBalance(input);
+    return getPersistenceService().spendMediaBalance(input as any);
   }
 
   throw new Error('Store-mode spend is handled by the route fallback.');
