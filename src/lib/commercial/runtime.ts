@@ -1,11 +1,16 @@
 import {
+  activateContract as activateContractStore,
   getMediaBalanceAccountSnapshot as getStoreMediaBalanceAccountSnapshot,
+  markInvoicePaid as markInvoicePaidStore,
   releaseMediaBalance as releaseStoreMediaBalance,
+  renewSubscription as renewSubscriptionStore,
   reserveMediaBalance as reserveStoreMediaBalance,
-} from './store';
-import { getPersistenceService } from './persistence-runtime';
+  resolveApprovalRequest as resolveApprovalRequestStore,
+  spendReservedMediaBalance as spendReservedMediaBalanceStore,
+} from "./store";
+import { getPersistenceService } from "./persistence-runtime";
 
-export type CommercialPersistenceMode = 'store' | 'supabase';
+export type CommercialPersistenceMode = "store" | "supabase";
 
 type RuntimeMutationInput = {
   tenantId: string;
@@ -13,63 +18,164 @@ type RuntimeMutationInput = {
   currency?: string;
   operationKey?: string;
   actorId?: string;
-  reference?: string;
+  reference?: string | null;
   payload?: Record<string, unknown>;
+  reservedByUserId?: string;
+  releasedByUserId?: string;
+  spentByUserId?: string;
+  reason?: string;
+  note?: string | null;
+  source?: string;
+  entryType?: string;
 };
+
+type RuntimeApprovalDecisionInput = {
+  approvalRequestId: string;
+  approverUserId: string;
+  decision: "approve" | "reject";
+  note?: string | null;
+};
+
+type RuntimeActivateContractInput = {
+  contractId: string;
+  activatedByUserId: string;
+  effectiveAt?: string | null;
+};
+
+type RuntimeMarkInvoicePaidInput = {
+  invoiceId: string;
+  paidByUserId: string;
+  paidAt?: string | null;
+};
+
+type RuntimeRenewSubscriptionInput = {
+  subscriptionId: string;
+  renewedByUserId: string;
+  renewedAt?: string | null;
+};
+
+type DynamicRecord = Record<string, unknown>;
 
 function readEnv(names: string[]): string | undefined {
   for (const name of names) {
     const value = process.env[name];
-    if (typeof value === 'string' && value.trim().length > 0) {
+    if (typeof value === "string" && value.trim().length > 0) {
       return value.trim();
     }
   }
   return undefined;
 }
 
+function getPersistenceRuntimeRecord(): DynamicRecord {
+  return getPersistenceService() as unknown as DynamicRecord;
+}
+
+function findRuntimeMethod(names: string[]): ((...args: unknown[]) => unknown) | null {
+  const runtime = getPersistenceRuntimeRecord();
+  for (const name of names) {
+    const candidate = runtime[name];
+    if (typeof candidate === "function") {
+      return candidate as (...args: unknown[]) => unknown;
+    }
+  }
+  return null;
+}
+
+async function callRequiredRuntimeMethod(names: string[], ...args: unknown[]) {
+  const method = findRuntimeMethod(names);
+  if (!method) {
+    throw new Error(`No compatible persistence runtime method found for: ${names.join(", ")}`);
+  }
+  return method(...args);
+}
+
 export function getCommercialPersistenceMode(): CommercialPersistenceMode {
-  const forcedMode = readEnv(['COMMERCIAL_PERSISTENCE_MODE']);
-  if (forcedMode === 'store' || forcedMode === 'supabase') {
+  const forcedMode = readEnv(["COMMERCIAL_PERSISTENCE_MODE"]);
+  if (forcedMode === "store" || forcedMode === "supabase") {
     return forcedMode;
   }
 
-  if (process.env.NODE_ENV === 'test') {
-    return 'store';
+  if (process.env.NODE_ENV === "test") {
+    return "store";
   }
 
-  const url = readEnv(['NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_URL']);
-  const key = readEnv(['SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_SERVICE_KEY']);
-  return url && key ? 'supabase' : 'store';
+  const url = readEnv(["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_URL"]);
+  const key = readEnv(["SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_SERVICE_KEY"]);
+  return url && key ? "supabase" : "store";
 }
 
 export async function getMediaBalanceAccountSnapshotRuntime(tenantId: string) {
-  if (getCommercialPersistenceMode() === 'supabase') {
-    return getPersistenceService().getMediaBalanceAccountSnapshot(tenantId);
+  if (getCommercialPersistenceMode() === "supabase") {
+    return callRequiredRuntimeMethod(["getMediaBalanceAccountSnapshot"], tenantId);
   }
 
   return getStoreMediaBalanceAccountSnapshot(tenantId);
 }
 
 export async function reserveMediaBalanceRuntime(input: RuntimeMutationInput) {
-  if (getCommercialPersistenceMode() === 'supabase') {
-    return getPersistenceService().reserveMediaBalance(input as any);
+  if (getCommercialPersistenceMode() === "supabase") {
+    return callRequiredRuntimeMethod(["reserveMediaBalance"], input);
   }
 
   return (reserveStoreMediaBalance as unknown as (value: RuntimeMutationInput) => unknown)(input);
 }
 
 export async function releaseMediaBalanceRuntime(input: RuntimeMutationInput) {
-  if (getCommercialPersistenceMode() === 'supabase') {
-    return getPersistenceService().releaseMediaBalance(input as any);
+  if (getCommercialPersistenceMode() === "supabase") {
+    return callRequiredRuntimeMethod(["releaseMediaBalance"], input);
   }
 
   return (releaseStoreMediaBalance as unknown as (value: RuntimeMutationInput) => unknown)(input);
 }
 
 export async function spendMediaBalanceRuntime(input: RuntimeMutationInput) {
-  if (getCommercialPersistenceMode() === 'supabase') {
-    return getPersistenceService().spendMediaBalance(input as any);
+  if (getCommercialPersistenceMode() === "supabase") {
+    return callRequiredRuntimeMethod(["spendMediaBalance"], input);
   }
 
-  throw new Error('Store-mode spend is handled by the route fallback.');
+  return (spendReservedMediaBalanceStore as unknown as (value: RuntimeMutationInput) => unknown)(input);
+}
+
+export async function resolveApprovalRequestRuntime(input: RuntimeApprovalDecisionInput) {
+  if (getCommercialPersistenceMode() === "supabase") {
+    const method = findRuntimeMethod(["resolveApprovalRequest", "resolveApproval"]);
+    if (method) {
+      return method(input);
+    }
+  }
+
+  return (resolveApprovalRequestStore as unknown as (value: RuntimeApprovalDecisionInput) => unknown)(input);
+}
+
+export async function activateContractRuntime(input: RuntimeActivateContractInput) {
+  if (getCommercialPersistenceMode() === "supabase") {
+    const method = findRuntimeMethod(["activateContract"]);
+    if (method) {
+      return method(input);
+    }
+  }
+
+  return (activateContractStore as unknown as (value: RuntimeActivateContractInput) => unknown)(input);
+}
+
+export async function markInvoicePaidRuntime(input: RuntimeMarkInvoicePaidInput) {
+  if (getCommercialPersistenceMode() === "supabase") {
+    const method = findRuntimeMethod(["markInvoicePaid", "payInvoice"]);
+    if (method) {
+      return method(input);
+    }
+  }
+
+  return (markInvoicePaidStore as unknown as (value: RuntimeMarkInvoicePaidInput) => unknown)(input);
+}
+
+export async function renewSubscriptionRuntime(input: RuntimeRenewSubscriptionInput) {
+  if (getCommercialPersistenceMode() === "supabase") {
+    const method = findRuntimeMethod(["renewSubscription"]);
+    if (method) {
+      return method(input);
+    }
+  }
+
+  return (renewSubscriptionStore as unknown as (value: RuntimeRenewSubscriptionInput) => unknown)(input);
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-import { resolveApprovalRequest } from "@/lib/commercial/store"
+import { resolveApprovalRequestRuntime } from "@/lib/commercial/runtime"
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value)
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const result = resolveApprovalRequest({
+    const result = await resolveApprovalRequestRuntime({
       approvalRequestId,
       approverUserId,
       decision,

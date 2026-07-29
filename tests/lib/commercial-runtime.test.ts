@@ -1,151 +1,215 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 const storeMocks = vi.hoisted(() => ({
-  getMediaBalanceAccountSnapshot: vi.fn((tenantId: string) => ({
-    mediaBalanceAccount: {
-      tenantId,
-      balance: 500,
-      reserved: 100,
-      available: 400,
-      currency: 'USD',
-    },
-    reservations: [],
-    ledgerEntries: [],
-  })),
-  reserveMediaBalance: vi.fn((input: any) => ({
-    mediaBalanceAccount: {
-      tenantId: input.tenantId,
-      balance: 500,
-      reserved: 150,
-      available: 350,
-      currency: input.currency ?? 'USD',
-    },
-    reservation: {
-      id: 'reservation-store-1',
-      amount: input.amount,
-      currency: input.currency ?? 'USD',
-    },
-  })),
-  releaseMediaBalance: vi.fn((input: any) => ({
-    mediaBalanceAccount: {
-      tenantId: input.tenantId,
-      balance: 500,
-      reserved: 50,
-      available: 450,
-      currency: input.currency ?? 'USD',
-    },
-  })),
-}));
+  activateContract: vi.fn(),
+  getMediaBalanceAccountSnapshot: vi.fn(),
+  markInvoicePaid: vi.fn(),
+  releaseMediaBalance: vi.fn(),
+  renewSubscription: vi.fn(),
+  reserveMediaBalance: vi.fn(),
+  resolveApprovalRequest: vi.fn(),
+  spendReservedMediaBalance: vi.fn(),
+}))
 
-const persistenceService = vi.hoisted(() => ({
-  getMediaBalanceAccountSnapshot: vi.fn(async (tenantId: string) => ({
-    mediaBalanceAccount: {
-      tenantId,
-      balance: 900,
-      reserved: 200,
-      available: 700,
-      currency: 'USD',
-    },
-    reservations: [],
-    ledgerEntries: [],
-  })),
-  reserveMediaBalance: vi.fn(async (input: any) => ({
-    mediaBalanceAccount: {
-      tenantId: input.tenantId,
-      balance: 900,
-      reserved: 250,
-      available: 650,
-      currency: input.currency ?? 'USD',
-    },
-    reservation: {
-      id: 'reservation-supabase-1',
-      amount: input.amount,
-      currency: input.currency ?? 'USD',
-    },
-  })),
-  releaseMediaBalance: vi.fn(async (input: any) => ({
-    mediaBalanceAccount: {
-      tenantId: input.tenantId,
-      balance: 900,
-      reserved: 150,
-      available: 750,
-      currency: input.currency ?? 'USD',
-    },
-  })),
-  spendMediaBalance: vi.fn(async (input: any) => ({
-    mediaBalanceAccount: {
-      tenantId: input.tenantId,
-      balance: 780,
-      reserved: 80,
-      available: 700,
-      currency: input.currency ?? 'USD',
-    },
-    ledgerEntry: {
-      id: 'ledger-supabase-1',
-      direction: 'debit',
-      source: 'campaign_spend',
-      amount: input.amount,
-      currency: input.currency ?? 'USD',
-    },
-  })),
-}));
+const persistenceRuntimeMocks = vi.hoisted(() => ({
+  getPersistenceService: vi.fn(),
+}))
 
-vi.mock('@/lib/commercial/store', () => ({
+vi.mock("@/lib/commercial/store", () => ({
+  activateContract: storeMocks.activateContract,
   getMediaBalanceAccountSnapshot: storeMocks.getMediaBalanceAccountSnapshot,
-  reserveMediaBalance: storeMocks.reserveMediaBalance,
+  markInvoicePaid: storeMocks.markInvoicePaid,
   releaseMediaBalance: storeMocks.releaseMediaBalance,
-}));
+  renewSubscription: storeMocks.renewSubscription,
+  reserveMediaBalance: storeMocks.reserveMediaBalance,
+  resolveApprovalRequest: storeMocks.resolveApprovalRequest,
+  spendReservedMediaBalance: storeMocks.spendReservedMediaBalance,
+}))
 
-vi.mock('@/lib/commercial/persistence-runtime', () => ({
-  getPersistenceService: vi.fn(() => persistenceService),
-}));
+vi.mock("@/lib/commercial/persistence-runtime", () => ({
+  getPersistenceService: persistenceRuntimeMocks.getPersistenceService,
+}))
 
-describe('commercial runtime bridge', () => {
-  const originalEnv = { ...process.env };
+import {
+  activateContractRuntime,
+  getCommercialPersistenceMode,
+  getMediaBalanceAccountSnapshotRuntime,
+  markInvoicePaidRuntime,
+  releaseMediaBalanceRuntime,
+  renewSubscriptionRuntime,
+  reserveMediaBalanceRuntime,
+  resolveApprovalRequestRuntime,
+  spendMediaBalanceRuntime,
+} from "@/lib/commercial/runtime"
+
+describe("commercial runtime", () => {
+  const originalMode = process.env.COMMERCIAL_PERSISTENCE_MODE
+  const originalNodeEnv = process.env.NODE_ENV
 
   beforeEach(() => {
-    vi.resetModules();
-    vi.clearAllMocks();
-    process.env = { ...originalEnv };
-    delete process.env.COMMERCIAL_PERSISTENCE_MODE;
-    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-    delete process.env.SUPABASE_URL;
-    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
-    delete process.env.SUPABASE_SERVICE_KEY;
-    process.env.NODE_ENV = 'test';
-  });
+    vi.clearAllMocks()
+    delete process.env.COMMERCIAL_PERSISTENCE_MODE
+    process.env.NODE_ENV = "test"
+  })
 
-  it('defaults to store mode in tests and uses store reserve path', async () => {
-    const runtime = await import('@/lib/commercial/runtime');
+  afterEach(() => {
+    if (typeof originalMode === "undefined") {
+      delete process.env.COMMERCIAL_PERSISTENCE_MODE
+    } else {
+      process.env.COMMERCIAL_PERSISTENCE_MODE = originalMode
+    }
 
-    expect(runtime.getCommercialPersistenceMode()).toBe('store');
+    if (typeof originalNodeEnv === "undefined") {
+      delete process.env.NODE_ENV
+    } else {
+      process.env.NODE_ENV = originalNodeEnv
+    }
+  })
 
-    await runtime.reserveMediaBalanceRuntime({
-      tenantId: 'tenant-store',
-      amount: 50,
-      currency: 'USD',
-      operationKey: 'store-op-1',
-    });
+  it("defaults to store mode in tests", async () => {
+    storeMocks.getMediaBalanceAccountSnapshot.mockReturnValue({
+      tenantId: "tenant_1",
+      availableBalance: 22000,
+    })
 
-    expect(storeMocks.reserveMediaBalance).toHaveBeenCalledTimes(1);
-    expect(persistenceService.reserveMediaBalance).not.toHaveBeenCalled();
-  });
+    expect(getCommercialPersistenceMode()).toBe("store")
 
-  it('supports forced supabase mode and uses persistence service methods', async () => {
-    process.env.COMMERCIAL_PERSISTENCE_MODE = 'supabase';
+    await expect(getMediaBalanceAccountSnapshotRuntime("tenant_1")).resolves.toEqual({
+      tenantId: "tenant_1",
+      availableBalance: 22000,
+    })
 
-    const runtime = await import('@/lib/commercial/runtime');
+    expect(storeMocks.getMediaBalanceAccountSnapshot).toHaveBeenCalledWith("tenant_1")
+    expect(persistenceRuntimeMocks.getPersistenceService).not.toHaveBeenCalled()
+  })
 
-    expect(runtime.getCommercialPersistenceMode()).toBe('supabase');
+  it("uses persistence runtime for media-balance mutations in supabase mode", async () => {
+    process.env.COMMERCIAL_PERSISTENCE_MODE = "supabase"
 
-    await runtime.reserveMediaBalanceRuntime({
-      tenantId: 'tenant-supabase',
-      amount: 75,
-      currency: 'USD',
-      operationKey: 'supabase-op-1',
-    });
+    const persistenceService = {
+      getMediaBalanceAccountSnapshot: vi.fn(),
+      reserveMediaBalance: vi.fn().mockResolvedValue({ ok: true, kind: "reserve" }),
+      releaseMediaBalance: vi.fn().mockResolvedValue({ ok: true, kind: "release" }),
+      spendMediaBalance: vi.fn().mockResolvedValue({ ok: true, kind: "spend" }),
+    }
 
-    expect(persistenceService.reserveMediaBalance).toHaveBeenCalledTimes(1);
-    expect(storeMocks.reserveMediaBalance).not.toHaveBeenCalled();
-  });
-});
+    persistenceRuntimeMocks.getPersistenceService.mockReturnValue(persistenceService)
+
+    await expect(
+      reserveMediaBalanceRuntime({
+        tenantId: "tenant_1",
+        amount: 1000,
+        reservedByUserId: "user_ops",
+        reason: "launch",
+      }),
+    ).resolves.toEqual({ ok: true, kind: "reserve" })
+
+    await expect(
+      releaseMediaBalanceRuntime({
+        tenantId: "tenant_1",
+        amount: 300,
+        releasedByUserId: "user_ops",
+        reason: "rollback",
+      }),
+    ).resolves.toEqual({ ok: true, kind: "release" })
+
+    await expect(
+      spendMediaBalanceRuntime({
+        tenantId: "tenant_1",
+        amount: 700,
+        spentByUserId: "user_ops",
+        reason: "campaign spend",
+      }),
+    ).resolves.toEqual({ ok: true, kind: "spend" })
+
+    expect(persistenceService.reserveMediaBalance).toHaveBeenCalledTimes(1)
+    expect(persistenceService.releaseMediaBalance).toHaveBeenCalledTimes(1)
+    expect(persistenceService.spendMediaBalance).toHaveBeenCalledTimes(1)
+  })
+
+  it("uses persistence runtime for workflow mutations in supabase mode when available", async () => {
+    process.env.COMMERCIAL_PERSISTENCE_MODE = "supabase"
+
+    const persistenceService = {
+      getMediaBalanceAccountSnapshot: vi.fn(),
+      reserveMediaBalance: vi.fn(),
+      releaseMediaBalance: vi.fn(),
+      spendMediaBalance: vi.fn(),
+      resolveApprovalRequest: vi.fn().mockResolvedValue({ status: "approved" }),
+      activateContract: vi.fn().mockResolvedValue({ id: "contract_1", status: "active" }),
+      markInvoicePaid: vi.fn().mockResolvedValue({ id: "invoice_1", status: "paid" }),
+      renewSubscription: vi.fn().mockResolvedValue({ id: "subscription_1", status: "active" }),
+    }
+
+    persistenceRuntimeMocks.getPersistenceService.mockReturnValue(persistenceService)
+
+    await expect(
+      resolveApprovalRequestRuntime({
+        approvalRequestId: "approval_1",
+        approverUserId: "user_finance",
+        decision: "approve",
+        note: "approved",
+      }),
+    ).resolves.toEqual({ status: "approved" })
+
+    await expect(
+      activateContractRuntime({
+        contractId: "contract_1",
+        activatedByUserId: "user_legal",
+        effectiveAt: "2026-07-29T00:00:00.000Z",
+      }),
+    ).resolves.toEqual({ id: "contract_1", status: "active" })
+
+    await expect(
+      markInvoicePaidRuntime({
+        invoiceId: "invoice_1",
+        paidByUserId: "user_finance",
+        paidAt: "2026-07-29T00:00:00.000Z",
+      }),
+    ).resolves.toEqual({ id: "invoice_1", status: "paid" })
+
+    await expect(
+      renewSubscriptionRuntime({
+        subscriptionId: "subscription_1",
+        renewedByUserId: "user_billing",
+        renewedAt: "2026-07-29T00:00:00.000Z",
+      }),
+    ).resolves.toEqual({ id: "subscription_1", status: "active" })
+
+    expect(persistenceService.resolveApprovalRequest).toHaveBeenCalledTimes(1)
+    expect(persistenceService.activateContract).toHaveBeenCalledTimes(1)
+    expect(persistenceService.markInvoicePaid).toHaveBeenCalledTimes(1)
+    expect(persistenceService.renewSubscription).toHaveBeenCalledTimes(1)
+  })
+
+  it("falls back to store for workflow mutations when persistence runtime does not expose them", async () => {
+    process.env.COMMERCIAL_PERSISTENCE_MODE = "supabase"
+
+    persistenceRuntimeMocks.getPersistenceService.mockReturnValue({
+      getMediaBalanceAccountSnapshot: vi.fn(),
+      reserveMediaBalance: vi.fn(),
+      releaseMediaBalance: vi.fn(),
+      spendMediaBalance: vi.fn(),
+    })
+
+    storeMocks.activateContract.mockReturnValue({
+      id: "contract_store",
+      status: "active",
+    })
+
+    await expect(
+      activateContractRuntime({
+        contractId: "contract_store",
+        activatedByUserId: "user_store",
+      }),
+    ).resolves.toEqual({
+      id: "contract_store",
+      status: "active",
+    })
+
+    expect(storeMocks.activateContract).toHaveBeenCalledWith({
+      contractId: "contract_store",
+      activatedByUserId: "user_store",
+    })
+  })
+})

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-import { renewSubscription } from "@/lib/commercial/store"
+import { renewSubscriptionRuntime } from "@/lib/commercial/runtime"
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value)
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const subscription = renewSubscription({
+    const subscription = await renewSubscriptionRuntime({
       subscriptionId,
       renewedByUserId,
       renewedAt,

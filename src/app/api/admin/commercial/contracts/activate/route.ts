@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-import { activateContract } from "@/lib/commercial/store"
+import { activateContractRuntime } from "@/lib/commercial/runtime"
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value)
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const contract = activateContract({
+    const contract = await activateContractRuntime({
       contractId,
       activatedByUserId,
       effectiveAt,
