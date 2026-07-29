@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { clearWorkflowMutationRuntimeState } from "@/lib/commercial/workflow-mutation-runtime-state"
+
 const storeMocks = vi.hoisted(() => ({
   activateContract: vi.fn(),
   getMediaBalanceAccountSnapshot: vi.fn(),
@@ -48,11 +50,14 @@ describe("commercial runtime", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    clearWorkflowMutationRuntimeState()
     delete process.env.COMMERCIAL_PERSISTENCE_MODE
     process.env.NODE_ENV = "test"
   })
 
   afterEach(() => {
+    clearWorkflowMutationRuntimeState()
+
     if (typeof originalMode === "undefined") {
       delete process.env.COMMERCIAL_PERSISTENCE_MODE
     } else {
@@ -149,6 +154,7 @@ describe("commercial runtime", () => {
         approverUserId: "user_finance",
         decision: "approve",
         note: "approved",
+        operationKey: "approval-resolve:approval_1:approve",
       }),
     ).resolves.toEqual({ status: "approved" })
 
@@ -157,6 +163,7 @@ describe("commercial runtime", () => {
         contractId: "contract_1",
         activatedByUserId: "user_legal",
         effectiveAt: "2026-07-29T00:00:00.000Z",
+        operationKey: "contract-activate:contract_1",
       }),
     ).resolves.toEqual({ id: "contract_1", status: "active" })
 
@@ -165,6 +172,7 @@ describe("commercial runtime", () => {
         invoiceId: "invoice_1",
         paidByUserId: "user_finance",
         paidAt: "2026-07-29T00:00:00.000Z",
+        operationKey: "invoice-mark-paid:invoice_1",
       }),
     ).resolves.toEqual({ id: "invoice_1", status: "paid" })
 
@@ -173,6 +181,7 @@ describe("commercial runtime", () => {
         subscriptionId: "subscription_1",
         renewedByUserId: "user_billing",
         renewedAt: "2026-07-29T00:00:00.000Z",
+        operationKey: "subscription-renew:subscription_1",
       }),
     ).resolves.toEqual({ id: "subscription_1", status: "active" })
 
@@ -211,5 +220,75 @@ describe("commercial runtime", () => {
       contractId: "contract_store",
       activatedByUserId: "user_store",
     })
+  })
+
+  it("deduplicates store workflow mutations when operationKey is reused", async () => {
+    const result = {
+      status: "approved",
+      approvalRequestId: "approval_1",
+    }
+
+    storeMocks.resolveApprovalRequest.mockReturnValue(result)
+
+    await expect(
+      resolveApprovalRequestRuntime({
+        approvalRequestId: "approval_1",
+        approverUserId: "user_finance",
+        decision: "approve",
+        operationKey: "approval-resolve:approval_1:approve",
+      }),
+    ).resolves.toEqual(result)
+
+    await expect(
+      resolveApprovalRequestRuntime({
+        approvalRequestId: "approval_1",
+        approverUserId: "user_finance",
+        decision: "approve",
+        operationKey: "approval-resolve:approval_1:approve",
+      }),
+    ).resolves.toEqual(result)
+
+    expect(storeMocks.resolveApprovalRequest).toHaveBeenCalledTimes(1)
+  })
+
+  it("deduplicates persistence workflow mutations when operationKey is reused", async () => {
+    process.env.COMMERCIAL_PERSISTENCE_MODE = "supabase"
+
+    const persistenceService = {
+      getMediaBalanceAccountSnapshot: vi.fn(),
+      reserveMediaBalance: vi.fn(),
+      releaseMediaBalance: vi.fn(),
+      spendMediaBalance: vi.fn(),
+      markInvoicePaid: vi.fn().mockResolvedValue({
+        id: "invoice_1",
+        status: "paid",
+      }),
+    }
+
+    persistenceRuntimeMocks.getPersistenceService.mockReturnValue(persistenceService)
+
+    await expect(
+      markInvoicePaidRuntime({
+        invoiceId: "invoice_1",
+        paidByUserId: "user_finance",
+        operationKey: "invoice-mark-paid:invoice_1",
+      }),
+    ).resolves.toEqual({
+      id: "invoice_1",
+      status: "paid",
+    })
+
+    await expect(
+      markInvoicePaidRuntime({
+        invoiceId: "invoice_1",
+        paidByUserId: "user_finance",
+        operationKey: "invoice-mark-paid:invoice_1",
+      }),
+    ).resolves.toEqual({
+      id: "invoice_1",
+      status: "paid",
+    })
+
+    expect(persistenceService.markInvoicePaid).toHaveBeenCalledTimes(1)
   })
 })

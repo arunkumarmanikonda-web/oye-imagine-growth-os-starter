@@ -6,6 +6,31 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value)
 }
 
+function readOptionalString(value: unknown): string | undefined {
+  if (typeof value !== "string") {
+    return undefined
+  }
+
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : undefined
+}
+
+function buildOperationKey(
+  explicitKey: unknown,
+  prefix: string,
+  parts: Array<string | undefined>,
+): string {
+  const provided = readOptionalString(explicitKey)
+  if (provided) {
+    return provided
+  }
+
+  return [prefix, ...parts.filter((value): value is string => Boolean(value))]
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .join(":")
+}
+
 async function readJsonObject(request: Request): Promise<Record<string, unknown>> {
   const value: unknown = await request.json()
   if (!isRecord(value)) {
@@ -40,6 +65,10 @@ export async function POST(request: Request) {
       subscriptionId,
       renewedByUserId,
       renewedAt,
+      reference: readOptionalString(body.reference) ?? null,
+      operationKey: buildOperationKey(body.operationKey, "subscription-renew", [
+        subscriptionId,
+      ]),
     })
 
     return NextResponse.json({ subscription })
