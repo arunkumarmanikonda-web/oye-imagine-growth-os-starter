@@ -1,325 +1,285 @@
-import type {
-  AiContentOperation,
-  ContentAuditEvent,
-  ContentFaqEntry,
-  ContentPage,
-  ContentPromotion,
-  ContentPublishVersion,
-  ContentSection,
-  ContentStudioSnapshot,
-  FaqEntry,
-  PeopleProfile,
-} from './recovery-types'
-
-export const contentPages: ContentPage[] = [
+export const contentPages = [
   {
     id: 'page_public_home',
     slug: '/',
-    title: 'Public homepage',
+    title: 'AI-native growth operating system',
     kind: 'public_page',
     visibility: 'public',
     lifecycleStatus: 'published',
-    seoTitle: 'Oye !magine - Premium AI-native growth operating system',
-    seoDescription: 'Luxury corporate growth operating system with central config, support visibility and governed content control.',
+    seoTitle: 'Oye !magine - AI-native growth operating system',
+    seoDescription: 'Premium AI-native growth platform with governed content, legal confidence and operator control.',
   },
   {
     id: 'page_public_marketplace',
     slug: '/marketplace',
-    title: 'Marketplace entry',
+    title: 'Marketplace for premium growth specialists',
     kind: 'marketplace_page',
     visibility: 'public',
     lifecycleStatus: 'published',
     seoTitle: 'Marketplace - Oye !magine',
-    seoDescription: 'Discover service lanes, specialists, offers and request-led growth engagements.',
+    seoDescription: 'Discover specialist lanes, request entry and proposal-led premium delivery.',
+  },
+  {
+    id: 'page_contact',
+    slug: '/contact',
+    title: 'Contact and support',
+    kind: 'public_page',
+    visibility: 'public',
+    lifecycleStatus: 'published',
+    seoTitle: 'Contact - Oye !magine',
+    seoDescription: 'Governed contact surface for support, consultation and commercial routing.',
   },
   {
     id: 'page_login_client',
     slug: '/login/client',
-    title: 'Client login',
+    title: 'Secure client login',
     kind: 'auth_page',
     visibility: 'public',
-    lifecycleStatus: 'draft',
+    lifecycleStatus: 'published',
     seoTitle: 'Client login - Oye !magine',
-    seoDescription: 'Secure client entry for agreements, invoices, reports and concierge access.',
+    seoDescription: 'Client entry for agreements, invoices, reports, support and concierge.',
   },
   {
     id: 'page_login_admin',
     slug: '/login/admin',
-    title: 'Admin login',
+    title: 'Protected operator login',
     kind: 'auth_page',
     visibility: 'public',
-    lifecycleStatus: 'draft',
+    lifecycleStatus: 'published',
     seoTitle: 'Admin login - Oye !magine',
-    seoDescription: 'Secure operator access for content control, configuration and operations.',
+    seoDescription: 'Protected operator entry for content, config and workspace command.',
   },
   {
-    id: 'page_help_center',
-    slug: '/help',
-    title: 'Help center',
-    kind: 'system_page',
-    visibility: 'shared',
-    lifecycleStatus: 'draft',
-    seoTitle: 'Help center - Oye !magine',
-    seoDescription: 'Support, contact, billing help and governed FAQs.',
+    id: 'page_operator_home',
+    slug: '/admin',
+    title: 'Operator command deck',
+    kind: 'operator_page',
+    visibility: 'operator',
+    lifecycleStatus: 'published',
+    seoTitle: 'Operator command deck - Oye !magine',
+    seoDescription: 'Internal command surface for content, config, support and canonical workspace control.',
   },
 ]
 
-export const contentSections: ContentSection[] = [
+export const contentSections = [
   {
     id: 'section_home_hero',
     pageId: 'page_public_home',
-    key: 'hero',
-    title: 'Luxury public hero',
+    key: 'hero-main',
+    title: 'AI-native growth operating system for brands that refuse mediocrity',
     kind: 'hero',
     order: 1,
     lifecycleStatus: 'published',
-    summary: 'World-class AI-native growth platform headline, trust copy and CTA stack.',
+    summary: 'Premium positioning, legal trust, governed UI control and clear commercial paths in one platform shell.',
   },
   {
-    id: 'section_home_trust',
+    id: 'section_home_metrics',
     pageId: 'page_public_home',
     key: 'trust-ribbon',
-    title: 'Trust and legal identity ribbon',
-    kind: 'proof',
+    title: 'Central truth, legal confidence and governed business control',
+    kind: 'metrics',
     order: 2,
     lifecycleStatus: 'published',
-    summary: 'CIN, GSTIN, support identity and premium trust signals.',
+    summary: 'One identity spine for legal facts, support readiness, premium presentation and future commercial workflows.',
+  },
+  {
+    id: 'section_home_config',
+    pageId: 'page_public_home',
+    key: 'config-spine',
+    title: 'One control surface for identity, content, support and provider readiness',
+    kind: 'feature_grid',
+    order: 3,
+    lifecycleStatus: 'published',
+    summary: 'Operator control for visible UI, company identity, support plumbing and premium content publishing.',
+  },
+  {
+    id: 'section_home_commercial',
+    pageId: 'page_public_home',
+    key: 'commercial-clarity',
+    title: 'Commercial clarity from agreement to invoice to reporting',
+    kind: 'feature_grid',
+    order: 4,
+    lifecycleStatus: 'published',
+    summary: 'Client-facing flows prepared for agreement truth, invoice visibility, reporting continuity and support history.',
+  },
+  {
+    id: 'section_home_concierge',
+    pageId: 'page_public_home',
+    key: 'ai-concierge',
+    title: 'AI concierge ready for search, retrieval, explanation and action',
+    kind: 'feature_grid',
+    order: 5,
+    lifecycleStatus: 'published',
+    summary: 'The experience layer is prepared for permission-aware search, help, navigation shortcuts and guided actions.',
   },
   {
     id: 'section_home_people',
     pageId: 'page_public_home',
-    key: 'leadership-and-experts',
-    title: 'Leadership and experts rail',
+    key: 'leadership-experts',
+    title: 'Leadership, specialists and support under governed visibility',
     kind: 'people',
-    order: 3,
-    lifecycleStatus: 'draft',
-    summary: 'Leadership team, expert profiles and trust-by-people surface.',
+    order: 6,
+    lifecycleStatus: 'published',
+    summary: 'Trust surfaces for leadership, experts, marketplace specialists and support.',
   },
   {
-    id: 'section_marketplace_promo',
+    id: 'section_marketplace_hero',
     pageId: 'page_public_marketplace',
-    key: 'marketplace-launch-strip',
-    title: 'Marketplace promo strip',
-    kind: 'promo',
+    key: 'marketplace-hero',
+    title: 'Discover specialist lanes, managed growth models and premium engagement paths',
+    kind: 'hero',
     order: 1,
-    lifecycleStatus: 'draft',
-    summary: 'Offer banners, service lane CTAs and request-intake framing.',
+    lifecycleStatus: 'published',
+    summary: 'Marketplace discovery focused on real service lanes, premium requests and proposal-led execution.',
   },
   {
-    id: 'section_help_contact',
-    pageId: 'page_help_center',
-    key: 'support-contact-block',
-    title: 'Support and contact panel',
-    kind: 'support',
+    id: 'section_contact_hero',
+    pageId: 'page_contact',
+    key: 'contact-hero',
+    title: 'Talk to Oye !magine through a governed premium contact surface',
+    kind: 'hero',
     order: 1,
-    lifecycleStatus: 'draft',
-    summary: 'Public support phone, support email and response expectations.',
+    lifecycleStatus: 'published',
+    summary: 'Support, consultation and mailbox identity exposed cleanly without dead CTA behavior.',
   },
 ]
 
-export const contentPromotions: ContentPromotion[] = [
+export const contentPromotions = [
   {
     id: 'promo_strategy_consult',
     key: 'strategy-consult',
     kind: 'banner',
     title: 'Book a premium growth consultation',
-    summary: 'High-trust CTA for public and marketplace surfaces.',
+    summary: 'High-trust CTA for premium consultation and discovery.',
     ctaLabel: 'Talk to Oye !magine',
     ctaHref: '/contact',
-    lifecycleStatus: 'draft',
+    lifecycleStatus: 'published',
   },
   {
     id: 'promo_marketplace_launch',
     key: 'marketplace-launch',
     kind: 'announcement',
-    title: 'Marketplace specialist lanes now opening',
-    summary: 'Promotional launch strip for specialist-led discovery.',
+    title: 'Marketplace specialist lanes are opening',
+    summary: 'Discover premium specialist and managed-service lanes.',
     ctaLabel: 'Explore the marketplace',
     ctaHref: '/marketplace',
-    lifecycleStatus: 'draft',
+    lifecycleStatus: 'published',
+  },
+  {
+    id: 'promo_client_entry',
+    key: 'client-entry',
+    kind: 'offer',
+    title: 'Clients access one place for agreements, invoices, reports and support',
+    summary: 'Client login becomes the trusted single entry to commercial truth.',
+    ctaLabel: 'Client login',
+    ctaHref: '/login/client',
+    lifecycleStatus: 'published',
   },
 ]
 
-export const contentPeopleProfiles: PeopleProfile[] = [
+export const contentPeopleProfiles = [
   {
-    id: 'person_growth_strategy_lead',
+    id: 'person_growth_strategy_director',
     role: 'leadership',
-    displayName: 'Growth Strategy Lead',
-    title: 'Leadership surface seed',
-    summary: 'Governed placeholder for the leadership rail under admin control.',
-    lifecycleStatus: 'draft',
+    displayName: 'Growth Strategy Director',
+    title: 'Leadership',
+    summary: 'Owns strategic positioning, commercial clarity and premium operating-system outcomes.',
+    lifecycleStatus: 'published',
     featured: true,
   },
   {
-    id: 'person_performance_expert',
+    id: 'person_performance_architect',
     role: 'expert',
-    displayName: 'Performance Marketing Expert',
-    title: 'Expert surface seed',
-    summary: 'Governed placeholder for digital marketing specialist profiles.',
-    lifecycleStatus: 'draft',
+    displayName: 'Performance Architect',
+    title: 'Digital growth expert',
+    summary: 'Shapes conversion systems, campaign structure and reporting clarity.',
+    lifecycleStatus: 'published',
     featured: true,
   },
   {
-    id: 'person_client_success_support',
-    role: 'support',
-    displayName: 'Client Success Support',
-    title: 'Support surface seed',
-    summary: 'Governed placeholder for support and account success profile surfaces.',
-    lifecycleStatus: 'draft',
-    featured: false,
+    id: 'person_marketplace_specialist',
+    role: 'specialist',
+    displayName: 'Marketplace Specialist Lead',
+    title: 'Specialist operations',
+    summary: 'Connects marketplace requests to the right specialist and delivery lane.',
+    lifecycleStatus: 'published',
+    featured: true,
   },
 ]
 
-export const contentFaqEntries: FaqEntry[] = [
+export const contentFaqEntries = [
   {
     id: 'faq_services',
     audience: 'public',
     question: 'What services does Oye !magine offer?',
-    answer: 'Growth strategy, premium digital marketing, specialist marketplace support, reporting and AI-native operating system workflows.',
-    lifecycleStatus: 'draft',
+    answer: 'Growth strategy, premium digital marketing, marketplace specialist support, reporting, support and AI-native operating-system workflows.',
+    lifecycleStatus: 'published',
+  },
+  {
+    id: 'faq_marketplace',
+    audience: 'public',
+    question: 'How does the marketplace work?',
+    answer: 'The marketplace routes a brief into specialist lanes, proposal flow and governed delivery visibility.',
+    lifecycleStatus: 'published',
   },
   {
     id: 'faq_support',
     audience: 'shared',
     question: 'How can I contact support?',
-    answer: 'Use hello@oyeimagine.com, the support phone line, or the governed contact form.',
-    lifecycleStatus: 'draft',
-  },
-]
-
-export const contentPublishVersions: ContentPublishVersion[] = [
-  {
-    id: 'version_home_v1',
-    targetType: 'page',
-    targetId: 'page_public_home',
-    versionLabel: 'home-v1',
+    answer: 'Use hello@oyeimagine.com, the primary phone line or the governed contact surface.',
     lifecycleStatus: 'published',
-    publishedAt: '2026-07-30T08:00:00.000Z',
-  },
-  {
-    id: 'version_marketplace_v1',
-    targetType: 'page',
-    targetId: 'page_public_marketplace',
-    versionLabel: 'marketplace-v1',
-    lifecycleStatus: 'draft',
-  },
-  {
-    id: 'version_people_rail_v1',
-    targetType: 'section',
-    targetId: 'section_home_people',
-    versionLabel: 'people-rail-v1',
-    lifecycleStatus: 'scheduled',
-    scheduledFor: '2026-08-02T10:00:00.000Z',
   },
 ]
 
-export const contentAuditEvents: ContentAuditEvent[] = [
-  {
-    id: 'audit_001',
-    targetType: 'config',
-    targetId: 'org_oye_imagine',
-    action: 'seeded',
-    actorLabel: 'Recovery batch A1',
-    createdAt: '2026-07-30T08:05:00.000Z',
-    detail: 'Seeded organization legal identity and support contact foundation.',
-  },
-  {
-    id: 'audit_002',
-    targetType: 'page',
-    targetId: 'page_public_home',
-    action: 'published',
-    actorLabel: 'Recovery batch A1',
-    createdAt: '2026-07-30T08:10:00.000Z',
-    detail: 'Registered public homepage as a governed content page.',
-  },
+export const contentPublishVersions = [
+  { id: 'version_home_v2', targetType: 'page', targetId: 'page_public_home', versionLabel: 'home-v2-premium', lifecycleStatus: 'published' },
+  { id: 'version_marketplace_v2', targetType: 'page', targetId: 'page_public_marketplace', versionLabel: 'marketplace-v2-premium', lifecycleStatus: 'published' },
+  { id: 'version_contact_v1', targetType: 'page', targetId: 'page_contact', versionLabel: 'contact-v1', lifecycleStatus: 'published' },
 ]
 
-export const aiContentOperations: AiContentOperation[] = [
-  {
-    id: 'ai_generate_draft',
-    kind: 'generate_draft',
-    label: 'Generate draft',
-    description: 'Create a governed first-pass section draft.',
-    governed: true,
-  },
-  {
-    id: 'ai_rewrite_brand_tone',
-    kind: 'rewrite',
-    label: 'Rewrite in brand tone',
-    description: 'Rewrite controlled content in premium Oye !magine tone.',
-    governed: true,
-  },
-  {
-    id: 'ai_expand_copy',
-    kind: 'expand',
-    label: 'Expand copy',
-    description: 'Expand compact copy into richer premium narrative blocks.',
-    governed: true,
-  },
-  {
-    id: 'ai_generate_banner',
-    kind: 'generate_banner',
-    label: 'Generate banner copy',
-    description: 'Create promotional banner/title/CTA combinations.',
-    governed: true,
-  },
-  {
-    id: 'ai_generate_bio',
-    kind: 'generate_bio',
-    label: 'Generate leadership/expert bio',
-    description: 'Turn internal notes into governed people-profile summaries.',
-    governed: true,
-  },
-  {
-    id: 'ai_generate_faq',
-    kind: 'generate_faq',
-    label: 'Generate FAQ entries',
-    description: 'Turn support intent into controlled FAQ answers.',
-    governed: true,
-  },
-  {
-    id: 'ai_schedule_publish',
-    kind: 'schedule_publish',
-    label: 'Schedule publish',
-    description: 'Prepare a governed publish scheduling request.',
-    governed: true,
-  },
-  {
-    id: 'ai_rollback_version',
-    kind: 'rollback_version',
-    label: 'Rollback published version',
-    description: 'Create a governed rollback instruction for the selected target.',
-    governed: true,
-  },
+export const contentAuditEvents = [
+  { id: 'audit_001', targetType: 'page', targetId: 'page_public_home', action: 'published', actorLabel: 'Recovery batch A3' },
+  { id: 'audit_002', targetType: 'promotion', targetId: 'promo_marketplace_launch', action: 'scheduled', actorLabel: 'Recovery batch A3' },
 ]
 
-export function listContentPages(): ContentPage[] {
+export const aiContentOperations = [
+  { id: 'ai_generate_draft', kind: 'generate_draft', label: 'Generate draft', governed: true },
+  { id: 'ai_rewrite_brand_tone', kind: 'rewrite', label: 'Rewrite in brand tone', governed: true },
+  { id: 'ai_generate_banner', kind: 'generate_banner', label: 'Generate banner copy', governed: true },
+  { id: 'ai_generate_faq', kind: 'generate_faq', label: 'Generate FAQ entries', governed: true },
+]
+
+export function listContentPages() {
   return contentPages
 }
 
-export function listSectionsForPage(pageId: string): ContentSection[] {
+export function findContentPageBySlug(slug) {
+  return contentPages.find((page) => page.slug === slug)
+}
+
+export function listSectionsForPage(pageId) {
   return contentSections
     .filter((section) => section.pageId === pageId)
-    .sort((left, right) => left.order - right.order)
+    .sort((a, b) => a.order - b.order)
 }
 
-export function listContentPromotions(): ContentPromotion[] {
-  return contentPromotions
+export function listPublishedSectionsForPage(pageId) {
+  return listSectionsForPage(pageId).filter((section) => section.lifecycleStatus === 'published')
 }
 
-export function listPeopleProfiles(): PeopleProfile[] {
-  return contentPeopleProfiles
+export function listPublishedPromotions() {
+  return contentPromotions.filter((promotion) => promotion.lifecycleStatus === 'published')
 }
 
-export function listFaqEntries(): FaqEntry[] {
-  return contentFaqEntries
+export function listFeaturedPeopleProfiles() {
+  return contentPeopleProfiles.filter((person) => person.featured && person.lifecycleStatus === 'published')
 }
 
-export function listAiContentOperations(): AiContentOperation[] {
-  return aiContentOperations
+export function listPublishedFaqEntries() {
+  return contentFaqEntries.filter((entry) => entry.lifecycleStatus === 'published')
 }
 
-export function getContentStudioSnapshot(): ContentStudioSnapshot {
+export function getContentStudioSnapshot() {
   return {
     totalPages: contentPages.length,
     totalSections: contentSections.length,
@@ -335,31 +295,30 @@ export function getContentStudioSnapshot(): ContentStudioSnapshot {
 
 export function getContentControllerPanels() {
   const snapshot = getContentStudioSnapshot()
-
   return [
     {
       id: 'panel_site_content',
       label: 'Site content',
       value: snapshot.totalPages,
-      summary: 'Public pages, marketplace entry, auth pages and shared help surfaces.',
+      summary: 'Public pages, marketplace entry, contact surfaces, auth pages and operator-facing surfaces.',
     },
     {
       id: 'panel_people',
       label: 'Leadership and experts',
       value: snapshot.totalPeopleProfiles,
-      summary: 'Leadership, expert, support and advisor profiles under governed control.',
+      summary: 'Leadership, expert and specialist trust surfaces.',
     },
     {
       id: 'panel_promotions',
       label: 'Promotions and offers',
       value: snapshot.totalPromotions,
-      summary: 'Banner units, offers, announcements and campaign strips.',
+      summary: 'Banner units, offers and announcements.',
     },
     {
       id: 'panel_ai_ops',
       label: 'AI content actions',
       value: snapshot.aiOperationCount,
-      summary: 'One-click governed AI actions for drafts, rewrites, banners, FAQs and rollback preparation.',
+      summary: 'Governed AI operations for drafts, rewrites, banners and FAQs.',
     },
   ]
 }

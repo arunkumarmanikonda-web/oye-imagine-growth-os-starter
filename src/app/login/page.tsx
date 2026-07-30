@@ -1,43 +1,42 @@
 import Link from 'next/link'
+import { getLoginHubExperience } from '@/lib/recovery/surface-composer'
 
 export default function LoginPage() {
+  const experience = getLoginHubExperience()
+
   return (
-    <div className="min-h-screen bg-neutral-50 p-6">
-      <div className="mx-auto max-w-5xl space-y-8 py-10">
-        <header className="space-y-3 text-center">
-          <div className="text-xs uppercase tracking-[0.3em] text-neutral-500">Oye !magine</div>
-          <h1 className="text-4xl font-semibold tracking-tight text-neutral-950">Choose your secure entry</h1>
-          <p className="mx-auto max-w-2xl text-sm text-neutral-600">
-            Separate, premium authentication surfaces for clients and operators. No shared role confusion. No inert CTA flow.
-          </p>
-        </header>
-
-        <section className="grid gap-6 md:grid-cols-2">
-          <Link
-            href="/login/client"
-            className="rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm transition hover:border-neutral-400"
-          >
-            <div className="text-xs uppercase tracking-[0.2em] text-neutral-500">Client access</div>
-            <h2 className="mt-3 text-2xl font-semibold text-neutral-950">Client login</h2>
-            <p className="mt-3 text-sm text-neutral-600">
-              Access agreements, invoices, reports, support and the AI-native client experience.
-            </p>
-            <div className="mt-6 text-sm font-medium text-neutral-950">Continue to client authentication</div>
-          </Link>
-
-          <Link
-            href="/login/admin"
-            className="rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm transition hover:border-neutral-400"
-          >
-            <div className="text-xs uppercase tracking-[0.2em] text-neutral-500">Operator access</div>
-            <h2 className="mt-3 text-2xl font-semibold text-neutral-950">Admin / operator login</h2>
-            <p className="mt-3 text-sm text-neutral-600">
-              Access protected workspace control, content studio, config spine, pilot truth and operations surfaces.
-            </p>
-            <div className="mt-6 text-sm font-medium text-neutral-950">Continue to operator authentication</div>
-          </Link>
+    <div className="min-h-screen bg-neutral-50 text-neutral-950">
+      <main className="mx-auto max-w-5xl space-y-8 px-6 py-10">
+        <section className="rounded-[32px] border border-neutral-200 bg-white px-8 py-10 shadow-sm">
+          <div className="space-y-4">
+            <div className="text-xs uppercase tracking-[0.35em] text-neutral-500">Secure access</div>
+            <h1 className="text-4xl font-semibold tracking-tight">{experience.title}</h1>
+            <p className="max-w-3xl text-base leading-7 text-neutral-600">{experience.summary}</p>
+          </div>
         </section>
-      </div>
+
+        <section className="grid gap-4 md:grid-cols-2">
+          {experience.options.map((option) => (
+            <Link key={option.id} href={option.href} className="rounded-[28px] border border-neutral-200 bg-white p-6 shadow-sm no-underline transition hover:border-neutral-300">
+              <div className="text-xs uppercase tracking-wide text-neutral-500">{option.id}</div>
+              <div className="mt-3 text-xl font-semibold text-neutral-950">{option.label}</div>
+              <div className="mt-3 text-sm leading-6 text-neutral-600">{option.summary}</div>
+            </Link>
+          ))}
+        </section>
+
+        <section className="rounded-[28px] border border-neutral-200 bg-white p-6 shadow-sm">
+          <div className="text-xs uppercase tracking-[0.25em] text-neutral-500">Support</div>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            {experience.supportChannels.map((channel) => (
+              <a key={channel.id} href={channel.href} className="rounded-2xl bg-neutral-50 p-4 no-underline">
+                <div className="text-sm font-semibold text-neutral-950">{channel.label}</div>
+                <div className="mt-2 text-sm text-neutral-600">{channel.value}</div>
+              </a>
+            ))}
+          </div>
+        </section>
+      </main>
     </div>
   )
 }
