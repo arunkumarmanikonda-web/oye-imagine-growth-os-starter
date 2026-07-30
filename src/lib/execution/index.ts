@@ -5,3 +5,8 @@ export * from './campaign-drafts';
 export * from './seo-brief';
 export * from './social-calendar';
 export * from './creative-workflows';
+export * from './execution-governance-types';
+export * from './search-optimization';
+export * from './channel-qa';
+export * from './publish-guardrails';
+export * from './proof-assets';
