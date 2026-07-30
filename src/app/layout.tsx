@@ -1,85 +1,78 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import "./globals.css";
+import { buildFooterMeta } from "@/lib/foundation/public-shell";
 
 export const metadata: Metadata = {
-  title: "Oye !magine",
-  description: "AI-first Growth OS for customer-facing delivery and operator-grade execution.",
+  title: {
+    default: "Oye !magine",
+    template: "%s | Oye !magine",
+  },
+  description: "AI-native digital marketing services with premium public, client, and operator surfaces.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+const footerMeta = buildFooterMeta();
+
+export default function RootLayout(props: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
         <div className="oi-shell">
           <header className="oi-topbar">
-            <div className="oi-container oi-topbar-inner">
-              <Link href="/" className="oi-brand-lockup" aria-label="Oye !magine home">
-                <span className="oi-brand-mark-wrap">
-                  <Image
-                    src="/brand/oye-symbol.png"
-                    alt="Oye !magine"
-                    width={48}
-                    height={48}
-                    className="oi-brand-symbol"
-                    priority
-                  />
-                </span>
-                <span className="oi-brand-copy">
-                  <span className="oi-brand-name">Oye !magine</span>
-                  <span className="oi-brand-tag">AI-first Growth OS</span>
-                </span>
+            <div className="oi-container" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+              <Link className="oi-brand" href="/">
+                Oye !magine
               </Link>
 
               <nav className="oi-nav" aria-label="Primary">
-                <Link href="/" className="oi-nav-link">Home</Link>
-                <Link href="/marketplace" className="oi-nav-link">Marketplace</Link>
-                <Link href="/login" className="oi-nav-link">Login</Link>
+                <Link href="/">Home</Link>
+                <Link href="/marketplace">Marketplace</Link>
+                <Link href="/login">Login</Link>
+                <a href="mailto:hello@oyeimagine.com">Contact</a>
               </nav>
 
-              <div className="oi-topbar-actions">
-                <Link href="/login" className="oi-btn oi-btn-ghost">Sign in</Link>
-                <Link href="/admin" className="oi-btn oi-btn-primary">Admin workspace</Link>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <a className="oi-btn oi-btn--secondary" href="mailto:hello@oyeimagine.com">
+                  hello@oyeimagine.com
+                </a>
+                <Link className="oi-btn oi-btn--primary" href="/marketplace">
+                  Explore services
+                </Link>
               </div>
             </div>
           </header>
 
-          <main className="oi-main">{children}</main>
+          <main className="oi-main">{props.children}</main>
 
-          <footer className="oi-footer">
-            <div className="oi-container oi-footer-inner">
-              <div className="oi-footer-brand">
-                <Image
-                  src="/brand/oye-logo-dark.png"
-                  alt="Oye !magine"
-                  width={220}
-                  height={62}
-                  className="oi-footer-logo"
-                  priority
-                />
-                <p className="oi-footer-copy">
-                  Growth infrastructure built for brands that need clarity, speed, and accountable execution.
-                </p>
-              </div>
+          <footer>
+            <div className="oi-container" style={{ paddingTop: 24, paddingBottom: 36 }}>
+              <div className="oi-grid oi-grid--two">
+                <article className="oi-card">
+                  <div className="oi-card-title">Oye !magine</div>
+                  <p className="oi-page-subtitle" style={{ marginTop: 8 }}>
+                    Premium digital growth systems, managed delivery, client-ready reporting, and admin-controlled content surfaces.
+                  </p>
+                </article>
 
-              <div className="oi-footer-grid">
-                <div>
-                  <p className="oi-footer-heading">Product</p>
-                  <Link href="/" className="oi-footer-link">Overview</Link>
-                  <Link href="/marketplace" className="oi-footer-link">Marketplace</Link>
-                  <Link href="/login" className="oi-footer-link">Client access</Link>
-                </div>
-                <div>
-                  <p className="oi-footer-heading">Admin</p>
-                  <Link href="/admin" className="oi-footer-link">Workspace</Link>
-                  <Link href="/admin/marketplace" className="oi-footer-link">Marketplace admin</Link>
-                  <Link href="/admin/ops" className="oi-footer-link">Operations console</Link>
-                </div>
+                <article className="oi-card">
+                  <div className="oi-card-title">Legal and support identity</div>
+                  <div className="oi-meta-line" style={{ marginTop: 12 }}>
+                    <strong>Legal name:</strong> {footerMeta.legalName}
+                  </div>
+                  <div className="oi-meta-line" style={{ marginTop: 8 }}>
+                    <strong>GSTIN:</strong> {footerMeta.gstin}
+                  </div>
+                  <div className="oi-meta-line" style={{ marginTop: 8 }}>
+                    <strong>CIN:</strong> {footerMeta.cin}
+                  </div>
+                  <div className="oi-meta-line" style={{ marginTop: 8 }}>
+                    <strong>Email:</strong> {footerMeta.supportEmail}
+                  </div>
+                  <div className="oi-meta-line" style={{ marginTop: 8 }}>
+                    <strong>Phone:</strong> {footerMeta.supportPhone}
+                  </div>
+                </article>
               </div>
             </div>
           </footer>
