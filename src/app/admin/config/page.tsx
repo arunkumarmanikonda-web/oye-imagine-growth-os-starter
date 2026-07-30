@@ -43,6 +43,9 @@ export default function AdminConfigPage() {
               <Link className="oi-btn oi-btn--secondary" href="/admin/settings">
                 Workspace settings
               </Link>
+              <Link className="oi-btn oi-btn--secondary" href="/admin/content">
+                Content studio
+              </Link>
               <a className="oi-btn oi-btn--primary" href="mailto:hello@oyeimagine.com">
                 Email hello@oyeimagine.com
               </a>
