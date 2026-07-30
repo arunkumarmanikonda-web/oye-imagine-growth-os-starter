@@ -45,13 +45,13 @@ on public.commercial_subscriptions (tenant_id, status, updated_at desc);
 create or replace function public.tg_commercial_workflow_set_updated_at()
 returns trigger
 language plpgsql
-as .\supabase\migrations\20260730_commercial_workflow_persistence.sql
+as $wf$
 begin
   new.updated_at := timezone('utc', now());
   return new;
 end;
 
-.\supabase\migrations\20260730_commercial_workflow_persistence.sql;
+$wf$;
 
 drop trigger if exists trg_commercial_contracts_set_updated_at on public.commercial_contracts;
 create trigger trg_commercial_contracts_set_updated_at
@@ -82,7 +82,7 @@ create or replace function public.commercial_resolve_approval_request(
 language plpgsql
 security definer
 set search_path = public
-as .\supabase\migrations\20260730_commercial_workflow_persistence.sql
+as $wf$
 declare
   v_existing jsonb;
   v_request public.commercial_approval_requests%rowtype;
@@ -194,7 +194,7 @@ begin
   return v_result;
 end;
 
-.\supabase\migrations\20260730_commercial_workflow_persistence.sql;
+$wf$;
 
 create or replace function public.commercial_activate_contract(
   p_contract_id text,
@@ -206,7 +206,7 @@ create or replace function public.commercial_activate_contract(
 language plpgsql
 security definer
 set search_path = public
-as .\supabase\migrations\20260730_commercial_workflow_persistence.sql
+as $wf$
 declare
   v_existing jsonb;
   v_contract public.commercial_contracts%rowtype;
@@ -298,7 +298,7 @@ begin
   return v_result;
 end;
 
-.\supabase\migrations\20260730_commercial_workflow_persistence.sql;
+$wf$;
 
 create or replace function public.commercial_mark_invoice_paid(
   p_invoice_id text,
@@ -310,7 +310,7 @@ create or replace function public.commercial_mark_invoice_paid(
 language plpgsql
 security definer
 set search_path = public
-as .\supabase\migrations\20260730_commercial_workflow_persistence.sql
+as $wf$
 declare
   v_existing jsonb;
   v_invoice public.commercial_invoices%rowtype;
@@ -402,7 +402,7 @@ begin
   return v_result;
 end;
 
-.\supabase\migrations\20260730_commercial_workflow_persistence.sql;
+$wf$;
 
 create or replace function public.commercial_renew_subscription(
   p_subscription_id text,
@@ -414,7 +414,7 @@ create or replace function public.commercial_renew_subscription(
 language plpgsql
 security definer
 set search_path = public
-as .\supabase\migrations\20260730_commercial_workflow_persistence.sql
+as $wf$
 declare
   v_existing jsonb;
   v_subscription public.commercial_subscriptions%rowtype;
@@ -506,6 +506,6 @@ begin
   return v_result;
 end;
 
-.\supabase\migrations\20260730_commercial_workflow_persistence.sql;
+$wf$;
 
 commit;
