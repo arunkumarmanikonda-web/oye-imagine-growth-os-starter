@@ -1,16 +1,68 @@
-import {answerConciergeQuery,buildConciergeWorkspaceSnapshot} from '@/lib/ai/concierge-retrieval'
-import {buildDemoAdminConciergeScope,buildDemoClientConciergeScope,buildDemoMarketplaceConciergeScope} from '@/lib/ai/concierge-retrieval-registry'
+import { buildConciergeExperiencePayload } from '@/lib/ai/concierge-experience'
+import {
+  buildDemoAdminConciergeScope,
+  buildDemoClientConciergeScope,
+  buildDemoMarketplaceConciergeScope,
+} from '@/lib/ai/concierge-retrieval-registry'
 
-export default function AdminAiConciergePage(){
-  const admin=buildDemoAdminConciergeScope(), client=buildDemoClientConciergeScope(), market=buildDemoMarketplaceConciergeScope()
-  const clientDenied=answerConciergeQuery(client,'margin health and secret config','help_panel')
-  const adminVisible=answerConciergeQuery(admin,'margin health and secret config','help_panel')
-  const marketSnap=buildConciergeWorkspaceSnapshot(market,'marketplace_surface')
-  return <div className="space-y-6 p-6">
-    <header><h1 className="text-2xl font-semibold">Admin AI Concierge Oversight</h1><p className="text-sm text-neutral-600">Audit permission-aware retrieval across client, marketplace, and internal help surfaces.</p></header>
-    <section className="grid gap-3 md:grid-cols-3">{[
-      ['Client denied results',clientDenied.deniedCount],['Admin visible results',adminVisible.resultCount],['Marketplace visible artifacts',marketSnap.totalResources],
-    ].map(([l,v])=><div key={String(l)} className="rounded-xl border p-4"><div className="text-xs text-neutral-500">{l}</div><div className="text-2xl font-semibold">{v}</div></div>)}</section>
-    <section className="rounded-2xl border p-5"><div className="font-medium">Permission guard proof</div><p className="mt-2 text-sm text-neutral-600">Client query for internal finance/config returns {clientDenied.resultCount} visible results with {clientDenied.deniedCount} denied matches. Admin sees {adminVisible.resultCount} internal/admin items.</p></section>
-  </div>
+export default function AdminAiConciergePage() {
+  const adminScope = buildDemoAdminConciergeScope()
+  const clientScope = buildDemoClientConciergeScope()
+  const marketplaceScope = buildDemoMarketplaceConciergeScope()
+
+  const adminPayload = buildConciergeExperiencePayload(
+    adminScope,
+    'help_panel',
+    'margin health, secret config and denied results audit'
+  )
+  const clientPayload = buildConciergeExperiencePayload(
+    clientScope,
+    'client_dashboard',
+    'where is my overdue invoice, latest report and active agreement'
+  )
+  const marketplacePayload = buildConciergeExperiencePayload(
+    marketplaceScope,
+    'marketplace_surface',
+    'proposal status specialist availability approved deliverables'
+  )
+
+  return (
+    <div className="space-y-6 p-6">
+      <header className="space-y-2">
+        <div className="text-xs uppercase tracking-[0.2em] text-neutral-500">Admin oversight</div>
+        <h1 className="text-2xl font-semibold">Premium concierge quality and guardrails</h1>
+        <p className="max-w-3xl text-sm text-neutral-600">
+          Audit prompt coverage, action shortcuts, source linking, and permission-scoped visibility across all authenticated help surfaces.
+        </p>
+      </header>
+
+      <section className="grid gap-3 md:grid-cols-4">
+        {[
+          ['Admin source chips', adminPayload.guidedAnswer.sourceChips.length],
+          ['Client action cards', clientPayload.guidedAnswer.actionCards.length],
+          ['Marketplace presets', marketplacePayload.shell.promptPresets.length],
+          ['Denied results (admin audit)', adminPayload.guidedAnswer.answer.deniedCount],
+        ].map(([label, value]) => (
+          <div key={String(label)} className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+            <div className="text-xs text-neutral-500">{label}</div>
+            <div className="mt-2 text-2xl font-semibold">{value}</div>
+          </div>
+        ))}
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3">
+        {[
+          ['Client dashboard', clientPayload.shell.title, clientPayload.guidedAnswer.summary],
+          ['Marketplace surface', marketplacePayload.shell.title, marketplacePayload.guidedAnswer.summary],
+          ['Help panel', adminPayload.shell.title, adminPayload.guidedAnswer.summary],
+        ].map(([label, title, summary]) => (
+          <div key={String(label)} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+            <div className="text-xs uppercase tracking-wide text-neutral-500">{label}</div>
+            <div className="mt-2 text-lg font-medium">{title}</div>
+            <div className="mt-2 text-sm text-neutral-600">{summary}</div>
+          </div>
+        ))}
+      </section>
+    </div>
+  )
 }
