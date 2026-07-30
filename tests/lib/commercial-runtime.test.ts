@@ -185,10 +185,26 @@ describe("commercial runtime", () => {
       }),
     ).resolves.toEqual({ id: "subscription_1", status: "active" })
 
-    expect(persistenceService.resolveApprovalRequest).toHaveBeenCalledTimes(1)
-    expect(persistenceService.activateContract).toHaveBeenCalledTimes(1)
-    expect(persistenceService.markInvoicePaid).toHaveBeenCalledTimes(1)
-    expect(persistenceService.renewSubscription).toHaveBeenCalledTimes(1)
+    expect(persistenceService.resolveApprovalRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operationKey: "approval-resolve:approval_1:approve",
+      }),
+    )
+    expect(persistenceService.activateContract).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operationKey: "contract-activate:contract_1",
+      }),
+    )
+    expect(persistenceService.markInvoicePaid).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operationKey: "invoice-mark-paid:invoice_1",
+      }),
+    )
+    expect(persistenceService.renewSubscription).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operationKey: "subscription-renew:subscription_1",
+      }),
+    )
   })
 
   it("falls back to store for workflow mutations when persistence runtime does not expose them", async () => {
@@ -251,7 +267,7 @@ describe("commercial runtime", () => {
     expect(storeMocks.resolveApprovalRequest).toHaveBeenCalledTimes(1)
   })
 
-  it("deduplicates persistence workflow mutations when operationKey is reused", async () => {
+  it("does not runtime-deduplicate persistence workflow mutations when operationKey is reused", async () => {
     process.env.COMMERCIAL_PERSISTENCE_MODE = "supabase"
 
     const persistenceService = {
@@ -289,6 +305,18 @@ describe("commercial runtime", () => {
       status: "paid",
     })
 
-    expect(persistenceService.markInvoicePaid).toHaveBeenCalledTimes(1)
+    expect(persistenceService.markInvoicePaid).toHaveBeenCalledTimes(2)
+    expect(persistenceService.markInvoicePaid).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        operationKey: "invoice-mark-paid:invoice_1",
+      }),
+    )
+    expect(persistenceService.markInvoicePaid).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        operationKey: "invoice-mark-paid:invoice_1",
+      }),
+    )
   })
 })

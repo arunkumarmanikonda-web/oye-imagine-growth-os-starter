@@ -111,7 +111,7 @@ function normalizeOperationKey(value: string | null | undefined): string | undef
   return trimmed.length > 0 ? trimmed : undefined
 }
 
-async function runIdempotentWorkflowMutation<T>(
+async function runStoreBackedIdempotentWorkflowMutation<T>(
   kind: string,
   operationKey: string | null | undefined,
   execute: () => Promise<T> | T,
@@ -182,69 +182,65 @@ export async function spendMediaBalanceRuntime(input: RuntimeMutationInput) {
 }
 
 export async function resolveApprovalRequestRuntime(input: RuntimeApprovalDecisionInput) {
-  return runIdempotentWorkflowMutation(
+  if (getCommercialPersistenceMode() === "supabase") {
+    const method = findRuntimeMethod(["resolveApprovalRequest", "resolveApproval"])
+    if (method) {
+      return method(input)
+    }
+  }
+
+  return runStoreBackedIdempotentWorkflowMutation(
     "approval-resolve",
     input.operationKey,
-    async () => {
-      if (getCommercialPersistenceMode() === "supabase") {
-        const method = findRuntimeMethod(["resolveApprovalRequest", "resolveApproval"])
-        if (method) {
-          return method(input)
-        }
-      }
-
-      return (resolveApprovalRequestStore as unknown as (value: RuntimeApprovalDecisionInput) => unknown)(input)
-    },
+    async () =>
+      (resolveApprovalRequestStore as unknown as (value: RuntimeApprovalDecisionInput) => unknown)(input),
   )
 }
 
 export async function activateContractRuntime(input: RuntimeActivateContractInput) {
-  return runIdempotentWorkflowMutation(
+  if (getCommercialPersistenceMode() === "supabase") {
+    const method = findRuntimeMethod(["activateContract"])
+    if (method) {
+      return method(input)
+    }
+  }
+
+  return runStoreBackedIdempotentWorkflowMutation(
     "contract-activate",
     input.operationKey,
-    async () => {
-      if (getCommercialPersistenceMode() === "supabase") {
-        const method = findRuntimeMethod(["activateContract"])
-        if (method) {
-          return method(input)
-        }
-      }
-
-      return (activateContractStore as unknown as (value: RuntimeActivateContractInput) => unknown)(input)
-    },
+    async () =>
+      (activateContractStore as unknown as (value: RuntimeActivateContractInput) => unknown)(input),
   )
 }
 
 export async function markInvoicePaidRuntime(input: RuntimeMarkInvoicePaidInput) {
-  return runIdempotentWorkflowMutation(
+  if (getCommercialPersistenceMode() === "supabase") {
+    const method = findRuntimeMethod(["markInvoicePaid", "payInvoice"])
+    if (method) {
+      return method(input)
+    }
+  }
+
+  return runStoreBackedIdempotentWorkflowMutation(
     "invoice-mark-paid",
     input.operationKey,
-    async () => {
-      if (getCommercialPersistenceMode() === "supabase") {
-        const method = findRuntimeMethod(["markInvoicePaid", "payInvoice"])
-        if (method) {
-          return method(input)
-        }
-      }
-
-      return (markInvoicePaidStore as unknown as (value: RuntimeMarkInvoicePaidInput) => unknown)(input)
-    },
+    async () =>
+      (markInvoicePaidStore as unknown as (value: RuntimeMarkInvoicePaidInput) => unknown)(input),
   )
 }
 
 export async function renewSubscriptionRuntime(input: RuntimeRenewSubscriptionInput) {
-  return runIdempotentWorkflowMutation(
+  if (getCommercialPersistenceMode() === "supabase") {
+    const method = findRuntimeMethod(["renewSubscription"])
+    if (method) {
+      return method(input)
+    }
+  }
+
+  return runStoreBackedIdempotentWorkflowMutation(
     "subscription-renew",
     input.operationKey,
-    async () => {
-      if (getCommercialPersistenceMode() === "supabase") {
-        const method = findRuntimeMethod(["renewSubscription"])
-        if (method) {
-          return method(input)
-        }
-      }
-
-      return (renewSubscriptionStore as unknown as (value: RuntimeRenewSubscriptionInput) => unknown)(input)
-    },
+    async () =>
+      (renewSubscriptionStore as unknown as (value: RuntimeRenewSubscriptionInput) => unknown)(input),
   )
 }
