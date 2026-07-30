@@ -1,128 +1,144 @@
-import {
-  getCommercialOverview,
-  listPendingApprovalRequests,
-} from "@/lib/commercial/store"
+import { buildCommercialAutomationJobs, getCommercialAutomationSummary } from '@/lib/commercial/commercial-automation'
+import { getCommercialHardeningSnapshot } from '@/lib/commercial/commercial-hardening'
 
 function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
     maximumFractionDigits: 0,
   }).format(amount)
 }
 
-export default async function AdminCommercialPage() {
-  const overview = getCommercialOverview()
-  const pendingApprovals = listPendingApprovalRequests()
+export default function AdminCommercialPage() {
+  const referenceDate = '2026-08-05T00:00:00.000Z'
+  const snapshot = getCommercialHardeningSnapshot(referenceDate)
+  const summary = getCommercialAutomationSummary('all', referenceDate)
+  const jobs = buildCommercialAutomationJobs('all', referenceDate)
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 p-6">
-      <header className="space-y-2">
-        <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
-          Admin / Commercial
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
-          Commercial Backbone
-        </h1>
+    <main className="mx-auto flex max-w-7xl flex-col gap-8 px-6 py-10">
+      <header className="space-y-3">
+        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Admin / Commercial</p>
+        <h1 className="text-3xl font-semibold text-slate-950">Commercial automations and hardening</h1>
         <p className="max-w-3xl text-sm text-slate-600">
-          Tenant-level overview of subscriptions, contracts, media balance, and
-          approval-gated commercial actions for the current pilot backbone.
+          Commercial follow-ups, collections routing, renewal nudges, and readiness checks across agreements,
+          invoices, and client finance surfaces.
         </p>
       </header>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">Tenants</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900">
-            {overview.tenantCount}
-          </p>
+      <section className="grid gap-4 md:grid-cols-5">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-sm text-slate-500">Automation jobs</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-950">{snapshot.totalAutomationJobs}</p>
         </article>
-
-        <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">Pending approvals</p>
-          <p className="mt-2 text-3xl font-semibold text-amber-600">
-            {overview.pendingApprovalCount}
-          </p>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-sm text-slate-500">Critical jobs</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-950">{snapshot.criticalAutomationJobs}</p>
         </article>
-
-        <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">Available media balance</p>
-          <p className="mt-2 text-3xl font-semibold text-emerald-600">
-            {formatCurrency(overview.totalMediaBalanceAvailable)}
-          </p>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-sm text-slate-500">Open collections</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-950">{formatCurrency(snapshot.openCollectionsValue)}</p>
+        </article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-sm text-slate-500">Readiness score</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-950">{snapshot.readinessScore}%</p>
+        </article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-sm text-slate-500">Workspaces</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-950">{snapshot.workspacesCovered.length}</p>
         </article>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-5 py-4">
-          <h2 className="text-lg font-semibold text-slate-900">Tenant overview</h2>
+      <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="space-y-6">
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-slate-950">Automation queue</h2>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                workspaces: {summary.workspaces.join(', ')}
+              </span>
+            </div>
+
+            <div className="grid gap-4">
+              {jobs.map((job) => (
+                <article key={job.id} className="rounded-2xl border border-slate-200 p-5">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div className="space-y-1">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{job.kind}</p>
+                      <h3 className="text-lg font-semibold text-slate-950">{job.title}</h3>
+                      <p className="text-sm text-slate-600">{job.description}</p>
+                    </div>
+
+                    <div className="text-left md:text-right">
+                      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{job.priority}</p>
+                      <p className="text-sm text-slate-700">{job.channel}</p>
+                      <p className="text-xs text-slate-500">{job.scheduledFor.slice(0, 10)}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">{job.workspaceKey}</span>
+                    <span className="rounded-full bg-blue-50 px-3 py-1 text-blue-700">{job.targetReference}</span>
+                    {typeof job.amount === 'number' ? (
+                      <span className="rounded-full bg-amber-50 px-3 py-1 text-amber-700">
+                        {formatCurrency(job.amount)}
+                      </span>
+                    ) : null}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
         </div>
 
-        {overview.tenants.length === 0 ? (
-          <div className="px-5 py-6 text-sm text-slate-500">
-            No tenant commercial records available yet.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-5 py-3 text-left font-medium text-slate-600">Tenant</th>
-                  <th className="px-5 py-3 text-left font-medium text-slate-600">Plan</th>
-                  <th className="px-5 py-3 text-left font-medium text-slate-600">Subscription</th>
-                  <th className="px-5 py-3 text-left font-medium text-slate-600">Contract</th>
-                  <th className="px-5 py-3 text-left font-medium text-slate-600">Media balance</th>
-                  <th className="px-5 py-3 text-left font-medium text-slate-600">Pending approvals</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
-                {overview.tenants.map((tenant) => (
-                  <tr key={tenant.tenantId}>
-                    <td className="px-5 py-4">
-                      <div className="font-medium text-slate-900">{tenant.name}</div>
-                      <div className="text-xs text-slate-500">{tenant.slug}</div>
-                    </td>
-                    <td className="px-5 py-4 text-slate-700">{tenant.planCode ?? "—"}</td>
-                    <td className="px-5 py-4 text-slate-700">{tenant.subscriptionStatus}</td>
-                    <td className="px-5 py-4 text-slate-700">{tenant.contractStatus}</td>
-                    <td className="px-5 py-4 text-slate-700">
-                      {formatCurrency(tenant.mediaBalanceAvailable)}
-                    </td>
-                    <td className="px-5 py-4 text-slate-700">{tenant.pendingApprovalCount}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
-      <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-5 py-4">
-          <h2 className="text-lg font-semibold text-slate-900">Approval queue</h2>
-        </div>
-
-        {pendingApprovals.length === 0 ? (
-          <div className="px-5 py-6 text-sm text-slate-500">
-            No pending approval requests.
-          </div>
-        ) : (
-          <ul className="divide-y divide-slate-100">
-            {pendingApprovals.map((item) => (
-              <li key={item.id} className="px-5 py-4">
-                <div className="flex flex-col gap-1">
-                  <div className="text-sm font-medium text-slate-900">
-                    {item.actionType} · {formatCurrency(item.payload.amount)}
+        <aside className="space-y-6">
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-slate-950">Hardening checks</h2>
+            <div className="mt-4 grid gap-3">
+              {snapshot.checks.map((check) => (
+                <article key={check.id} className="rounded-xl border border-slate-200 px-4 py-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-slate-950">{check.title}</p>
+                    <span className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                      {check.passed ? 'pass' : 'fail'}
+                    </span>
                   </div>
-                  <div className="text-sm text-slate-600">{item.payload.reason}</div>
-                  <div className="text-xs text-slate-500">
-                    Requested by {item.requestedByUserId} · {item.status}
-                  </div>
+                  <p className="mt-2 text-sm text-slate-600">{check.detail}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-slate-950">Automation mix</h2>
+            <div className="mt-4 grid gap-3 text-sm text-slate-700">
+              {Object.entries(summary.byKind).map(([kind, count]) => (
+                <div key={kind} className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3">
+                  <span className="uppercase tracking-[0.18em] text-slate-500">{kind}</span>
+                  <span className="font-semibold text-slate-950">{count}</span>
                 </div>
-              </li>
-            ))}
-          </ul>
-        )}
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-slate-950">At-risk workspaces</h2>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {snapshot.atRiskWorkspaces.length === 0 ? (
+                <p className="text-sm text-slate-600">No high-risk workspaces right now.</p>
+              ) : (
+                snapshot.atRiskWorkspaces.map((workspace) => (
+                  <span
+                    key={workspace}
+                    className="rounded-full bg-rose-50 px-3 py-1 text-xs font-medium text-rose-700"
+                  >
+                    {workspace}
+                  </span>
+                ))
+              )}
+            </div>
+          </section>
+        </aside>
       </section>
     </main>
   )
