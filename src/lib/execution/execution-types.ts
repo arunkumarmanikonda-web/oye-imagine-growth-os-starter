@@ -16,6 +16,10 @@ export type CampaignStatus =
   | 'exported'
   | 'archived';
 
+export type SocialChannel = 'instagram' | 'facebook' | 'linkedin' | 'youtube' | 'email';
+export type SocialFormat = 'static' | 'carousel' | 'reel' | 'story' | 'email';
+export type CreativeFormat = 'static' | 'carousel' | 'reel' | 'story' | 'banner';
+
 export interface ContentTheme {
   title: string;
   angle: string;
@@ -106,4 +110,69 @@ export interface CampaignDraft {
     hook: string;
     cta: string;
   }>;
+}
+
+export interface SeoBriefInput {
+  brandName: string;
+  offer: string;
+  audience: string;
+  primaryKeyword: string;
+  supportingKeywords: string[];
+  differentiators: string[];
+}
+
+export interface SeoBrief {
+  briefName: string;
+  primaryKeyword: string;
+  supportingKeywords: string[];
+  titleOptions: string[];
+  metaDescription: string;
+  headingOutline: string[];
+  internalLinks: string[];
+  schemaRecommendations: string[];
+}
+
+export interface SocialCalendarInput {
+  brandName: string;
+  campaignTheme: string;
+  startDate: string;
+  weeks: number;
+  cadencePerWeek: number;
+  channels: SocialChannel[];
+  formats: SocialFormat[];
+  primaryCta: string;
+}
+
+export interface SocialCalendarEntry {
+  publishOn: string;
+  channel: SocialChannel;
+  format: SocialFormat;
+  pillar: string;
+  captionHook: string;
+  primaryCta: string;
+}
+
+export interface CreativeAssetInput {
+  platform: CampaignPlatform | 'organic_social';
+  objective: string;
+  offer: string;
+  audience: string;
+  hooks: string[];
+  formats: CreativeFormat[];
+  claims: string[];
+  disclaimer?: string;
+}
+
+export interface CreativeAssetDraft {
+  platform: CampaignPlatform | 'organic_social';
+  objective: string;
+  assets: Array<{
+    format: CreativeFormat;
+    aspectRatio: string;
+    hook: string;
+    headline: string;
+    primaryText: string;
+  }>;
+  complianceFlags: string[];
+  disclaimer?: string;
 }
