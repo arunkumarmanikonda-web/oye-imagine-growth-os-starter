@@ -1,136 +1,101 @@
-import Link from "next/link";
 import {
-  buildCmsMutationPlan,
-  buildCmsStudioSectionCards,
-  getCmsRegistrySummary,
-} from "@/lib/cms/control-plane";
-import { buildCmsAiSuggestionBundle, listCmsAiCapabilities } from "@/lib/cms/ai-assist";
-
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
+  getContentControllerPanels,
+  getContentStudioSnapshot,
+  listAiContentOperations,
+  listContentPromotions,
+  listPeopleProfiles,
+} from '@/lib/recovery/content-controller'
 
 export default function AdminContentPage() {
-  const summary = getCmsRegistrySummary();
-  const studioCards = buildCmsStudioSectionCards();
-  const aiCapabilities = listCmsAiCapabilities();
-  const samplePlan = buildCmsMutationPlan("promotion", "promo-growth-audit", "publish");
-  const sampleAi = buildCmsAiSuggestionBundle({
-    entityType: "promotion",
-    prompt: "AI growth audit offer for premium brands",
-  });
+  const snapshot = getContentStudioSnapshot()
+  const panels = getContentControllerPanels()
+  const promotions = listContentPromotions()
+  const people = listPeopleProfiles()
+  const aiOps = listAiContentOperations()
 
   return (
-    <main className="oi-shell">
-      <div className="oi-main">
-        <div className="oi-container" style={{ paddingTop: 40, paddingBottom: 40 }}>
-          <div className="oi-stage-head">
-            <div>
-              <div className="oi-pill">Mega Batch A · A3</div>
-              <h1 className="oi-page-title">Admin content studio</h1>
-              <p className="oi-page-subtitle">
-                CMS registry, publish planning, and AI-assisted content operations for visible UI surfaces.
-              </p>
-            </div>
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <Link className="oi-btn oi-btn--secondary" href="/admin/config">
-                Config control
-              </Link>
-              <Link className="oi-btn oi-btn--secondary" href="/admin/support">
-                Support ops
-              </Link>
-              <a className="oi-btn oi-btn--primary" href="mailto:hello@oyeimagine.com">
-                Content escalation
-              </a>
-            </div>
+    <div className="space-y-6 p-6">
+      <header className="space-y-2">
+        <div className="text-xs uppercase tracking-[0.2em] text-neutral-500">Recovery A1</div>
+        <h1 className="text-2xl font-semibold">Content studio foundation</h1>
+        <p className="max-w-3xl text-sm text-neutral-600">
+          Govern every visible business-facing UI surface through schema-backed content control, revisions,
+          promos, people rails and AI-assisted one-click operations.
+        </p>
+      </header>
+
+      <section className="grid gap-3 md:grid-cols-4">
+        {panels.map((panel) => (
+          <div key={panel.id} className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
+            <div className="text-xs text-neutral-500">{panel.label}</div>
+            <div className="mt-2 text-2xl font-semibold">{panel.value}</div>
+            <div className="mt-2 text-sm text-neutral-600">{panel.summary}</div>
           </div>
+        ))}
+      </section>
 
-          <section className="oi-grid oi-grid--stats" style={{ marginTop: 24 }}>
-            <article className="oi-card">
-              <div className="oi-kpi-label">Collections</div>
-              <div className="oi-kpi-value">{summary.totalCollections}</div>
-            </article>
-            <article className="oi-card">
-              <div className="oi-kpi-label">Managed items</div>
-              <div className="oi-kpi-value">{summary.totalManagedItems}</div>
-            </article>
-            <article className="oi-card">
-              <div className="oi-kpi-label">Surface families</div>
-              <div className="oi-kpi-value">{summary.totalVisibleSurfaceFamilies}</div>
-            </article>
-          </section>
-
-          <section className="oi-grid oi-grid--three" style={{ marginTop: 24 }}>
-            {studioCards.map((card) => (
-              <article key={card.entityType} className="oi-card">
-                <div className="oi-card-title">{card.title}</div>
-                <p className="oi-page-subtitle" style={{ marginTop: 8 }}>{card.description}</p>
-                <div className="oi-meta-line" style={{ marginTop: 12 }}>
-                  <strong>Count:</strong> {card.itemCount}
-                </div>
-              </article>
+      <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+          <div className="text-xs uppercase tracking-wide text-neutral-500">Studio snapshot</div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            {[
+              ['Pages', snapshot.totalPages],
+              ['Sections', snapshot.totalSections],
+              ['Promotions', snapshot.totalPromotions],
+              ['People', snapshot.totalPeopleProfiles],
+              ['FAQs', snapshot.totalFaqEntries],
+              ['Published versions', snapshot.publishedCount],
+            ].map(([label, value]) => (
+              <div key={String(label)} className="rounded-xl bg-neutral-50 p-4">
+                <div className="text-xs text-neutral-500">{label}</div>
+                <div className="mt-2 text-xl font-semibold">{value}</div>
+              </div>
             ))}
-          </section>
-
-          <section className="oi-grid oi-grid--two" style={{ marginTop: 24 }}>
-            <article className="oi-card">
-              <div className="oi-card-title">Publish and mutation planning</div>
-              <div className="oi-meta-line" style={{ marginTop: 12 }}>
-                <strong>Entity:</strong> {samplePlan.entityType}
-              </div>
-              <div className="oi-meta-line" style={{ marginTop: 8 }}>
-                <strong>Slug:</strong> {samplePlan.slug}
-              </div>
-              <div className="oi-meta-line" style={{ marginTop: 8 }}>
-                <strong>Action:</strong> {samplePlan.action}
-              </div>
-              <div className="oi-meta-line" style={{ marginTop: 8 }}>
-                <strong>Review required:</strong> {String(samplePlan.requiresReview)}
-              </div>
-              <div className="oi-meta-line" style={{ marginTop: 8 }}>
-                <strong>Status:</strong> {samplePlan.status}
-              </div>
-              <p className="oi-page-subtitle" style={{ marginTop: 12 }}>{samplePlan.summary}</p>
-            </article>
-
-            <article className="oi-card">
-              <div className="oi-card-title">AI-assisted content suggestion</div>
-              <div className="oi-meta-line" style={{ marginTop: 12 }}>
-                <strong>Title:</strong> {sampleAi.title}
-              </div>
-              <p className="oi-page-subtitle" style={{ marginTop: 8 }}>{sampleAi.summary}</p>
-              <ul className="oi-list" style={{ marginTop: 12 }}>
-                {sampleAi.bullets.map((bullet) => (
-                  <li key={bullet}>{bullet}</li>
-                ))}
-              </ul>
-              <div className="oi-meta-line" style={{ marginTop: 12 }}>
-                <strong>CTA:</strong> {sampleAi.ctaLabel}
-              </div>
-            </article>
-          </section>
-
-          <section className="oi-grid oi-grid--two" style={{ marginTop: 24 }}>
-            <article className="oi-card">
-              <div className="oi-card-title">AI capabilities</div>
-              <ul className="oi-list" style={{ marginTop: 12 }}>
-                {aiCapabilities.map((capability) => (
-                  <li key={capability}>{capability}</li>
-                ))}
-              </ul>
-            </article>
-
-            <article className="oi-card">
-              <div className="oi-card-title">Batch A closure hardening</div>
-              <ul className="oi-list" style={{ marginTop: 12 }}>
-                <li>Support operations workspace linked</li>
-                <li>Resend runtime status visible to operators</li>
-                <li>Mail-log lifecycle visible to admin users</li>
-                <li>Config, content, support, and route protection now form the full Batch A spine</li>
-              </ul>
-            </article>
-          </section>
+          </div>
         </div>
-      </div>
-    </main>
-  );
+
+        <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+          <div className="text-xs uppercase tracking-wide text-neutral-500">AI one-click operations</div>
+          <ul className="mt-4 space-y-3">
+            {aiOps.map((operation) => (
+              <li key={operation.id} className="rounded-xl border border-neutral-200 p-3">
+                <div className="font-medium">{operation.label}</div>
+                <div className="mt-1 text-sm text-neutral-600">{operation.description}</div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+          <div className="text-xs uppercase tracking-wide text-neutral-500">Leadership and experts</div>
+          <ul className="mt-4 space-y-3">
+            {people.map((person) => (
+              <li key={person.id} className="rounded-xl border border-neutral-200 p-3">
+                <div className="font-medium">{person.displayName}</div>
+                <div className="text-sm text-neutral-600">{person.title}</div>
+                <div className="mt-1 text-sm text-neutral-600">{person.summary}</div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+          <div className="text-xs uppercase tracking-wide text-neutral-500">Promotions and offers</div>
+          <ul className="mt-4 space-y-3">
+            {promotions.map((promotion) => (
+              <li key={promotion.id} className="rounded-xl border border-neutral-200 p-3">
+                <div className="font-medium">{promotion.title}</div>
+                <div className="mt-1 text-sm text-neutral-600">{promotion.summary}</div>
+                <div className="mt-2 text-xs uppercase tracking-wide text-neutral-500">
+                  {promotion.ctaLabel} · {promotion.lifecycleStatus}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    </div>
+  )
 }
