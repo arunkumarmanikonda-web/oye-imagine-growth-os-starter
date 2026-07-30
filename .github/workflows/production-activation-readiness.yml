@@ -1,0 +1,28 @@
+name: production-activation-readiness
+
+on:
+  push:
+    branches:
+      - main
+      - closeout-*
+  pull_request:
+
+jobs:
+  production-activation-readiness:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup-node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: install
+        run: npm ci
+
+      - name: run production activation readiness
+        shell: pwsh
+        run: ./scripts/Invoke-ProductionActivationReadiness.ps1
