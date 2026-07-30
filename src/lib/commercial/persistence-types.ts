@@ -70,3 +70,14 @@ export interface CommercialPersistenceRepository {
   listAuditEvents(tenantId: string): Promise<CommercialAuditEventRecord[]>;
   listApprovalRequests(tenantId: string): Promise<CommercialApprovalRequestRecord[]>;
 }
+
+export type {
+  ActivateCommercialContractInput,
+  CommercialApprovalDecision,
+  CommercialWorkflowMutationInputBase,
+  CommercialWorkflowPersistenceRuntimeSurface,
+  MarkCommercialInvoicePaidInput,
+  RenewCommercialSubscriptionInput,
+  ResolveCommercialApprovalRequestInput,
+} from './workflow-persistence-surface'
+export { hasCommercialWorkflowPersistenceSurface } from './workflow-persistence-surface'

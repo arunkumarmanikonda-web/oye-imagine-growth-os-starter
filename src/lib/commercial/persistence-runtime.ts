@@ -109,3 +109,5 @@ export function getPersistenceService(): CommercialPersistenceRuntime {
 export function resetPersistenceServiceForTests(): void {
   persistenceRuntimeSingleton = null;
 }
+
+
