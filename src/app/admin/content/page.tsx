@@ -1,99 +1,109 @@
-import {
-  getContentControllerPanels,
-  getContentStudioSnapshot,
-  listAiContentOperations,
-  listContentPromotions,
-  listPeopleProfiles,
-} from '@/lib/recovery/content-controller'
+import { getAdminContentStudioExperience } from '@/lib/recovery/content-governance'
 
 export default function AdminContentPage() {
-  const snapshot = getContentStudioSnapshot()
-  const panels = getContentControllerPanels()
-  const promotions = listContentPromotions()
-  const people = listPeopleProfiles()
-  const aiOps = listAiContentOperations()
+  const experience = getAdminContentStudioExperience()
 
   return (
-    <div className="space-y-6 p-6">
-      <header className="space-y-2">
-        <div className="text-xs uppercase tracking-[0.2em] text-neutral-500">Recovery A1</div>
-        <h1 className="text-2xl font-semibold">Content studio foundation</h1>
-        <p className="max-w-3xl text-sm text-neutral-600">
-          Govern every visible business-facing UI surface through schema-backed content control, revisions,
-          promos, people rails and AI-assisted one-click operations.
-        </p>
-      </header>
-
-      <section className="grid gap-3 md:grid-cols-4">
-        {panels.map((panel) => (
-          <div key={panel.id} className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
-            <div className="text-xs text-neutral-500">{panel.label}</div>
-            <div className="mt-2 text-2xl font-semibold">{panel.value}</div>
-            <div className="mt-2 text-sm text-neutral-600">{panel.summary}</div>
-          </div>
-        ))}
+    <div className="space-y-8">
+      <section className="rounded-[32px] border border-neutral-200 bg-white px-8 py-10 shadow-sm">
+        <div className="space-y-4">
+          <div className="text-xs uppercase tracking-[0.35em] text-neutral-500">Content studio</div>
+          <h1 className="text-4xl font-semibold tracking-tight">Governed edit and publish control</h1>
+          <p className="max-w-3xl text-base leading-7 text-neutral-600">
+            Final visible-UI control layer for premium surfaces, AI-assisted drafting, publish hardening and immutable legal identity protection.
+          </p>
+        </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <div className="text-xs uppercase tracking-wide text-neutral-500">Studio snapshot</div>
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
-            {[
-              ['Pages', snapshot.totalPages],
-              ['Sections', snapshot.totalSections],
-              ['Promotions', snapshot.totalPromotions],
-              ['People', snapshot.totalPeopleProfiles],
-              ['FAQs', snapshot.totalFaqEntries],
-              ['Published versions', snapshot.publishedCount],
-            ].map(([label, value]) => (
-              <div key={String(label)} className="rounded-xl bg-neutral-50 p-4">
-                <div className="text-xs text-neutral-500">{label}</div>
-                <div className="mt-2 text-xl font-semibold">{value}</div>
+      <section className="grid gap-4 md:grid-cols-4">
+        <div className="rounded-[28px] border border-neutral-200 bg-white p-6 shadow-sm">
+          <div className="text-xs uppercase tracking-wide text-neutral-500">Editable targets</div>
+          <div className="mt-3 text-3xl font-semibold">{experience.governanceSnapshot.editableTargetCount}</div>
+        </div>
+        <div className="rounded-[28px] border border-neutral-200 bg-white p-6 shadow-sm">
+          <div className="text-xs uppercase tracking-wide text-neutral-500">Immutable identity fields</div>
+          <div className="mt-3 text-3xl font-semibold">{experience.governanceSnapshot.immutableFieldCount}</div>
+        </div>
+        <div className="rounded-[28px] border border-neutral-200 bg-white p-6 shadow-sm">
+          <div className="text-xs uppercase tracking-wide text-neutral-500">AI content actions</div>
+          <div className="mt-3 text-3xl font-semibold">{experience.governanceSnapshot.aiActionCount}</div>
+        </div>
+        <div className="rounded-[28px] border border-neutral-200 bg-white p-6 shadow-sm">
+          <div className="text-xs uppercase tracking-wide text-neutral-500">Review-required actions</div>
+          <div className="mt-3 text-3xl font-semibold">{experience.governanceSnapshot.reviewRequiredActionCount}</div>
+        </div>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="rounded-[28px] border border-neutral-200 bg-white p-6 shadow-sm">
+          <div className="text-xs uppercase tracking-[0.25em] text-neutral-500">Editable surface targets</div>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            {experience.editableTargets.map((target) => (
+              <div key={target.targetId} className="rounded-2xl bg-neutral-50 p-4">
+                <div className="text-xs uppercase tracking-wide text-neutral-500">{target.route}</div>
+                <div className="mt-2 text-lg font-semibold">{target.label}</div>
+                <div className="mt-3 text-sm text-neutral-600">Fields: {target.editableFields.join(', ')}</div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <div className="text-xs uppercase tracking-wide text-neutral-500">AI one-click operations</div>
-          <ul className="mt-4 space-y-3">
-            {aiOps.map((operation) => (
-              <li key={operation.id} className="rounded-xl border border-neutral-200 p-3">
-                <div className="font-medium">{operation.label}</div>
-                <div className="mt-1 text-sm text-neutral-600">{operation.description}</div>
-              </li>
+        <div className="rounded-[28px] border border-neutral-200 bg-white p-6 shadow-sm">
+          <div className="text-xs uppercase tracking-[0.25em] text-neutral-500">Immutable identity rules</div>
+          <div className="mt-5 grid gap-3">
+            {experience.immutableIdentityFields.map((field) => (
+              <div key={field} className="rounded-2xl bg-neutral-50 px-4 py-3 text-sm leading-6 text-neutral-700">
+                {field}
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <div className="text-xs uppercase tracking-wide text-neutral-500">Leadership and experts</div>
-          <ul className="mt-4 space-y-3">
-            {people.map((person) => (
-              <li key={person.id} className="rounded-xl border border-neutral-200 p-3">
-                <div className="font-medium">{person.displayName}</div>
-                <div className="text-sm text-neutral-600">{person.title}</div>
-                <div className="mt-1 text-sm text-neutral-600">{person.summary}</div>
-              </li>
+      <section className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+        <div className="rounded-[28px] border border-neutral-200 bg-white p-6 shadow-sm">
+          <div className="text-xs uppercase tracking-[0.25em] text-neutral-500">AI-assisted actions</div>
+          <div className="mt-5 space-y-4">
+            {experience.aiActions.map((action) => (
+              <div key={action.actionId} className="rounded-2xl bg-neutral-50 p-4">
+                <div className="text-sm font-semibold">{action.label}</div>
+                <div className="mt-2 text-sm text-neutral-600">Output: {action.output}</div>
+                <div className="mt-2 text-sm text-neutral-600">
+                  Review: {action.requiresReview ? 'Required' : 'Not required'}
+                </div>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <div className="text-xs uppercase tracking-wide text-neutral-500">Promotions and offers</div>
-          <ul className="mt-4 space-y-3">
-            {promotions.map((promotion) => (
-              <li key={promotion.id} className="rounded-xl border border-neutral-200 p-3">
-                <div className="font-medium">{promotion.title}</div>
-                <div className="mt-1 text-sm text-neutral-600">{promotion.summary}</div>
-                <div className="mt-2 text-xs uppercase tracking-wide text-neutral-500">
-                  {promotion.ctaLabel} · {promotion.lifecycleStatus}
-                </div>
-              </li>
+        <div className="rounded-[28px] border border-neutral-200 bg-white p-6 shadow-sm">
+          <div className="text-xs uppercase tracking-[0.25em] text-neutral-500">Workflow lanes</div>
+          <div className="mt-5 space-y-4">
+            {experience.workflowLanes.map((lane) => (
+              <div key={lane.laneId} className="rounded-2xl bg-neutral-50 p-4">
+                <div className="text-sm font-semibold">{lane.label}</div>
+                <div className="mt-2 text-sm leading-6 text-neutral-600">{lane.summary}</div>
+              </div>
             ))}
-          </ul>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-[28px] border border-neutral-200 bg-white p-6 shadow-sm">
+        <div className="text-xs uppercase tracking-[0.25em] text-neutral-500">Live controlled content</div>
+        <div className="mt-5 grid gap-4 md:grid-cols-3">
+          <div className="rounded-2xl bg-neutral-50 p-4">
+            <div className="text-sm font-semibold">Promotions</div>
+            <div className="mt-2 text-2xl font-semibold">{experience.publishedPromotions.length}</div>
+          </div>
+          <div className="rounded-2xl bg-neutral-50 p-4">
+            <div className="text-sm font-semibold">Featured people</div>
+            <div className="mt-2 text-2xl font-semibold">{experience.featuredPeopleProfiles.length}</div>
+          </div>
+          <div className="rounded-2xl bg-neutral-50 p-4">
+            <div className="text-sm font-semibold">FAQ entries</div>
+            <div className="mt-2 text-2xl font-semibold">{experience.faqEntries.length}</div>
+          </div>
         </div>
       </section>
     </div>

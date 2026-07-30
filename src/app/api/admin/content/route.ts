@@ -1,20 +1,6 @@
 import { NextResponse } from 'next/server'
-import {
-  getContentControllerPanels,
-  getContentStudioSnapshot,
-  listAiContentOperations,
-  listContentPromotions,
-  listFaqEntries,
-  listPeopleProfiles,
-} from '@/lib/recovery/content-controller'
+import { getAdminContentStudioExperience } from '@/lib/recovery/content-governance'
 
 export async function GET() {
-  return NextResponse.json({
-    snapshot: getContentStudioSnapshot(),
-    panels: getContentControllerPanels(),
-    aiOperations: listAiContentOperations(),
-    promotions: listContentPromotions(),
-    peopleProfiles: listPeopleProfiles(),
-    faqEntries: listFaqEntries(),
-  })
+  return NextResponse.json(getAdminContentStudioExperience())
 }
