@@ -35,6 +35,9 @@ export default function AdminContentPage() {
               <Link className="oi-btn oi-btn--secondary" href="/admin/config">
                 Config control
               </Link>
+              <Link className="oi-btn oi-btn--secondary" href="/admin/support">
+                Support ops
+              </Link>
               <a className="oi-btn oi-btn--primary" href="mailto:hello@oyeimagine.com">
                 Content escalation
               </a>
@@ -117,12 +120,12 @@ export default function AdminContentPage() {
             </article>
 
             <article className="oi-card">
-              <div className="oi-card-title">Next hardening target</div>
+              <div className="oi-card-title">Batch A closure hardening</div>
               <ul className="oi-list" style={{ marginTop: 12 }}>
-                <li>Support / Resend operational wiring</li>
-                <li>Mail-log operational lifecycle</li>
-                <li>Admin studio hardening and audit closure</li>
-                <li>Batch A closure pass</li>
+                <li>Support operations workspace linked</li>
+                <li>Resend runtime status visible to operators</li>
+                <li>Mail-log lifecycle visible to admin users</li>
+                <li>Config, content, support, and route protection now form the full Batch A spine</li>
               </ul>
             </article>
           </section>

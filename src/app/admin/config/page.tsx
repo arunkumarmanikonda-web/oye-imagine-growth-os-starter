@@ -46,6 +46,9 @@ export default function AdminConfigPage() {
               <Link className="oi-btn oi-btn--secondary" href="/admin/content">
                 Content studio
               </Link>
+              <Link className="oi-btn oi-btn--secondary" href="/admin/support">
+                Support ops
+              </Link>
               <a className="oi-btn oi-btn--primary" href="mailto:hello@oyeimagine.com">
                 Email hello@oyeimagine.com
               </a>
