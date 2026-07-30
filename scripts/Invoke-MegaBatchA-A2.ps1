@@ -2,18 +2,18 @@ Set-Location (Split-Path -Parent $PSScriptRoot | Split-Path -Parent)
 $ErrorActionPreference = "Stop"
 
 function Invoke-LocalVitest {
-  param([string[]]$Args)
+  param([string[]]$CmdArgs)
 
   $vitestCmd = Join-Path (Get-Location) "node_modules\.bin\vitest.cmd"
   $vitestMjs = Join-Path (Get-Location) "node_modules\vitest\vitest.mjs"
 
   if (Test-Path $vitestCmd) {
-    & $vitestCmd @Args
+    & $vitestCmd @CmdArgs
     return $LASTEXITCODE
   }
 
   if (Test-Path $vitestMjs) {
-    & node $vitestMjs @Args
+    & node $vitestMjs @CmdArgs
     return $LASTEXITCODE
   }
 
