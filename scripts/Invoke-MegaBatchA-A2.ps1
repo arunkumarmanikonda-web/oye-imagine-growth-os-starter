@@ -25,11 +25,14 @@ Invoke-LocalVitest @(
   "tests/lib/foundation-organization-profile.test.ts",
   "tests/lib/foundation-neejee-profile.test.ts",
   "tests/lib/foundation-cms-controller.test.ts",
-  "tests/lib/foundation-public-shell.test.ts"
+  "tests/lib/foundation-public-shell.test.ts",
+  "tests/lib/foundation-auth-session.test.ts",
+  "tests/lib/foundation-route-access.test.ts",
+  "tests/lib/foundation-canonical-workspace.test.ts"
 )
 
 if ($LASTEXITCODE -ne 0) {
-  throw "Focused Wave A2 tests failed."
+  throw "Focused Mega Batch A / A2 tests failed."
 }
 
 if (-not (Test-Path ".\scripts\Invoke-GrowthOsValidation.ps1")) {

@@ -230,6 +230,7 @@ export function SupportStrip(props: { support: SupportStripModel }) {
 }
 
 export function AuthFormShell(props: {
+  lane: "client" | "admin";
   eyebrow: string;
   title: string;
   summary: string;
@@ -237,6 +238,7 @@ export function AuthFormShell(props: {
   supportPhone: string;
   helpHref: string;
   helpLabel: string;
+  redirectTo: string;
 }) {
   return (
     <section className="oi-container" style={{ paddingTop: 40, paddingBottom: 40 }}>
@@ -248,33 +250,40 @@ export function AuthFormShell(props: {
           </h1>
           <p className="oi-page-subtitle">{props.summary}</p>
 
-          <div style={{ display: "grid", gap: 12, marginTop: 20 }}>
+          <form method="post" action="/api/auth/session" style={{ display: "grid", gap: 12, marginTop: 20 }}>
+            <input type="hidden" name="lane" value={props.lane} />
+            <input type="hidden" name="redirectTo" value={props.redirectTo} />
+
             <label className="oi-meta-line">
               <strong>Email</strong>
               <input
+                name="email"
                 type="email"
+                required
                 placeholder="name@company.com"
                 style={{ width: "100%", marginTop: 8, padding: 12, borderRadius: 14, border: "1px solid rgba(15,23,42,0.12)" }}
               />
             </label>
+
             <label className="oi-meta-line">
               <strong>Password</strong>
               <input
+                name="password"
                 type="password"
                 placeholder="Enter password"
                 style={{ width: "100%", marginTop: 8, padding: 12, borderRadius: 14, border: "1px solid rgba(15,23,42,0.12)" }}
               />
             </label>
-          </div>
 
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 20 }}>
-            <button className="oi-btn oi-btn--primary" type="button" disabled aria-disabled="true">
-              Authentication wiring queued in next wave
-            </button>
-            <a className="oi-btn oi-btn--secondary" href={props.helpHref}>
-              {props.helpLabel}
-            </a>
-          </div>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
+              <button className="oi-btn oi-btn--primary" type="submit">
+                Continue to {props.lane === "admin" ? "admin workspace" : "client dashboard"}
+              </button>
+              <a className="oi-btn oi-btn--secondary" href={props.helpHref}>
+                {props.helpLabel}
+              </a>
+            </div>
+          </form>
         </article>
 
         <article className="oi-card">
@@ -287,8 +296,8 @@ export function AuthFormShell(props: {
           </div>
           <ul className="oi-list" style={{ marginTop: 16 }}>
             <li>Separate client and admin surfaces</li>
-            <li>CMS-backed content and CTA blocks</li>
-            <li>Canonical legal identity already loaded</li>
+            <li>Protected routing is active for client and admin lanes</li>
+            <li>Canonical legal identity is already loaded</li>
           </ul>
         </article>
       </div>
