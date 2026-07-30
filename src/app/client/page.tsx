@@ -1,75 +1,40 @@
-import Link from "next/link";
-import { cookies } from "next/headers";
-import { resolveCanonicalWorkspaceContext } from "@/lib/admin/canonical-workspace";
-import { authCookieKeys, resolveAuthSessionFromCookieMap } from "@/lib/auth/session";
-import { buildSupportStripModel } from "@/lib/foundation/public-shell";
+import { cookies } from 'next/headers'
+import { buildRecoveryAuthSessionFromCookieStore } from '@/lib/recovery/auth-session-server'
 
-export default async function ClientDashboardPage() {
-  const cookieStore = await cookies();
-  const session = resolveAuthSessionFromCookieMap({
-    [authCookieKeys.lane]: cookieStore.get(authCookieKeys.lane)?.value,
-    [authCookieKeys.email]: cookieStore.get(authCookieKeys.email)?.value,
-    [authCookieKeys.workspaceSlug]: cookieStore.get(authCookieKeys.workspaceSlug)?.value,
-    [authCookieKeys.tenantSlug]: cookieStore.get(authCookieKeys.tenantSlug)?.value,
-    [authCookieKeys.brandSlug]: cookieStore.get(authCookieKeys.brandSlug)?.value,
-    [authCookieKeys.issuedAt]: cookieStore.get(authCookieKeys.issuedAt)?.value,
-  });
-
-  const workspace = resolveCanonicalWorkspaceContext(session);
-  const support = buildSupportStripModel();
+export default async function ClientHomePage() {
+  const cookieStore = await cookies()
+  const session = buildRecoveryAuthSessionFromCookieStore(cookieStore)
 
   return (
-    <main className="oi-shell">
-      <div className="oi-main">
-        <div className="oi-container" style={{ paddingTop: 40, paddingBottom: 40 }}>
-          <div className="oi-grid oi-grid--two">
-            <article className="oi-card">
-              <div className="oi-pill">Client dashboard</div>
-              <h1 className="oi-page-title" style={{ marginTop: 12 }}>
-                Client access lane is now protected and workspace-aware
-              </h1>
-              <p className="oi-page-subtitle">
-                This dashboard is the protected client landing surface for Batch A / A2.
-              </p>
+    <div className="mx-auto max-w-6xl space-y-6 p-6">
+      <header className="space-y-2">
+        <div className="text-xs uppercase tracking-[0.2em] text-neutral-500">Client dashboard foundation</div>
+        <h1 className="text-2xl font-semibold text-neutral-950">Welcome back</h1>
+        <p className="text-sm text-neutral-600">
+          Authenticated client shell foundation for agreements, invoices, reports, support and AI concierge access.
+        </p>
+      </header>
 
-              <div className="oi-meta-line" style={{ marginTop: 18 }}>
-                <strong>Lane:</strong> {session.lane}
-              </div>
-              <div className="oi-meta-line" style={{ marginTop: 8 }}>
-                <strong>Email:</strong> {session.email}
-              </div>
-              <div className="oi-meta-line" style={{ marginTop: 8 }}>
-                <strong>Workspace:</strong> {workspace.workspaceSlug}
-              </div>
-              <div className="oi-meta-line" style={{ marginTop: 8 }}>
-                <strong>Tenant:</strong> {workspace.tenantSlug}
-              </div>
-              <div className="oi-meta-line" style={{ marginTop: 8 }}>
-                <strong>Brand:</strong> {workspace.brandName}
-              </div>
-
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 20 }}>
-                <Link className="oi-btn oi-btn--secondary" href="/marketplace">
-                  Back to marketplace
-                </Link>
-                <a className="oi-btn oi-btn--primary" href="mailto:hello@oyeimagine.com">
-                  Contact support
-                </a>
-              </div>
-            </article>
-
-            <article className="oi-card">
-              <div className="oi-card-title">Support and next layers</div>
-              <ul className="oi-list" style={{ marginTop: 12 }}>
-                <li>Commercial dashboards arrive in Mega Batch B</li>
-                <li>AI concierge arrives in Mega Batch C</li>
-                <li>Support email: {support.primaryEmail}</li>
-                <li>Support phone: {support.primaryPhone}</li>
-              </ul>
-            </article>
+      <section className="grid gap-4 md:grid-cols-4">
+        {[
+          ['Agreements', 'Structured agreement and scope access'],
+          ['Invoices', 'Billing, overdue and tax invoice retrieval'],
+          ['Reports', 'Reporting and performance access'],
+          ['Support', 'Support, help and contact visibility'],
+        ].map(([label, summary]) => (
+          <div key={label} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+            <div className="text-sm font-medium text-neutral-950">{label}</div>
+            <div className="mt-2 text-sm text-neutral-600">{summary}</div>
           </div>
+        ))}
+      </section>
+
+      <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+        <div className="text-xs uppercase tracking-wide text-neutral-500">Authenticated identity</div>
+        <div className="mt-3 text-sm text-neutral-700">
+          Session role: {session.role} · Email: {session.email}
         </div>
-      </div>
-    </main>
-  );
+      </section>
+    </div>
+  )
 }
