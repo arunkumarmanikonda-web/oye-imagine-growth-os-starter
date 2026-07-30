@@ -1,10 +1,14 @@
 import type {
+  ActivateCommercialContractInput,
   CommercialAuditEventRecord,
   CommercialLedgerEntryRecord,
   CommercialMediaBalanceAccountRecord,
   CommercialMutationInput,
   CommercialMutationResult,
   CommercialPersistenceRepository,
+  MarkCommercialInvoicePaidInput,
+  RenewCommercialSubscriptionInput,
+  ResolveCommercialApprovalRequestInput,
 } from './persistence-types';
 
 function assertNonEmpty(value: string, field: string): void {
@@ -17,6 +21,28 @@ function assertPositiveAmount(value: number): void {
   if (!Number.isFinite(value) || value <= 0) {
     throw new Error('amount must be positive');
   }
+}
+
+async function invokeWorkflowMethod(
+  service: CommercialPersistenceService,
+  methodName:
+    | 'resolveApprovalRequest'
+    | 'activateContract'
+    | 'markInvoicePaid'
+    | 'renewSubscription',
+  input: unknown,
+): Promise<unknown> {
+  const candidate = (service as unknown as Record<string, unknown>)[methodName];
+
+  if (typeof candidate !== 'function') {
+    throw new Error(
+      `${methodName} is not implemented by the commercial persistence service`,
+    );
+  }
+
+  return await (
+    candidate as (value: unknown) => Promise<unknown>
+  ).call(service, input);
 }
 
 export class CommercialPersistenceService {
@@ -51,6 +77,39 @@ export class CommercialPersistenceService {
     return this.repository.spendMediaBalance(input);
   }
 
+  async resolveApprovalRequest(
+    input: ResolveCommercialApprovalRequestInput,
+  ): Promise<unknown> {
+    assertNonEmpty(input.approvalRequestId, 'approvalRequestId');
+    assertNonEmpty(input.operationKey, 'operationKey');
+    assertNonEmpty(input.decision, 'decision');
+    return this.repository.resolveApprovalRequest(input);
+  }
+
+  async activateContract(
+    input: ActivateCommercialContractInput,
+  ): Promise<unknown> {
+    assertNonEmpty(input.contractId, 'contractId');
+    assertNonEmpty(input.operationKey, 'operationKey');
+    return this.repository.activateContract(input);
+  }
+
+  async markInvoicePaid(
+    input: MarkCommercialInvoicePaidInput,
+  ): Promise<unknown> {
+    assertNonEmpty(input.invoiceId, 'invoiceId');
+    assertNonEmpty(input.operationKey, 'operationKey');
+    return this.repository.markInvoicePaid(input);
+  }
+
+  async renewSubscription(
+    input: RenewCommercialSubscriptionInput,
+  ): Promise<unknown> {
+    assertNonEmpty(input.subscriptionId, 'subscriptionId');
+    assertNonEmpty(input.operationKey, 'operationKey');
+    return this.repository.renewSubscription(input);
+  }
+
   async listLedgerEntries(tenantId: string): Promise<CommercialLedgerEntryRecord[]> {
     assertNonEmpty(tenantId, 'tenantId');
     return this.repository.listLedgerEntries(tenantId);
@@ -60,74 +119,37 @@ export class CommercialPersistenceService {
     assertNonEmpty(tenantId, 'tenantId');
     return this.repository.listAuditEvents(tenantId);
   }
-}
 
-type CommercialPersistenceServiceWithWorkflowSurface =
-  CommercialPersistenceService &
-    import('./workflow-persistence-surface').CommercialWorkflowPersistenceRuntimeSurface
-
-function getCommercialPersistenceServiceWorkflowSurface(
-  service: CommercialPersistenceService,
-): CommercialPersistenceServiceWithWorkflowSurface {
-  return service as CommercialPersistenceServiceWithWorkflowSurface
+  async listApprovalRequests(tenantId: string) {
+    assertNonEmpty(tenantId, 'tenantId');
+    return this.repository.listApprovalRequests(tenantId);
+  }
 }
 
 export async function resolveApprovalRequestViaPersistenceService(
   service: CommercialPersistenceService,
-  input: import('./workflow-persistence-surface').ResolveCommercialApprovalRequestInput,
+  input: ResolveCommercialApprovalRequestInput,
 ): Promise<unknown> {
-  const workflowService = getCommercialPersistenceServiceWorkflowSurface(service)
-
-  if (typeof workflowService.resolveApprovalRequest !== 'function') {
-    throw new Error(
-      'resolveApprovalRequest is not implemented by the commercial persistence service',
-    )
-  }
-
-  return workflowService.resolveApprovalRequest(input)
+  return invokeWorkflowMethod(service, 'resolveApprovalRequest', input);
 }
 
 export async function activateContractViaPersistenceService(
   service: CommercialPersistenceService,
-  input: import('./workflow-persistence-surface').ActivateCommercialContractInput,
+  input: ActivateCommercialContractInput,
 ): Promise<unknown> {
-  const workflowService = getCommercialPersistenceServiceWorkflowSurface(service)
-
-  if (typeof workflowService.activateContract !== 'function') {
-    throw new Error(
-      'activateContract is not implemented by the commercial persistence service',
-    )
-  }
-
-  return workflowService.activateContract(input)
+  return invokeWorkflowMethod(service, 'activateContract', input);
 }
 
 export async function markInvoicePaidViaPersistenceService(
   service: CommercialPersistenceService,
-  input: import('./workflow-persistence-surface').MarkCommercialInvoicePaidInput,
+  input: MarkCommercialInvoicePaidInput,
 ): Promise<unknown> {
-  const workflowService = getCommercialPersistenceServiceWorkflowSurface(service)
-
-  if (typeof workflowService.markInvoicePaid !== 'function') {
-    throw new Error(
-      'markInvoicePaid is not implemented by the commercial persistence service',
-    )
-  }
-
-  return workflowService.markInvoicePaid(input)
+  return invokeWorkflowMethod(service, 'markInvoicePaid', input);
 }
 
 export async function renewSubscriptionViaPersistenceService(
   service: CommercialPersistenceService,
-  input: import('./workflow-persistence-surface').RenewCommercialSubscriptionInput,
+  input: RenewCommercialSubscriptionInput,
 ): Promise<unknown> {
-  const workflowService = getCommercialPersistenceServiceWorkflowSurface(service)
-
-  if (typeof workflowService.renewSubscription !== 'function') {
-    throw new Error(
-      'renewSubscription is not implemented by the commercial persistence service',
-    )
-  }
-
-  return workflowService.renewSubscription(input)
+  return invokeWorkflowMethod(service, 'renewSubscription', input);
 }

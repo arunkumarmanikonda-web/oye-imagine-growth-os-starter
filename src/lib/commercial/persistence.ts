@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type {
+  ActivateCommercialContractInput,
   CommercialApprovalRequestRecord,
   CommercialAuditEventRecord,
   CommercialCurrencyCode,
@@ -9,6 +10,9 @@ import type {
   CommercialMutationInput,
   CommercialMutationResult,
   CommercialPersistenceRepository,
+  MarkCommercialInvoicePaidInput,
+  RenewCommercialSubscriptionInput,
+  ResolveCommercialApprovalRequestInput,
 } from './persistence-types';
 
 function asNumber(value: unknown): number {
@@ -166,6 +170,79 @@ export class SupabaseCommercialPersistenceRepository implements CommercialPersis
     }
 
     return mapMutationResult(rpc.data);
+  }
+
+  async resolveApprovalRequest(
+    input: ResolveCommercialApprovalRequestInput,
+  ): Promise<unknown> {
+    const rpc = await this.supabase.rpc('commercial_resolve_approval_request', {
+      p_approval_request_id: input.approvalRequestId,
+      p_decision: input.decision,
+      p_actor_id: input.actorUserId ?? null,
+      p_note: input.note ?? null,
+      p_operation_key: input.operationKey,
+      p_reference: input.reference ?? null,
+    });
+
+    if (rpc.error) {
+      throw new Error(`Failed to resolve approval request: ${rpc.error.message}`);
+    }
+
+    return rpc.data;
+  }
+
+  async activateContract(
+    input: ActivateCommercialContractInput,
+  ): Promise<unknown> {
+    const rpc = await this.supabase.rpc('commercial_activate_contract', {
+      p_contract_id: input.contractId,
+      p_actor_id: input.actorUserId ?? null,
+      p_effective_at: input.effectiveAt ?? null,
+      p_operation_key: input.operationKey,
+      p_reference: input.reference ?? null,
+    });
+
+    if (rpc.error) {
+      throw new Error(`Failed to activate contract: ${rpc.error.message}`);
+    }
+
+    return rpc.data;
+  }
+
+  async markInvoicePaid(
+    input: MarkCommercialInvoicePaidInput,
+  ): Promise<unknown> {
+    const rpc = await this.supabase.rpc('commercial_mark_invoice_paid', {
+      p_invoice_id: input.invoiceId,
+      p_actor_id: input.actorUserId ?? null,
+      p_paid_at: input.paidAt ?? null,
+      p_operation_key: input.operationKey,
+      p_reference: input.reference ?? null,
+    });
+
+    if (rpc.error) {
+      throw new Error(`Failed to mark invoice paid: ${rpc.error.message}`);
+    }
+
+    return rpc.data;
+  }
+
+  async renewSubscription(
+    input: RenewCommercialSubscriptionInput,
+  ): Promise<unknown> {
+    const rpc = await this.supabase.rpc('commercial_renew_subscription', {
+      p_subscription_id: input.subscriptionId,
+      p_actor_id: input.actorUserId ?? null,
+      p_renewed_at: input.renewedAt ?? null,
+      p_operation_key: input.operationKey,
+      p_reference: input.reference ?? null,
+    });
+
+    if (rpc.error) {
+      throw new Error(`Failed to renew subscription: ${rpc.error.message}`);
+    }
+
+    return rpc.data;
   }
 
   async listLedgerEntries(tenantId: string): Promise<CommercialLedgerEntryRecord[]> {

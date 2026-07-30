@@ -10,21 +10,25 @@ export interface ResolveCommercialApprovalRequestInput
   extends CommercialWorkflowMutationInputBase {
   approvalRequestId: string
   decision: CommercialApprovalDecision
+  note?: string | null
 }
 
 export interface ActivateCommercialContractInput
   extends CommercialWorkflowMutationInputBase {
   contractId: string
+  effectiveAt?: string | null
 }
 
 export interface MarkCommercialInvoicePaidInput
   extends CommercialWorkflowMutationInputBase {
   invoiceId: string
+  paidAt?: string | null
 }
 
 export interface RenewCommercialSubscriptionInput
   extends CommercialWorkflowMutationInputBase {
   subscriptionId: string
+  renewedAt?: string | null
 }
 
 export interface CommercialWorkflowPersistenceRuntimeSurface {

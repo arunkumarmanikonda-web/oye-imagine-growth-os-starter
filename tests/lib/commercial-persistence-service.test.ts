@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { CommercialPersistenceService } from '@/lib/commercial/persistence-service';
 import type {
+  ActivateCommercialContractInput,
   CommercialApprovalRequestRecord,
   CommercialAuditEventRecord,
   CommercialLedgerEntryRecord,
@@ -9,6 +10,9 @@ import type {
   CommercialMutationInput,
   CommercialMutationResult,
   CommercialPersistenceRepository,
+  MarkCommercialInvoicePaidInput,
+  RenewCommercialSubscriptionInput,
+  ResolveCommercialApprovalRequestInput,
 } from '@/lib/commercial/persistence-types';
 
 class FakeRepository implements CommercialPersistenceRepository {
@@ -127,6 +131,46 @@ class FakeRepository implements CommercialPersistenceRepository {
     };
   }
 
+  async resolveApprovalRequest(
+    input: ResolveCommercialApprovalRequestInput,
+  ): Promise<unknown> {
+    return {
+      status: input.decision === 'approve' ? 'approved' : 'rejected',
+      approvalRequestId: input.approvalRequestId,
+      operationKey: input.operationKey,
+    };
+  }
+
+  async activateContract(
+    input: ActivateCommercialContractInput,
+  ): Promise<unknown> {
+    return {
+      id: input.contractId,
+      status: 'active',
+      operationKey: input.operationKey,
+    };
+  }
+
+  async markInvoicePaid(
+    input: MarkCommercialInvoicePaidInput,
+  ): Promise<unknown> {
+    return {
+      id: input.invoiceId,
+      status: 'paid',
+      operationKey: input.operationKey,
+    };
+  }
+
+  async renewSubscription(
+    input: RenewCommercialSubscriptionInput,
+  ): Promise<unknown> {
+    return {
+      id: input.subscriptionId,
+      status: 'active',
+      operationKey: input.operationKey,
+    };
+  }
+
   async listLedgerEntries(): Promise<CommercialLedgerEntryRecord[]> {
     return [];
   }
@@ -171,5 +215,50 @@ describe('commercial persistence service', () => {
 
     expect(spent.account.reserved).toBe(175);
     expect(spent.account.spent).toBe(125);
+  });
+
+  it('routes workflow persistence operations through repository contract', async () => {
+    const service = new CommercialPersistenceService(new FakeRepository());
+
+    await expect(service.resolveApprovalRequest({
+      approvalRequestId: 'approval-1',
+      decision: 'approve',
+      operationKey: 'approval-resolve:approval-1:approve',
+      actorUserId: 'user-finance',
+    })).resolves.toEqual({
+      status: 'approved',
+      approvalRequestId: 'approval-1',
+      operationKey: 'approval-resolve:approval-1:approve',
+    });
+
+    await expect(service.activateContract({
+      contractId: 'contract-1',
+      operationKey: 'contract-activate:contract-1',
+      actorUserId: 'user-legal',
+    })).resolves.toEqual({
+      id: 'contract-1',
+      status: 'active',
+      operationKey: 'contract-activate:contract-1',
+    });
+
+    await expect(service.markInvoicePaid({
+      invoiceId: 'invoice-1',
+      operationKey: 'invoice-mark-paid:invoice-1',
+      actorUserId: 'user-finance',
+    })).resolves.toEqual({
+      id: 'invoice-1',
+      status: 'paid',
+      operationKey: 'invoice-mark-paid:invoice-1',
+    });
+
+    await expect(service.renewSubscription({
+      subscriptionId: 'subscription-1',
+      operationKey: 'subscription-renew:subscription-1',
+      actorUserId: 'user-billing',
+    })).resolves.toEqual({
+      id: 'subscription-1',
+      status: 'active',
+      operationKey: 'subscription-renew:subscription-1',
+    });
   });
 });

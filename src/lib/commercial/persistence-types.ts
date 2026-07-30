@@ -1,3 +1,10 @@
+import type {
+  ActivateCommercialContractInput,
+  MarkCommercialInvoicePaidInput,
+  RenewCommercialSubscriptionInput,
+  ResolveCommercialApprovalRequestInput,
+} from './workflow-persistence-surface';
+
 export type CommercialCurrencyCode = string;
 
 export interface CommercialMediaBalanceAccountRecord {
@@ -62,10 +69,17 @@ export interface CommercialMutationResult {
 }
 
 export interface CommercialPersistenceRepository {
-  getOrCreateMediaBalanceAccount(tenantId: string, currency?: CommercialCurrencyCode): Promise<CommercialMediaBalanceAccountRecord>;
+  getOrCreateMediaBalanceAccount(
+    tenantId: string,
+    currency?: CommercialCurrencyCode,
+  ): Promise<CommercialMediaBalanceAccountRecord>;
   reserveMediaBalance(input: CommercialMutationInput): Promise<CommercialMutationResult>;
   releaseMediaBalance(input: CommercialMutationInput): Promise<CommercialMutationResult>;
   spendMediaBalance(input: CommercialMutationInput): Promise<CommercialMutationResult>;
+  resolveApprovalRequest(input: ResolveCommercialApprovalRequestInput): Promise<unknown>;
+  activateContract(input: ActivateCommercialContractInput): Promise<unknown>;
+  markInvoicePaid(input: MarkCommercialInvoicePaidInput): Promise<unknown>;
+  renewSubscription(input: RenewCommercialSubscriptionInput): Promise<unknown>;
   listLedgerEntries(tenantId: string): Promise<CommercialLedgerEntryRecord[]>;
   listAuditEvents(tenantId: string): Promise<CommercialAuditEventRecord[]>;
   listApprovalRequests(tenantId: string): Promise<CommercialApprovalRequestRecord[]>;
@@ -79,5 +93,5 @@ export type {
   MarkCommercialInvoicePaidInput,
   RenewCommercialSubscriptionInput,
   ResolveCommercialApprovalRequestInput,
-} from './workflow-persistence-surface'
-export { hasCommercialWorkflowPersistenceSurface } from './workflow-persistence-surface'
+} from './workflow-persistence-surface';
+export { hasCommercialWorkflowPersistenceSurface } from './workflow-persistence-surface';

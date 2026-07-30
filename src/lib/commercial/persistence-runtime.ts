@@ -1,3 +1,10 @@
+import type {
+  ActivateCommercialContractInput,
+  MarkCommercialInvoicePaidInput,
+  RenewCommercialSubscriptionInput,
+  ResolveCommercialApprovalRequestInput,
+} from './persistence-types';
+
 import { SupabaseCommercialPersistenceRepository } from './persistence';
 import { CommercialPersistenceService } from './persistence-service';
 import { getCommercialSupabaseAdminClient } from './supabase-admin';
@@ -7,6 +14,18 @@ export type CommercialPersistenceRuntime = {
   reserveMediaBalance: (input: unknown) => Promise<unknown>;
   releaseMediaBalance: (input: unknown) => Promise<unknown>;
   spendMediaBalance: (input: unknown) => Promise<unknown>;
+  resolveApprovalRequest: (
+    input: ResolveCommercialApprovalRequestInput,
+  ) => Promise<unknown>;
+  activateContract: (
+    input: ActivateCommercialContractInput,
+  ) => Promise<unknown>;
+  markInvoicePaid: (
+    input: MarkCommercialInvoicePaidInput,
+  ) => Promise<unknown>;
+  renewSubscription: (
+    input: RenewCommercialSubscriptionInput,
+  ) => Promise<unknown>;
 };
 
 let persistenceRuntimeSingleton: CommercialPersistenceRuntime | null = null;
@@ -46,6 +65,7 @@ async function getMediaBalanceAccountSnapshotViaRepository(
       'getCommercialMediaBalanceAccount',
       'ensureMediaBalanceAccount',
       'ensureCommercialMediaBalanceAccount',
+      'getOrCreateMediaBalanceAccount',
     ],
     [tenantId],
   );
@@ -100,6 +120,14 @@ export function getPersistenceService(): CommercialPersistenceRuntime {
         service.releaseMediaBalance(input as any),
       spendMediaBalance: (input: unknown) =>
         service.spendMediaBalance(input as any),
+      resolveApprovalRequest: (input: ResolveCommercialApprovalRequestInput) =>
+        service.resolveApprovalRequest(input),
+      activateContract: (input: ActivateCommercialContractInput) =>
+        service.activateContract(input),
+      markInvoicePaid: (input: MarkCommercialInvoicePaidInput) =>
+        service.markInvoicePaid(input),
+      renewSubscription: (input: RenewCommercialSubscriptionInput) =>
+        service.renewSubscription(input),
     };
   }
 
@@ -109,5 +137,3 @@ export function getPersistenceService(): CommercialPersistenceRuntime {
 export function resetPersistenceServiceForTests(): void {
   persistenceRuntimeSingleton = null;
 }
-
-

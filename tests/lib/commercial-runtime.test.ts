@@ -96,6 +96,10 @@ describe("commercial runtime", () => {
       reserveMediaBalance: vi.fn().mockResolvedValue({ ok: true, kind: "reserve" }),
       releaseMediaBalance: vi.fn().mockResolvedValue({ ok: true, kind: "release" }),
       spendMediaBalance: vi.fn().mockResolvedValue({ ok: true, kind: "spend" }),
+      resolveApprovalRequest: vi.fn(),
+      activateContract: vi.fn(),
+      markInvoicePaid: vi.fn(),
+      renewSubscription: vi.fn(),
     }
 
     persistenceRuntimeMocks.getPersistenceService.mockReturnValue(persistenceService)
@@ -132,7 +136,7 @@ describe("commercial runtime", () => {
     expect(persistenceService.spendMediaBalance).toHaveBeenCalledTimes(1)
   })
 
-  it("uses persistence runtime for workflow mutations in supabase mode when available", async () => {
+  it("uses persistence runtime for workflow mutations in supabase mode", async () => {
     process.env.COMMERCIAL_PERSISTENCE_MODE = "supabase"
 
     const persistenceService = {
@@ -187,27 +191,39 @@ describe("commercial runtime", () => {
 
     expect(persistenceService.resolveApprovalRequest).toHaveBeenCalledWith(
       expect.objectContaining({
+        approvalRequestId: "approval_1",
+        actorUserId: "user_finance",
+        note: "approved",
         operationKey: "approval-resolve:approval_1:approve",
       }),
     )
     expect(persistenceService.activateContract).toHaveBeenCalledWith(
       expect.objectContaining({
+        contractId: "contract_1",
+        actorUserId: "user_legal",
+        effectiveAt: "2026-07-29T00:00:00.000Z",
         operationKey: "contract-activate:contract_1",
       }),
     )
     expect(persistenceService.markInvoicePaid).toHaveBeenCalledWith(
       expect.objectContaining({
+        invoiceId: "invoice_1",
+        actorUserId: "user_finance",
+        paidAt: "2026-07-29T00:00:00.000Z",
         operationKey: "invoice-mark-paid:invoice_1",
       }),
     )
     expect(persistenceService.renewSubscription).toHaveBeenCalledWith(
       expect.objectContaining({
+        subscriptionId: "subscription_1",
+        actorUserId: "user_billing",
+        renewedAt: "2026-07-29T00:00:00.000Z",
         operationKey: "subscription-renew:subscription_1",
       }),
     )
   })
 
-  it("falls back to store for workflow mutations when persistence runtime does not expose them", async () => {
+  it("throws when supabase workflow method is missing", async () => {
     process.env.COMMERCIAL_PERSISTENCE_MODE = "supabase"
 
     persistenceRuntimeMocks.getPersistenceService.mockReturnValue({
@@ -217,25 +233,13 @@ describe("commercial runtime", () => {
       spendMediaBalance: vi.fn(),
     })
 
-    storeMocks.activateContract.mockReturnValue({
-      id: "contract_store",
-      status: "active",
-    })
-
     await expect(
       activateContractRuntime({
         contractId: "contract_store",
         activatedByUserId: "user_store",
+        operationKey: "contract-activate:contract_store",
       }),
-    ).resolves.toEqual({
-      id: "contract_store",
-      status: "active",
-    })
-
-    expect(storeMocks.activateContract).toHaveBeenCalledWith({
-      contractId: "contract_store",
-      activatedByUserId: "user_store",
-    })
+    ).rejects.toThrow(/No compatible persistence runtime method found/)
   })
 
   it("deduplicates store workflow mutations when operationKey is reused", async () => {
@@ -275,10 +279,13 @@ describe("commercial runtime", () => {
       reserveMediaBalance: vi.fn(),
       releaseMediaBalance: vi.fn(),
       spendMediaBalance: vi.fn(),
+      resolveApprovalRequest: vi.fn(),
+      activateContract: vi.fn(),
       markInvoicePaid: vi.fn().mockResolvedValue({
         id: "invoice_1",
         status: "paid",
       }),
+      renewSubscription: vi.fn(),
     }
 
     persistenceRuntimeMocks.getPersistenceService.mockReturnValue(persistenceService)
@@ -309,12 +316,16 @@ describe("commercial runtime", () => {
     expect(persistenceService.markInvoicePaid).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
+        invoiceId: "invoice_1",
+        actorUserId: "user_finance",
         operationKey: "invoice-mark-paid:invoice_1",
       }),
     )
     expect(persistenceService.markInvoicePaid).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
+        invoiceId: "invoice_1",
+        actorUserId: "user_finance",
         operationKey: "invoice-mark-paid:invoice_1",
       }),
     )
