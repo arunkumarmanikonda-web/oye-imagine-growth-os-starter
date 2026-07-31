@@ -5,105 +5,104 @@ export default function HomePage() {
   const experience = getPublicHomepageExperience()
 
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-950">
-      <main className="mx-auto max-w-7xl space-y-10 px-6 py-10">
-        <section className="rounded-[32px] border border-neutral-200 bg-white px-8 py-10 shadow-sm lg:px-12 lg:py-14">
-          <div className="max-w-4xl space-y-5">
-            <div className="text-xs uppercase tracking-[0.35em] text-neutral-500">Oye !magine</div>
-            <h1 className="text-4xl font-semibold tracking-tight lg:text-6xl">{experience.hero.title}</h1>
-            <p className="max-w-3xl text-base leading-7 text-neutral-600 lg:text-lg">{experience.hero.summary}</p>
+    <main className="min-h-screen bg-slate-950 text-white">
+      <div className="mx-auto max-w-7xl px-6 py-6">
+        <header className="flex flex-wrap items-center justify-between gap-4 rounded-full border border-white/10 bg-white/5 px-5 py-3">
+          <div>
+            <div className="text-lg font-semibold">{experience.trustBlock.brandName}</div>
+            <div className="text-sm text-slate-300">{experience.trustBlock.descriptor}</div>
+          </div>
+          <nav className="flex flex-wrap gap-4 text-sm text-slate-200">
+            {experience.navigation.map((item) => (
+              <Link key={item.href} href={item.href} className="hover:text-white">
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </header>
 
-            <div className="flex flex-wrap gap-3 pt-2">
-              {experience.primaryCtas.map((cta) => (
-                <Link key={cta.href} href={cta.href} className="rounded-2xl bg-neutral-950 px-5 py-3 text-sm font-medium text-white">
+        <section className="grid gap-10 py-16 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="space-y-6">
+            <p className="text-sm font-medium uppercase tracking-[0.3em] text-cyan-300">{experience.hero.eyebrow}</p>
+            <h1 className="max-w-4xl text-5xl font-semibold leading-tight">{experience.hero.title}</h1>
+            <p className="max-w-3xl text-lg leading-8 text-slate-300">{experience.hero.body}</p>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              {experience.hero.bullets.map((bullet) => (
+                <div key={bullet} className="rounded-3xl border border-white/10 bg-white/5 p-4 text-sm text-slate-200">
+                  {bullet}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              {experience.hero.ctas?.map((cta) => (
+                <Link
+                  key={cta.href}
+                  href={cta.href}
+                  className={
+                    cta.emphasis === 'primary'
+                      ? 'rounded-full bg-cyan-400 px-5 py-3 font-medium text-slate-950'
+                      : cta.emphasis === 'secondary'
+                      ? 'rounded-full border border-white/20 px-5 py-3 font-medium text-white'
+                      : 'rounded-full px-5 py-3 font-medium text-cyan-300'
+                  }
+                >
                   {cta.label}
                 </Link>
               ))}
             </div>
           </div>
-        </section>
 
-        <section className="grid gap-4 md:grid-cols-4">
-          {[
-            ['Legal identity', experience.organization.legalIdentity.legalName],
-            ['GSTIN', experience.organization.legalIdentity.gstin],
-            ['Support', experience.organization.contactProfile.supportEmail],
-            ['Phone', experience.organization.contactProfile.supportPhone],
-          ].map(([label, value]) => (
-            <div key={String(label)} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-              <div className="text-xs uppercase tracking-wide text-neutral-500">{label}</div>
-              <div className="mt-3 text-sm font-medium text-neutral-900">{value}</div>
-            </div>
-          ))}
-        </section>
-
-        {experience.metric ? (
-          <section className="rounded-[28px] border border-neutral-200 bg-white p-8 shadow-sm">
-            <div className="text-xs uppercase tracking-[0.25em] text-neutral-500">Trust ribbon</div>
-            <h2 className="mt-3 text-2xl font-semibold">{experience.metric.title}</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-neutral-600">{experience.metric.summary}</p>
-            <div className="mt-5 text-sm text-neutral-700">{experience.organization.footerIdentityLine}</div>
-          </section>
-        ) : null}
-
-        <section className="grid gap-4 lg:grid-cols-3">
-          {experience.featureSections.map((section) => (
-            <div key={section.id} className="rounded-[28px] border border-neutral-200 bg-white p-6 shadow-sm">
-              <div className="text-xs uppercase tracking-wide text-neutral-500">{section.key.replace(/-/g, ' ')}</div>
-              <h3 className="mt-3 text-xl font-semibold">{section.title}</h3>
-              <p className="mt-3 text-sm leading-7 text-neutral-600">{section.summary}</p>
-            </div>
-          ))}
-        </section>
-
-        <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-[28px] border border-neutral-200 bg-white p-6 shadow-sm">
-            <div className="text-xs uppercase tracking-[0.25em] text-neutral-500">Leadership and experts</div>
-            <div className="mt-5 grid gap-4 md:grid-cols-3">
-              {experience.featuredPeople.map((person) => (
-                <div key={person.id} className="rounded-2xl bg-neutral-50 p-4">
-                  <div className="text-xs uppercase tracking-wide text-neutral-500">{person.role}</div>
-                  <div className="mt-2 text-lg font-semibold">{person.displayName}</div>
-                  <div className="mt-1 text-sm text-neutral-600">{person.title}</div>
-                  <div className="mt-3 text-sm leading-6 text-neutral-600">{person.summary}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-[28px] border border-neutral-200 bg-white p-6 shadow-sm">
-            <div className="text-xs uppercase tracking-[0.25em] text-neutral-500">Promotions and offers</div>
-            <div className="mt-5 space-y-4">
-              {experience.promotions.map((promotion) => (
-                <div key={promotion.id} className="rounded-2xl border border-neutral-200 p-4">
-                  <div className="text-sm font-semibold">{promotion.title}</div>
-                  <div className="mt-2 text-sm leading-6 text-neutral-600">{promotion.summary}</div>
-                  <Link href={promotion.ctaHref} className="mt-4 inline-block text-sm font-medium underline">
-                    {promotion.ctaLabel}
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="rounded-[28px] border border-neutral-200 bg-white p-6 shadow-sm">
-          <div className="text-xs uppercase tracking-[0.25em] text-neutral-500">FAQ</div>
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            {experience.faqEntries.map((entry) => (
-              <div key={entry.id} className="rounded-2xl bg-neutral-50 p-4">
-                <div className="text-sm font-semibold">{entry.question}</div>
-                <div className="mt-2 text-sm leading-6 text-neutral-600">{entry.answer}</div>
+          <aside className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+            <div className="text-xs uppercase tracking-[0.25em] text-cyan-300">Company trust</div>
+            <div className="mt-4 space-y-4">
+              <div>
+                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Legal name</div>
+                <div className="mt-2 text-lg font-medium">{experience.trustBlock.legalName}</div>
               </div>
-            ))}
-          </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <div className="text-xs uppercase tracking-[0.2em] text-slate-400">GSTIN</div>
+                  <div className="mt-2 text-sm">{experience.trustBlock.taxIdentity.gstin}</div>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <div className="text-xs uppercase tracking-[0.2em] text-slate-400">CIN</div>
+                  <div className="mt-2 text-sm">{experience.trustBlock.taxIdentity.cin}</div>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-slate-300">
+                {experience.trustBlock.registeredAddress}
+              </div>
+            </div>
+          </aside>
         </section>
 
-        <footer className="rounded-[28px] border border-neutral-200 bg-white p-6 shadow-sm">
-          <div className="text-sm font-medium text-neutral-950">{experience.organization.footerIdentityLine}</div>
-          <div className="mt-2 text-sm text-neutral-600">{experience.organization.trustCopy}</div>
+        <section className="grid gap-6 pb-16 lg:grid-cols-2">
+          {experience.sections.map((section) => (
+            <article key={section.id} className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+              <div className="text-xs uppercase tracking-[0.25em] text-cyan-300">{section.eyebrow}</div>
+              <h2 className="mt-4 text-2xl font-semibold">{section.title}</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">{section.body}</p>
+              <ul className="mt-5 space-y-2 text-sm text-slate-200">
+                {section.bullets.map((bullet) => (
+                  <li key={bullet}>• {bullet}</li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </section>
+
+        <footer className="border-t border-white/10 py-8 text-sm text-slate-400">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>{experience.trustBlock.legalName} · GSTIN {experience.trustBlock.taxIdentity.gstin}</div>
+            <div className="flex gap-4">
+              <Link href="/contact" className="hover:text-white">Contact</Link>
+              <Link href="/login" className="hover:text-white">Login</Link>
+            </div>
+          </div>
         </footer>
-      </main>
-    </div>
+      </div>
+    </main>
   )
 }
