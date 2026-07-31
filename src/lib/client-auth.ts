@@ -5,7 +5,7 @@ import {
   resolveAccessRoleFromCookies,
 } from './recovery/auth-foundation'
 
-export async function getOperatorAccessState() {
+export async function getClientAccessState() {
   const cookieStore = await cookies()
   const role = resolveAccessRoleFromCookies({
     [ACCESS_COOKIE_KEYS.role]: cookieStore.get(ACCESS_COOKIE_KEYS.role)?.value,
@@ -14,7 +14,7 @@ export async function getOperatorAccessState() {
 
   return {
     role,
-    isOperator: role === 'operator',
+    isClient: role === 'client' || role === 'operator',
     isAuthenticated: role !== 'anonymous',
     postLoginDestination: getPostLoginDestination(role),
   }

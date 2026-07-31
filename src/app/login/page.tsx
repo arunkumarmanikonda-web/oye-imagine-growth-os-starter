@@ -19,6 +19,10 @@ export default function LoginHubPage() {
             </Link>
           ))}
         </div>
+
+        <div className="mt-12 rounded-[2rem] border border-cyan-400/20 bg-cyan-400/10 p-6 text-sm leading-7 text-slate-100">
+          Auth split foundation is now in place. Route guard enforcement is feature-flagged until the next pass wires the full session flow and protected redirects.
+        </div>
       </div>
     </main>
   )

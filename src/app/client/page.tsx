@@ -1,40 +1,43 @@
-import { cookies } from 'next/headers'
-import { buildRecoveryAuthSessionFromCookieStore } from '@/lib/recovery/auth-session-server'
+import Link from 'next/link'
+import { getClientAccessState } from '@/lib/client-auth'
 
-export default async function ClientHomePage() {
-  const cookieStore = await cookies()
-  const session = buildRecoveryAuthSessionFromCookieStore(cookieStore)
+export default async function ClientPage() {
+  const accessState = await getClientAccessState()
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6">
-      <header className="space-y-2">
-        <div className="text-xs uppercase tracking-[0.2em] text-neutral-500">Client dashboard foundation</div>
-        <h1 className="text-2xl font-semibold text-neutral-950">Welcome back</h1>
-        <p className="text-sm text-neutral-600">
-          Authenticated client shell foundation for agreements, invoices, reports, support and AI concierge access.
+    <main className="min-h-screen bg-slate-950 text-white">
+      <div className="mx-auto max-w-6xl px-6 py-16">
+        <div className="text-sm uppercase tracking-[0.3em] text-cyan-300">Client workspace foundation</div>
+        <h1 className="mt-5 text-5xl font-semibold leading-tight">Client dashboard route foundation</h1>
+        <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-300">
+          This route establishes the protected client destination for reports, invoices, agreements and support visibility.
         </p>
-      </header>
 
-      <section className="grid gap-4 md:grid-cols-4">
-        {[
-          ['Agreements', 'Structured agreement and scope access'],
-          ['Invoices', 'Billing, overdue and tax invoice retrieval'],
-          ['Reports', 'Reporting and performance access'],
-          ['Support', 'Support, help and contact visibility'],
-        ].map(([label, summary]) => (
-          <div key={label} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-            <div className="text-sm font-medium text-neutral-950">{label}</div>
-            <div className="mt-2 text-sm text-neutral-600">{summary}</div>
+        <section className="mt-12 grid gap-6 lg:grid-cols-3">
+          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Authenticated</div>
+            <div className="mt-3 text-3xl font-semibold">{accessState.isAuthenticated ? 'yes' : 'no'}</div>
           </div>
-        ))}
-      </section>
+          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Client access</div>
+            <div className="mt-3 text-3xl font-semibold">{accessState.isClient ? 'ready' : 'blocked'}</div>
+          </div>
+          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Post-login destination</div>
+            <div className="mt-3 text-sm">{accessState.postLoginDestination}</div>
+          </div>
+        </section>
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-        <div className="text-xs uppercase tracking-wide text-neutral-500">Authenticated identity</div>
-        <div className="mt-3 text-sm text-neutral-700">
-          Session role: {session.role} · Email: {session.email}
+        <div className="mt-10 rounded-[2rem] border border-white/10 bg-white/5 p-6 text-sm leading-7 text-slate-300">
+          Route guard middleware is implemented behind the <code>ENABLE_BATCH_A_ROUTE_GUARDS</code> feature flag so the platform can adopt real session enforcement in the next pass without locking out the current rebuild branch prematurely.
         </div>
-      </section>
-    </div>
+
+        <div className="mt-8">
+          <Link href="/login/client" className="rounded-full border border-white/20 px-5 py-3 font-medium text-white">
+            Back to client login
+          </Link>
+        </div>
+      </div>
+    </main>
   )
 }

@@ -1,8 +1,14 @@
 import Link from 'next/link'
 import { getClientAccessExperience } from '@/lib/recovery/surface-composer'
 
-export default function ClientAccessPage() {
+type ClientLoginPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}
+
+export default async function ClientLoginPage({ searchParams }: ClientLoginPageProps) {
   const experience = getClientAccessExperience()
+  const params = (await searchParams) ?? {}
+  const redirect = typeof params.redirect === 'string' ? params.redirect : '/client'
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
@@ -12,11 +18,16 @@ export default function ClientAccessPage() {
         <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-300">{experience.body}</p>
 
         <div className="mt-10 rounded-[2rem] border border-white/10 bg-white/5 p-6">
-          <div className="text-sm text-slate-300">
-            Client authentication closure is the next pass inside Mega Batch A. This page exists now to establish a separate client route and remove mixed-role ambiguity.
+          <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Redirect target</div>
+          <div className="mt-3 text-sm text-slate-200">{redirect}</div>
+          <div className="mt-6 text-sm leading-7 text-slate-300">
+            Full client session authentication is the next pass of Mega Batch A. This route now carries split access intent and redirect awareness.
           </div>
-          <div className="mt-6">
-            <Link href="/contact" className="rounded-full bg-cyan-400 px-5 py-3 font-medium text-slate-950">
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href={redirect} className="rounded-full bg-cyan-400 px-5 py-3 font-medium text-slate-950">
+              Continue to client destination
+            </Link>
+            <Link href="/contact" className="rounded-full border border-white/20 px-5 py-3 font-medium text-white">
               Need support first?
             </Link>
           </div>
