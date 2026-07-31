@@ -1,8 +1,15 @@
 import Link from 'next/link'
 import { getOperatorDashboardExperience } from '@/lib/recovery/operator-foundation'
+import { buildWorkspaceContext } from '@/lib/recovery/workspace-foundation'
+import { buildNeejeeTruthSnapshot } from '@/lib/recovery/neejee-foundation'
 
 export default function AdminPage() {
   const experience = getOperatorDashboardExperience()
+  const workspaceContext = buildWorkspaceContext({
+    role: 'operator',
+    allowedWorkspaceIds: ['workspace_neejee_primary', 'workspace_oye_internal'],
+  })
+  const neejeeTruth = buildNeejeeTruthSnapshot()
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
@@ -38,24 +45,58 @@ export default function AdminPage() {
                 </Link>
               ))}
             </div>
+
+            <section className="mt-10 rounded-[2rem] border border-white/10 bg-white/5 p-6">
+              <div className="text-xs uppercase tracking-[0.25em] text-cyan-300">Workspace resolver foundation</div>
+              <div className="mt-6 grid gap-4 lg:grid-cols-2">
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Active workspace</div>
+                  <div className="mt-2 text-sm">{workspaceContext.activeWorkspaceId}</div>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Selection source</div>
+                  <div className="mt-2 text-sm">{workspaceContext.source}</div>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Brand</div>
+                  <div className="mt-2 text-sm">{workspaceContext.activeBrandName}</div>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Stable selection</div>
+                  <div className="mt-2 text-sm">{workspaceContext.isStable ? 'yes' : 'no'}</div>
+                </div>
+              </div>
+            </section>
           </div>
 
-          <aside className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
-            <div className="text-xs uppercase tracking-[0.25em] text-cyan-300">Trust block</div>
-            <div className="mt-4 space-y-4">
-              <div>
-                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Legal name</div>
-                <div className="mt-2 text-lg font-medium">{experience.trustBlock.legalName}</div>
+          <aside className="space-y-6">
+            <section className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+              <div className="text-xs uppercase tracking-[0.25em] text-cyan-300">Trust block</div>
+              <div className="mt-4 space-y-4">
+                <div>
+                  <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Legal name</div>
+                  <div className="mt-2 text-lg font-medium">{experience.trustBlock.legalName}</div>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <div className="text-xs uppercase tracking-[0.2em] text-slate-400">GSTIN</div>
+                  <div className="mt-2 text-sm">{experience.trustBlock.taxIdentity.gstin}</div>
+                </div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">GSTIN</div>
-                <div className="mt-2 text-sm">{experience.trustBlock.taxIdentity.gstin}</div>
+            </section>
+
+            <section className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+              <div className="text-xs uppercase tracking-[0.25em] text-cyan-300">Neejee truth foundation</div>
+              <div className="mt-4 space-y-4">
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Canonical source</div>
+                  <div className="mt-2 text-sm">{neejeeTruth.canonicalTruthSource}</div>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Deprecated live sources removed next</div>
+                  <div className="mt-2 text-sm">{neejeeTruth.deprecatedSources.join(', ')}</div>
+                </div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Support email</div>
-                <div className="mt-2 text-sm">{experience.trustBlock.supportChannels[0].value}</div>
-              </div>
-            </div>
+            </section>
           </aside>
         </section>
       </div>
