@@ -1,41 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server'
-import {
-  ACCESS_COOKIE_KEYS,
-  getLoginRedirect,
-  hasSupabaseSessionCookie,
-  resolveAccessRoleFromCookies,
-  shouldProtectPath,
-  shouldRedirectForRole,
-} from '@/lib/recovery/auth-foundation'
+
+import { resolveRuntimeAccess } from './src/lib/recovery/runtime-enforcement-foundation'
+
+function normalizeRoleCookie(value?: string) {
+  if (value === 'client' || value === 'admin') {
+    return value
+  }
+
+  return 'public'
+}
 
 export function middleware(request: NextRequest) {
-  if (process.env.ENABLE_BATCH_A_ROUTE_GUARDS !== 'true') {
-    return NextResponse.next()
-  }
+  const sessionState = request.cookies.get('oye_session_state')?.value
+  const workspaceId = request.cookies.get('oye_workspace_id')?.value ?? null
+  const role = normalizeRoleCookie(request.cookies.get('oye_active_role')?.value)
 
-  const { pathname } = request.nextUrl
-  if (!shouldProtectPath(pathname)) {
-    return NextResponse.next()
-  }
-
-  const cookieNames = request.cookies.getAll().map((cookie) => cookie.name)
-  const supabaseLikeSession = hasSupabaseSessionCookie(cookieNames)
-
-  const role = resolveAccessRoleFromCookies({
-    [ACCESS_COOKIE_KEYS.role]: request.cookies.get(ACCESS_COOKIE_KEYS.role)?.value,
-    [ACCESS_COOKIE_KEYS.authReady]: supabaseLikeSession
-      ? 'true'
-      : request.cookies.get(ACCESS_COOKIE_KEYS.authReady)?.value,
+  const decision = resolveRuntimeAccess({
+    pathname: request.nextUrl.pathname,
+    role,
+    isAuthenticated: sessionState === 'authenticated',
+    workspaceId
   })
 
-  if (shouldRedirectForRole(pathname, role)) {
-    const redirectUrl = new URL(getLoginRedirect(pathname), request.url)
+  if (!decision.allow && decision.redirectTo) {
+    const redirectUrl = request.nextUrl.clone()
+    redirectUrl.pathname = decision.redirectTo
+    redirectUrl.search = ''
+
+    if (decision.redirectPath) {
+      redirectUrl.searchParams.set('redirect', decision.redirectPath)
+    }
+
+    if (decision.errorCode) {
+      redirectUrl.searchParams.set('error', decision.errorCode)
+    }
+
     return NextResponse.redirect(redirectUrl)
   }
 
-  return NextResponse.next()
+  const response = NextResponse.next()
+  response.headers.set('x-oye-batch-a-surface', decision.surface)
+  response.headers.set('x-oye-batch-a-runtime', decision.reason)
+  return response
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/client/:path*'],
+  matcher: ['/client/:path*', '/admin/:path*']
 }
