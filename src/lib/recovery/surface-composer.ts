@@ -17,9 +17,25 @@ function getPublicNavigation() {
     }))
 }
 
-function getSupportChannelValue(matchText: string, fallback: string) {
-  const channel = supportChannels.find((item) => String(item.value).includes(matchText))
-  return channel ? String(channel.value) : fallback
+function getChannelByKind(kind: 'email' | 'phone' | 'address') {
+  if (kind === 'email') {
+    return supportChannels.find((channel) => String(channel.value).includes('@')) ?? {
+      label: 'Email',
+      value: 'hello@oyeimagine.com'
+    }
+  }
+
+  if (kind === 'phone') {
+    return supportChannels.find((channel) => String(channel.value).includes('+91')) ?? {
+      label: 'Phone',
+      value: '+91 8 988 988 988'
+    }
+  }
+
+  return supportChannels.find((channel) => String(channel.value).includes('Suite')) ?? {
+    label: 'Address',
+    value: 'Suite No.11 A-116, Urbtech Trade Centre, Sector-132 Maharishi Nagar, Noida, Uttar Pradesh 201304'
+  }
 }
 
 export function getPublicHomepageExperience() {
@@ -38,18 +54,28 @@ export function getPublicHomepageExperience() {
       ctaLabel: heroSection?.ctaLabel ?? homePage?.ctaLabel ?? 'Explore',
       ctaHref: heroSection?.ctaHref ?? homePage?.ctaHref ?? '/marketplace'
     },
-    trust: {
+    trustBlock: {
       title: trustSection?.title ?? 'Canonical legal and commercial identity',
       body: trustSection?.description ?? '',
       bullets: trustSection?.bullets ?? [],
       legalName: supportIdentity.legalName,
-      gstin: supportIdentity.gstin,
+      taxIdentity: {
+        gstin: supportIdentity.gstin,
+        pan: organizationProfile.pan,
+        tan: organizationProfile.tan,
+        cin: organizationProfile.cin
+      },
       supportEmail: supportIdentity.supportEmail,
-      supportPhone: supportIdentity.supportPhone
+      supportPhone: supportIdentity.supportPhone,
+      address: {
+        line1: supportIdentity.addressLine1,
+        city: supportIdentity.city,
+        state: supportIdentity.state,
+        postalCode: supportIdentity.postalCode
+      }
     },
     promotions: getContentPromotionsByPageSlug('home'),
-    faqEntries: getContentFaqEntriesByPageSlug('home'),
-    legalIdentity: supportIdentity
+    faqEntries: getContentFaqEntriesByPageSlug('home')
   }
 }
 
@@ -71,7 +97,9 @@ export function getMarketplaceExperience() {
 
 export function getContactExperience() {
   const page = getContentPageBySlug('contact')
-  const supportIdentity = getSupportIdentitySnapshot()
+  const emailChannel = getChannelByKind('email')
+  const phoneChannel = getChannelByKind('phone')
+  const addressChannel = getChannelByKind('address')
 
   return {
     navigation: getPublicNavigation(),
@@ -79,9 +107,12 @@ export function getContactExperience() {
       title: page?.headline ?? 'Contact',
       body: page?.summary ?? ''
     },
-    support: {
-      email: getSupportChannelValue('@', 'hello@oyeimagine.com'),
-      phone: getSupportChannelValue('+91', '+91 8 988 988 988'),
+    supportChannels: [
+      { label: String(emailChannel.label ?? 'Email'), value: String(emailChannel.value) },
+      { label: String(phoneChannel.label ?? 'Phone'), value: String(phoneChannel.value) },
+      { label: String(addressChannel.label ?? 'Address'), value: String(addressChannel.value) }
+    ],
+    legalIdentity: {
       legalName: organizationProfile.legalName,
       gstin: organizationProfile.gstin,
       addressLine1: organizationProfile.principalPlaceOfBusiness.addressLine1,
@@ -90,8 +121,7 @@ export function getContactExperience() {
       postalCode: organizationProfile.principalPlaceOfBusiness.postalCode
     },
     sections: getContentSectionsByPageSlug('contact'),
-    faqEntries: getContentFaqEntriesByPageSlug('contact'),
-    legalIdentity: supportIdentity
+    faqEntries: getContentFaqEntriesByPageSlug('contact')
   }
 }
 
