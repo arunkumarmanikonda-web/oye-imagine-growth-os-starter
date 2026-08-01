@@ -1,10 +1,13 @@
-import type { Route } from 'next'
+﻿import type { Route } from 'next'
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import { PilotStatusCard, type PilotStatusSummary } from "./pilot-status-card";
+import { OperatorActionBridgePanel } from "./operator-action-bridge-panel";
+import { buildReleaseStatusRequestPath } from "@/lib/ops/admin-ops-release-status";
+import type { OperatorLaunchActionBridgeSummary } from "@/lib/ops/operator-launch-action-bridge";
 
 type ReleaseStatus = {
   ok: boolean;
@@ -38,6 +41,10 @@ type ReleaseStatus = {
     settings: string;
     ops: string;
   };
+  commercialEvidence?: {
+    companyName: string;
+  } | null;
+  operatorActionBridge?: OperatorLaunchActionBridgeSummary | null;
   warnings?: string[];
 };
 
@@ -112,7 +119,7 @@ export default function AdminOpsPage() {
         setPilotStatusError(null);
 
         const [releaseResponse, pilotResponse] = await Promise.all([
-          fetch("/api/admin/release-status", {
+          fetch(buildReleaseStatusRequestPath(window.location.search), {
             cache: "no-store",
             credentials: "include",
           }),
@@ -454,3 +461,4 @@ export default function AdminOpsPage() {
     </main>
   );
 }
+
