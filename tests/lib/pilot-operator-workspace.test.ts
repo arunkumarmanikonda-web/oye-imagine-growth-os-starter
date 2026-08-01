@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 import { buildCommercialContinuitySummary } from '../../src/lib/pilot/commercial-continuity';
 import { buildOperatorWorkItems } from '../../src/lib/pilot/operator-workspace';
 
@@ -30,6 +30,35 @@ describe('pilot operator workspace', () => {
     expect(items.some((item) => item.queueType === 'approval')).toBe(true);
   });
 
+  it('creates an activation blocker item when core setup is complete but launch blockers remain', () => {
+    const summary = buildCommercialContinuitySummary({
+      brandName: 'Neejee',
+      onboardingCompleted: true,
+      strategyGenerated: true,
+      strategyApproved: true,
+      contractSigned: true,
+      subscriptionActive: true,
+      invoiceStatus: 'issued',
+      approvalOpenCount: 0,
+      auditCoverage: 0.6,
+      mediaBalanceAmount: 30000,
+      currency: 'INR',
+    });
+
+    const items = buildOperatorWorkItems({
+      brandName: 'Neejee',
+      summary,
+      requestedLaunchDate: '2026-08-18',
+    });
+
+    const activationItem = items.find((item) => item.queueType === 'activation');
+
+    expect(activationItem).toBeTruthy();
+    expect(activationItem?.title).toContain('clear activation blockers');
+    expect(JSON.stringify(activationItem?.payload)).toContain('Invoice is issued but not paid');
+    expect(JSON.stringify(activationItem?.payload)).toContain('Audit coverage is below activation threshold');
+  });
+
   it('creates an activation item when the pilot is ready', () => {
     const summary = buildCommercialContinuitySummary({
       brandName: 'Neejee',
@@ -53,5 +82,6 @@ describe('pilot operator workspace', () => {
 
     expect(items).toHaveLength(1);
     expect(items[0]?.queueType).toBe('activation');
+    expect(items[0]?.title).toContain('launch pilot activation');
   });
 });

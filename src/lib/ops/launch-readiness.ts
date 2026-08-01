@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   LaunchReadinessCheck,
   LaunchReadinessSummary,
   ReadinessStatus,
@@ -14,9 +14,13 @@ export function summarizeLaunchReadiness(
   const pendingCount = checks.filter((item) => item.status === 'pending').length;
   const waivedCount = checks.filter((item) => item.status === 'waived').length;
 
-  const blockingChecks = checks
-    .filter((item) => BLOCKING_STATUSES.includes(item.status))
-    .map((item) => `${item.category}: ${item.checkName}`);
+  const blockingChecks = Array.from(
+    new Set(
+      checks
+        .filter((item) => BLOCKING_STATUSES.includes(item.status))
+        .map((item) => `${item.category}: ${item.checkName}`),
+    ),
+  );
 
   return {
     ready: failCount === 0 && pendingCount === 0,

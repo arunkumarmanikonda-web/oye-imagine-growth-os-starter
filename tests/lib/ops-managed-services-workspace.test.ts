@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 import {
   buildManagedServicesWorkspaceSnapshot,
   managedWorkspaceHasActionableQueue,
@@ -16,8 +16,22 @@ describe('ops managed services workspace', () => {
     });
 
     expect(snapshot.ownerRole).toBe('PROGRAM_MANAGER');
-    expect(snapshot.nextBestAction).toContain('resolve active blockers');
+    expect(snapshot.nextBestAction).toBe('Neejee: resolve 3 active blocker(s)');
     expect(managedWorkspaceHasActionableQueue(snapshot)).toBe(true);
+  });
+
+  it('prioritizes approvals when blockers are clear', () => {
+    const snapshot = buildManagedServicesWorkspaceSnapshot({
+      brandName: 'Neejee',
+      openApprovals: 2,
+      pendingReports: 1,
+      pendingCampaigns: 1,
+      pendingStrategyTasks: 1,
+      activeBlockers: 0,
+    });
+
+    expect(snapshot.ownerRole).toBe('PROGRAM_MANAGER');
+    expect(snapshot.nextBestAction).toBe('Neejee: clear 2 open approval(s)');
   });
 
   it('handles empty queues gracefully', () => {
@@ -30,6 +44,7 @@ describe('ops managed services workspace', () => {
       activeBlockers: 0,
     });
 
+    expect(snapshot.nextBestAction).toBe('Neejee: continue managed services execution');
     expect(managedWorkspaceHasActionableQueue(snapshot)).toBe(false);
   });
 });

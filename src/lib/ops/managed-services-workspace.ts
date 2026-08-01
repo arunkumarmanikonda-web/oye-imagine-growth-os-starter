@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   ManagedServicesWorkspaceInput,
   ManagedServicesWorkspaceSnapshot,
 } from './ops-closeout-types';
@@ -10,19 +10,19 @@ export function buildManagedServicesWorkspaceSnapshot(
   let ownerRole = 'ACCOUNT_MANAGER';
 
   if (input.activeBlockers > 0) {
-    nextBestAction = `${input.brandName}: resolve active blockers first`;
+    nextBestAction = `${input.brandName}: resolve ${input.activeBlockers} active blocker(s)`;
     ownerRole = 'PROGRAM_MANAGER';
   } else if (input.openApprovals > 0) {
-    nextBestAction = `${input.brandName}: clear open approvals`;
+    nextBestAction = `${input.brandName}: clear ${input.openApprovals} open approval(s)`;
     ownerRole = 'PROGRAM_MANAGER';
   } else if (input.pendingCampaigns > 0) {
-    nextBestAction = `${input.brandName}: prepare next campaign draft package`;
+    nextBestAction = `${input.brandName}: prepare ${input.pendingCampaigns} pending campaign draft(s)`;
     ownerRole = 'PERFORMANCE_MARKETER';
   } else if (input.pendingReports > 0) {
-    nextBestAction = `${input.brandName}: publish pending reports`;
+    nextBestAction = `${input.brandName}: publish ${input.pendingReports} pending report(s)`;
     ownerRole = 'REPORTING_MANAGER';
   } else if (input.pendingStrategyTasks > 0) {
-    nextBestAction = `${input.brandName}: complete remaining strategy tasks`;
+    nextBestAction = `${input.brandName}: complete ${input.pendingStrategyTasks} remaining strategy task(s)`;
     ownerRole = 'STRATEGY_LEAD';
   }
 

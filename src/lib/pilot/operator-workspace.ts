@@ -1,8 +1,26 @@
-import type {
+﻿import type {
   CommercialContinuitySummary,
   OperatorWorkItem,
   OperatorWorkspaceInput,
 } from './pilot-operating-types';
+
+function activationStageReady(summary: CommercialContinuitySummary): boolean {
+  return (
+    summary.statuses.onboarding === 'completed' &&
+    summary.statuses.strategy === 'completed' &&
+    summary.statuses.contract === 'completed' &&
+    summary.statuses.subscription === 'completed' &&
+    summary.statuses.approvals === 'completed'
+  );
+}
+
+function collectActivationBlockers(summary: CommercialContinuitySummary): string[] {
+  const keywords = ['audit', 'invoice', 'subscription', 'contract', 'activation'];
+
+  return summary.blockers.filter((item) =>
+    keywords.some((keyword) => item.toLowerCase().includes(keyword)),
+  );
+}
 
 export function buildOperatorWorkItems(
   input: OperatorWorkspaceInput,
@@ -78,6 +96,8 @@ export function buildOperatorWorkItems(
     });
   }
 
+  const activationBlockers = collectActivationBlockers(summary);
+
   if (summary.readyForActivation) {
     items.push({
       queueType: 'activation',
@@ -86,6 +106,22 @@ export function buildOperatorWorkItems(
       ownerRole: 'ACCOUNT_DIRECTOR',
       status: 'open',
       payload: {
+        requestedLaunchDate: input.requestedLaunchDate || null,
+      },
+    });
+  } else if (activationStageReady(summary) && activationBlockers.length > 0) {
+    items.push({
+      queueType: 'activation',
+      priority:
+        summary.statuses.invoicing === 'blocked' || summary.statuses.audit === 'blocked'
+          ? 'critical'
+          : 'high',
+      title: `${input.brandName}: clear activation blockers`,
+      ownerRole: 'ACCOUNT_DIRECTOR',
+      status: 'open',
+      payload: {
+        blockers: activationBlockers,
+        nextActions: summary.nextActions,
         requestedLaunchDate: input.requestedLaunchDate || null,
       },
     });
