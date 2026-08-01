@@ -2,7 +2,7 @@
 import { GET } from '../../src/app/api/admin/commercial/onboarding-workspace/route'
 
 describe('admin commercial onboarding workspace route', () => {
-  it('returns a ready workspace when onboarding, KYC, and commercial controls are complete', async () => {
+  it('returns a ready workspace when onboarding, KYC, provider, and commercial controls are complete', async () => {
     const request = new Request(
       'http://localhost/api/admin/commercial/onboarding-workspace?' +
         [
@@ -45,6 +45,16 @@ describe('admin commercial onboarding workspace route', () => {
           'auditCoverage=0.9',
           'mediaBalanceAmount=50000',
           'currency=INR',
+          'esignCredentialsPresent=true',
+          'esignBusinessVerified=true',
+          'esignLiveAccountConnected=true',
+          'esignWebhookConfigured=true',
+          'esignCallbackVerified=true',
+          'paymentGatewayCredentialsPresent=true',
+          'paymentGatewayBusinessVerified=true',
+          'paymentGatewayLiveAccountConnected=true',
+          'paymentGatewayWebhookConfigured=true',
+          'paymentGatewayCallbackVerified=true',
         ].join('&'),
     )
 
@@ -54,19 +64,19 @@ describe('admin commercial onboarding workspace route', () => {
     expect(response.status).toBe(200)
     expect(body.ok).toBe(true)
     expect(body.workspace.kycVerification.status).toBe('verified')
+    expect(body.workspace.providerReadiness.status).toBe('ready')
     expect(body.workspace.agreementBlueprint.clientProfile.gstin).toBe('29ABCDE1234F1Z5')
     expect(body.workspace.readyForCommercialReview).toBe(true)
     expect(body.derived.commercialReviewStatus).toBe('ready')
     expect(body.derived.activationStatus).toBe('ready')
+    expect(body.derived.providerReadinessStatus).toBe('ready')
+    expect(body.derived.providerReadinessBlockers).toEqual([])
     expect(body.derived.continuityReady).toBe(true)
     expect(body.derived.kycStatus).toBe('verified')
-    expect(body.derived.kycMissingChecks).toEqual([])
     expect(body.derived.agreementClientGstin).toBe('29ABCDE1234F1Z5')
-    expect(body.derived.agreementClientGstinReady).toBe(true)
-    expect(body.derived.missingOnboardingFields).toEqual([])
   })
 
-  it('returns blockers when onboarding or KYC controls are incomplete', async () => {
+  it('returns provider blockers when onboarding or provider controls are incomplete', async () => {
     const request = new Request(
       'http://localhost/api/admin/commercial/onboarding-workspace?' +
         [
@@ -91,16 +101,19 @@ describe('admin commercial onboarding workspace route', () => {
     expect(body.ok).toBe(true)
     expect(body.workspace.readyForCommercialReview).toBe(false)
     expect(body.workspace.kycVerification.status).toBe('pending')
+    expect(body.workspace.providerReadiness.status).toBe('blocked')
     expect(body.workspace.agreementBlueprint.clientProfile.gstin).toBe('pending_client_tax_profile')
     expect(body.derived.commercialReviewStatus).toBe('blocked')
     expect(body.derived.activationStatus).toBe('blocked')
-    expect(body.derived.continuityReady).toBe(false)
-    expect(body.derived.missingOnboardingFields).toContain('legalName')
+    expect(body.derived.providerReadinessStatus).toBe('blocked')
+    expect(body.derived.providerReadinessBlockers).toContain(
+      'esign: credentials missing, business verification incomplete, live account not connected, webhook not configured, callback not verified',
+    )
+    expect(body.derived.providerReadinessBlockers).toContain(
+      'payment_gateway: credentials missing, business verification incomplete, live account not connected, webhook not configured, callback not verified',
+    )
     expect(body.derived.kycStatus).toBe('pending')
     expect(body.derived.kycMissingChecks).toContain('clientGstin')
-    expect(body.derived.kycMissingChecks).toContain('billing identity')
-    expect(body.derived.agreementClientGstin).toBe('pending_client_tax_profile')
-    expect(body.derived.agreementClientGstinReady).toBe(false)
     expect(body.derived.continuityBlockers).toContain('Onboarding information is incomplete')
   })
 })

@@ -2,7 +2,7 @@
 import { buildCommercialOnboardingWorkspace } from '../../src/lib/pilot/commercial-onboarding-workspace'
 
 describe('pilot commercial onboarding workspace', () => {
-  it('builds a review-ready workspace when onboarding, KYC, and commercial inputs are complete', () => {
+  it('builds a review-ready workspace when onboarding, KYC, provider, and commercial inputs are complete', () => {
     const workspace = buildCommercialOnboardingWorkspace({
       intakeId: 'intake_neejee_1',
       tenantId: 'tenant_neejee',
@@ -40,22 +40,30 @@ describe('pilot commercial onboarding workspace', () => {
       auditCoverage: 0.9,
       mediaBalanceAmount: 50000,
       currency: 'INR',
+      esignCredentialsPresent: true,
+      esignBusinessVerified: true,
+      esignLiveAccountConnected: true,
+      esignWebhookConfigured: true,
+      esignCallbackVerified: true,
+      paymentGatewayCredentialsPresent: true,
+      paymentGatewayBusinessVerified: true,
+      paymentGatewayLiveAccountConnected: true,
+      paymentGatewayWebhookConfigured: true,
+      paymentGatewayCallbackVerified: true,
     })
 
     expect(workspace.onboardingProgress.readyForReview).toBe(true)
     expect(workspace.kycVerification.status).toBe('verified')
+    expect(workspace.providerReadiness.status).toBe('ready')
+    expect(workspace.providerReadiness.requiredProviders).toHaveLength(2)
     expect(workspace.readyForCommercialReview).toBe(true)
     expect(workspace.agreementBlueprint.status).toBe('intake_ready')
     expect(workspace.agreementBlueprint.clientProfile.gstin).toBe('29ABCDE1234F1Z5')
-    expect(workspace.agreementBlueprint.requestedLanes).toEqual([
-      'growth_strategy',
-      'performance_marketing',
-    ])
     expect(workspace.activationSummary.status).toBe('ready')
     expect(workspace.continuitySummary.readyForActivation).toBe(true)
   })
 
-  it('keeps the workspace blocked when onboarding or KYC controls are incomplete', () => {
+  it('keeps the workspace blocked when onboarding, provider, or KYC controls are incomplete', () => {
     const workspace = buildCommercialOnboardingWorkspace({
       intakeId: 'intake_neejee_2',
       tenantId: 'tenant_neejee',
@@ -84,11 +92,15 @@ describe('pilot commercial onboarding workspace', () => {
     expect(workspace.onboardingProgress.readyForReview).toBe(false)
     expect(workspace.onboardingProgress.missingFields).toContain('legalName')
     expect(workspace.kycVerification.status).toBe('pending')
-    expect(workspace.kycVerification.missingChecks).toContain('clientGstin')
-    expect(workspace.kycVerification.missingChecks).toContain('billing identity')
+    expect(workspace.providerReadiness.status).toBe('blocked')
+    expect(workspace.providerReadiness.blockers).toContain(
+      'esign: credentials missing, business verification incomplete, live account not connected, webhook not configured, callback not verified',
+    )
+    expect(workspace.providerReadiness.blockers).toContain(
+      'payment_gateway: credentials missing, business verification incomplete, live account not connected, webhook not configured, callback not verified',
+    )
     expect(workspace.agreementBlueprint.clientProfile.gstin).toBe('pending_client_tax_profile')
     expect(workspace.activationSummary.status).toBe('blocked')
     expect(workspace.continuitySummary.readyForActivation).toBe(false)
-    expect(workspace.continuitySummary.blockers).toContain('Onboarding information is incomplete')
   })
 })

@@ -79,6 +79,18 @@ export async function GET(request: Request) {
     auditCoverage: toNumber(searchParams.get('auditCoverage'), 0),
     mediaBalanceAmount: toNumber(searchParams.get('mediaBalanceAmount'), 0),
     currency: searchParams.get('currency')?.trim() || 'INR',
+
+    esignCredentialsPresent: toBoolean(searchParams.get('esignCredentialsPresent')),
+    esignBusinessVerified: toBoolean(searchParams.get('esignBusinessVerified')),
+    esignLiveAccountConnected: toBoolean(searchParams.get('esignLiveAccountConnected')),
+    esignWebhookConfigured: toBoolean(searchParams.get('esignWebhookConfigured')),
+    esignCallbackVerified: toBoolean(searchParams.get('esignCallbackVerified')),
+
+    paymentGatewayCredentialsPresent: toBoolean(searchParams.get('paymentGatewayCredentialsPresent')),
+    paymentGatewayBusinessVerified: toBoolean(searchParams.get('paymentGatewayBusinessVerified')),
+    paymentGatewayLiveAccountConnected: toBoolean(searchParams.get('paymentGatewayLiveAccountConnected')),
+    paymentGatewayWebhookConfigured: toBoolean(searchParams.get('paymentGatewayWebhookConfigured')),
+    paymentGatewayCallbackVerified: toBoolean(searchParams.get('paymentGatewayCallbackVerified')),
   })
 
   return NextResponse.json({
@@ -95,6 +107,8 @@ export async function GET(request: Request) {
       agreementClientGstin: workspace.agreementBlueprint.clientProfile.gstin,
       agreementClientGstinReady:
         workspace.agreementBlueprint.clientProfile.gstin !== 'pending_client_tax_profile',
+      providerReadinessStatus: workspace.providerReadiness.status,
+      providerReadinessBlockers: workspace.providerReadiness.blockers,
     },
   })
 }

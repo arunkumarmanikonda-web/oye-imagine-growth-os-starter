@@ -1,4 +1,9 @@
-﻿import { buildAgreementSignupBlueprint } from '@/lib/recovery/commercial-agreement-foundation'
+﻿import type { CredentialStatusSummary } from '@/lib/activation/activation-types'
+import {
+  buildCredentialStatusSummary,
+  providerReady,
+} from '@/lib/activation/credential-status'
+import { buildAgreementSignupBlueprint } from '@/lib/recovery/commercial-agreement-foundation'
 import type {
   CommercialBillingModel,
   CommercialPaymentTerm,
@@ -53,6 +58,18 @@ export type CommercialOnboardingWorkspaceInput = {
   auditCoverage?: number
   mediaBalanceAmount?: number
   currency?: string
+
+  esignCredentialsPresent?: boolean
+  esignBusinessVerified?: boolean
+  esignLiveAccountConnected?: boolean
+  esignWebhookConfigured?: boolean
+  esignCallbackVerified?: boolean
+
+  paymentGatewayCredentialsPresent?: boolean
+  paymentGatewayBusinessVerified?: boolean
+  paymentGatewayLiveAccountConnected?: boolean
+  paymentGatewayWebhookConfigured?: boolean
+  paymentGatewayCallbackVerified?: boolean
 }
 
 export type CommercialKycVerificationSummary = {
@@ -71,10 +88,17 @@ export type CommercialKycVerificationSummary = {
   authorizedRepresentativeVerified: boolean
 }
 
+export type CommercialProviderReadinessSummary = {
+  status: 'ready' | 'blocked'
+  requiredProviders: CredentialStatusSummary[]
+  blockers: string[]
+}
+
 export type CommercialOnboardingWorkspace = {
   intake: OnboardingIntakeDraft
   onboardingProgress: OnboardingProgressSummary
   kycVerification: CommercialKycVerificationSummary
+  providerReadiness: CommercialProviderReadinessSummary
   agreementBlueprint: ReturnType<typeof buildAgreementSignupBlueprint>
   activationSummary: ReturnType<typeof buildCommercialActivationSummary>
   continuitySummary: ReturnType<typeof buildCommercialContinuitySummary>
@@ -160,6 +184,41 @@ function buildCommercialKycVerificationSummary(
   }
 }
 
+function buildCommercialProviderReadinessSummary(
+  input: CommercialOnboardingWorkspaceInput,
+): CommercialProviderReadinessSummary {
+  const esignSummary = buildCredentialStatusSummary({
+    provider: 'esign',
+    credentialsPresent: input.esignCredentialsPresent ?? input.esignProviderReady ?? false,
+    appReviewApproved: false,
+    businessVerified: input.esignBusinessVerified ?? input.esignProviderReady ?? false,
+    liveAccountConnected: input.esignLiveAccountConnected ?? input.esignProviderReady ?? false,
+    webhookConfigured: input.esignWebhookConfigured ?? input.esignProviderReady ?? false,
+    callbackVerified: input.esignCallbackVerified ?? input.esignProviderReady ?? false,
+  })
+
+  const paymentGatewaySummary = buildCredentialStatusSummary({
+    provider: 'payment_gateway',
+    credentialsPresent: input.paymentGatewayCredentialsPresent ?? input.paymentMethodReady ?? false,
+    appReviewApproved: false,
+    businessVerified: input.paymentGatewayBusinessVerified ?? input.paymentMethodReady ?? false,
+    liveAccountConnected: input.paymentGatewayLiveAccountConnected ?? input.paymentMethodReady ?? false,
+    webhookConfigured: input.paymentGatewayWebhookConfigured ?? input.paymentMethodReady ?? false,
+    callbackVerified: input.paymentGatewayCallbackVerified ?? input.paymentMethodReady ?? false,
+  })
+
+  const requiredProviders = [esignSummary, paymentGatewaySummary]
+  const blockers = requiredProviders
+    .filter((provider) => provider.status !== 'ready')
+    .map((provider) => `${provider.provider}: ${provider.blockers.join(', ')}`)
+
+  return {
+    status: blockers.length === 0 ? 'ready' : 'blocked',
+    requiredProviders,
+    blockers,
+  }
+}
+
 export function buildCommercialOnboardingWorkspace(
   input: CommercialOnboardingWorkspaceInput,
 ): CommercialOnboardingWorkspace {
@@ -179,6 +238,12 @@ export function buildCommercialOnboardingWorkspace(
 
   const onboardingProgress = summarizeOnboardingProgress(intake)
   const kycVerification = buildCommercialKycVerificationSummary(input, intake)
+  const providerReadiness = buildCommercialProviderReadinessSummary(input)
+
+  const esignStatus =
+    providerReadiness.requiredProviders.find((provider) => provider.provider === 'esign') ?? null
+  const paymentGatewayStatus =
+    providerReadiness.requiredProviders.find((provider) => provider.provider === 'payment_gateway') ?? null
 
   const agreementBlueprint = buildAgreementSignupBlueprint({
     clientLegalName: input.legalName?.trim() || input.companyName.trim(),
@@ -195,11 +260,12 @@ export function buildCommercialOnboardingWorkspace(
   const activationSummary = buildCommercialActivationSummary({
     brandName: intake.companyName,
     contractSigned: input.contractSigned ?? false,
-    esignProviderReady: input.esignProviderReady ?? false,
+    esignProviderReady: input.esignProviderReady ?? (esignStatus ? providerReady(esignStatus) : false),
     subscriptionActivated: input.subscriptionActive ?? false,
     invoiceProfileReady:
       input.invoiceProfileReady ?? (onboardingProgress.readyForReview && kycVerification.status === 'verified'),
-    paymentMethodReady: input.paymentMethodReady ?? false,
+    paymentMethodReady:
+      input.paymentMethodReady ?? (paymentGatewayStatus ? providerReady(paymentGatewayStatus) : false),
     approvalPolicyReady: input.approvalPolicyReady ?? false,
   })
 
@@ -221,6 +287,7 @@ export function buildCommercialOnboardingWorkspace(
     intake,
     onboardingProgress,
     kycVerification,
+    providerReadiness,
     agreementBlueprint,
     activationSummary,
     continuitySummary,

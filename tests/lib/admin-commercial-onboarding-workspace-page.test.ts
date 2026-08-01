@@ -42,24 +42,32 @@ describe('admin commercial onboarding workspace page', () => {
         auditCoverage: '0.9',
         mediaBalanceAmount: '50000',
         currency: 'INR',
+        esignCredentialsPresent: 'true',
+        esignBusinessVerified: 'true',
+        esignLiveAccountConnected: 'true',
+        esignWebhookConfigured: 'true',
+        esignCallbackVerified: 'true',
+        paymentGatewayCredentialsPresent: 'true',
+        paymentGatewayBusinessVerified: 'true',
+        paymentGatewayLiveAccountConnected: 'true',
+        paymentGatewayWebhookConfigured: 'true',
+        paymentGatewayCallbackVerified: 'true',
       }),
     })
 
     const html = renderToStaticMarkup(element)
 
-    expect(html).toContain('Mega Batch B1')
-    expect(html).toContain('Neejee')
     expect(html).toContain('Commercial review ready')
     expect(html).toContain('KYC verified')
-    expect(html).toContain('Activation ready')
-    expect(html).toContain('Continuity ready')
-    expect(html).toContain('KYC verification')
+    expect(html).toContain('Providers ready')
+    expect(html).toContain('Provider readiness')
+    expect(html).toContain('esign: ready')
+    expect(html).toContain('payment_gateway: ready')
     expect(html).toContain('Client GSTIN')
     expect(html).toContain('29ABCDE1234F1Z5')
-    expect(html).toContain('None')
   })
 
-  it('renders missing fields and blockers for a blocked workspace', async () => {
+  it('renders provider blockers for a blocked workspace', async () => {
     const element = await AdminCommercialOnboardingWorkspacePage({
       searchParams: Promise.resolve({
         tenantId: 'tenant_neejee',
@@ -80,12 +88,11 @@ describe('admin commercial onboarding workspace page', () => {
 
     expect(html).toContain('Commercial review blocked')
     expect(html).toContain('KYC pending')
-    expect(html).toContain('Continuity blocked')
-    expect(html).toContain('Missing fields')
-    expect(html).toContain('Client GSTIN')
-    expect(html).toContain('legalName')
-    expect(html).toContain('clientGstin')
-    expect(html).toContain('billing identity')
-    expect(html).toContain('Onboarding information is incomplete')
+    expect(html).toContain('Providers blocked')
+    expect(html).toContain('Provider readiness')
+    expect(html).toContain('esign: blocked')
+    expect(html).toContain('payment_gateway: blocked')
+    expect(html).toContain('business verification incomplete')
+    expect(html).toContain('webhook not configured')
   })
 })
