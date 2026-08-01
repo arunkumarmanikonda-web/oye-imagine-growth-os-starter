@@ -105,6 +105,28 @@ describe("admin release-status route commercial evidence bridge", () => {
     expect(body.commercialEvidence.sharedBlockers).toContain(
       "Required providers are not production ready",
     );
+
+    expect(body.operatorActionBridge).toMatchObject({
+      operatorQueueCount: 1,
+      highestPriority: "medium",
+      activationQueueCount: 1,
+      nextBestAction: "Neejee: resolve 2 active blocker(s)",
+      nextBestActionOwnerRole: "PROGRAM_MANAGER",
+      managedQueueActionable: true,
+      launchReady: false,
+      continuityReady: true,
+    });
+    expect(body.operatorActionBridge.operatorQueueTypes).toContain("activation");
+    expect(body.operatorActionBridge.blockingChecks).toContain(
+      "commercial: commercial review",
+    );
+    expect(body.operatorActionBridge.blockingChecks).toContain(
+      "providers: provider readiness",
+    );
+    expect(body.operatorActionBridge.blockingChecks).toContain(
+      "activation: activation gate",
+    );
+
     expect(body.warnings[0]).toMatch(/SUPABASE_SERVICE_ROLE_KEY/i);
   });
 
@@ -117,5 +139,6 @@ describe("admin release-status route commercial evidence bridge", () => {
 
     expect(body.ok).toBe(true);
     expect(body.commercialEvidence).toBeNull();
+    expect(body.operatorActionBridge).toBeNull();
   });
 });
