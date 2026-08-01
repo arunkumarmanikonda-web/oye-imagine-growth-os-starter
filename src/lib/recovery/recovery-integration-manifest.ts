@@ -118,7 +118,7 @@ export function getIntegrationValidationGate() {
     '/support/center',
   ]
 
-  const missingRequiredRoutes = requiredRoutes.filter((route) => !routeSet.has(route))
+  const missingRequiredRoutes = requiredRoutes.filter((route) => !routeSet.has(route as Parameters<typeof routeSet.has>[0]))
 
   return {
     status:

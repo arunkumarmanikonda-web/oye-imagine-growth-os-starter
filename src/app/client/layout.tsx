@@ -1,3 +1,4 @@
+import type { Route } from 'next'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { buildRecoveryAuthSessionFromCookieStore } from '@/lib/recovery/auth-session-server'
@@ -13,7 +14,7 @@ export default async function ClientLayout({
   const decision = getRouteAccessDecision(session, 'client')
 
   if (!decision.allow && decision.redirectTo) {
-    redirect(decision.redirectTo)
+    redirect(decision.redirectTo as Route)
   }
 
   return (

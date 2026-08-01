@@ -1,3 +1,4 @@
+import type { Route } from 'next'
 import Link from 'next/link'
 import { getPublicHomepageExperience } from '../lib/recovery/public-premium-experience'
 
@@ -15,7 +16,7 @@ export default function HomePage() {
 
           <div className="flex flex-wrap items-center gap-3 text-sm text-slate-200">
             {experience.navigation.map((item) => (
-              <Link key={item.href} href={item.href} className="rounded-full px-3 py-2 transition hover:bg-white/10">
+              <Link key={item.href} href={item.href as Route} className="rounded-full px-3 py-2 transition hover:bg-white/10">
                 {item.label}
               </Link>
             ))}
@@ -31,13 +32,13 @@ export default function HomePage() {
             <p className="max-w-3xl text-lg leading-8 text-slate-300">{experience.hero.body}</p>
 
             <div className="flex flex-wrap gap-3">
-              <Link href={experience.hero.primaryAction.href} className="rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950">
+              <Link href={experience.hero.primaryAction.href as Route} className="rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950">
                 {experience.hero.primaryAction.label}
               </Link>
-              <Link href={experience.hero.secondaryAction.href} className="rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white">
+              <Link href={experience.hero.secondaryAction.href as Route} className="rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white">
                 {experience.hero.secondaryAction.label}
               </Link>
-              <Link href={experience.hero.tertiaryAction.href} className="rounded-full px-5 py-3 text-sm font-semibold text-slate-300">
+              <Link href={experience.hero.tertiaryAction.href as Route} className="rounded-full px-5 py-3 text-sm font-semibold text-slate-300">
                 {experience.hero.tertiaryAction.label}
               </Link>
             </div>

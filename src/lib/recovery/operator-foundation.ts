@@ -89,10 +89,10 @@ export function getOperatorConfigExperience() {
       }
     ],
     trustBlock: {
-      addressLine1: organizationProfile.principalPlaceOfBusiness.addressLine1,
-      city: organizationProfile.principalPlaceOfBusiness.city,
-      state: organizationProfile.principalPlaceOfBusiness.state,
-      postalCode: organizationProfile.principalPlaceOfBusiness.postalCode
+      addressLine1: organizationProfile.principalPlaceOfBusiness,
+      city: '',
+      state: '',
+      postalCode: ''
     }
   }
 }

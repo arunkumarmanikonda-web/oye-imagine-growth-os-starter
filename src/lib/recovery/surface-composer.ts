@@ -115,10 +115,10 @@ export function getContactExperience() {
     legalIdentity: {
       legalName: organizationProfile.legalName,
       gstin: organizationProfile.gstin,
-      addressLine1: organizationProfile.principalPlaceOfBusiness.addressLine1,
-      city: organizationProfile.principalPlaceOfBusiness.city,
-      state: organizationProfile.principalPlaceOfBusiness.state,
-      postalCode: organizationProfile.principalPlaceOfBusiness.postalCode
+      addressLine1: organizationProfile.principalPlaceOfBusiness,
+      city: '',
+      state: '',
+      postalCode: ''
     },
     sections: getContentSectionsByPageSlug('contact'),
     faqEntries: getContentFaqEntriesByPageSlug('contact')
@@ -165,5 +165,21 @@ export function getAdminLoginExperience() {
       action: '/admin',
       submitLabel: 'Enter operator workspace'
     }
+  }
+}
+
+export function getClientAccessExperience() {
+  const experience = getClientLoginExperience()
+  return {
+    eyebrow: 'Client access',
+    ...experience,
+  }
+}
+
+export function getOperatorAccessExperience() {
+  const experience = getAdminLoginExperience()
+  return {
+    eyebrow: 'Operator access',
+    ...experience,
   }
 }

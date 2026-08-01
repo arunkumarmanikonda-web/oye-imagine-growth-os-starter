@@ -1,3 +1,4 @@
+import type { Route } from 'next'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { buildRecoveryAuthSessionFromCookieStore, getSelectedWorkspaceIdFromCookieStore } from '@/lib/recovery/auth-session-server'
@@ -14,7 +15,7 @@ export default async function AdminLayout({
   const decision = getRouteAccessDecision(session, 'operator')
 
   if (!decision.allow && decision.redirectTo) {
-    redirect(decision.redirectTo)
+    redirect(decision.redirectTo as Route)
   }
 
   const workspaceContext = resolveRecoveryWorkspaceContext(

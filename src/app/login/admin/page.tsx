@@ -1,3 +1,4 @@
+import type { Route } from 'next'
 import Link from 'next/link'
 import { getOperatorAccessExperience } from '@/lib/recovery/surface-composer'
 
@@ -24,7 +25,7 @@ export default async function AdminLoginPage({ searchParams }: AdminLoginPagePro
             Full operator session authentication and protected route enforcement are the next pass of Mega Batch A. This route now carries split access intent and redirect awareness.
           </div>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link href={redirect} className="rounded-full border border-white/20 px-5 py-3 font-medium text-white">
+            <Link href={redirect as Route} className="rounded-full border border-white/20 px-5 py-3 font-medium text-white">
               Continue to operator destination
             </Link>
             <Link href="/login" className="rounded-full px-5 py-3 font-medium text-cyan-300">

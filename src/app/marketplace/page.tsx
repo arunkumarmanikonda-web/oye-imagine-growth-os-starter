@@ -1,3 +1,4 @@
+import type { Route } from 'next'
 import Link from 'next/link'
 import { getMarketplaceExperience } from '../../lib/recovery/public-premium-experience'
 
@@ -21,7 +22,7 @@ export default function MarketplacePage() {
               <p className="mt-4 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">
                 {category.proofPoint}
               </p>
-              <Link href={category.href} className="mt-5 inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-950">
+              <Link href={category.href as Route} className="mt-5 inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-950">
                 Explore category
               </Link>
             </article>
@@ -32,7 +33,7 @@ export default function MarketplacePage() {
           {experience.actions.map((action) => (
             <Link
               key={action.href}
-              href={action.href}
+              href={action.href as Route}
               className={
                 action.emphasis === 'primary'
                   ? 'rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950'

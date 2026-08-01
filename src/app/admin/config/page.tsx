@@ -6,9 +6,9 @@ export default function AdminConfigPage() {
   return (
     <main className="min-h-screen bg-slate-950 text-white">
       <div className="mx-auto max-w-7xl px-6 py-16">
-        <div className="text-sm uppercase tracking-[0.3em] text-cyan-300">{experience.eyebrow}</div>
+        <div className="text-sm uppercase tracking-[0.3em] text-cyan-300">Configuration control plane</div>
         <h1 className="mt-5 text-5xl font-semibold leading-tight">{experience.title}</h1>
-        <p className="mt-5 max-w-4xl text-lg leading-8 text-slate-300">{experience.summary}</p>
+        <p className="mt-5 max-w-4xl text-lg leading-8 text-slate-300">{experience.subtitle}</p>
 
         <section className="mt-12 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
@@ -19,8 +19,8 @@ export default function AdminConfigPage() {
                 <div className="mt-2 text-sm">{experience.legalProfile.legalName}</div>
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Company type</div>
-                <div className="mt-2 text-sm">{experience.legalProfile.companyType}</div>
+                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">GST registration type</div>
+                <div className="mt-2 text-sm">{experience.legalProfile.gstRegistrationType}</div>
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <div className="text-xs uppercase tracking-[0.2em] text-slate-400">CIN</div>
@@ -41,8 +41,8 @@ export default function AdminConfigPage() {
             </div>
 
             <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4">
-              <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Registered address</div>
-              <div className="mt-2 text-sm leading-7 text-slate-300">{experience.legalProfile.principalPlaceOfBusiness}</div>
+              <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Registry identifiers</div>
+              <div className="mt-2 text-sm leading-7 text-slate-300">{experience.legalProfile.legalName} Ãƒâ€šÃ‚Â· CIN {experience.legalProfile.cin} Ãƒâ€šÃ‚Â· GSTIN {experience.legalProfile.gstin}</div>
             </div>
           </div>
 
@@ -51,7 +51,7 @@ export default function AdminConfigPage() {
               <div className="text-xs uppercase tracking-[0.25em] text-cyan-300">Support channels</div>
               <div className="mt-5 space-y-4">
                 {experience.supportChannels.map((channel) => (
-                  <div key={channel.channel} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <div key={channel.label} className="rounded-2xl border border-white/10 bg-black/20 p-4">
                     <div className="text-xs uppercase tracking-[0.2em] text-slate-400">{channel.label}</div>
                     <div className="mt-2 text-sm">{channel.value}</div>
                   </div>
@@ -65,7 +65,7 @@ export default function AdminConfigPage() {
                 {experience.providers.map((provider) => (
                   <div key={provider.name} className="rounded-2xl border border-white/10 bg-black/20 p-4">
                     <div className="text-sm font-medium">{provider.name}</div>
-                    <div className="mt-2 text-xs uppercase tracking-[0.2em] text-slate-400">{provider.state}</div>
+                    <div className="mt-2 text-xs uppercase tracking-[0.2em] text-slate-400">{provider.purpose}</div>
                   </div>
                 ))}
               </div>
@@ -73,14 +73,12 @@ export default function AdminConfigPage() {
           </div>
         </section>
 
-        <section className="mt-12 grid gap-6 lg:grid-cols-2">
-          {experience.modules.map((module) => (
-            <article key={module.title} className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
-              <div className="text-sm uppercase tracking-[0.2em] text-cyan-300">{module.title}</div>
-              <p className="mt-4 text-sm leading-7 text-slate-300">{module.body}</p>
-            </article>
-          ))}
-        </section>
+        <section className="mt-12">
+  <article className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+    <div className="text-sm uppercase tracking-[0.2em] text-cyan-300">Trust block</div>
+    <pre className="mt-4 overflow-x-auto rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-7 text-slate-300 whitespace-pre-wrap">{JSON.stringify(experience.trustBlock, null, 2)}</pre>
+  </article>
+</section>
       </div>
     </main>
   )

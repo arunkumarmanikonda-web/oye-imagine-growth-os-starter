@@ -1,3 +1,4 @@
+import type { Route } from 'next'
 import { buildConciergeExperiencePayload } from '@/lib/ai/concierge-experience'
 import { buildDemoMarketplaceConciergeScope } from '@/lib/ai/concierge-retrieval-registry'
 
@@ -58,7 +59,7 @@ export default function MarketplaceAiPage() {
           {payload.guidedAnswer.sourceChips.map((chip) => (
             <a
               key={`${chip.kind}-${chip.href}`}
-              href={chip.href}
+              href={chip.href as Route}
               className="rounded-full border border-neutral-200 px-3 py-1 text-xs text-neutral-700"
             >
               {chip.label}
@@ -70,7 +71,7 @@ export default function MarketplaceAiPage() {
           {payload.guidedAnswer.actionCards.map((card) => (
             <a
               key={card.id}
-              href={card.href}
+              href={card.href as Route}
               className="rounded-xl border border-neutral-200 p-4 transition hover:border-neutral-400"
             >
               <div className="text-xs uppercase tracking-wide text-neutral-500">{card.tone}</div>

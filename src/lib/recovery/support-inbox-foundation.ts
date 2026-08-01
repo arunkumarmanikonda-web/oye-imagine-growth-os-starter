@@ -158,7 +158,7 @@ export function getSupportInboxExperience() {
     trustProfile: {
       legalName: organizationProfile.legalName,
       gstin: organizationProfile.gstin,
-      addressLine: organizationProfile.principalPlaceOfBusiness.addressLine1
+      addressLine: organizationProfile.principalPlaceOfBusiness
     },
     summaryCards: [
       { label: 'Open events', value: String(snapshot.openCount) },

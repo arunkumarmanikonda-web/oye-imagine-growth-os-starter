@@ -9,9 +9,9 @@ function isAgreementStatus(value: string): value is AgreementStatus {
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { agreementId: string } },
+  { params }: { params: Promise<{ agreementId: string }> },
 ) {
-  const agreement = findAgreementById(params.agreementId)
+  const agreement = findAgreementById((await params).agreementId)
 
   if (!agreement) {
     return NextResponse.json({ error: 'Agreement not found' }, { status: 404 })
@@ -25,9 +25,9 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { agreementId: string } },
+  { params }: { params: Promise<{ agreementId: string }> },
 ) {
-  const existing = findAgreementById(params.agreementId)
+  const existing = findAgreementById((await params).agreementId)
 
   if (!existing) {
     return NextResponse.json({ error: 'Agreement not found' }, { status: 404 })
