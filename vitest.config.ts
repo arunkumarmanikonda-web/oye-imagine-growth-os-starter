@@ -13,6 +13,6 @@ export default defineConfig({
     clearMocks: true,
     restoreMocks: true,
     setupFiles: ["./tests/setup/node.ts"],
-    include: ["tests/**/*.test.ts"],
+    include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
   },
 });
