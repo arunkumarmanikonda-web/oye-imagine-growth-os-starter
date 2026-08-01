@@ -11,7 +11,8 @@ describe("admin ops operator action bridge panel", () => {
           operatorQueueCount: 1,
           operatorQueueTypes: ["activation"],
           highestPriority: "medium",
-          activationQueueCount: 1,          queueSummary: {
+          activationQueueCount: 1,
+          queueSummary: {
             openApprovals: 0,
             pendingReports: 1,
             pendingCampaigns: 2,
@@ -39,12 +40,14 @@ describe("admin ops operator action bridge panel", () => {
     expect(html).toContain("Operator action bridge");
     expect(html).toContain("Neejee");
     expect(html).toContain("Neejee: resolve 2 active blocker(s)");
-    expect(html).toContain("PROGRAM_MANAGER");    expect(html).toContain("Queue summary");
+    expect(html).toContain("PROGRAM_MANAGER");
+    expect(html).toContain("Queue summary");
     expect(html).toContain("Open approvals");
     expect(html).toContain("Pending reports");
     expect(html).toContain("Pending campaigns");
     expect(html).toContain("Pending strategy tasks");
-    expect(html).toContain("Active blockers");
+    expect(html).toContain("Active blockers");    const queueSummaryMatches = html.match(/Queue summary/g) ?? [];
+    expect(queueSummaryMatches).toHaveLength(1);
     expect(html).toContain("commercial: commercial review");
     expect(html).toContain("Required providers are not production ready");
     expect(html).toContain("• commercial: commercial review");
