@@ -60,6 +60,7 @@ describe('admin commercial onboarding workspace page', () => {
     expect(html).toContain('Commercial review ready')
     expect(html).toContain('KYC verified')
     expect(html).toContain('Providers ready')
+    expect(html).toContain('Commercial review blockers')
     expect(html).toContain('Provider readiness')
     expect(html).toContain('esign: ready')
     expect(html).toContain('payment_gateway: ready')
@@ -89,10 +90,72 @@ describe('admin commercial onboarding workspace page', () => {
     expect(html).toContain('Commercial review blocked')
     expect(html).toContain('KYC pending')
     expect(html).toContain('Providers blocked')
+    expect(html).toContain('Commercial review blockers')
     expect(html).toContain('Provider readiness')
     expect(html).toContain('esign: blocked')
     expect(html).toContain('payment_gateway: blocked')
     expect(html).toContain('business verification incomplete')
     expect(html).toContain('webhook not configured')
+  })
+
+  it('renders commercial review blockers when provider readiness alone is incomplete', async () => {
+    const element = await AdminCommercialOnboardingWorkspacePage({
+      searchParams: Promise.resolve({
+        tenantId: 'tenant_neejee',
+        intakeId: 'intake_neejee_3',
+        companyName: 'Neejee',
+        legalName: 'Neejee Retail Private Limited',
+        websiteUrl: 'neejee.com',
+        industry: 'Jewellery',
+        country: ['IN'],
+        service: ['brand_strategy', 'seo'],
+        lane: ['growth_strategy'],
+        clientTradeName: 'Neejee',
+        clientPrimaryContactName: 'Commercial Lead',
+        clientPrimaryContactEmail: 'finance@neejee.example',
+        clientGstin: '29ABCDE1234F1Z5',
+        businessEmail: 'finance@neejee.example',
+        domainVerified: 'true',
+        businessEmailVerified: 'true',
+        authorizedRepresentativeName: 'Commercial Lead',
+        authorizedRepresentativeEmail: 'finance@neejee.example',
+        authorizedRepresentativeVerified: 'true',
+        billingIdentityConfirmed: 'true',
+        billingModel: 'monthly_retainer',
+        baseFeeInr: '125000',
+        paymentTerm: 'net_15',
+        contractSigned: 'true',
+        esignProviderReady: 'true',
+        subscriptionActive: 'true',
+        invoiceProfileReady: 'true',
+        paymentMethodReady: 'true',
+        approvalPolicyReady: 'true',
+        strategyGenerated: 'true',
+        strategyApproved: 'true',
+        invoiceStatus: 'paid',
+        approvalOpenCount: '0',
+        auditCoverage: '0.95',
+        mediaBalanceAmount: '50000',
+        currency: 'INR',
+        esignCredentialsPresent: 'true',
+        esignBusinessVerified: 'false',
+        esignLiveAccountConnected: 'true',
+        esignWebhookConfigured: 'true',
+        esignCallbackVerified: 'true',
+        paymentGatewayCredentialsPresent: 'true',
+        paymentGatewayBusinessVerified: 'true',
+        paymentGatewayLiveAccountConnected: 'true',
+        paymentGatewayWebhookConfigured: 'true',
+        paymentGatewayCallbackVerified: 'true',
+      }),
+    })
+
+    const html = renderToStaticMarkup(element)
+
+    expect(html).toContain('Commercial review blocked')
+    expect(html).toContain('Commercial review blockers')
+    expect(html).toContain('Required providers are not production ready')
+    expect(html).toContain('Providers blocked')
+    expect(html).toContain('business verification incomplete')
   })
 })

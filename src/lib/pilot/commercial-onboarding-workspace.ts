@@ -102,6 +102,7 @@ export type CommercialOnboardingWorkspace = {
   agreementBlueprint: ReturnType<typeof buildAgreementSignupBlueprint>
   activationSummary: ReturnType<typeof buildCommercialActivationSummary>
   continuitySummary: ReturnType<typeof buildCommercialContinuitySummary>
+  commercialReviewBlockers: string[]
   readyForCommercialReview: boolean
 }
 
@@ -245,6 +246,9 @@ export function buildCommercialOnboardingWorkspace(
   const paymentGatewayStatus =
     providerReadiness.requiredProviders.find((provider) => provider.provider === 'payment_gateway') ?? null
 
+  const esignProviderComputedReady = esignStatus ? providerReady(esignStatus) : false
+  const paymentGatewayComputedReady = paymentGatewayStatus ? providerReady(paymentGatewayStatus) : false
+
   const agreementBlueprint = buildAgreementSignupBlueprint({
     clientLegalName: input.legalName?.trim() || input.companyName.trim(),
     clientTradeName: input.clientTradeName?.trim() || input.companyName.trim(),
@@ -258,24 +262,36 @@ export function buildCommercialOnboardingWorkspace(
   })
 
   const activationSummary = buildCommercialActivationSummary({
-    brandName: intake.companyName,
+    brandName: input.companyName,
     contractSigned: input.contractSigned ?? false,
-    esignProviderReady: input.esignProviderReady ?? (esignStatus ? providerReady(esignStatus) : false),
+    esignProviderReady: esignProviderComputedReady,
     subscriptionActivated: input.subscriptionActive ?? false,
-    invoiceProfileReady:
-      input.invoiceProfileReady ?? (onboardingProgress.readyForReview && kycVerification.status === 'verified'),
-    paymentMethodReady:
-      input.paymentMethodReady ?? (paymentGatewayStatus ? providerReady(paymentGatewayStatus) : false),
+    invoiceProfileReady: input.invoiceProfileReady ?? false,
+    paymentMethodReady: paymentGatewayComputedReady,
     approvalPolicyReady: input.approvalPolicyReady ?? false,
   })
 
+  const commercialReviewBlockers: string[] = []
+  if (!onboardingProgress.readyForReview) {
+    commercialReviewBlockers.push('Onboarding information is incomplete')
+  }
+  if (kycVerification.status !== 'verified') {
+    commercialReviewBlockers.push('KYC verification is incomplete')
+  }
+  if (agreementBlueprint.status !== 'intake_ready') {
+    commercialReviewBlockers.push('Commercial agreement intake is incomplete')
+  }
+  if (providerReadiness.status !== 'ready') {
+    commercialReviewBlockers.push('Required providers are not production ready')
+  }
+
   const continuitySummary = buildCommercialContinuitySummary({
-    brandName: intake.companyName,
+    brandName: input.companyName,
     onboardingCompleted: onboardingProgress.readyForReview,
-    strategyGenerated: input.strategyGenerated ?? false,
-    strategyApproved: input.strategyApproved ?? false,
     contractSigned: input.contractSigned ?? false,
     subscriptionActive: input.subscriptionActive ?? false,
+    strategyGenerated: input.strategyGenerated ?? false,
+    strategyApproved: input.strategyApproved ?? false,
     invoiceStatus: input.invoiceStatus ?? 'not_issued',
     approvalOpenCount: input.approvalOpenCount ?? 0,
     auditCoverage: input.auditCoverage ?? 0,
@@ -291,9 +307,12 @@ export function buildCommercialOnboardingWorkspace(
     agreementBlueprint,
     activationSummary,
     continuitySummary,
-    readyForCommercialReview:
-      onboardingProgress.readyForReview &&
-      kycVerification.status === 'verified' &&
-      agreementBlueprint.status === 'intake_ready',
+    commercialReviewBlockers,
+    readyForCommercialReview: commercialReviewBlockers.length === 0,
   }
 }
+
+
+
+
+

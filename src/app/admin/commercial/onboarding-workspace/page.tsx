@@ -163,6 +163,7 @@ export default async function AdminCommercialOnboardingWorkspacePage({
   })
 
   const missingFields = workspace.onboardingProgress.missingFields
+  const commercialReviewBlockers = workspace.commercialReviewBlockers
   const continuityBlockers = workspace.continuitySummary.blockers
   const kycMissingChecks = workspace.kycVerification.missingChecks
   const kycVerifiedChecks = workspace.kycVerification.verifiedChecks
@@ -261,21 +262,48 @@ export default async function AdminCommercialOnboardingWorkspacePage({
                 <dd className="font-medium">{workspace.kycVerification.businessEmail || 'Pending'}</dd>
               </div>
               <div>
+                <dt className="text-slate-500">Website</dt>
+                <dd className="font-medium">{workspace.kycVerification.websiteUrl || 'Pending'}</dd>
+              </div>
+              <div>
                 <dt className="text-slate-500">Authorized representative</dt>
                 <dd className="font-medium">
                   {workspace.kycVerification.authorizedRepresentativeName || 'Pending'}
                 </dd>
               </div>
-              <div className="sm:col-span-2">
-                <dt className="text-slate-500">Verified checks</dt>
-                <dd className="mt-1">
-                  <BulletList items={kycVerifiedChecks} />
+              <div>
+                <dt className="text-slate-500">Authorized rep email</dt>
+                <dd className="font-medium">
+                  {workspace.kycVerification.authorizedRepresentativeEmail || 'Pending'}
                 </dd>
               </div>
               <div className="sm:col-span-2">
-                <dt className="text-slate-500">Missing KYC checks</dt>
-                <dd className="mt-1">
-                  <BulletList items={kycMissingChecks} tone="danger" />
+                <dt className="text-slate-500">Verified checks</dt>
+                <dd className="font-medium">
+                  <BulletList items={kycVerifiedChecks} emptyLabel="None" />
+                </dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className="text-slate-500">Missing checks</dt>
+                <dd className="font-medium">
+                  <BulletList items={kycMissingChecks} tone="danger" emptyLabel="None" />
+                </dd>
+              </div>
+            </dl>
+          </SectionCard>
+
+          <SectionCard title="Commercial review blockers">
+            <dl className="grid grid-cols-1 gap-3 text-sm">
+              <div>
+                <dt className="text-slate-500">Status</dt>
+                <dd className="font-medium">
+                  {workspace.readyForCommercialReview ? 'ready' : 'blocked'}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">Blockers</dt>
+                <dd className="font-medium">
+                  <BulletList items={commercialReviewBlockers} tone="danger" emptyLabel="None" />
                 </dd>
               </div>
             </dl>
@@ -289,14 +317,14 @@ export default async function AdminCommercialOnboardingWorkspacePage({
               </div>
               <div>
                 <dt className="text-slate-500">Required providers</dt>
-                <dd className="mt-1">
-                  <BulletList items={providerStatuses} />
+                <dd className="font-medium">
+                  <BulletList items={providerStatuses} emptyLabel="None" />
                 </dd>
               </div>
               <div>
                 <dt className="text-slate-500">Provider blockers</dt>
-                <dd className="mt-1">
-                  <BulletList items={workspace.providerReadiness.blockers} tone="danger" />
+                <dd className="font-medium">
+                  <BulletList items={workspace.providerReadiness.blockers} tone="danger" emptyLabel="None" />
                 </dd>
               </div>
             </dl>
@@ -305,32 +333,22 @@ export default async function AdminCommercialOnboardingWorkspacePage({
           <SectionCard title="Commercial agreement">
             <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
               <div>
-                <dt className="text-slate-500">Blueprint status</dt>
-                <dd className="font-medium">{workspace.agreementBlueprint.status}</dd>
-              </div>
-              <div>
                 <dt className="text-slate-500">Client legal name</dt>
-                <dd className="font-medium">{workspace.agreementBlueprint.clientProfile.legalName}</dd>
+                <dd className="font-medium">
+                  {workspace.agreementBlueprint.clientProfile.legalName}
+                </dd>
               </div>
               <div>
                 <dt className="text-slate-500">Client GSTIN</dt>
                 <dd className="font-medium">{agreementClientGstin}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Payment term</dt>
-                <dd className="font-medium">{firstValue(resolved.paymentTerm) || 'net_15'}</dd>
-              </div>
-              <div>
                 <dt className="text-slate-500">Billing model</dt>
                 <dd className="font-medium">{firstValue(resolved.billingModel) || 'monthly_retainer'}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Base fee (INR)</dt>
-                <dd className="font-medium">{toNumber(resolved.baseFeeInr, 0)}</dd>
-              </div>
-              <div className="sm:col-span-2">
-                <dt className="text-slate-500">Requested lanes</dt>
-                <dd className="font-medium">{workspace.agreementBlueprint.requestedLanes.join(', ')}</dd>
+                <dt className="text-slate-500">Payment term</dt>
+                <dd className="font-medium">{firstValue(resolved.paymentTerm) || 'net_15'}</dd>
               </div>
             </dl>
           </SectionCard>
@@ -342,12 +360,14 @@ export default async function AdminCommercialOnboardingWorkspacePage({
                 <dd className="font-medium">{workspace.activationSummary.status}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Activation note</dt>
+                <dt className="text-slate-500">Blockers</dt>
                 <dd className="font-medium">
-                  {workspace.activationSummary.status === 'ready'
-                    ? 'Commercial activation controls are fully satisfied.'
-                    : 'Commercial activation remains blocked until contract, e-sign, subscription, invoicing, payment method, and approval controls are satisfied.'}
+                  <BulletList items={workspace.activationSummary.blockers} tone="danger" emptyLabel="None" />
                 </dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">Next action</dt>
+                <dd className="font-medium">{workspace.activationSummary.nextAction}</dd>
               </div>
             </dl>
           </SectionCard>
@@ -355,15 +375,15 @@ export default async function AdminCommercialOnboardingWorkspacePage({
           <SectionCard title="Continuity blockers">
             <dl className="grid grid-cols-1 gap-3 text-sm">
               <div>
-                <dt className="text-slate-500">Continuity status</dt>
+                <dt className="text-slate-500">Status</dt>
                 <dd className="font-medium">
                   {workspace.continuitySummary.readyForActivation ? 'ready' : 'blocked'}
                 </dd>
               </div>
               <div>
                 <dt className="text-slate-500">Blockers</dt>
-                <dd className="mt-1">
-                  <BulletList items={continuityBlockers} tone="danger" />
+                <dd className="font-medium">
+                  <BulletList items={continuityBlockers} tone="danger" emptyLabel="None" />
                 </dd>
               </div>
             </dl>
@@ -373,3 +393,4 @@ export default async function AdminCommercialOnboardingWorkspacePage({
     </main>
   )
 }
+
