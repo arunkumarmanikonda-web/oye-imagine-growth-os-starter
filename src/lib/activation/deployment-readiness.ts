@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   DeploymentReadinessInput,
   DeploymentReadinessSummary,
 } from './activation-types';
@@ -8,6 +8,9 @@ export function buildDeploymentReadinessSummary(
 ): DeploymentReadinessSummary {
   const blockers: string[] = [];
   const failedSystems: string[] = [];
+  const evidenceBlockers = Array.from(
+    new Set((input.evidenceBlockers ?? []).map((item) => item.trim()).filter(Boolean)),
+  );
 
   if (!input.vercelDeploymentPassed) {
     failedSystems.push('vercel');
@@ -30,11 +33,16 @@ export function buildDeploymentReadinessSummary(
     }
   }
 
+  for (const blocker of evidenceBlockers) {
+    blockers.push(`commercial evidence: ${blocker}`);
+  }
+
   return {
     overallStatus: blockers.length === 0 ? 'ready' : 'blocked',
     blockerCount: blockers.length,
     blockers,
     failedSystems,
+    evidenceBlockers,
   };
 }
 

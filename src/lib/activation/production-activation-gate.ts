@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   ProductionActivationInput,
   ProductionActivationSummary,
 } from './activation-types';
@@ -8,6 +8,7 @@ export function buildProductionActivationSummary(
 ): ProductionActivationSummary {
   const blockers: string[] = [...input.deployment.blockers];
   const externalDependencies: string[] = [];
+  const evidenceBlockers = Array.from(new Set(input.deployment.evidenceBlockers ?? []));
 
   for (const provider of input.providerStatuses) {
     if (provider.status !== 'ready') {
@@ -36,14 +37,22 @@ export function buildProductionActivationSummary(
     }
   }
 
+  for (const blocker of evidenceBlockers) {
+    externalDependencies.push(`commercial evidence: ${blocker}`);
+  }
+
+  const uniqueBlockers = Array.from(new Set(blockers));
+  const uniqueExternalDependencies = Array.from(new Set(externalDependencies));
+
   return {
-    canProceed: blockers.length === 0,
-    blockers,
+    canProceed: uniqueBlockers.length === 0,
+    blockers: uniqueBlockers,
     nextAction:
-      blockers.length === 0
+      uniqueBlockers.length === 0
         ? `${input.brandName}: ready for live activation`
         : `${input.brandName}: resolve external dependencies and deployment blockers`,
-    externalDependencies,
+    externalDependencies: uniqueExternalDependencies,
+    evidenceBlockers,
   };
 }
 

@@ -1,4 +1,4 @@
-export type ProviderKey =
+﻿export type ProviderKey =
   | 'google_ads'
   | 'meta_marketing'
   | 'linkedin_marketing'
@@ -41,6 +41,7 @@ export type DeploymentReadinessInput = {
   workspaceBrandingSmokePassed: boolean;
   validationPassed: boolean;
   requiredProviders: CredentialStatusSummary[];
+  evidenceBlockers?: string[];
 };
 
 export type DeploymentReadinessSummary = {
@@ -48,6 +49,7 @@ export type DeploymentReadinessSummary = {
   blockerCount: number;
   blockers: string[];
   failedSystems: string[];
+  evidenceBlockers?: string[];
 };
 
 export type ProductionActivationInput = {
@@ -69,6 +71,7 @@ export type ProductionActivationSummary = {
   blockers: string[];
   nextAction: string;
   externalDependencies: string[];
+  evidenceBlockers?: string[];
 };
 
 export type NeejeeActivationChecklistInput = {

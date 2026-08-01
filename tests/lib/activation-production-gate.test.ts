@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 import {
   buildProductionActivationSummary,
   productionActivationReady,
@@ -14,6 +14,7 @@ describe('production-activation-gate', () => {
         blockerCount: 0,
         blockers: [],
         failedSystems: [],
+        evidenceBlockers: [],
       },
       providerStatuses: [
         {
@@ -28,18 +29,20 @@ describe('production-activation-gate', () => {
     });
 
     expect(summary.canProceed).toBe(true);
+    expect(summary.evidenceBlockers).toEqual([]);
     expect(productionActivationReady(summary)).toBe(true);
   });
 
-  it('blocks when signoff and provider readiness are incomplete', () => {
+  it('blocks when signoff, provider readiness, and commercial evidence are incomplete', () => {
     const summary = buildProductionActivationSummary({
       brandName: 'Neejee',
       autonomyMode: 'guardrailed',
       deployment: {
         overallStatus: 'blocked',
-        blockerCount: 1,
+        blockerCount: 2,
         blockers: ['workspace branding smoke failed'],
         failedSystems: ['workspace-branding-smoke'],
+        evidenceBlockers: ['KYC verification is incomplete'],
       },
       providerStatuses: [
         {
@@ -56,5 +59,9 @@ describe('production-activation-gate', () => {
     expect(summary.canProceed).toBe(false);
     expect(summary.blockers).toContain('legal signoff not complete');
     expect(summary.externalDependencies).toContain('legal signoff');
+    expect(summary.evidenceBlockers).toContain('KYC verification is incomplete');
+    expect(summary.externalDependencies).toContain(
+      'commercial evidence: KYC verification is incomplete',
+    );
   });
 });
