@@ -1,3 +1,4 @@
+import type { Route } from 'next'
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -366,19 +367,19 @@ export default function AdminOpsPage() {
                 <div className="mt-3 flex flex-col gap-2">
                   <a
                     className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white"
-                    href={data.links.admin}
+                    href={data.links.admin as Route}
                   >
                     /admin
                   </a>
                   <a
                     className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white"
-                    href={data.links.settings}
+                    href={data.links.settings as Route}
                   >
                     /admin/settings
                   </a>
                   <a
                     className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white"
-                    href={data.links.ops}
+                    href={data.links.ops as Route}
                   >
                     /admin/ops
                   </a>
@@ -439,7 +440,7 @@ export default function AdminOpsPage() {
                 <a
                   key={item.href}
                   className="oi-button-primary"
-                  href={item.href}
+                  href={item.href as Route}
                   rel="noreferrer"
                   target="_blank"
                 >

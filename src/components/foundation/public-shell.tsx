@@ -1,3 +1,4 @@
+import type { Route } from 'next'
 import Link from "next/link";
 import type { CmsFaq, CmsPersonProfile } from "@/lib/foundation/cms-types";
 import type {
@@ -35,7 +36,7 @@ export function PublicHeroSection(props: { hero: PublicHeroModel; trustMarkers: 
             <a className="oi-btn oi-btn--primary" href={hero.primaryCtaHref}>
               {hero.primaryCtaLabel}
             </a>
-            <Link className="oi-btn oi-btn--secondary" href={hero.secondaryCtaHref}>
+            <Link className="oi-btn oi-btn--secondary" href={hero.secondaryCtaHref as Route}>
               {hero.secondaryCtaLabel}
             </Link>
           </div>
@@ -83,7 +84,7 @@ export function LoginLaneSection(props: { lanes: LoginLaneModel[] }) {
               ))}
             </ul>
             <div style={{ marginTop: 20 }}>
-              <Link className="oi-btn oi-btn--primary" href={lane.href}>
+              <Link className="oi-btn oi-btn--primary" href={lane.href as Route}>
                 Open {lane.title}
               </Link>
             </div>

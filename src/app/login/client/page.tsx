@@ -1,3 +1,4 @@
+import type { Route } from 'next'
 import Link from 'next/link'
 import { getClientAccessExperience } from '@/lib/recovery/surface-composer'
 
@@ -24,7 +25,7 @@ export default async function ClientLoginPage({ searchParams }: ClientLoginPageP
             Full client session authentication is the next pass of Mega Batch A. This route now carries split access intent and redirect awareness.
           </div>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link href={redirect} className="rounded-full bg-cyan-400 px-5 py-3 font-medium text-slate-950">
+            <Link href={redirect as Route} className="rounded-full bg-cyan-400 px-5 py-3 font-medium text-slate-950">
               Continue to client destination
             </Link>
             <Link href="/contact" className="rounded-full border border-white/20 px-5 py-3 font-medium text-white">

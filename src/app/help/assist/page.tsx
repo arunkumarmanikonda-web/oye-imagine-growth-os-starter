@@ -1,3 +1,4 @@
+import type { Route } from 'next'
 import { buildConciergeExperiencePayload } from '@/lib/ai/concierge-experience'
 import { buildDemoClientConciergeScope } from '@/lib/ai/concierge-retrieval-registry'
 
@@ -24,7 +25,7 @@ export default function HelpAssistPage() {
           {payload.guidedAnswer.actionCards.map((card) => (
             <a
               key={card.id}
-              href={card.href}
+              href={card.href as Route}
               className="rounded-xl border border-neutral-200 p-4 transition hover:border-neutral-400"
             >
               <div className="font-medium">{card.label}</div>

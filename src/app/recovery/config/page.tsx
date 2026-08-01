@@ -1,4 +1,4 @@
-import { providerCatalog } from '../../../src/lib/config-control/provider-catalog';
+import { providerCatalog } from '../../../lib/config-control/provider-catalog';
 
 export default function RecoveryConfigPage() {
   const providers = Object.values(providerCatalog);

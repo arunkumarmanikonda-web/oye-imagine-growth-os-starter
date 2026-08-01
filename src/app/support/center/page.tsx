@@ -1,3 +1,4 @@
+import type { Route } from 'next'
 import { buildConciergeExperiencePayload } from '@/lib/ai/concierge-experience'
 import { buildDemoClientConciergeScope } from '@/lib/ai/concierge-retrieval-registry'
 
@@ -38,7 +39,7 @@ export default function SupportCenterConciergePage() {
           {payload.guidedAnswer.sourceChips.map((chip) => (
             <a
               key={`${chip.kind}-${chip.href}`}
-              href={chip.href}
+              href={chip.href as Route}
               className="rounded-full border border-neutral-200 px-3 py-1 text-xs text-neutral-700"
             >
               {chip.label}

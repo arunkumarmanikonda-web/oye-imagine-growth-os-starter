@@ -1,3 +1,4 @@
+import type { Route } from 'next'
 import Link from 'next/link'
 import { getClientLoginExperience } from '../../lib/recovery/auth-entry-foundation'
 
@@ -16,7 +17,7 @@ export default function ClientLoginPage() {
             {experience.actions.map((action) => (
               <Link
                 key={action.href + action.label}
-                href={action.href}
+                href={action.href as Route}
                 className="rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950"
               >
                 {action.label}
@@ -29,7 +30,7 @@ export default function ClientLoginPage() {
           <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Client help</p>
           <div className="mt-4 space-y-3">
             {experience.supportLinks.map((link) => (
-              <Link key={link.href + link.label} href={link.href} className="block rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-200">
+              <Link key={link.href + link.label} href={link.href as Route} className="block rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-200">
                 {link.label}
               </Link>
             ))}

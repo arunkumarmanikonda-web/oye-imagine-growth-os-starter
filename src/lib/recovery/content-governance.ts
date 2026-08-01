@@ -224,7 +224,7 @@ export function createAiDraftEnvelope(input: {
     : []
 
   const allowedFields = requestedFields.length
-    ? requestedFields.filter((field) => target.editableFields.includes(field))
+    ? requestedFields.filter((field) => (target.editableFields as readonly string[]).includes(field))
     : [...target.editableFields]
 
   return {
@@ -270,7 +270,7 @@ export function createPublishWorkflow(input: {
     IMMUTABLE_IDENTITY_FIELDS.includes(field as (typeof IMMUTABLE_IDENTITY_FIELDS)[number]),
   )
 
-  const allowedFields = requestedFields.filter((field) => target.editableFields.includes(field))
+  const allowedFields = requestedFields.filter((field) => (target.editableFields as readonly string[]).includes(field))
 
   return {
     status: blockedFields.length ? 'blocked' : 'ready_for_review',

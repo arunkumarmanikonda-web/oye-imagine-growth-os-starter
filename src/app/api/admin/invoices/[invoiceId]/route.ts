@@ -9,9 +9,9 @@ function isInvoiceStatus(value: string): value is InvoiceStatus {
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { invoiceId: string } },
+  { params }: { params: Promise<{ invoiceId: string }> },
 ) {
-  const invoice = findInvoiceById(params.invoiceId)
+  const invoice = findInvoiceById((await params).invoiceId)
 
   if (!invoice) {
     return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
@@ -25,9 +25,9 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { invoiceId: string } },
+  { params }: { params: Promise<{ invoiceId: string }> },
 ) {
-  const existing = findInvoiceById(params.invoiceId)
+  const existing = findInvoiceById((await params).invoiceId)
 
   if (!existing) {
     return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })

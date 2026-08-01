@@ -39,12 +39,8 @@ export default function AdminRuntimePage() {
               <div className="mt-4 space-y-3 text-sm text-white/75">
                 <p>{organizationProfile.legalName}</p>
                 <p>GSTIN: {organizationProfile.gstin}</p>
-                <p>{organizationProfile.principalPlaceOfBusiness.addressLine1}</p>
-                <p>
-                  {organizationProfile.principalPlaceOfBusiness.city},{' '}
-                  {organizationProfile.principalPlaceOfBusiness.state}{' '}
-                  {organizationProfile.principalPlaceOfBusiness.postalCode}
-                </p>
+                <p>{organizationProfile.principalPlaceOfBusiness}</p>
+                
               </div>
             </section>
 

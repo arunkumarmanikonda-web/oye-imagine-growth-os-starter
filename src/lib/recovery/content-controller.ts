@@ -167,7 +167,7 @@ export const contentSections: ContentSection[] = [
     bullets: [
       organizationProfile.legalName,
       `GSTIN ${organizationProfile.gstin}`,
-      `${organizationProfile.principalPlaceOfBusiness.addressLine1}, ${organizationProfile.principalPlaceOfBusiness.city}`
+      `${organizationProfile.principalPlaceOfBusiness}`
     ]
   },
   {
@@ -378,10 +378,10 @@ export function getSupportIdentitySnapshot() {
     gstin: organizationProfile.gstin,
     supportEmail: String(supportEmail),
     supportPhone: String(supportPhone),
-    addressLine1: organizationProfile.principalPlaceOfBusiness.addressLine1,
-    city: organizationProfile.principalPlaceOfBusiness.city,
-    state: organizationProfile.principalPlaceOfBusiness.state,
-    postalCode: organizationProfile.principalPlaceOfBusiness.postalCode
+    addressLine1: organizationProfile.principalPlaceOfBusiness,
+    city: '',
+    state: '',
+    postalCode: ''
   }
 }
 
@@ -398,4 +398,31 @@ export function getContentControllerSnapshot() {
     adminPageCount: contentPages.filter((page) => page.surface === 'admin').length,
     supportIdentity: getSupportIdentitySnapshot()
   }
+}
+
+export function getContentStudioSnapshot() {
+  return getContentControllerSnapshot()
+}
+
+export function getContentControllerPanels() {
+  return contentPages.map((page) => ({
+    id: page.id,
+    slug: page.slug,
+    path: page.path,
+    surface: page.surface,
+    title: page.headline,
+    summary: page.summary,
+  }))
+}
+
+export function listPublishedPromotions() {
+  return [...contentPromotions]
+}
+
+export function listFeaturedPeopleProfiles() {
+  return [...contentPeopleProfiles]
+}
+
+export function listPublishedFaqEntries() {
+  return [...contentFaqEntries]
 }
