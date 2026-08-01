@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import AdminRuntimePage from "../../src/app/admin/runtime/page";
@@ -66,6 +66,8 @@ describe("admin runtime page activation evidence bridge", () => {
     expect(html).toContain("Shared blockers");
     expect(html).toContain("Required providers are not production ready");
     expect(html).toContain("eSign provider not ready");
+    expect(html).toContain("• Required providers are not production ready");
+    expect(html).not.toContain("\u00E2\u20AC\u00A2");
   });
 
   it("omits the evidence bridge when no commercial query inputs are provided", async () => {
