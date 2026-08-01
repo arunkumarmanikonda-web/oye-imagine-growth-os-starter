@@ -46,6 +46,7 @@ describe('pilot commercial onboarding workspace', () => {
     expect(workspace.kycVerification.status).toBe('verified')
     expect(workspace.readyForCommercialReview).toBe(true)
     expect(workspace.agreementBlueprint.status).toBe('intake_ready')
+    expect(workspace.agreementBlueprint.clientProfile.gstin).toBe('29ABCDE1234F1Z5')
     expect(workspace.agreementBlueprint.requestedLanes).toEqual([
       'growth_strategy',
       'performance_marketing',
@@ -85,6 +86,7 @@ describe('pilot commercial onboarding workspace', () => {
     expect(workspace.kycVerification.status).toBe('pending')
     expect(workspace.kycVerification.missingChecks).toContain('clientGstin')
     expect(workspace.kycVerification.missingChecks).toContain('billing identity')
+    expect(workspace.agreementBlueprint.clientProfile.gstin).toBe('pending_client_tax_profile')
     expect(workspace.activationSummary.status).toBe('blocked')
     expect(workspace.continuitySummary.readyForActivation).toBe(false)
     expect(workspace.continuitySummary.blockers).toContain('Onboarding information is incomplete')
