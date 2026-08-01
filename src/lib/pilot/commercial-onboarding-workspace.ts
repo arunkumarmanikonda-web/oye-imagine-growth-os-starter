@@ -185,6 +185,7 @@ export function buildCommercialOnboardingWorkspace(
     clientTradeName: input.clientTradeName?.trim() || input.companyName.trim(),
     clientPrimaryContactName: input.clientPrimaryContactName?.trim() || 'Primary contact pending',
     clientPrimaryContactEmail: input.clientPrimaryContactEmail?.trim() || 'pending@example.com',
+    clientGstin: input.clientGstin?.trim() || undefined,
     requestedLanes: input.requestedLanes ?? ['growth_strategy'],
     billingModel: input.billingModel ?? 'monthly_retainer',
     baseFeeInr: input.baseFeeInr ?? 0,

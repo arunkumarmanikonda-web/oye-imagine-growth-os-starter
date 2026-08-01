@@ -154,6 +154,10 @@ export default async function AdminCommercialOnboardingWorkspacePage({
   const continuityBlockers = workspace.continuitySummary.blockers
   const kycMissingChecks = workspace.kycVerification.missingChecks
   const kycVerifiedChecks = workspace.kycVerification.verifiedChecks
+  const agreementClientGstin =
+    workspace.agreementBlueprint.clientProfile.gstin === 'pending_client_tax_profile'
+      ? 'Pending'
+      : workspace.agreementBlueprint.clientProfile.gstin
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-900">
@@ -263,6 +267,14 @@ export default async function AdminCommercialOnboardingWorkspacePage({
               <div>
                 <dt className="text-slate-500">Blueprint status</dt>
                 <dd className="font-medium">{workspace.agreementBlueprint.status}</dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">Client legal name</dt>
+                <dd className="font-medium">{workspace.agreementBlueprint.clientProfile.legalName}</dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">Client GSTIN</dt>
+                <dd className="font-medium">{agreementClientGstin}</dd>
               </div>
               <div>
                 <dt className="text-slate-500">Payment term</dt>

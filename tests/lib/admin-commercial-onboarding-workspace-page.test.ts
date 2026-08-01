@@ -54,6 +54,8 @@ describe('admin commercial onboarding workspace page', () => {
     expect(html).toContain('Activation ready')
     expect(html).toContain('Continuity ready')
     expect(html).toContain('KYC verification')
+    expect(html).toContain('Client GSTIN')
+    expect(html).toContain('29ABCDE1234F1Z5')
     expect(html).toContain('None')
   })
 
@@ -80,6 +82,7 @@ describe('admin commercial onboarding workspace page', () => {
     expect(html).toContain('KYC pending')
     expect(html).toContain('Continuity blocked')
     expect(html).toContain('Missing fields')
+    expect(html).toContain('Client GSTIN')
     expect(html).toContain('legalName')
     expect(html).toContain('clientGstin')
     expect(html).toContain('billing identity')

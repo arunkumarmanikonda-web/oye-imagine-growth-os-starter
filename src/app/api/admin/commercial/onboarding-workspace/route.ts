@@ -92,6 +92,9 @@ export async function GET(request: Request) {
       continuityBlockers: workspace.continuitySummary.blockers,
       kycStatus: workspace.kycVerification.status,
       kycMissingChecks: workspace.kycVerification.missingChecks,
+      agreementClientGstin: workspace.agreementBlueprint.clientProfile.gstin,
+      agreementClientGstinReady:
+        workspace.agreementBlueprint.clientProfile.gstin !== 'pending_client_tax_profile',
     },
   })
 }
