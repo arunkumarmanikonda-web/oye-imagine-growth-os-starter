@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import { buildCommercialOnboardingWorkspace } from '@/lib/pilot/commercial-onboarding-workspace'
 import type { ServiceKey } from '@/lib/pilot/onboarding-types'
 import type {
@@ -48,7 +48,9 @@ function StatusPill({
         : 'bg-rose-100 text-rose-800 border-rose-200'
 
   return (
-    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${toneClass}`}>
+    <span
+      className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${toneClass}`}
+    >
       {label}
     </span>
   )
@@ -66,6 +68,30 @@ function SectionCard({
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{title}</h2>
       <div className="mt-4">{children}</div>
     </section>
+  )
+}
+
+function BulletList({
+  items,
+  emptyLabel = 'None',
+  tone = 'default',
+}: {
+  items: string[]
+  emptyLabel?: string
+  tone?: 'default' | 'danger'
+}) {
+  if (!items.length) {
+    return <p className="font-medium">{emptyLabel}</p>
+  }
+
+  const textClass = tone === 'danger' ? 'text-rose-700' : 'text-slate-700'
+
+  return (
+    <ul className={`space-y-1 text-sm ${textClass}`}>
+      {items.map((item) => (
+        <li key={item}>• {item}</li>
+      ))}
+    </ul>
   )
 }
 
@@ -91,6 +117,14 @@ export default async function AdminCommercialOnboardingWorkspacePage({
     clientTradeName: firstValue(resolved.clientTradeName) || companyName,
     clientPrimaryContactName: firstValue(resolved.clientPrimaryContactName),
     clientPrimaryContactEmail: firstValue(resolved.clientPrimaryContactEmail),
+    clientGstin: firstValue(resolved.clientGstin),
+    businessEmail: firstValue(resolved.businessEmail),
+    domainVerified: toBoolean(resolved.domainVerified),
+    businessEmailVerified: toBoolean(resolved.businessEmailVerified),
+    authorizedRepresentativeName: firstValue(resolved.authorizedRepresentativeName),
+    authorizedRepresentativeEmail: firstValue(resolved.authorizedRepresentativeEmail),
+    authorizedRepresentativeVerified: toBoolean(resolved.authorizedRepresentativeVerified),
+    billingIdentityConfirmed: toBoolean(resolved.billingIdentityConfirmed),
     requestedLanes: (manyValues(resolved.lane).length
       ? manyValues(resolved.lane)
       : ['growth_strategy']) as CommercialScopeLane[],
@@ -117,7 +151,9 @@ export default async function AdminCommercialOnboardingWorkspacePage({
   })
 
   const missingFields = workspace.onboardingProgress.missingFields
-  const blockers = workspace.continuitySummary.blockers
+  const continuityBlockers = workspace.continuitySummary.blockers
+  const kycMissingChecks = workspace.kycVerification.missingChecks
+  const kycVerifiedChecks = workspace.kycVerification.verifiedChecks
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-900">
@@ -133,6 +169,10 @@ export default async function AdminCommercialOnboardingWorkspacePage({
               tone={workspace.readyForCommercialReview ? 'green' : 'red'}
             />
             <StatusPill
+              label={`KYC ${workspace.kycVerification.status}`}
+              tone={workspace.kycVerification.status === 'verified' ? 'green' : 'yellow'}
+            />
+            <StatusPill
               label={`Activation ${workspace.activationSummary.status}`}
               tone={workspace.activationSummary.status === 'ready' ? 'green' : 'yellow'}
             />
@@ -142,8 +182,8 @@ export default async function AdminCommercialOnboardingWorkspacePage({
             />
           </div>
           <p className="mt-3 max-w-3xl text-sm text-slate-300">
-            Admin commercial onboarding workspace: onboarding completeness, agreement intake readiness,
-            activation controls, and continuity blockers in one governed view.
+            Admin commercial onboarding workspace with onboarding completeness, KYC proof gating,
+            agreement intake readiness, activation controls, and continuity blockers in one governed view.
           </p>
         </header>
 
@@ -183,6 +223,41 @@ export default async function AdminCommercialOnboardingWorkspacePage({
             </dl>
           </SectionCard>
 
+          <SectionCard title="KYC verification">
+            <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+              <div>
+                <dt className="text-slate-500">Status</dt>
+                <dd className="font-medium">{workspace.kycVerification.status}</dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">Client GSTIN</dt>
+                <dd className="font-medium">{workspace.kycVerification.clientGstin || 'Pending'}</dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">Business email</dt>
+                <dd className="font-medium">{workspace.kycVerification.businessEmail || 'Pending'}</dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">Authorized representative</dt>
+                <dd className="font-medium">
+                  {workspace.kycVerification.authorizedRepresentativeName || 'Pending'}
+                </dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className="text-slate-500">Verified checks</dt>
+                <dd className="mt-1">
+                  <BulletList items={kycVerifiedChecks} />
+                </dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className="text-slate-500">Missing KYC checks</dt>
+                <dd className="mt-1">
+                  <BulletList items={kycMissingChecks} tone="danger" />
+                </dd>
+              </div>
+            </dl>
+          </SectionCard>
+
           <SectionCard title="Commercial agreement">
             <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
               <div>
@@ -209,7 +284,7 @@ export default async function AdminCommercialOnboardingWorkspacePage({
           </SectionCard>
 
           <SectionCard title="Activation controls">
-            <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+            <dl className="grid grid-cols-1 gap-3 text-sm">
               <div>
                 <dt className="text-slate-500">Status</dt>
                 <dd className="font-medium">{workspace.activationSummary.status}</dd>
@@ -218,37 +293,25 @@ export default async function AdminCommercialOnboardingWorkspacePage({
                 <dt className="text-slate-500">Activation note</dt>
                 <dd className="font-medium">
                   {workspace.activationSummary.status === 'ready'
-                    ? 'None'
-                    : 'See onboarding missing fields and continuity blockers below'}
+                    ? 'Commercial activation controls are fully satisfied.'
+                    : 'Commercial activation remains blocked until contract, e-sign, subscription, invoicing, payment method, and approval controls are satisfied.'}
                 </dd>
               </div>
             </dl>
           </SectionCard>
 
-          <SectionCard title="Continuity and blockers">
-            <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+          <SectionCard title="Continuity blockers">
+            <dl className="grid grid-cols-1 gap-3 text-sm">
               <div>
-                <dt className="text-slate-500">Ready for activation</dt>
+                <dt className="text-slate-500">Continuity status</dt>
                 <dd className="font-medium">
-                  {workspace.continuitySummary.readyForActivation ? 'Yes' : 'No'}
+                  {workspace.continuitySummary.readyForActivation ? 'ready' : 'blocked'}
                 </dd>
               </div>
               <div>
-                <dt className="text-slate-500">Invoice status</dt>
-                <dd className="font-medium">{firstValue(resolved.invoiceStatus) || 'not_issued'}</dd>
-              </div>
-              <div>
-                <dt className="text-slate-500">Approval open count</dt>
-                <dd className="font-medium">{toNumber(resolved.approvalOpenCount, 0)}</dd>
-              </div>
-              <div>
-                <dt className="text-slate-500">Audit coverage</dt>
-                <dd className="font-medium">{toNumber(resolved.auditCoverage, 0)}</dd>
-              </div>
-              <div className="sm:col-span-2">
                 <dt className="text-slate-500">Blockers</dt>
-                <dd className="font-medium text-amber-700">
-                  {blockers.length ? blockers.join(', ') : 'None'}
+                <dd className="mt-1">
+                  <BulletList items={continuityBlockers} tone="danger" />
                 </dd>
               </div>
             </dl>

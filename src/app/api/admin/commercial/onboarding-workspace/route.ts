@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+﻿import { NextResponse } from 'next/server'
 import { buildCommercialOnboardingWorkspace } from '@/lib/pilot/commercial-onboarding-workspace'
 import type { ServiceKey } from '@/lib/pilot/onboarding-types'
 import type {
@@ -46,6 +46,18 @@ export async function GET(request: Request) {
     clientTradeName: searchParams.get('clientTradeName')?.trim() || companyName,
     clientPrimaryContactName: searchParams.get('clientPrimaryContactName')?.trim() || null,
     clientPrimaryContactEmail: searchParams.get('clientPrimaryContactEmail')?.trim() || null,
+    clientGstin: searchParams.get('clientGstin')?.trim() || null,
+    businessEmail: searchParams.get('businessEmail')?.trim() || null,
+    domainVerified: toBoolean(searchParams.get('domainVerified')),
+    businessEmailVerified: toBoolean(searchParams.get('businessEmailVerified')),
+    authorizedRepresentativeName:
+      searchParams.get('authorizedRepresentativeName')?.trim() || null,
+    authorizedRepresentativeEmail:
+      searchParams.get('authorizedRepresentativeEmail')?.trim() || null,
+    authorizedRepresentativeVerified: toBoolean(
+      searchParams.get('authorizedRepresentativeVerified'),
+    ),
+    billingIdentityConfirmed: toBoolean(searchParams.get('billingIdentityConfirmed')),
     requestedLanes,
     billingModel: (searchParams.get('billingModel')?.trim() || 'monthly_retainer') as CommercialBillingModel,
     baseFeeInr: toNumber(searchParams.get('baseFeeInr'), 0),
@@ -78,6 +90,8 @@ export async function GET(request: Request) {
       continuityReady: workspace.continuitySummary.readyForActivation,
       missingOnboardingFields: workspace.onboardingProgress.missingFields,
       continuityBlockers: workspace.continuitySummary.blockers,
+      kycStatus: workspace.kycVerification.status,
+      kycMissingChecks: workspace.kycVerification.missingChecks,
     },
   })
 }
