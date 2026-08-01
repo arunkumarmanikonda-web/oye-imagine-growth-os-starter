@@ -46,7 +46,8 @@ export interface OperatorLaunchActionBridgeSummary {
     pendingCampaigns: number;
     pendingStrategyTasks: number;
     activeBlockers: number;
-  };  sharedBlockers: string[];
+  };
+  sharedBlockers: string[];
   nextBestAction: string;
   nextBestActionOwnerRole: string;
   managedQueueActionable: boolean;
@@ -132,7 +133,8 @@ export function buildOperatorLaunchActionBridge(
     operatorQueueTypes: Array.from(new Set(operatorItems.map((item) => item.queueType))),
     highestPriority: highestPriority(operatorItems),
     activationQueueCount: operatorItems.filter((item) => item.queueType === 'activation').length,
-    queueSummary: managedWorkspace.queueSummary,    sharedBlockers: input.sharedBlockers,
+    queueSummary: managedWorkspace.queueSummary,
+    sharedBlockers: input.sharedBlockers,
     nextBestAction: managedWorkspace.nextBestAction,
     nextBestActionOwnerRole: managedWorkspace.ownerRole,
     managedQueueActionable: managedWorkspaceHasActionableQueue(managedWorkspace),
