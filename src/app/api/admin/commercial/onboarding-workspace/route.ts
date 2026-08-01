@@ -98,6 +98,7 @@ export async function GET(request: Request) {
     workspace,
     derived: {
       commercialReviewStatus: workspace.readyForCommercialReview ? 'ready' : 'blocked',
+      commercialReviewBlockers: workspace.commercialReviewBlockers,
       activationStatus: workspace.activationSummary.status,
       continuityReady: workspace.continuitySummary.readyForActivation,
       missingOnboardingFields: workspace.onboardingProgress.missingFields,
