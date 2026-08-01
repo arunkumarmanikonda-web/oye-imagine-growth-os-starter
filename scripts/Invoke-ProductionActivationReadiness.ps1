@@ -18,7 +18,7 @@ $testFiles | ForEach-Object { Write-Host $_ }
 
 Write-Host ''
 Write-Host '=== RUN PRODUCTION ACTIVATION SUITE ===' -ForegroundColor Cyan
-npx vitest run $testFiles
+npm run test:activation-production-suite
 if ($LASTEXITCODE -ne 0) {
   throw 'production activation suite failed'
 }
