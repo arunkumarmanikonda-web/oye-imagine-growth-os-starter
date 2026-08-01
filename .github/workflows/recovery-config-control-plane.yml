@@ -1,0 +1,28 @@
+name: recovery-config-control-plane
+
+on:
+  push:
+    branches:
+      - main
+      - closeout-*
+  pull_request:
+
+jobs:
+  recovery-config-control-plane:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup-node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: install
+        run: npm ci
+
+      - name: run recovery config validation
+        shell: pwsh
+        run: ./scripts/Invoke-RecoveryConfigValidation.ps1

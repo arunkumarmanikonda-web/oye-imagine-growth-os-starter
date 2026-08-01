@@ -1,89 +1,76 @@
-import Image from "next/image";
-import Link from "next/link";
+import Link from 'next/link'
+import { getPublicHomepageExperience } from '../lib/recovery/public-premium-experience'
 
 export default function HomePage() {
+  const experience = getPublicHomepageExperience()
+
   return (
-    <div className="oi-page">
-      <div className="oi-container">
-        <div className="oi-page-head">
-          <span className="oi-kicker">Product shell overhaul</span>
-        </div>
+    <main className="min-h-screen bg-slate-950 text-white">
+      <section className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-8 md:px-10">
+        <nav className="flex flex-wrap items-center justify-between gap-4 rounded-full border border-white/10 bg-white/5 px-5 py-4 backdrop-blur">
+          <div className="space-y-1">
+            <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">{experience.hero.eyebrow}</p>
+            <p className="text-sm text-slate-300">{experience.legalIdentity.legalName}</p>
+          </div>
 
-        <section className="oi-hero">
-          <div className="oi-panel">
-            <Image
-              src="/brand/oye-logo-dark.png"
-              alt="Oye !magine"
-              width={220}
-              height={62}
-              className="oi-logo-hero"
-              priority
-            />
-            <h1 className="oi-display">Growth infrastructure built for brands that need clarity, speed, and accountable execution.</h1>
-            <p className="oi-lead">
-              Oye !magine is the operating layer for strategy, websites, SEO, paid media, analytics,
-              specialist execution, and governed marketplace delivery.
-            </p>
+          <div className="flex flex-wrap items-center gap-3 text-sm text-slate-200">
+            {experience.navigation.map((item) => (
+              <Link key={item.href} href={item.href} className="rounded-full px-3 py-2 transition hover:bg-white/10">
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </nav>
 
-            <div className="oi-chip-row">
-              <Link href="/marketplace" className="oi-btn oi-btn-primary">Explore marketplace</Link>
-              <Link href="/admin" className="oi-btn oi-btn-secondary">Open admin workspace</Link>
-              <Link href="/login" className="oi-btn oi-btn-ghost">Sign in</Link>
+        <section className="grid gap-8 rounded-[2rem] border border-white/10 bg-gradient-to-br from-slate-900 via-slate-950 to-cyan-950/40 px-8 py-12 shadow-2xl shadow-cyan-950/30 lg:grid-cols-[1.25fr_0.75fr]">
+          <div className="space-y-6">
+            <p className="text-sm uppercase tracking-[0.4em] text-cyan-300">{experience.hero.eyebrow}</p>
+            <h1 className="max-w-4xl text-4xl font-semibold leading-tight md:text-6xl">
+              {experience.hero.title}
+            </h1>
+            <p className="max-w-3xl text-lg leading-8 text-slate-300">{experience.hero.body}</p>
+
+            <div className="flex flex-wrap gap-3">
+              <Link href={experience.hero.primaryAction.href} className="rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950">
+                {experience.hero.primaryAction.label}
+              </Link>
+              <Link href={experience.hero.secondaryAction.href} className="rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white">
+                {experience.hero.secondaryAction.label}
+              </Link>
+              <Link href={experience.hero.tertiaryAction.href} className="rounded-full px-5 py-3 text-sm font-semibold text-slate-300">
+                {experience.hero.tertiaryAction.label}
+              </Link>
             </div>
           </div>
 
-          <div className="oi-panel-dark">
-            <span className="oi-kicker">Setup readiness</span>
-            <h2 className="oi-display oi-display-inverse">100%</h2>
-            <p className="oi-lead oi-lead-inverse">
-              Operational readiness is complete, core checks are available, and the shell now separates
-              customer-facing value from admin execution surfaces more clearly.
-            </p>
-
-            <div className="oi-mini-grid" style={{ marginTop: 22 }}>
-              <div className="oi-mini-stat">
-                <strong>6/6</strong>
-                checks ready
+          <aside className="grid gap-4 rounded-[1.5rem] border border-white/10 bg-white/5 p-6">
+            <p className="text-sm uppercase tracking-[0.35em] text-slate-400">Trust surface</p>
+            {experience.trustSignals.map((signal) => (
+              <div key={signal.label} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{signal.label}</p>
+                <p className="mt-2 text-sm font-medium text-white">{signal.value}</p>
               </div>
-              <div className="oi-mini-stat">
-                <strong>Live</strong>
-                strategy
-              </div>
-              <div className="oi-mini-stat">
-                <strong>Live</strong>
-                marketplace
-              </div>
-              <div className="oi-mini-stat">
-                <strong>Ready</strong>
-                operator workspace
-              </div>
-            </div>
-          </div>
+            ))}
+          </aside>
         </section>
 
-        <section className="oi-section">
-          <div className="oi-grid-3">
-            <article className="oi-card">
-              <h3 className="oi-card-title">Strategy engine</h3>
-              <p className="oi-card-copy">
-                Convert inputs into channel plans, positioning, growth priorities, and execution guidance.
-              </p>
+        <section className="grid gap-5 lg:grid-cols-3">
+          {experience.sections.map((section) => (
+            <article key={section.id} className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6">
+              <p className="text-xs uppercase tracking-[0.3em] text-cyan-300">{section.eyebrow}</p>
+              <h2 className="mt-4 text-2xl font-semibold">{section.title}</h2>
+              <p className="mt-4 text-sm leading-7 text-slate-300">{section.body}</p>
+              <ul className="mt-5 space-y-3 text-sm text-slate-200">
+                {section.bullets.map((bullet) => (
+                  <li key={bullet} className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
+                    {bullet}
+                  </li>
+                ))}
+              </ul>
             </article>
-            <article className="oi-card">
-              <h3 className="oi-card-title">Specialist marketplace</h3>
-              <p className="oi-card-copy">
-                Route governed briefs into a managed network of operators, reviewers, and delivery flows.
-              </p>
-            </article>
-            <article className="oi-card">
-              <h3 className="oi-card-title">Admin control plane</h3>
-              <p className="oi-card-copy">
-                Manage context, settings, audit trails, workstreams, and marketplace actions in one place.
-              </p>
-            </article>
-          </div>
+          ))}
         </section>
-      </div>
-    </div>
-  );
+      </section>
+    </main>
+  )
 }

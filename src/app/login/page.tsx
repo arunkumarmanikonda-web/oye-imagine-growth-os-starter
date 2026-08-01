@@ -1,168 +1,41 @@
-import Image from "next/image";
-import Link from "next/link";
+import Link from 'next/link'
+import { getClientLoginExperience } from '../../lib/recovery/auth-entry-foundation'
 
-const trustPoints = [
-  "Track marketplace requests, proposals, and execution visibility.",
-  "Separate customer-facing journeys from internal admin operations.",
-  "Keep approvals, follow-ups, and activity easier to inspect.",
-  "Present a cleaner visual system with stronger product confidence.",
-];
+export default function ClientLoginPage() {
+  const experience = getClientLoginExperience()
 
-export default function LoginPage() {
   return (
-    <div className="oi-page">
-      <div className="oi-container">
-        <div className="oi-page-head">
-          <span className="oi-kicker">Client access</span>
-        </div>
+    <main className="min-h-screen bg-slate-950 px-6 py-12 text-white md:px-10">
+      <section className="mx-auto grid w-full max-w-5xl gap-8 rounded-[2rem] border border-white/10 bg-white/5 p-8 lg:grid-cols-[1.1fr_0.9fr]">
+        <article className="space-y-5">
+          <p className="text-sm uppercase tracking-[0.35em] text-cyan-300">{experience.eyebrow}</p>
+          <h1 className="text-4xl font-semibold">{experience.title}</h1>
+          <p className="max-w-2xl text-base leading-8 text-slate-300">{experience.body}</p>
 
-        <section className="oi-auth-shell">
-          <aside className="oi-auth-side">
-            <Image
-              src="/brand/oye-logo-light.png"
-              alt="Oye !magine"
-              width={220}
-              height={62}
-              className="oi-logo-hero"
-              priority
-            />
-
-            <h1 className="oi-display oi-display-inverse" style={{ marginTop: 18 }}>
-              A premium sign-in surface for clients and operators.
-            </h1>
-
-            <p className="oi-lead oi-lead-inverse">
-              The login page should build trust immediately: clear brand presence, strong contrast,
-              quiet form framing, and obvious next actions.
-            </p>
-
-            <div className="oi-divider" />
-
-            <div className="oi-mini-grid">
-              <div className="oi-mini-stat">
-                <strong>Secure</strong>
-                workspace entry
-              </div>
-              <div className="oi-mini-stat">
-                <strong>Clear</strong>
-                customer/admin split
-              </div>
-              <div className="oi-mini-stat">
-                <strong>Governed</strong>
-                proposal access
-              </div>
-              <div className="oi-mini-stat">
-                <strong>Sharper</strong>
-                product feel
-              </div>
-            </div>
-
-            <div style={{ marginTop: 22 }}>
-              <ul className="oi-list">
-                {trustPoints.map((point) => (
-                  <li key={point} className="oi-list-item">
-                    <span className="oi-bullet" />
-                    <span style={{ color: "#e2e8f0" }}>{point}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </aside>
-
-          <section
-            className="oi-auth-card"
-            style={{
-              background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,251,255,0.94) 100%)",
-            }}
-          >
-            <div className="oi-section-header">
-              <h2 className="oi-section-title">Sign in</h2>
-              <p className="oi-section-copy">
-                Use your workspace credentials to access customer or admin flows.
-              </p>
-            </div>
-
-            <div className="oi-form-shell">
-              <div className="oi-field">
-                <label className="oi-label" htmlFor="email">Email</label>
-                <input id="email" type="email" className="oi-input" placeholder="name@company.com" />
-              </div>
-
-              <div className="oi-field">
-                <label className="oi-label" htmlFor="password">Password</label>
-                <input id="password" type="password" className="oi-input" placeholder="Enter your password" />
-              </div>
-
-              <div className="oi-grid-2">
-                <label
-                  className="oi-card"
-                  style={{
-                    padding: 16,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    background: "#ffffff",
-                  }}
-                >
-                  <input type="checkbox" />
-                  <span className="oi-subtle">Keep me signed in</span>
-                </label>
-
-                <Link
-                  href="/admin"
-                  className="oi-card"
-                  style={{
-                    padding: 16,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "#ffffff",
-                    fontWeight: 800,
-                  }}
-                >
-                  Need admin access?
-                </Link>
-              </div>
-
-              <div className="oi-chip-row">
-                <button type="button" className="oi-btn oi-btn-primary">Continue</button>
-                <button type="button" className="oi-btn oi-btn-secondary">Use magic link</button>
-              </div>
-
-              <div
-                style={{
-                  marginTop: 8,
-                  padding: 18,
-                  borderRadius: 18,
-                  border: "1px solid rgba(15,23,42,0.08)",
-                  background: "rgba(248,251,255,0.9)",
-                }}
+          <div className="flex flex-wrap gap-3">
+            {experience.actions.map((action) => (
+              <Link
+                key={action.href + action.label}
+                href={action.href}
+                className="rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950"
               >
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(2, minmax(0,1fr))",
-                    gap: 12,
-                  }}
-                >
-                  <div>
-                    <div className="oi-stat-label">Customer lane</div>
-                    <div className="oi-card-copy">Requests, proposals, delivery visibility.</div>
-                  </div>
-                  <div>
-                    <div className="oi-stat-label">Admin lane</div>
-                    <div className="oi-card-copy">Context switching, notes, audit, ops, marketplace control.</div>
-                  </div>
-                </div>
-              </div>
+                {action.label}
+              </Link>
+            ))}
+          </div>
+        </article>
 
-              <p className="oi-subtle" style={{ margin: 0 }}>
-                If authentication handlers already exist in the project, keep this visual shell and reconnect the controls to the existing logic next.
-              </p>
-            </div>
-          </section>
-        </section>
-      </div>
-    </div>
-  );
+        <aside className="rounded-[1.5rem] border border-white/10 bg-black/20 p-6">
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Client help</p>
+          <div className="mt-4 space-y-3">
+            {experience.supportLinks.map((link) => (
+              <Link key={link.href + link.label} href={link.href} className="block rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-200">
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </aside>
+      </section>
+    </main>
+  )
 }
