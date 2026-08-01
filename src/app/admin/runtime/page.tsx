@@ -1,39 +1,10 @@
-﻿import React from "react";
-import { buildCommercialOnboardingWorkspace } from "@/lib/pilot/commercial-onboarding-workspace";
-import type { ServiceKey } from "@/lib/pilot/onboarding-types";
-import type {
-  CommercialBillingModel,
-  CommercialPaymentTerm,
-  CommercialScopeLane,
-} from "@/lib/recovery/commercial-agreement-types";
+import React from "react";
+import { buildCommercialEvidenceBridgeFromSearchParamRecord } from "@/lib/ops/commercial-evidence-bridge";
 import { organizationProfile } from "../../../lib/recovery/organization-profile";
 import { getRuntimeShellAudit } from "../../../lib/recovery/runtime-enforcement-foundation";
 
 type SearchParamValue = string | string[] | undefined;
 type SearchParamsShape = Record<string, SearchParamValue>;
-
-function firstValue(value: SearchParamValue): string | null {
-  if (Array.isArray(value)) return value[0]?.trim() || null;
-  return value?.trim() || null;
-}
-
-function manyValues(value: SearchParamValue): string[] {
-  if (Array.isArray(value)) return value.map((item) => item.trim()).filter(Boolean);
-  return value?.trim() ? [value.trim()] : [];
-}
-
-function toBoolean(value: SearchParamValue, fallback = false): boolean {
-  const normalized = firstValue(value);
-  if (normalized == null) return fallback;
-  return ["1", "true", "yes", "y"].includes(normalized.toLowerCase());
-}
-
-function toNumber(value: SearchParamValue, fallback = 0): number {
-  const normalized = firstValue(value);
-  if (normalized == null || normalized === "") return fallback;
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
 
 function toneClass(status: "ready" | "verified" | "blocked"): string {
   return status === "ready" || status === "verified"
@@ -49,79 +20,9 @@ export default async function AdminRuntimePage({
   const audit = getRuntimeShellAudit();
   const resolved = (await searchParams) ?? {};
 
-  const companyName = firstValue(resolved.companyName);
-  const tenantId = firstValue(resolved.tenantId);
-  const intakeId = firstValue(resolved.intakeId);
-
-  const workspace =
-    companyName || tenantId || intakeId
-      ? buildCommercialOnboardingWorkspace({
-          intakeId: intakeId || "intake_demo",
-          tenantId: tenantId || "tenant_demo",
-          companyName: companyName || "Unknown company",
-          legalName: firstValue(resolved.legalName),
-          websiteUrl: firstValue(resolved.websiteUrl),
-          industry: firstValue(resolved.industry),
-          countriesServed: manyValues(resolved.country),
-          servicesRequested: manyValues(resolved.service) as ServiceKey[],
-          autonomyLevel: toNumber(resolved.autonomyLevel, 1) as 0 | 1 | 2 | 3 | 4,
-          billingCurrency: firstValue(resolved.billingCurrency) || "INR",
-          clientTradeName: firstValue(resolved.clientTradeName) || companyName || "Unknown company",
-          clientPrimaryContactName: firstValue(resolved.clientPrimaryContactName),
-          clientPrimaryContactEmail: firstValue(resolved.clientPrimaryContactEmail),
-          clientGstin: firstValue(resolved.clientGstin),
-          businessEmail: firstValue(resolved.businessEmail),
-          domainVerified: toBoolean(resolved.domainVerified),
-          businessEmailVerified: toBoolean(resolved.businessEmailVerified),
-          authorizedRepresentativeName: firstValue(resolved.authorizedRepresentativeName),
-          authorizedRepresentativeEmail: firstValue(resolved.authorizedRepresentativeEmail),
-          authorizedRepresentativeVerified: toBoolean(resolved.authorizedRepresentativeVerified),
-          billingIdentityConfirmed: toBoolean(resolved.billingIdentityConfirmed),
-          requestedLanes: (manyValues(resolved.lane).length
-            ? manyValues(resolved.lane)
-            : ["growth_strategy"]) as CommercialScopeLane[],
-          billingModel: (firstValue(resolved.billingModel) || "monthly_retainer") as CommercialBillingModel,
-          baseFeeInr: toNumber(resolved.baseFeeInr, 0),
-          paymentTerm: (firstValue(resolved.paymentTerm) || "net_15") as CommercialPaymentTerm,
-          contractSigned: toBoolean(resolved.contractSigned),
-          esignProviderReady: toBoolean(resolved.esignProviderReady),
-          subscriptionActive: toBoolean(resolved.subscriptionActive),
-          invoiceProfileReady: toBoolean(resolved.invoiceProfileReady),
-          paymentMethodReady: toBoolean(resolved.paymentMethodReady),
-          approvalPolicyReady: toBoolean(resolved.approvalPolicyReady),
-          strategyGenerated: toBoolean(resolved.strategyGenerated),
-          strategyApproved: toBoolean(resolved.strategyApproved),
-          invoiceStatus: (firstValue(resolved.invoiceStatus) || "not_issued") as
-            | "not_issued"
-            | "issued"
-            | "paid"
-            | "overdue",
-          approvalOpenCount: toNumber(resolved.approvalOpenCount, 0),
-          auditCoverage: toNumber(resolved.auditCoverage, 0),
-          mediaBalanceAmount: toNumber(resolved.mediaBalanceAmount, 0),
-          currency: firstValue(resolved.currency) || "INR",
-          esignCredentialsPresent: toBoolean(resolved.esignCredentialsPresent),
-          esignBusinessVerified: toBoolean(resolved.esignBusinessVerified),
-          esignLiveAccountConnected: toBoolean(resolved.esignLiveAccountConnected),
-          esignWebhookConfigured: toBoolean(resolved.esignWebhookConfigured),
-          esignCallbackVerified: toBoolean(resolved.esignCallbackVerified),
-          paymentGatewayCredentialsPresent: toBoolean(resolved.paymentGatewayCredentialsPresent),
-          paymentGatewayBusinessVerified: toBoolean(resolved.paymentGatewayBusinessVerified),
-          paymentGatewayLiveAccountConnected: toBoolean(resolved.paymentGatewayLiveAccountConnected),
-          paymentGatewayWebhookConfigured: toBoolean(resolved.paymentGatewayWebhookConfigured),
-          paymentGatewayCallbackVerified: toBoolean(resolved.paymentGatewayCallbackVerified),
-        })
-      : null;
-
-  const sharedBlockers = workspace
-    ? Array.from(
-        new Set([
-          ...workspace.commercialReviewBlockers,
-          ...workspace.activationSummary.blockers,
-          ...workspace.continuitySummary.blockers,
-        ]),
-      )
-    : [];
+  const evidenceBridge = buildCommercialEvidenceBridgeFromSearchParamRecord(resolved);
+  const workspace = evidenceBridge.workspace;
+  const sharedBlockers = evidenceBridge.sharedBlockers;
 
   return (
     <main className="min-h-screen bg-neutral-950 px-6 py-10 text-white">
