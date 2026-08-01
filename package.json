@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "test:admin-ops-panels": "vitest run tests/lib/admin-ops-commercial-evidence-panel.test.tsx tests/lib/admin-ops-operator-action-bridge-panel.test.tsx",
+    "test:admin-ops-runtime-bridge": "vitest run tests/lib/admin-runtime-page.test.ts tests/lib/admin-release-status-route.test.ts tests/lib/commercial-evidence-bridge.test.ts",
+    "test:admin-ops-release-surfaces": "npm run test:admin-ops-panels && npm run test:admin-ops-runtime-bridge",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
