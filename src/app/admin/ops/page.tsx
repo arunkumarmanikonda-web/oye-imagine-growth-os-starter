@@ -1,12 +1,14 @@
-﻿import type { Route } from 'next'
+import type { Route } from 'next'
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import { PilotStatusCard, type PilotStatusSummary } from "./pilot-status-card";
+import { CommercialEvidencePanel } from "./commercial-evidence-panel";
 import { OperatorActionBridgePanel } from "./operator-action-bridge-panel";
 import { buildReleaseStatusRequestPath } from "@/lib/ops/admin-ops-release-status";
+import type { CommercialEvidenceSummary } from "@/lib/ops/commercial-evidence-bridge";
 import type { OperatorLaunchActionBridgeSummary } from "@/lib/ops/operator-launch-action-bridge";
 
 type ReleaseStatus = {
@@ -41,9 +43,7 @@ type ReleaseStatus = {
     settings: string;
     ops: string;
   };
-  commercialEvidence?: {
-    companyName: string;
-  } | null;
+  commercialEvidence?: CommercialEvidenceSummary | null;
   operatorActionBridge?: OperatorLaunchActionBridgeSummary | null;
   warnings?: string[];
 };
@@ -258,6 +258,18 @@ export default function AdminOpsPage() {
         <section className="rounded-[28px] border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
           {error}
         </section>
+      ) : null}
+      {data ? (
+        <>
+          <CommercialEvidencePanel
+            companyName={data.commercialEvidence?.companyName ?? null}
+            evidence={data.commercialEvidence}
+          />
+          <OperatorActionBridgePanel
+            companyName={data.commercialEvidence?.companyName ?? null}
+            bridge={data.operatorActionBridge}
+          />
+        </>
       ) : null}
 
       {data ? (
