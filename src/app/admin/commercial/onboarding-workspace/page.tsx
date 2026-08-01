@@ -148,6 +148,18 @@ export default async function AdminCommercialOnboardingWorkspacePage({
     auditCoverage: toNumber(resolved.auditCoverage, 0),
     mediaBalanceAmount: toNumber(resolved.mediaBalanceAmount, 0),
     currency: firstValue(resolved.currency) || 'INR',
+
+    esignCredentialsPresent: toBoolean(resolved.esignCredentialsPresent),
+    esignBusinessVerified: toBoolean(resolved.esignBusinessVerified),
+    esignLiveAccountConnected: toBoolean(resolved.esignLiveAccountConnected),
+    esignWebhookConfigured: toBoolean(resolved.esignWebhookConfigured),
+    esignCallbackVerified: toBoolean(resolved.esignCallbackVerified),
+
+    paymentGatewayCredentialsPresent: toBoolean(resolved.paymentGatewayCredentialsPresent),
+    paymentGatewayBusinessVerified: toBoolean(resolved.paymentGatewayBusinessVerified),
+    paymentGatewayLiveAccountConnected: toBoolean(resolved.paymentGatewayLiveAccountConnected),
+    paymentGatewayWebhookConfigured: toBoolean(resolved.paymentGatewayWebhookConfigured),
+    paymentGatewayCallbackVerified: toBoolean(resolved.paymentGatewayCallbackVerified),
   })
 
   const missingFields = workspace.onboardingProgress.missingFields
@@ -158,6 +170,9 @@ export default async function AdminCommercialOnboardingWorkspacePage({
     workspace.agreementBlueprint.clientProfile.gstin === 'pending_client_tax_profile'
       ? 'Pending'
       : workspace.agreementBlueprint.clientProfile.gstin
+  const providerStatuses = workspace.providerReadiness.requiredProviders.map(
+    (provider) => `${provider.provider}: ${provider.status}`,
+  )
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-900">
@@ -177,6 +192,10 @@ export default async function AdminCommercialOnboardingWorkspacePage({
               tone={workspace.kycVerification.status === 'verified' ? 'green' : 'yellow'}
             />
             <StatusPill
+              label={`Providers ${workspace.providerReadiness.status}`}
+              tone={workspace.providerReadiness.status === 'ready' ? 'green' : 'yellow'}
+            />
+            <StatusPill
               label={`Activation ${workspace.activationSummary.status}`}
               tone={workspace.activationSummary.status === 'ready' ? 'green' : 'yellow'}
             />
@@ -187,7 +206,7 @@ export default async function AdminCommercialOnboardingWorkspacePage({
           </div>
           <p className="mt-3 max-w-3xl text-sm text-slate-300">
             Admin commercial onboarding workspace with onboarding completeness, KYC proof gating,
-            agreement intake readiness, activation controls, and continuity blockers in one governed view.
+            provider readiness, agreement intake readiness, activation controls, and continuity blockers in one governed view.
           </p>
         </header>
 
@@ -257,6 +276,27 @@ export default async function AdminCommercialOnboardingWorkspacePage({
                 <dt className="text-slate-500">Missing KYC checks</dt>
                 <dd className="mt-1">
                   <BulletList items={kycMissingChecks} tone="danger" />
+                </dd>
+              </div>
+            </dl>
+          </SectionCard>
+
+          <SectionCard title="Provider readiness">
+            <dl className="grid grid-cols-1 gap-3 text-sm">
+              <div>
+                <dt className="text-slate-500">Status</dt>
+                <dd className="font-medium">{workspace.providerReadiness.status}</dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">Required providers</dt>
+                <dd className="mt-1">
+                  <BulletList items={providerStatuses} />
+                </dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">Provider blockers</dt>
+                <dd className="mt-1">
+                  <BulletList items={workspace.providerReadiness.blockers} tone="danger" />
                 </dd>
               </div>
             </dl>
