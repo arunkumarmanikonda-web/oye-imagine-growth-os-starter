@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 import {
   buildDeploymentReadinessSummary,
   deploymentReadinessPassed,
@@ -42,5 +42,28 @@ describe('deployment-readiness', () => {
     expect(summary.overallStatus).toBe('blocked');
     expect(summary.blockers).toContain('vercel deployment failed');
     expect(summary.blockers).toContain('meta_marketing not ready');
+  });
+
+  it('blocks when commercial evidence is incomplete', () => {
+    const summary = buildDeploymentReadinessSummary({
+      vercelDeploymentPassed: true,
+      workspaceBrandingSmokePassed: true,
+      validationPassed: true,
+      requiredProviders: [
+        {
+          provider: 'google_ads',
+          status: 'ready',
+          blockers: [],
+          readyChecks: ['credentials present'],
+        },
+      ],
+      evidenceBlockers: ['Required providers are not production ready'],
+    });
+
+    expect(summary.overallStatus).toBe('blocked');
+    expect(summary.evidenceBlockers).toContain('Required providers are not production ready');
+    expect(summary.blockers).toContain(
+      'commercial evidence: Required providers are not production ready',
+    );
   });
 });
