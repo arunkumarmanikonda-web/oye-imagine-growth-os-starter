@@ -1,5 +1,6 @@
 ﻿import { requireAdmin } from "@/lib/admin-route";
 import { buildCommercialOnboardingWorkspace } from "@/lib/pilot/commercial-onboarding-workspace";
+import { buildOperatorLaunchActionBridge } from "@/lib/ops/operator-launch-action-bridge";
 import type { ServiceKey } from "@/lib/pilot/onboarding-types";
 import type {
   CommercialBillingModel,
@@ -137,6 +138,55 @@ function buildCommercialEvidence(searchParams: URLSearchParams) {
   };
 }
 
+
+function buildOperatorActionBridge(searchParams: URLSearchParams) {
+  const commercialEvidence = buildCommercialEvidence(searchParams);
+  if (!commercialEvidence) {
+    return null;
+  }
+
+  const domainVerified = toBoolean(searchParams.get("domainVerified"));
+  const businessEmailVerified = toBoolean(searchParams.get("businessEmailVerified"));
+  const authorizedRepresentativeVerified = toBoolean(
+    searchParams.get("authorizedRepresentativeVerified"),
+  );
+  const billingIdentityConfirmed = toBoolean(searchParams.get("billingIdentityConfirmed"));
+
+  return buildOperatorLaunchActionBridge({
+    brandName: commercialEvidence.companyName,
+    onboardingCompleted:
+      domainVerified &&
+      businessEmailVerified &&
+      authorizedRepresentativeVerified &&
+      billingIdentityConfirmed,
+    strategyGenerated: toBoolean(searchParams.get("strategyGenerated")),
+    strategyApproved: toBoolean(searchParams.get("strategyApproved")),
+    contractSigned: toBoolean(searchParams.get("contractSigned")),
+    subscriptionActive: toBoolean(searchParams.get("subscriptionActive")),
+    invoiceStatus: (searchParams.get("invoiceStatus")?.trim() || "not_issued") as
+      | "not_issued"
+      | "issued"
+      | "paid"
+      | "overdue",
+    approvalOpenCount: toNumber(searchParams.get("approvalOpenCount"), 0),
+    auditCoverage: toNumber(searchParams.get("auditCoverage"), 0),
+    mediaBalanceAmount: toNumber(searchParams.get("mediaBalanceAmount"), 0),
+    currency: searchParams.get("currency")?.trim() || "INR",
+    requestedLaunchDate: searchParams.get("requestedLaunchDate")?.trim() || undefined,
+    commercialReviewStatus: commercialEvidence.commercialReviewStatus as "ready" | "blocked",
+    providerReadinessStatus: commercialEvidence.providerReadinessStatus as "ready" | "blocked",
+    activationStatus: commercialEvidence.activationStatus as "ready" | "blocked",
+    continuityReady: commercialEvidence.continuityReady,
+    sharedBlockers: commercialEvidence.sharedBlockers,
+    pendingReports: toNumber(searchParams.get("pendingReports"), 0),
+    pendingCampaigns: toNumber(searchParams.get("pendingCampaigns"), 0),
+    pendingStrategyTasks: toNumber(
+      searchParams.get("pendingStrategyTasks"),
+      toBoolean(searchParams.get("strategyApproved")) ? 0 : 1,
+    ),
+  });
+}
+
 function getServiceClient(): AnyClient | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -245,6 +295,7 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const commercialEvidence = buildCommercialEvidence(searchParams);
+  const operatorActionBridge = buildOperatorActionBridge(searchParams);
 
   const env = {
     NEXT_PUBLIC_SUPABASE_URL: hasEnv("NEXT_PUBLIC_SUPABASE_URL"),
@@ -286,6 +337,7 @@ export async function GET(request: Request) {
           audit: null,
         },
         commercialEvidence,
+        operatorActionBridge,
         env,
         links,
         warnings: ["SUPABASE_SERVICE_ROLE_KEY and/or NEXT_PUBLIC_SUPABASE_URL missing."],
@@ -343,6 +395,7 @@ export async function GET(request: Request) {
         audit: latestAudit,
       },
       commercialEvidence,
+      operatorActionBridge,
       env,
       links,
       warnings: [],
@@ -354,3 +407,12 @@ export async function GET(request: Request) {
     },
   );
 }
+
+
+
+
+
+
+
+
+
