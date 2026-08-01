@@ -1,4 +1,4 @@
-import { buildAgreementSignupBlueprint } from '@/lib/recovery/commercial-agreement-foundation'
+﻿import { buildAgreementSignupBlueprint } from '@/lib/recovery/commercial-agreement-foundation'
 import type {
   CommercialBillingModel,
   CommercialPaymentTerm,
@@ -28,6 +28,14 @@ export type CommercialOnboardingWorkspaceInput = {
   clientTradeName?: string | null
   clientPrimaryContactName?: string | null
   clientPrimaryContactEmail?: string | null
+  clientGstin?: string | null
+  businessEmail?: string | null
+  domainVerified?: boolean
+  businessEmailVerified?: boolean
+  authorizedRepresentativeName?: string | null
+  authorizedRepresentativeEmail?: string | null
+  authorizedRepresentativeVerified?: boolean
+  billingIdentityConfirmed?: boolean
   requestedLanes?: CommercialScopeLane[]
   billingModel?: CommercialBillingModel
   baseFeeInr?: number
@@ -47,13 +55,109 @@ export type CommercialOnboardingWorkspaceInput = {
   currency?: string
 }
 
+export type CommercialKycVerificationSummary = {
+  status: 'verified' | 'pending'
+  verifiedChecks: string[]
+  missingChecks: string[]
+  clientLegalName: string | null
+  clientGstin: string | null
+  businessEmail: string | null
+  websiteUrl: string | null
+  authorizedRepresentativeName: string | null
+  authorizedRepresentativeEmail: string | null
+  billingIdentityConfirmed: boolean
+  domainVerified: boolean
+  businessEmailVerified: boolean
+  authorizedRepresentativeVerified: boolean
+}
+
 export type CommercialOnboardingWorkspace = {
   intake: OnboardingIntakeDraft
   onboardingProgress: OnboardingProgressSummary
+  kycVerification: CommercialKycVerificationSummary
   agreementBlueprint: ReturnType<typeof buildAgreementSignupBlueprint>
   activationSummary: ReturnType<typeof buildCommercialActivationSummary>
   continuitySummary: ReturnType<typeof buildCommercialContinuitySummary>
   readyForCommercialReview: boolean
+}
+
+function buildCommercialKycVerificationSummary(
+  input: CommercialOnboardingWorkspaceInput,
+  intake: OnboardingIntakeDraft,
+): CommercialKycVerificationSummary {
+  const verifiedChecks: string[] = []
+  const missingChecks: string[] = []
+
+  const clientLegalName = input.legalName?.trim() || null
+  const clientGstin = input.clientGstin?.trim() || null
+  const businessEmail =
+    input.businessEmail?.trim() ||
+    input.clientPrimaryContactEmail?.trim() ||
+    null
+  const websiteUrl = intake.websiteUrl?.trim() || null
+  const authorizedRepresentativeName =
+    input.authorizedRepresentativeName?.trim() ||
+    input.clientPrimaryContactName?.trim() ||
+    null
+  const authorizedRepresentativeEmail =
+    input.authorizedRepresentativeEmail?.trim() ||
+    input.clientPrimaryContactEmail?.trim() ||
+    null
+
+  if (clientLegalName) verifiedChecks.push('legalName')
+  else missingChecks.push('legalName')
+
+  if (clientGstin) verifiedChecks.push('clientGstin')
+  else missingChecks.push('clientGstin')
+
+  if (websiteUrl) {
+    verifiedChecks.push('websiteUrl')
+    if (input.domainVerified) verifiedChecks.push('domain verification')
+    else missingChecks.push('domain verification')
+  } else {
+    missingChecks.push('websiteUrl')
+    missingChecks.push('domain verification')
+  }
+
+  if (businessEmail) {
+    verifiedChecks.push('business email')
+    if (input.businessEmailVerified) verifiedChecks.push('business email verification')
+    else missingChecks.push('business email verification')
+  } else {
+    missingChecks.push('business email')
+    missingChecks.push('business email verification')
+  }
+
+  if (authorizedRepresentativeName && authorizedRepresentativeEmail) {
+    verifiedChecks.push('authorized representative')
+    if (input.authorizedRepresentativeVerified) {
+      verifiedChecks.push('authorized representative verification')
+    } else {
+      missingChecks.push('authorized representative verification')
+    }
+  } else {
+    missingChecks.push('authorized representative')
+    missingChecks.push('authorized representative verification')
+  }
+
+  if (input.billingIdentityConfirmed) verifiedChecks.push('billing identity')
+  else missingChecks.push('billing identity')
+
+  return {
+    status: missingChecks.length === 0 ? 'verified' : 'pending',
+    verifiedChecks,
+    missingChecks,
+    clientLegalName,
+    clientGstin,
+    businessEmail,
+    websiteUrl,
+    authorizedRepresentativeName,
+    authorizedRepresentativeEmail,
+    billingIdentityConfirmed: input.billingIdentityConfirmed ?? false,
+    domainVerified: input.domainVerified ?? false,
+    businessEmailVerified: input.businessEmailVerified ?? false,
+    authorizedRepresentativeVerified: input.authorizedRepresentativeVerified ?? false,
+  }
 }
 
 export function buildCommercialOnboardingWorkspace(
@@ -74,6 +178,7 @@ export function buildCommercialOnboardingWorkspace(
   })
 
   const onboardingProgress = summarizeOnboardingProgress(intake)
+  const kycVerification = buildCommercialKycVerificationSummary(input, intake)
 
   const agreementBlueprint = buildAgreementSignupBlueprint({
     clientLegalName: input.legalName?.trim() || input.companyName.trim(),
@@ -91,7 +196,8 @@ export function buildCommercialOnboardingWorkspace(
     contractSigned: input.contractSigned ?? false,
     esignProviderReady: input.esignProviderReady ?? false,
     subscriptionActivated: input.subscriptionActive ?? false,
-    invoiceProfileReady: input.invoiceProfileReady ?? onboardingProgress.readyForReview,
+    invoiceProfileReady:
+      input.invoiceProfileReady ?? (onboardingProgress.readyForReview && kycVerification.status === 'verified'),
     paymentMethodReady: input.paymentMethodReady ?? false,
     approvalPolicyReady: input.approvalPolicyReady ?? false,
   })
@@ -113,11 +219,13 @@ export function buildCommercialOnboardingWorkspace(
   return {
     intake,
     onboardingProgress,
+    kycVerification,
     agreementBlueprint,
     activationSummary,
     continuitySummary,
     readyForCommercialReview:
       onboardingProgress.readyForReview &&
+      kycVerification.status === 'verified' &&
       agreementBlueprint.status === 'intake_ready',
   }
 }

@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import { GET } from '../../src/app/api/admin/commercial/onboarding-workspace/route'
 
 describe('admin commercial onboarding workspace route', () => {
-  it('returns a ready workspace when onboarding and commercial controls are complete', async () => {
+  it('returns a ready workspace when onboarding, KYC, and commercial controls are complete', async () => {
     const request = new Request(
       'http://localhost/api/admin/commercial/onboarding-workspace?' +
         [
@@ -21,6 +21,14 @@ describe('admin commercial onboarding workspace route', () => {
           'clientTradeName=Neejee',
           'clientPrimaryContactName=Commercial%20Lead',
           'clientPrimaryContactEmail=finance%40neejee.example',
+          'clientGstin=29ABCDE1234F1Z5',
+          'businessEmail=finance%40neejee.example',
+          'domainVerified=true',
+          'businessEmailVerified=true',
+          'authorizedRepresentativeName=Commercial%20Lead',
+          'authorizedRepresentativeEmail=finance%40neejee.example',
+          'authorizedRepresentativeVerified=true',
+          'billingIdentityConfirmed=true',
           'billingModel=monthly_retainer',
           'baseFeeInr=125000',
           'paymentTerm=net_15',
@@ -45,14 +53,17 @@ describe('admin commercial onboarding workspace route', () => {
 
     expect(response.status).toBe(200)
     expect(body.ok).toBe(true)
+    expect(body.workspace.kycVerification.status).toBe('verified')
     expect(body.workspace.readyForCommercialReview).toBe(true)
     expect(body.derived.commercialReviewStatus).toBe('ready')
     expect(body.derived.activationStatus).toBe('ready')
     expect(body.derived.continuityReady).toBe(true)
+    expect(body.derived.kycStatus).toBe('verified')
+    expect(body.derived.kycMissingChecks).toEqual([])
     expect(body.derived.missingOnboardingFields).toEqual([])
   })
 
-  it('returns blockers when onboarding or commercial controls are incomplete', async () => {
+  it('returns blockers when onboarding or KYC controls are incomplete', async () => {
     const request = new Request(
       'http://localhost/api/admin/commercial/onboarding-workspace?' +
         [
@@ -76,10 +87,14 @@ describe('admin commercial onboarding workspace route', () => {
     expect(response.status).toBe(200)
     expect(body.ok).toBe(true)
     expect(body.workspace.readyForCommercialReview).toBe(false)
+    expect(body.workspace.kycVerification.status).toBe('pending')
     expect(body.derived.commercialReviewStatus).toBe('blocked')
     expect(body.derived.activationStatus).toBe('blocked')
     expect(body.derived.continuityReady).toBe(false)
     expect(body.derived.missingOnboardingFields).toContain('legalName')
+    expect(body.derived.kycStatus).toBe('pending')
+    expect(body.derived.kycMissingChecks).toContain('clientGstin')
+    expect(body.derived.kycMissingChecks).toContain('billing identity')
     expect(body.derived.continuityBlockers).toContain('Onboarding information is incomplete')
   })
 })

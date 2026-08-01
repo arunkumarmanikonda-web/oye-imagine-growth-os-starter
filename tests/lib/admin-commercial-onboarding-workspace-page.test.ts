@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import AdminCommercialOnboardingWorkspacePage from '../../src/app/admin/commercial/onboarding-workspace/page'
 
@@ -18,6 +18,14 @@ describe('admin commercial onboarding workspace page', () => {
         clientTradeName: 'Neejee',
         clientPrimaryContactName: 'Commercial Lead',
         clientPrimaryContactEmail: 'finance@neejee.example',
+        clientGstin: '29ABCDE1234F1Z5',
+        businessEmail: 'finance@neejee.example',
+        domainVerified: 'true',
+        businessEmailVerified: 'true',
+        authorizedRepresentativeName: 'Commercial Lead',
+        authorizedRepresentativeEmail: 'finance@neejee.example',
+        authorizedRepresentativeVerified: 'true',
+        billingIdentityConfirmed: 'true',
         billingModel: 'monthly_retainer',
         baseFeeInr: '125000',
         paymentTerm: 'net_15',
@@ -42,8 +50,10 @@ describe('admin commercial onboarding workspace page', () => {
     expect(html).toContain('Mega Batch B1')
     expect(html).toContain('Neejee')
     expect(html).toContain('Commercial review ready')
+    expect(html).toContain('KYC verified')
     expect(html).toContain('Activation ready')
     expect(html).toContain('Continuity ready')
+    expect(html).toContain('KYC verification')
     expect(html).toContain('None')
   })
 
@@ -67,9 +77,12 @@ describe('admin commercial onboarding workspace page', () => {
     const html = renderToStaticMarkup(element)
 
     expect(html).toContain('Commercial review blocked')
+    expect(html).toContain('KYC pending')
     expect(html).toContain('Continuity blocked')
     expect(html).toContain('Missing fields')
     expect(html).toContain('legalName')
+    expect(html).toContain('clientGstin')
+    expect(html).toContain('billing identity')
     expect(html).toContain('Onboarding information is incomplete')
   })
 })
