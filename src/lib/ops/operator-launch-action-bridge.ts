@@ -1,4 +1,4 @@
-﻿import { buildCommercialContinuitySummary } from '../pilot/commercial-continuity';
+import { buildCommercialContinuitySummary } from '../pilot/commercial-continuity';
 import type {
   InvoiceLifecycleStatus,
   OperatorPriority,
@@ -40,7 +40,13 @@ export interface OperatorLaunchActionBridgeSummary {
   operatorQueueTypes: string[];
   highestPriority: OperatorPriority;
   activationQueueCount: number;
-  sharedBlockers: string[];
+  queueSummary: {
+    openApprovals: number;
+    pendingReports: number;
+    pendingCampaigns: number;
+    pendingStrategyTasks: number;
+    activeBlockers: number;
+  };  sharedBlockers: string[];
   nextBestAction: string;
   nextBestActionOwnerRole: string;
   managedQueueActionable: boolean;
@@ -126,7 +132,7 @@ export function buildOperatorLaunchActionBridge(
     operatorQueueTypes: Array.from(new Set(operatorItems.map((item) => item.queueType))),
     highestPriority: highestPriority(operatorItems),
     activationQueueCount: operatorItems.filter((item) => item.queueType === 'activation').length,
-    sharedBlockers: input.sharedBlockers,
+    queueSummary: managedWorkspace.queueSummary,    sharedBlockers: input.sharedBlockers,
     nextBestAction: managedWorkspace.nextBestAction,
     nextBestActionOwnerRole: managedWorkspace.ownerRole,
     managedQueueActionable: managedWorkspaceHasActionableQueue(managedWorkspace),

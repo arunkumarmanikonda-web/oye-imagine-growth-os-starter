@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { buildOperatorLaunchActionBridge } from '../../src/lib/ops/operator-launch-action-bridge';
 
 describe('ops operator launch action bridge', () => {
@@ -33,6 +33,13 @@ describe('ops operator launch action bridge', () => {
     expect(summary.operatorQueueTypes).toContain('activation');
     expect(summary.highestPriority).toBe('medium');
     expect(summary.activationQueueCount).toBe(1);
+    expect(summary.queueSummary).toEqual({
+      openApprovals: 0,
+      pendingReports: 0,
+      pendingCampaigns: 0,
+      pendingStrategyTasks: 0,
+      activeBlockers: 2,
+    });
     expect(summary.nextBestAction).toBe('Neejee: resolve 2 active blocker(s)');
     expect(summary.nextBestActionOwnerRole).toBe('PROGRAM_MANAGER');
     expect(summary.managedQueueActionable).toBe(true);
@@ -70,6 +77,13 @@ describe('ops operator launch action bridge', () => {
     expect(summary.operatorQueueTypes).toContain('activation');
     expect(summary.highestPriority).toBe('medium');
     expect(summary.activationQueueCount).toBe(1);
+    expect(summary.queueSummary).toEqual({
+      openApprovals: 0,
+      pendingReports: 0,
+      pendingCampaigns: 0,
+      pendingStrategyTasks: 0,
+      activeBlockers: 0,
+    });
     expect(summary.nextBestAction).toBe('Neejee: continue managed services execution');
     expect(summary.nextBestActionOwnerRole).toBe('ACCOUNT_MANAGER');
     expect(summary.managedQueueActionable).toBe(false);
