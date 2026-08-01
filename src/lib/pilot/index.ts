@@ -28,3 +28,4 @@ export * from './website-audit-ingestion';
 export * from './competitor-intelligence-ingestion';
 export * from './commercial-activation-chain';
 export * from './pilot-state-machine';
+export * from './commercial-onboarding-workspace';
