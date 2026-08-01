@@ -1,3 +1,4 @@
+import React from 'react'
 import { buildCommercialOnboardingWorkspace } from '@/lib/pilot/commercial-onboarding-workspace'
 import type { ServiceKey } from '@/lib/pilot/onboarding-types'
 import type {
