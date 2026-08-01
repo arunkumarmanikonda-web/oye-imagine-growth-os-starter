@@ -66,8 +66,9 @@ describe("admin runtime page activation evidence bridge", () => {
     expect(html).toContain("Shared blockers");
     expect(html).toContain("Required providers are not production ready");
     expect(html).toContain("eSign provider not ready");
-    expect(html).toContain("• Required providers are not production ready");
+    expect(html).toContain("\u2022 Required providers are not production ready");
     expect(html).not.toContain("â€¢");
+    expect(html).not.toContain("Ã¢â‚¬Â¢");
   });
 
   it("omits the evidence bridge when no commercial query inputs are provided", async () => {

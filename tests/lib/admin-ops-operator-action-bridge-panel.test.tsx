@@ -46,12 +46,14 @@ describe("admin ops operator action bridge panel", () => {
     expect(html).toContain("Pending reports");
     expect(html).toContain("Pending campaigns");
     expect(html).toContain("Pending strategy tasks");
-    expect(html).toContain("Active blockers");    const queueSummaryMatches = html.match(/Queue summary/g) ?? [];
+    expect(html).toContain("Active blockers");
+    const queueSummaryMatches = html.match(/Queue summary/g) ?? [];
     expect(queueSummaryMatches).toHaveLength(1);
     expect(html).toContain("commercial: commercial review");
     expect(html).toContain("Required providers are not production ready");
-    expect(html).toContain("• commercial: commercial review");
+    expect(html).toContain("\u2022 commercial: commercial review");
     expect(html).not.toContain("â€¢");
+    expect(html).not.toContain("Ã¢â‚¬Â¢");
   });
 
   it("returns no markup when the bridge is absent", () => {
