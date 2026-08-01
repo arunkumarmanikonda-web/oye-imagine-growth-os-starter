@@ -154,7 +154,7 @@ export default async function AdminRuntimePage({
                     {sharedBlockers.length ? (
                       <ul className="mt-4 space-y-2 text-sm text-rose-200">
                         {sharedBlockers.map((blocker) => (
-                          <li key={blocker}>• {blocker}</li>
+                          <li key={blocker}>{"\u2022 "}{blocker}</li>
                         ))}
                       </ul>
                     ) : (
@@ -171,7 +171,7 @@ export default async function AdminRuntimePage({
                           {(workspace.commercialReviewBlockers.length
                             ? workspace.commercialReviewBlockers
                             : ["None"]).map((item) => (
-                            <li key={`commercial-${item}`}>• {item}</li>
+                            <li key={`commercial-${item}`}>{"\u2022 "}{item}</li>
                           ))}
                         </ul>
                       </div>
@@ -181,7 +181,7 @@ export default async function AdminRuntimePage({
                           {(workspace.activationSummary.blockers.length
                             ? workspace.activationSummary.blockers
                             : ["None"]).map((item) => (
-                            <li key={`activation-${item}`}>• {item}</li>
+                            <li key={`activation-${item}`}>{"\u2022 "}{item}</li>
                           ))}
                         </ul>
                       </div>
@@ -191,7 +191,7 @@ export default async function AdminRuntimePage({
                           {(workspace.continuitySummary.blockers.length
                             ? workspace.continuitySummary.blockers
                             : ["None"]).map((item) => (
-                            <li key={`continuity-${item}`}>• {item}</li>
+                            <li key={`continuity-${item}`}>{"\u2022 "}{item}</li>
                           ))}
                         </ul>
                       </div>

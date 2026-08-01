@@ -62,7 +62,7 @@ export function CommercialEvidencePanel({
           {evidence.sharedBlockers.length ? (
             <ul className="mt-3 space-y-2 text-sm text-slate-700">
               {evidence.sharedBlockers.map((item) => (
-                <li key={item}>• {item}</li>
+                <li key={item}>{"\u2022 "}{item}</li>
               ))}
             </ul>
           ) : (
@@ -75,7 +75,7 @@ export function CommercialEvidencePanel({
           {evidence.continuityBlockers.length ? (
             <ul className="mt-3 space-y-2 text-sm text-slate-700">
               {evidence.continuityBlockers.map((item) => (
-                <li key={item}>• {item}</li>
+                <li key={item}>{"\u2022 "}{item}</li>
               ))}
             </ul>
           ) : (
@@ -91,7 +91,7 @@ export function CommercialEvidencePanel({
             {(evidence.commercialReviewBlockers.length
               ? evidence.commercialReviewBlockers
               : ["None"]).map((item) => (
-              <li key={`commercial-${item}`}>• {item}</li>
+              <li key={`commercial-${item}`}>{"\u2022 "}{item}</li>
             ))}
           </ul>
         </section>
@@ -102,7 +102,7 @@ export function CommercialEvidencePanel({
             {(evidence.providerReadinessBlockers.length
               ? evidence.providerReadinessBlockers
               : ["None"]).map((item) => (
-              <li key={`provider-${item}`}>• {item}</li>
+              <li key={`provider-${item}`}>{"\u2022 "}{item}</li>
             ))}
           </ul>
         </section>
@@ -113,7 +113,7 @@ export function CommercialEvidencePanel({
             {(evidence.activationBlockers.length
               ? evidence.activationBlockers
               : ["None"]).map((item) => (
-              <li key={`activation-${item}`}>• {item}</li>
+              <li key={`activation-${item}`}>{"\u2022 "}{item}</li>
             ))}
           </ul>
         </section>

@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { OperatorActionBridgePanel } from "../../src/app/admin/ops/operator-action-bridge-panel";
 
@@ -36,6 +36,8 @@ describe("admin ops operator action bridge panel", () => {
     expect(html).toContain("PROGRAM_MANAGER");
     expect(html).toContain("commercial: commercial review");
     expect(html).toContain("Required providers are not production ready");
+    expect(html).toContain("• commercial: commercial review");
+    expect(html).not.toContain("â€¢");
   });
 
   it("returns no markup when the bridge is absent", () => {

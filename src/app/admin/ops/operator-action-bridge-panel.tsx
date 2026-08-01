@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import type { OperatorLaunchActionBridgeSummary } from "@/lib/ops/operator-launch-action-bridge";
 
 function toneClass(value: boolean): string {
@@ -104,7 +104,7 @@ export function OperatorActionBridgePanel({
           {bridge.blockingChecks.length ? (
             <ul className="mt-3 space-y-2 text-sm text-slate-700">
               {bridge.blockingChecks.map((item) => (
-                <li key={item}>• {item}</li>
+                <li key={item}>{"\u2022 "}{item}</li>
               ))}
             </ul>
           ) : (
@@ -119,7 +119,7 @@ export function OperatorActionBridgePanel({
           {bridge.sharedBlockers.length ? (
             <ul className="mt-3 space-y-2 text-sm text-slate-700">
               {bridge.sharedBlockers.map((item) => (
-                <li key={item}>• {item}</li>
+                <li key={item}>{"\u2022 "}{item}</li>
               ))}
             </ul>
           ) : (
