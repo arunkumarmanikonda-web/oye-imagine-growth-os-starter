@@ -34,6 +34,8 @@ describe("admin ops commercial evidence panel", () => {
     expect(html).toContain("Required providers are not production ready");
     expect(html).toContain("esign: business verification incomplete");
     expect(html).toContain("eSign provider not ready");
+    expect(html).toContain("• Required providers are not production ready");
+    expect(html).not.toContain("â€¢");
   });
 
   it("returns no markup when evidence is absent", () => {
