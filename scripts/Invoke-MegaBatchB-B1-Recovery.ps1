@@ -19,12 +19,23 @@ Invoke-LocalVitest @(
   'tests/lib/foundation-commercial-agreement-legal-binding.test.ts'
 )
 
+if ($LASTEXITCODE -ne 0) {
+  throw 'Focused Mega Batch B1 recovery tests failed.'
+}
+
 $validation = @(
-  Join-Path (Get-Location) 'scripts\Invoke-GrowthOsValidation.ps1',
-  Join-Path (Get-Location) 'Invoke-GrowthOsValidation.ps1'
+  (Join-Path (Get-Location) 'scripts\Invoke-GrowthOsValidation.ps1'),
+  (Join-Path (Get-Location) 'Invoke-GrowthOsValidation.ps1')
 ) | Where-Object { Test-Path $_ } | Select-Object -First 1
 
-if (-not $validation) { throw 'Invoke-GrowthOsValidation.ps1 not found.' }
+if (-not $validation) {
+  throw 'Invoke-GrowthOsValidation.ps1 not found.'
+}
+
 & $validation
+
+if ($LASTEXITCODE -ne 0) {
+  throw 'Full validation failed after Mega Batch B1 recovery.'
+}
 
 git rev-parse --short HEAD
