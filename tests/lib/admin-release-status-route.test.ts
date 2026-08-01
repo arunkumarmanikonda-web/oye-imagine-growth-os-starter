@@ -1,4 +1,4 @@
-﻿import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/admin-route", () => ({
   requireAdmin: vi.fn(() => null),
@@ -109,7 +109,13 @@ describe("admin release-status route commercial evidence bridge", () => {
     expect(body.operatorActionBridge).toMatchObject({
       operatorQueueCount: 1,
       highestPriority: "medium",
-      activationQueueCount: 1,
+      activationQueueCount: 1,      queueSummary: {
+        openApprovals: 0,
+        pendingReports: 0,
+        pendingCampaigns: 0,
+        pendingStrategyTasks: 0,
+        activeBlockers: 2,
+      },
       nextBestAction: "Neejee: resolve 2 active blocker(s)",
       nextBestActionOwnerRole: "PROGRAM_MANAGER",
       managedQueueActionable: true,

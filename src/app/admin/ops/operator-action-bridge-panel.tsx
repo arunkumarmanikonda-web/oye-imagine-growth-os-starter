@@ -93,7 +93,56 @@ export function OperatorActionBridgePanel({
         </div>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+
+      <section className="mt-6 rounded-[24px] border border-slate-200 bg-white p-6">
+        <h3 className="text-lg font-semibold text-slate-950">Queue summary</h3>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-4">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Open approvals
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-slate-950">
+              {bridge.queueSummary.openApprovals}
+            </div>
+          </div>
+
+          <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-4">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Pending reports
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-slate-950">
+              {bridge.queueSummary.pendingReports}
+            </div>
+          </div>
+
+          <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-4">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Pending campaigns
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-slate-950">
+              {bridge.queueSummary.pendingCampaigns}
+            </div>
+          </div>
+
+          <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-4">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Pending strategy tasks
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-slate-950">
+              {bridge.queueSummary.pendingStrategyTasks}
+            </div>
+          </div>
+
+          <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-4">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Active blockers
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-slate-950">
+              {bridge.queueSummary.activeBlockers}
+            </div>
+          </div>
+        </div>
+      </section>      <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <section className="rounded-[24px] border border-slate-200 bg-white p-6">
           <h3 className="text-lg font-semibold text-slate-950">Next best action</h3>
           <p className="mt-3 text-sm leading-6 text-slate-700">{bridge.nextBestAction}</p>
@@ -113,7 +162,56 @@ export function OperatorActionBridgePanel({
         </section>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+
+      <section className="mt-6 rounded-[24px] border border-slate-200 bg-white p-6">
+        <h3 className="text-lg font-semibold text-slate-950">Queue summary</h3>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-4">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Open approvals
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-slate-950">
+              {bridge.queueSummary.openApprovals}
+            </div>
+          </div>
+
+          <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-4">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Pending reports
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-slate-950">
+              {bridge.queueSummary.pendingReports}
+            </div>
+          </div>
+
+          <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-4">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Pending campaigns
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-slate-950">
+              {bridge.queueSummary.pendingCampaigns}
+            </div>
+          </div>
+
+          <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-4">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Pending strategy tasks
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-slate-950">
+              {bridge.queueSummary.pendingStrategyTasks}
+            </div>
+          </div>
+
+          <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-4">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Active blockers
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-slate-950">
+              {bridge.queueSummary.activeBlockers}
+            </div>
+          </div>
+        </div>
+      </section>      <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <section className="rounded-[24px] border border-slate-200 bg-white p-6">
           <h3 className="text-lg font-semibold text-slate-950">Shared blockers</h3>
           {bridge.sharedBlockers.length ? (

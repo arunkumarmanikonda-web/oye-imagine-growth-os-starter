@@ -69,7 +69,13 @@ describe("commercial evidence bridge", () => {
     expect(result.sharedBlockers).toContain("Required providers are not production ready");
     expect(result.operatorActionBridge).toMatchObject({
       operatorQueueCount: 1,
-      activationQueueCount: 1,
+      activationQueueCount: 1,      queueSummary: {
+        openApprovals: 0,
+        pendingReports: 0,
+        pendingCampaigns: 0,
+        pendingStrategyTasks: 0,
+        activeBlockers: 2,
+      },
       nextBestAction: "Neejee: resolve 2 active blocker(s)",
       nextBestActionOwnerRole: "PROGRAM_MANAGER",
       launchReady: false,
