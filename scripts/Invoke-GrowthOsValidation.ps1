@@ -30,16 +30,10 @@ if ($testFiles.Count -eq 0) {
   throw 'no validation test files matched'
 }
 
-Write-Host "=== VALIDATION TEST FILES ===" -ForegroundColor Cyan
-$testFiles | Sort-Object | ForEach-Object { Write-Host $_ }
-
-Write-Host ""
-Write-Host "=== RUN VALIDATION SUITE ===" -ForegroundColor Cyan
-& npx vitest run @($testFiles | Sort-Object)
+Write-Host "=== RUN FULL VALIDATION ===" -ForegroundColor Cyan
+npm run test:validation-full-suite
 if ($LASTEXITCODE -ne 0) {
-  throw 'validation suite failed'
+  throw "npm run test:validation-full-suite failed with exit code $LASTEXITCODE"
 }
-
-Write-Host ""
 Write-Host "=== VALIDATION COMPLETE ===" -ForegroundColor Cyan
 git rev-parse --short HEAD
