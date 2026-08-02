@@ -1,46 +1,17 @@
 $ErrorActionPreference = 'Stop'
-Set-Location (Split-Path -Parent $PSScriptRoot)
 
-function Invoke-LocalVitest {
-  param([Parameter(Mandatory = $true)][string[]]$CmdArgs)
+$repoRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
+Push-Location $repoRoot
 
-  $vitestCmd = Join-Path (Get-Location) 'node_modules\.bin\vitest.cmd'
-  $vitestMjs = Join-Path (Get-Location) 'node_modules\vitest\vitest.mjs'
-  $pnpmCmd = Get-Command pnpm -ErrorAction SilentlyContinue
+try {
+    Write-Host "=== RUN MEGA BATCH C4 VALIDATION ===" -ForegroundColor Cyan
+    npm run test:concierge-experience-foundation-suite
+    if ($LASTEXITCODE -ne 0) {
+        throw "npm run test:concierge-experience-foundation-suite failed with exit code $LASTEXITCODE"
+    }
 
-  if (Test-Path $vitestCmd) {
-    & $vitestCmd @CmdArgs
-    return
-  }
-
-  if (Test-Path $vitestMjs) {
-    & node $vitestMjs @CmdArgs
-    return
-  }
-
-  if ($pnpmCmd) {
-    & pnpm exec vitest @CmdArgs
-    return
-  }
-
-  throw 'Local Vitest runner not found.'
+    Write-Host "=== MEGA BATCH C4 VALIDATION COMPLETE ===" -ForegroundColor Cyan
 }
-
-Invoke-LocalVitest @(
-  'run'
-  'tests/lib/foundation-concierge-experience-types.test.ts'
-  'tests/lib/foundation-concierge-experience-engine.test.ts'
-  'tests/lib/foundation-concierge-experience-marketplace.test.ts'
-)
-
-$validation = @(
-  (Join-Path (Get-Location) 'scripts\Invoke-GrowthOsValidation.ps1'),
-  (Join-Path (Get-Location) 'Invoke-GrowthOsValidation.ps1')
-) | Where-Object { Test-Path $_ } | Select-Object -First 1
-
-if (-not $validation) {
-  throw 'Invoke-GrowthOsValidation.ps1 not found.'
+finally {
+    Pop-Location
 }
-
-& $validation
-git rev-parse --short HEAD
