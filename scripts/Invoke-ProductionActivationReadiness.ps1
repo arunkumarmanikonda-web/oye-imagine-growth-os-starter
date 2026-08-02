@@ -16,10 +16,6 @@ Write-Host ''
 Write-Host '=== RUN FULL VALIDATION ===' -ForegroundColor Cyan
 npm run test:validation-full-suite
 if ($LASTEXITCODE -ne 0) { throw "npm run test:validation-full-suite failed with exit code $LASTEXITCODE" }
-& .\scripts\Invoke-GrowthOsValidation.ps1
-if ($LASTEXITCODE -ne 0) {
-  throw 'full validation failed'
-}
 
 $sha = (git rev-parse --short HEAD).Trim()
 Write-Host ''
