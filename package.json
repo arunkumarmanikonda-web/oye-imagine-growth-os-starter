@@ -13,6 +13,7 @@
     "test:concierge-foundation-suite": "vitest run tests/lib/foundation-concierge-types.test.ts tests/lib/foundation-concierge-engine.test.ts tests/lib/foundation-concierge-registry.test.ts",
     "test:marketplace-foundation-suite": "vitest run tests/lib/foundation-marketplace-types.test.ts tests/lib/foundation-marketplace-engine.test.ts tests/lib/foundation-marketplace-registry.test.ts",
     "test:concierge-retrieval-foundation-suite": "vitest run tests/lib/foundation-concierge-retrieval-types.test.ts tests/lib/foundation-concierge-retrieval-engine.test.ts tests/lib/foundation-concierge-permission-scope.test.ts",
+    "test:foundation-profile-suite": "vitest run tests/lib/foundation-organization-profile.test.ts tests/lib/foundation-neejee-profile.test.ts tests/lib/foundation-cms-controller.test.ts",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
