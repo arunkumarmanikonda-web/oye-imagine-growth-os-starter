@@ -297,7 +297,7 @@ export function AuthFormShell(props: {
           </div>
           <ul className="oi-list" style={{ marginTop: 16 }}>
             <li>Separate client and operator surfaces</li>
-            <li>Protected routing is active for client and admin lanes</li>
+            <li>Protected routing is active for client and operator lanes</li>
             <li>Canonical legal identity is already loaded</li>
           </ul>
         </article>
