@@ -405,13 +405,83 @@ export function getContentStudioSnapshot() {
 }
 
 export function getContentControllerPanels() {
-  return contentPages.map((page) => ({
+  const pagePanels = contentPages.map((page) => ({
     id: page.id,
     slug: page.slug,
     path: page.path,
     surface: page.surface,
+    label: page.navigationLabel,
     title: page.headline,
     summary: page.summary,
+  }))
+
+  return [
+    ...pagePanels,
+    {
+      id: 'panel-leadership-experts',
+      slug: 'leadership-experts',
+      path: '/admin/content',
+      surface: 'admin' as const,
+      label: 'Leadership and experts',
+      title: 'Leadership and experts',
+      summary: 'Profiles, expert positioning, and operator-visible governance surfaces.'
+    }
+  ]
+}
+
+function resolveRecoveryPageSlug(pageIdOrSlug: string) {
+  const aliases: Record<string, string> = {
+    page_public_home: 'home',
+    page_public_marketplace: 'marketplace',
+    page_public_contact: 'contact',
+    page_public_login: 'login',
+    page_client_workspace: 'client',
+    page_admin_workspace: 'admin'
+  }
+
+  return (
+    aliases[pageIdOrSlug] ??
+    contentPages.find((page) => page.id === pageIdOrSlug)?.slug ??
+    getContentPageBySlug(pageIdOrSlug)?.slug ??
+    pageIdOrSlug
+  )
+}
+
+export function listAiContentOperations() {
+  return [
+    {
+      id: 'ai-op-generate-banner',
+      kind: 'generate_banner',
+      label: 'Generate banner',
+      summary: 'Generate governed hero/banner creative for public and commercial content surfaces.'
+    },
+    {
+      id: 'ai-op-rollback-version',
+      kind: 'rollback_version',
+      label: 'Rollback version',
+      summary: 'Rollback content to the last governed approved version.'
+    }
+  ]
+}
+
+export function listContentPromotions() {
+  return [...contentPromotions]
+}
+
+export function listPeopleProfiles() {
+  return contentPeopleProfiles.map((profile, index) => ({
+    ...profile,
+    role: index === 0 ? 'leadership' : profile.role
+  }))
+}
+
+export function listSectionsForPage(pageIdOrSlug: string) {
+  const pageSlug = resolveRecoveryPageSlug(pageIdOrSlug)
+
+  return getSectionsForPage(pageSlug).map((section) => ({
+    ...section,
+    pageId: pageIdOrSlug,
+    kind: section.key
   }))
 }
 
