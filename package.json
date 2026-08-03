@@ -11,6 +11,7 @@
     "test:recovery-config-validation-suite": "vitest run tests/lib/config-control-crypto.test.ts tests/lib/config-control-provider-catalog.test.ts tests/lib/config-control-runtime-resolver.test.ts tests/lib/config-control-sync-planner.test.ts",
     "test:concierge-experience-foundation-suite": "vitest run tests/lib/foundation-concierge-experience-types.test.ts tests/lib/foundation-concierge-experience-engine.test.ts tests/lib/foundation-concierge-experience-marketplace.test.ts",
     "test:concierge-foundation-suite": "vitest run tests/lib/foundation-concierge-types.test.ts tests/lib/foundation-concierge-engine.test.ts tests/lib/foundation-concierge-registry.test.ts",
+    "test:marketplace-foundation-suite": "vitest run tests/lib/foundation-marketplace-types.test.ts tests/lib/foundation-marketplace-engine.test.ts tests/lib/foundation-marketplace-registry.test.ts",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
