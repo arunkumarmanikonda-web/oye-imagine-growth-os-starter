@@ -14,6 +14,7 @@
     "test:marketplace-foundation-suite": "vitest run tests/lib/foundation-marketplace-types.test.ts tests/lib/foundation-marketplace-engine.test.ts tests/lib/foundation-marketplace-registry.test.ts",
     "test:concierge-retrieval-foundation-suite": "vitest run tests/lib/foundation-concierge-retrieval-types.test.ts tests/lib/foundation-concierge-retrieval-engine.test.ts tests/lib/foundation-concierge-permission-scope.test.ts",
     "test:foundation-profile-suite": "vitest run tests/lib/foundation-organization-profile.test.ts tests/lib/foundation-neejee-profile.test.ts tests/lib/foundation-cms-controller.test.ts",
+    "test:foundation-workspace-suite": "vitest run tests/lib/foundation-organization-profile.test.ts tests/lib/foundation-neejee-profile.test.ts tests/lib/foundation-cms-controller.test.ts tests/lib/foundation-public-shell.test.ts tests/lib/foundation-auth-session.test.ts tests/lib/foundation-route-access.test.ts tests/lib/foundation-canonical-workspace.test.ts",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
