@@ -1,30 +1,8 @@
-$ErrorActionPreference = 'Stop'
-Set-Location (Split-Path -Parent $PSScriptRoot)
+$ErrorActionPreference = "Stop"
 
-function Invoke-LocalVitest {
-  param([string[]]$CmdArgs)
-  $vitestCmd = Join-Path (Get-Location) 'node_modules\.bin\vitest.cmd'
-  $vitestMjs = Join-Path (Get-Location) 'node_modules\vitest\vitest.mjs'
-  $pnpm = Get-Command pnpm -ErrorAction SilentlyContinue
-  if (Test-Path $vitestCmd) { & $vitestCmd @CmdArgs; return }
-  if (Test-Path $vitestMjs) { & node $vitestMjs @CmdArgs; return }
-  if ($pnpm) { & pnpm exec vitest @CmdArgs; return }
-  throw 'Local Vitest runner not found.'
+Write-Host "=== RUN MEGA BATCH B4 RECOVERY VALIDATION ===" -ForegroundColor Cyan
+npm run test:foundation-commercial-recovery-suite
+if ($LASTEXITCODE -ne 0) {
+  throw "Mega Batch B4 recovery validation failed with exit code $LASTEXITCODE"
 }
-
-Invoke-LocalVitest @(
-  'run',
-  'tests/lib/foundation-commercial-client-dashboard.test.ts',
-  'tests/lib/foundation-commercial-workflow-closure.test.ts',
-  'tests/lib/foundation-commercial-admin-dashboard.test.ts'
-)
-
-$validation = @(
-  Join-Path (Get-Location) 'scripts\Invoke-GrowthOsValidation.ps1',
-  Join-Path (Get-Location) 'Invoke-GrowthOsValidation.ps1'
-) | Where-Object { Test-Path $_ } | Select-Object -First 1
-
-if (-not $validation) { throw 'Invoke-GrowthOsValidation.ps1 not found.' }
-& $validation
-
-git rev-parse --short HEAD
+Write-Host "=== MEGA BATCH B4 RECOVERY VALIDATION COMPLETE ===" -ForegroundColor Green
