@@ -1,43 +1,17 @@
 $ErrorActionPreference = 'Stop'
 
-$RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
-Set-Location $RepoRoot
+$repoRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
+Push-Location $repoRoot
 
-function Invoke-LocalVitest {
-  param(
-    [Parameter(Mandatory = $true)][string[]]$CmdArgs
-  )
+try {
+    Write-Host "=== RUN MEGA BATCH C1 VALIDATION ===" -ForegroundColor Cyan
+    npm run test:concierge-foundation-suite
+    if ($LASTEXITCODE -ne 0) {
+        throw "npm run test:concierge-foundation-suite failed with exit code $LASTEXITCODE"
+    }
 
-  $VitestCmd = Join-Path $RepoRoot 'node_modules\.bin\vitest.cmd'
-  $VitestMjs = Join-Path $RepoRoot 'node_modules\vitest\vitest.mjs'
-
-  if (Test-Path $VitestCmd) {
-    & $VitestCmd @CmdArgs
-    return
-  }
-
-  if (Test-Path $VitestMjs) {
-    & node $VitestMjs @CmdArgs
-    return
-  }
-
-  throw 'Local Vitest runner not found.'
+    Write-Host "=== MEGA BATCH C1 VALIDATION COMPLETE ===" -ForegroundColor Cyan
 }
-
-Invoke-LocalVitest @(
-  'run'
-  'tests/lib/foundation-concierge-types.test.ts'
-  'tests/lib/foundation-concierge-engine.test.ts'
-  'tests/lib/foundation-concierge-registry.test.ts'
-)
-
-if ($LASTEXITCODE -ne 0) {
-  throw 'Focused Mega Batch C1 tests failed.'
+finally {
+    Pop-Location
 }
-
-powershell -ExecutionPolicy Bypass -File .\scripts\Invoke-GrowthOsValidation.ps1
-if ($LASTEXITCODE -ne 0) {
-  throw 'Full validation failed after Mega Batch C1.'
-}
-
-git rev-parse --short HEAD
