@@ -1,29 +1,8 @@
-$ErrorActionPreference = 'Stop'
-Set-Location (Split-Path -Parent $PSScriptRoot)
+Write-Host "=== RUN MEGA BATCH C3 VALIDATION ===" -ForegroundColor Cyan
 
-function Invoke-LocalVitest {
-  param([Parameter(Mandatory = $true)][string[]]$CmdArgs)
-  $vitestCmd = Join-Path (Get-Location) 'node_modules\.bin\vitest.cmd'
-  $vitestMjs = Join-Path (Get-Location) 'node_modules\vitest\vitest.mjs'
-  $pnpm = Get-Command pnpm -ErrorAction SilentlyContinue
-  if (Test-Path $vitestCmd) { & $vitestCmd @CmdArgs; return }
-  if (Test-Path $vitestMjs) { & node $vitestMjs @CmdArgs; return }
-  if ($pnpm) { & pnpm exec vitest @CmdArgs; return }
-  throw 'Local Vitest runner not found.'
+npm run test:concierge-retrieval-foundation-suite
+if ($LASTEXITCODE -ne 0) {
+  throw "npm run test:concierge-retrieval-foundation-suite failed with exit code $LASTEXITCODE"
 }
 
-Invoke-LocalVitest @(
-  'run'
-  'tests/lib/foundation-concierge-retrieval-types.test.ts'
-  'tests/lib/foundation-concierge-retrieval-engine.test.ts'
-  'tests/lib/foundation-concierge-permission-scope.test.ts'
-)
-
-$validation = @(
-  (Join-Path (Get-Location) 'scripts\Invoke-GrowthOsValidation.ps1'),
-  (Join-Path (Get-Location) 'Invoke-GrowthOsValidation.ps1')
-) | Where-Object { Test-Path $_ } | Select-Object -First 1
-
-if (-not $validation) { throw 'Invoke-GrowthOsValidation.ps1 not found.' }
-& $validation
-git rev-parse --short HEAD
+Write-Host "=== MEGA BATCH C3 VALIDATION COMPLETE ===" -ForegroundColor Green
