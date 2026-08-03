@@ -23,6 +23,7 @@
     "test:foundation-commercial-suite": "vitest run tests/lib/foundation-commercial-automation.test.ts tests/lib/foundation-commercial-hardening.test.ts",
     "test:foundation-commercial-recovery-suite": "vitest run tests/lib/foundation-commercial-client-dashboard.test.ts tests/lib/foundation-commercial-workflow-closure.test.ts tests/lib/foundation-commercial-admin-dashboard.test.ts",
     "test:foundation-recovery-profile-suite": "vitest run tests/lib/foundation-recovery-company-profile.test.ts tests/lib/foundation-recovery-content-controller.test.ts tests/lib/foundation-recovery-provider-config-and-neejee.test.ts",
+    "test:foundation-recovery-auth-suite": "vitest run tests/lib/foundation-recovery-auth-session.test.ts tests/lib/foundation-recovery-route-guards.test.ts tests/lib/foundation-recovery-workspace-context.test.ts",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
