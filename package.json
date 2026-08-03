@@ -19,6 +19,7 @@
     "test:foundation-support-suite": "vitest run tests/lib/foundation-organization-profile.test.ts tests/lib/foundation-neejee-profile.test.ts tests/lib/foundation-cms-controller.test.ts tests/lib/foundation-public-shell.test.ts tests/lib/foundation-auth-session.test.ts tests/lib/foundation-route-access.test.ts tests/lib/foundation-canonical-workspace.test.ts tests/lib/foundation-cms-control-plane.test.ts tests/lib/foundation-cms-ai-assist.test.ts tests/lib/foundation-resend-runtime.test.ts tests/lib/foundation-support-mail-log.test.ts tests/lib/foundation-support-operations.test.ts",
     "test:foundation-agreement-suite": "vitest run tests/lib/foundation-agreement-types.test.ts tests/lib/foundation-agreement-engine.test.ts tests/lib/foundation-agreement-registry.test.ts",
     "test:foundation-invoice-suite": "vitest run tests/lib/foundation-invoice-types.test.ts tests/lib/foundation-gst-engine.test.ts tests/lib/foundation-invoice-registry.test.ts",
+    "test:foundation-finance-suite": "vitest run tests/lib/foundation-finance-types.test.ts tests/lib/foundation-client-finance-workspace.test.ts tests/lib/foundation-client-finance-collections.test.ts",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
