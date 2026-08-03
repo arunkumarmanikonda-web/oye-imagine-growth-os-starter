@@ -240,7 +240,7 @@ export const contentSections: ContentSection[] = [
       'Operator surfaces centralize content, configuration, support, runtime enforcement, and trust-safe platform governance.',
     bullets: [
       'Content governance',
-      'Configuration control',
+      'Configuration control and recovery validation',
       'Support operations and runtime audit'
     ]
   }
@@ -277,7 +277,7 @@ export const contentPromotions: ContentPromotion[] = [
     title: 'Content, support, config, and runtime enforcement',
     description:
       'The operator shell unifies controlled publishing, support inbox management, configuration, and runtime shell audit.',
-    ctaLabel: 'Open admin workspace',
+    ctaLabel: 'Open operator workspace',
     ctaHref: '/admin'
   }
 ]
