@@ -62,3 +62,12 @@ export function landingPageReadyForApproval(draft: LandingPageDraft): boolean {
     draft.cta.label,
   );
 }
+
+export function landingPageHasProofAndCtaCoverage(draft: LandingPageDraft): boolean {
+  const hasProof = draft.sections.some((section) => section.key === 'proof' && Boolean(section.body?.trim()));
+  const hasDifferentiators = draft.sections.some(
+    (section) => section.key === 'differentiators' && Boolean(section.body?.trim()),
+  );
+
+  return Boolean(hasProof && hasDifferentiators && draft.cta?.label && draft.cta?.action);
+}

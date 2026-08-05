@@ -40,3 +40,13 @@ export function resolveCanonicalWorkspaceContext(
       session.workspaceSlug || session.tenantSlug || session.brandSlug ? "session" : "fallback",
   };
 }
+
+export function canonicalWorkspaceSupportsNeejeeProof(
+  context: CanonicalWorkspaceContext,
+): boolean {
+  if (context.lane === 'client') {
+    return context.workspaceSlug === 'neejee-pilot' && context.brandName === 'Neejee';
+  }
+
+  return context.workspaceSlug === 'oye-imagine-admin' || context.source === 'session';
+}

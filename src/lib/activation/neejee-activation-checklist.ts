@@ -36,3 +36,16 @@ export function neejeeActivationChecklistReady(
 ): boolean {
   return summary.ready && summary.missingItems.length === 0;
 }
+
+export function neejeeActivationHasChannelCoverage(
+  summary: NeejeeActivationChecklistSummary,
+): boolean {
+  const required = [
+    'websiteConnected',
+    'analyticsConnected',
+    'adsConnected',
+    'searchConsoleConnected',
+  ];
+
+  return required.every((item) => summary.completedItems.includes(item));
+}

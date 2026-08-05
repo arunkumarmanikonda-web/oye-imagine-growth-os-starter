@@ -31,3 +31,9 @@ export function getCmsControllerSummary(): CmsControllerSummary {
     editableSurfaces: [...cmsEditableSurfaces],
   };
 }
+
+export function cmsControllerSupportsPageOperatingSystem(): boolean {
+  return cmsEditableSurfaces.includes('publishing governance and approval workflow')
+    && cmsEditableSurfaces.includes('seo metadata')
+    && cmsEditableSurfaces.includes('legal identity and trust documents');
+}

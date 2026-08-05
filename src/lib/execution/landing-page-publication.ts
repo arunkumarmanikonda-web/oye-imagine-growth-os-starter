@@ -24,3 +24,9 @@ export function landingPageCanPublish(
 ): boolean {
   return summary.publicationStatus === 'ready' && summary.blockers.length === 0;
 }
+
+export function landingPagePublicationNeedsRollback(
+  summary: LandingPagePublicationSummary,
+): boolean {
+  return summary.publicationStatus === 'blocked' && summary.blockers.length > 0;
+}
