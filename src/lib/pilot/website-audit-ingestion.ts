@@ -33,3 +33,9 @@ export function buildWebsiteAuditSummary(
 export function websiteAuditHealthy(summary: WebsiteAuditSummary): boolean {
   return summary.blockedPages === 0 && summary.analyticsCoverage >= 100;
 }
+
+export function websiteAuditNeedsRemediation(
+  summary: WebsiteAuditSummary,
+): boolean {
+  return !websiteAuditHealthy(summary) || summary.priorityFixes.length > 0
+}

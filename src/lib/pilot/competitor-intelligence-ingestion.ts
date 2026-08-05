@@ -41,3 +41,9 @@ export function competitorLandscapeHasWhiteSpace(
 ): boolean {
   return summary.whiteSpace.length > 0;
 }
+
+export function competitorLandscapeNeedsExpansion(
+  summary: CompetitorLandscapeSummary,
+): boolean {
+  return summary.strongestCompetitors.length === 0 || summary.parityGaps.length > 0
+}
