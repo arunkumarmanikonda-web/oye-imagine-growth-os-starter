@@ -78,3 +78,11 @@ export function buildContentPlan(input: ContentPlanInput): ContentPlan {
 export function summarizeThemes(themes: ContentTheme[]): string[] {
   return unique(themes.flatMap((theme) => [theme.title, ...theme.keywords]));
 }
+
+export function contentPlanSupportsLifecycleExecution(plan: ContentPlan): boolean {
+  return Boolean(
+    plan.items.length > 0 &&
+    plan.channelMix.length >= 2 &&
+    plan.audienceSegments.length >= 3
+  );
+}

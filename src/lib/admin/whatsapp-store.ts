@@ -67,3 +67,13 @@ export function updateWhatsappDraft(
 export function resetWhatsappDraftStore(): void {
   whatsappDraftRecord = null;
 }
+
+export function whatsappDraftReadyForLifecycle(
+  record: WhatsappDraftRecord,
+): boolean {
+  return Boolean(
+    record.status &&
+    record.messages.length >= 3 &&
+    record.audience?.persona
+  );
+}

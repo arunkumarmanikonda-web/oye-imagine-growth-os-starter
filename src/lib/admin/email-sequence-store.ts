@@ -67,3 +67,13 @@ export function updateEmailSequenceDraft(
 export function resetEmailSequenceDraftStore(): void {
   emailSequenceDraftRecord = null;
 }
+
+export function emailSequenceDraftReadyForLifecycle(
+  record: EmailSequenceDraftRecord,
+): boolean {
+  return Boolean(
+    record.status &&
+    record.emails.length >= 3 &&
+    record.audience?.persona
+  );
+}
