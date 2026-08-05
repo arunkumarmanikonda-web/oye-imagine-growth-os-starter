@@ -26,6 +26,8 @@
     "test:b2-agreements-annexures-esign-execution": "npm run test:foundation-agreement-suite",
     "test:foundation-invoice-suite": "vitest run tests/lib/foundation-invoice-types.test.ts tests/lib/foundation-gst-engine.test.ts tests/lib/foundation-invoice-registry.test.ts",
     "test:foundation-finance-suite": "vitest run tests/lib/foundation-finance-types.test.ts tests/lib/foundation-client-finance-workspace.test.ts tests/lib/foundation-client-finance-collections.test.ts",
+
+    "test:b3-billing-ledger-collections-remittance-operations": "npm run test:foundation-invoice-suite && npm run test:foundation-finance-suite",
     "test:foundation-commercial-suite": "vitest run tests/lib/foundation-commercial-automation.test.ts tests/lib/foundation-commercial-hardening.test.ts",
     "test:b1-commercial-activation-verification-derivation": "npm run test:foundation-commercial-suite && npm run test:activation-production-suite",
     "test:foundation-commercial-recovery-suite": "vitest run tests/lib/foundation-commercial-client-dashboard.test.ts tests/lib/foundation-commercial-workflow-closure.test.ts tests/lib/foundation-commercial-admin-dashboard.test.ts",

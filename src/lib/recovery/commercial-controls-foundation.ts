@@ -89,9 +89,9 @@ function getOutstandingForAccount(accountName: string) {
 
 export function getCommercialControlsExperience() {
   return {
-    title: 'Commercial controls and release governance',
+    title: 'Commercial controls, collections, and release governance',
     subtitle:
-      'Operator-governed holds, release conditions, remittance validation, and verified commercial activation checks before account progression.',
+      'Operator-governed holds, collections release conditions, remittance validation, ledger truth, and verified commercial activation checks before account progression.',
     issuer: {
       legalName: organizationProfile.legalName,
       gstin: organizationProfile.gstin,
@@ -112,7 +112,7 @@ export function getCommercialControlsExperience() {
     remittances: remittanceSubmissions,
     governanceRules: [
       'Active holds must clearly state the blocked area and release condition.',
-      'Remittance submissions must remain reviewable before any commercial release action.',
+      'Remittance submissions must remain reviewable against canonical invoice and ledger truth before any commercial release action.',
       'Commercial release decisions must remain bound to canonical legal identity and ledger truth.'
     ]
   }
