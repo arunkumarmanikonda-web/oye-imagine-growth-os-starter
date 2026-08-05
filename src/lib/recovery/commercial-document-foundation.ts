@@ -50,9 +50,9 @@ export function getAgreementIssuanceExperience() {
   }))
 
   return {
-    title: 'Agreement issuance control',
+    title: 'Agreement and annexure issuance control',
     subtitle:
-      'Operator-governed agreement preparation, issuance, and e-sign readiness for client and marketplace commercial flows.',
+      'Operator-governed agreement, annexure, issuance, and e-sign readiness for client and marketplace commercial flows.',
     legalIdentity: {
       legalName: organizationProfile.legalName,
       gstin: organizationProfile.gstin,
@@ -69,8 +69,8 @@ export function getAgreementIssuanceExperience() {
       signed: agreementPackets.filter((packet) => packet.status === 'signed').length
     },
     steps: [
-      'Prepare governed agreement terms under canonical legal identity',
-      'Issue agreement through operator-controlled e-sign path',
+      'Prepare governed agreement and annexure terms under canonical legal identity',
+      'Issue agreement and annexure packets through the operator-controlled e-sign path',
       'Track signature state before invoice activation',
       'Expose agreement visibility to the correct client account'
     ],
