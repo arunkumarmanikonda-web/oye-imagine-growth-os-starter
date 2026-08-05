@@ -55,3 +55,13 @@ export function buildCreativeAssetDraft(input: CreativeAssetInput): CreativeAsse
 export function creativeDraftNeedsLegalReview(draft: CreativeAssetDraft): boolean {
   return draft.complianceFlags.length > 0;
 }
+
+export function creativeDraftHasBrandLockCoverage(draft: CreativeAssetDraft): boolean {
+  const allowedRatios = ['1:1', '4:5', '9:16', '16:9'];
+  return Boolean(
+    draft.assets.length > 0 &&
+    draft.assets.every((asset) => allowedRatios.includes(asset.aspectRatio)) &&
+    draft.assets.every((asset) => Boolean(asset.headline?.trim())) &&
+    draft.assets.every((asset) => Boolean(asset.primaryText?.trim()))
+  );
+}
