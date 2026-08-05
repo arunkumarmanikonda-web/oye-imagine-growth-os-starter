@@ -74,3 +74,7 @@ export function summarizeSupportMailLogs(logs: SupportMailLogRecord[]): SupportM
     inbound: logs.filter((log) => log.direction === "inbound").length,
   };
 }
+
+export function supportMailLogNeedsEscalation(summary: SupportMailLogSummary): boolean {
+  return summary.failed > 0 || summary.queued > 3;
+}

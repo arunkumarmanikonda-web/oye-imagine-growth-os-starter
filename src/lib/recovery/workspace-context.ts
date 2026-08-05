@@ -50,3 +50,9 @@ export function resolveRecoveryWorkspaceContext(
     sessionRole: session.role,
   }
 }
+
+export function recoveryWorkspaceUsesCanonicalSelection(
+  context: RecoveryWorkspaceContext,
+): boolean {
+  return context.source === 'default_canonical' || context.source === 'explicit_selection';
+}

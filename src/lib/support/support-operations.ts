@@ -105,3 +105,15 @@ export function getSupportOperationsSnapshot(
     ],
   };
 }
+
+export function supportOperationsReadyForClosure(
+  snapshot: SupportOperationsSnapshot,
+): boolean {
+  return Boolean(
+    snapshot.channelCount > 0 &&
+    snapshot.mailSummary.total > 0 &&
+    snapshot.publishGovernance.length >= 4 &&
+    snapshot.studioHardeningChecklist.length >= 4 &&
+    snapshot.batchClosureReadiness.length >= 4,
+  );
+}

@@ -63,3 +63,10 @@ export function clearRecoverySessionPayload() {
     displayName: '',
   }
 }
+
+export function recoverySessionCanAccessRole(
+  session: RecoveryAuthSession,
+  requiredRole: Exclude<RecoveryAuthRole, 'public'>,
+): boolean {
+  return session.isAuthenticated && session.role === requiredRole;
+}
