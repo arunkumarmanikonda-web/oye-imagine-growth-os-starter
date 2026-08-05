@@ -47,3 +47,10 @@ export function mergeBrandSignals(
   merged.readinessScore = computeBrandReadiness(merged);
   return merged;
 }
+
+export function brandProfileIsReady(profile: BrandProfile): boolean {
+  return (
+    listMissingBrandProfileFields(profile).length === 0 &&
+    computeBrandReadiness(profile) === 100
+  )
+}

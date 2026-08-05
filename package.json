@@ -42,6 +42,7 @@
     "test:admin-marketplace": "vitest run tests/api/admin-marketplace-lifecycle.test.ts",
     "test:admin-marketplace:watch": "vitest tests/api/admin-marketplace-lifecycle.test.ts",
     "test:admin-onboarding": "vitest run tests/api/admin-onboarding.test.ts",
+    "test:c2-audit-brand-memory-competitor-intelligence-foundation": "vitest run tests/lib/pilot-audit-summary.test.ts tests/lib/pilot-brand-profile.test.ts tests/lib/pilot-competitor-intelligence.test.ts tests/lib/pilot-competitor-intelligence-ingestion.test.ts tests/lib/pilot-website-audit-ingestion.test.ts",
     "test:c1-onboarding-intake-service-configuration-system-connections": "vitest run tests/lib/pilot-onboarding-service.test.ts tests/lib/pilot-commercial-onboarding-workspace.test.ts tests/api/admin-onboarding.test.ts tests/lib/config-control-crypto.test.ts tests/lib/config-control-provider-catalog.test.ts tests/lib/config-control-runtime-resolver.test.ts tests/lib/config-control-sync-planner.test.ts",
     "test:admin-brand-intelligence": "vitest run tests/api/admin-brand-intelligence.test.ts",
     "test:admin-pilot": "vitest run tests/api/admin-pilot.test.ts",
