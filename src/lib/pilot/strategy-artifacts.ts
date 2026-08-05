@@ -57,3 +57,23 @@ export function canPublishStrategyArtifact(
     Object.keys(artifact.summary).length > 0
   );
 }
+
+export function strategyArtifactReadyForApproval(
+  artifact: StrategyArtifact,
+): boolean {
+  return (
+    artifact.status === 'review' &&
+    artifact.sections.length > 0 &&
+    Object.keys(artifact.summary).length > 0
+  )
+}
+
+export function strategyArtifactReadyForExport(
+  artifact: StrategyArtifact,
+): boolean {
+  return (
+    artifact.status === 'published' &&
+    artifact.sections.length > 0 &&
+    Object.keys(artifact.summary).length > 0
+  )
+}
