@@ -91,7 +91,7 @@ export function getCommercialControlsExperience() {
   return {
     title: 'Commercial controls and release governance',
     subtitle:
-      'Operator-governed holds, release conditions, remittance validation, and commercial safety checks before account progression.',
+      'Operator-governed holds, release conditions, remittance validation, and verified commercial activation checks before account progression.',
     issuer: {
       legalName: organizationProfile.legalName,
       gstin: organizationProfile.gstin,
