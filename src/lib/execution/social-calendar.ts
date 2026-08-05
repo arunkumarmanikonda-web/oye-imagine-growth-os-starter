@@ -49,3 +49,10 @@ export function socialCalendarHasCoverage(
   const covered = new Set(entries.map((entry) => entry.channel));
   return channels.every((channel) => covered.has(channel));
 }
+
+export function socialCalendarSupportsLifecycleCadence(
+  entries: SocialCalendarEntry[],
+): boolean {
+  const channels = new Set(entries.map((entry) => entry.channel));
+  return entries.length >= 3 && channels.size >= 2;
+}
