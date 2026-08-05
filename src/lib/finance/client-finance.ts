@@ -237,3 +237,14 @@ export function getClientFinanceWorkspace(
     gstModes,
   }
 }
+
+export function clientFinanceWorkspaceHasBudgetGovernance(
+  workspace: ClientFinanceWorkspace,
+): boolean {
+  return Boolean(
+    workspace.summary.totalInvoiced >= 0 &&
+    workspace.summary.outstandingAmount >= 0 &&
+    workspace.summary.currency &&
+    workspace.paymentTimeline.length >= 1
+  );
+}

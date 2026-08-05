@@ -994,3 +994,9 @@ export function getCommercialAuditEvents(tenantId?: string): AuditEvent[] {
 
   return clone(events)
 }
+
+export function mediaBalanceAdjustmentNeedsApproval(tenantId: string, amount: number): boolean {
+  const policy = getPolicyForMediaBalance(tenantId);
+  const thresholdAmount = policy?.thresholdAmount ?? Number.MAX_SAFE_INTEGER;
+  return Math.abs(amount) >= thresholdAmount;
+}
