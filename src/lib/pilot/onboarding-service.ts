@@ -129,3 +129,13 @@ export function createOnboardingIntakeDraft(input: {
 
   return draft;
 }
+
+export function onboardingIntakeIsReviewReady(
+  progress: OnboardingProgressSummary,
+): boolean {
+  return (
+    progress.readyForReview &&
+    progress.missingFields.length === 0 &&
+    progress.completionPercent === 100
+  )
+}

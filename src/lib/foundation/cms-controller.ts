@@ -14,6 +14,8 @@ export const cmsEditableSurfaces = [
   "offers",
   "cta blocks",
   "footer and legal",
+  "legal identity and trust documents",
+  "publishing governance and approval workflow",
   "faq",
   "seo metadata",
 ] as const;

@@ -138,7 +138,7 @@ export function getLoginHubExperience() {
         description: 'Enter the client workspace through the role-safe client sign-in route.'
       },
       {
-        label: 'Admin workspace',
+        label: 'Operator access',
         href: '/login/admin',
         description: 'Enter the protected operator workspace through the operator sign-in route.'
       }
