@@ -175,3 +175,13 @@ export function buildPublicTrustMarkers(): string[] {
     `Trusted operating environment for ${neejeeCanonicalBrandProfile.brandName}`,
   ];
 }
+
+export function publicShellHasDistinctAccessLanes(): boolean {
+  const lanes = buildLoginLaneModels();
+  const trust = buildPublicTrustMarkers();
+
+  return lanes.length >= 2
+    && lanes.some((lane) => lane.key === 'client')
+    && lanes.some((lane) => lane.key === 'admin')
+    && trust.includes('CMS-backed public surfaces');
+}
