@@ -84,3 +84,12 @@ export function hasHighPriorityRecommendation(
 ): boolean {
   return recommendations.some((item) => item.priority === 'high');
 }
+
+export function optimizationRecommendationsSupportExperimentation(
+  recommendations: OptimizationRecommendation[],
+): boolean {
+  return Boolean(
+    recommendations.length > 0 &&
+    recommendations.every((item) => Boolean(item.channel && item.recommendationType && item.expectedImpact))
+  );
+}

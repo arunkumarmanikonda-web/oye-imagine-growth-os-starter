@@ -13,3 +13,6 @@ export * from './reporting-types';
 export const reportingE1FoundationExportMarker = 'reporting-e1-foundation-exported';
 
 export * from './attribution-engine';
+
+export * from './experimentation-engine';
+export * from './institutional-learning';

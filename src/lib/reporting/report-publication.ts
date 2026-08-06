@@ -48,3 +48,13 @@ export function reportPublicationReady(
     plan.jobs.length > 0 &&
     plan.jobs.every((job) => job.decision === 'ready');
 }
+
+export function reportPublicationSupportsMultiFormatDelivery(
+  plan: ReportPublicationPlan,
+): boolean {
+  const readyFormats = plan.jobs.filter((job) => job.decision === 'ready').map((job) => job.format);
+  return Boolean(
+    reportPublicationReady(plan) &&
+    readyFormats.length >= 2
+  );
+}

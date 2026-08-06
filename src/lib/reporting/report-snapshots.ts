@@ -44,3 +44,14 @@ export function reportSnapshotSupportsGovernedKpiNarrative(
     labels.includes('CPL')
   );
 }
+
+export function reportSnapshotSupportsInterpretiveReporting(
+  snapshot: ReportSnapshot,
+): boolean {
+  return Boolean(
+    reportSnapshotReady(snapshot) &&
+    snapshot.narrative.length >= 50 &&
+    snapshot.topInsights.length > 0 &&
+    snapshot.recommendedActions.length > 0,
+  );
+}

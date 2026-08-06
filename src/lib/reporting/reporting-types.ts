@@ -132,3 +132,46 @@ export interface AttributionSummary {
   limitations: string[];
   ready: boolean;
 }
+
+export type ReportingCadence =
+  | 'daily'
+  | 'weekly'
+  | 'monthly'
+  | 'quarterly'
+  | 'campaign_closure'
+  | 'creative_performance'
+  | 'budget_utilization'
+  | 'profitability';
+
+export interface ExperimentDefinition {
+  experimentId: string;
+  tenantId: string;
+  workspaceId: string;
+  experimentType: 'ab' | 'multivariate';
+  surface: 'landing_page' | 'creative' | 'offer' | 'audience';
+  hypothesis: string;
+  variants: string[];
+  primaryMetric: string;
+  outcome: 'pending' | 'win' | 'loss' | 'inconclusive';
+  confidence: 'low' | 'medium' | 'high';
+}
+
+export interface ExperimentSummary {
+  experimentId: string;
+  experimentType: 'ab' | 'multivariate';
+  surface: 'landing_page' | 'creative' | 'offer' | 'audience';
+  variantCount: number;
+  outcome: 'pending' | 'win' | 'loss' | 'inconclusive';
+  confidence: 'low' | 'medium' | 'high';
+  ready: boolean;
+}
+
+export interface InstitutionalLearningEntry {
+  learningId: string;
+  tenantId: string;
+  workspaceId: string;
+  title: string;
+  summary: string;
+  evidenceRefs: string[];
+  reusableTags: string[];
+}
