@@ -30,3 +30,17 @@ export function reportSnapshotReady(snapshot: ReportSnapshot): boolean {
     snapshot.recommendedActions.length > 0,
   );
 }
+
+export function reportSnapshotSupportsGovernedKpiNarrative(
+  snapshot: ReportSnapshot,
+): boolean {
+  const labels = snapshot.summaryCards.map((card) => card.label);
+
+  return Boolean(
+    reportSnapshotReady(snapshot) &&
+    labels.includes('ROAS') &&
+    labels.includes('Revenue') &&
+    labels.includes('Conversion Rate') &&
+    labels.includes('CPL')
+  );
+}
