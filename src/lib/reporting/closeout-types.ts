@@ -64,3 +64,21 @@ export interface OptimizationEscalation {
   escalationReason: string;
   dueHours: number;
 }
+
+export type LeadershipDashboardPersona =
+  | 'founder'
+  | 'ceo'
+  | 'cmo'
+  | 'performance'
+  | 'seo'
+  | 'social'
+  | 'finance'
+  | 'account_manager'
+  | 'marketplace';
+
+export interface DashboardTruthSummary {
+  personaCount: number;
+  hasExecutiveCoverage: boolean;
+  hasOperatorCoverage: boolean;
+  attributionVisible: boolean;
+}

@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test:e2-attribution-dashboard-truth": "npm run test:reporting-dashboard-personas && npm run test:reporting-launch-readiness-dashboard && vitest run tests/lib/reporting-attribution-engine.test.ts tests/lib/reporting-dashboard-truth.test.ts",
+    "test:reporting-launch-readiness-dashboard": "vitest run tests/lib/reporting-launch-readiness-dashboard.test.ts",
     "test:reporting-dashboard-personas": "vitest run tests/lib/reporting-dashboard-personas.test.ts tests/lib/reporting-kpi-engine.test.ts tests/lib/reporting-report-snapshots.test.ts",
     "test:e1-unified-data-kpi-foundation": "npm run test:reporting-dashboard-personas",
     "test:admin-ops-panels": "vitest run tests/lib/admin-ops-commercial-evidence-panel.test.tsx tests/lib/admin-ops-operator-action-bridge-panel.test.tsx",
