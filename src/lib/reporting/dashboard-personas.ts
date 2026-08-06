@@ -99,3 +99,17 @@ export function personaDashboardSupportsKpiFoundation(
     labels.includes('Conversion Rate')
   );
 }
+
+export function personaDashboardSupportsDecisionTruth(
+  snapshot: PersonaDashboardSnapshot,
+): boolean {
+  const labels = snapshot.cards.map((card) => card.label);
+
+  return Boolean(
+    personaDashboardReady(snapshot) &&
+    labels.includes('ROAS') &&
+    labels.includes('Revenue') &&
+    labels.includes('Conversion Rate') &&
+    snapshot.highlights.some((highlight) => highlight.toLowerCase().includes('roas'))
+  );
+}

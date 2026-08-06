@@ -102,3 +102,33 @@ export interface KpiGovernanceSummary {
   sourceCount: number;
   ready: boolean;
 }
+
+export type AttributionModel =
+  | 'first_touch'
+  | 'last_touch'
+  | 'linear'
+  | 'time_decay'
+  | 'position_based'
+  | 'custom';
+
+export interface AttributionInput {
+  model: AttributionModel;
+  periodLabel: string;
+  touchpoints: number;
+  conversions: number;
+  revenue: number;
+  confidence: 'low' | 'medium' | 'high';
+  freshnessHours: number;
+  limitations: string[];
+}
+
+export interface AttributionSummary {
+  model: AttributionModel;
+  periodLabel: string;
+  attributedConversions: number;
+  attributedRevenue: number;
+  confidence: 'low' | 'medium' | 'high';
+  freshnessHours: number;
+  limitations: string[];
+  ready: boolean;
+}
