@@ -24,3 +24,13 @@ export function proofPackageComplete(
 ): boolean {
   return summary.packageStatus === 'ready' && summary.missingElements.length === 0;
 }
+
+export function proofPackageSupportsBatchClosure(
+  summary: ProofExecutionPackageSummary,
+): boolean {
+  return Boolean(
+    summary.packageStatus === 'ready' &&
+    summary.missingElements.length === 0 &&
+    summary.includedAssetCount >= 1
+  );
+}

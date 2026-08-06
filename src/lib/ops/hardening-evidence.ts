@@ -25,3 +25,9 @@ export function hardeningEvidenceComplete(
 ): boolean {
   return summary.evidenceStatus === 'ready' && summary.missingEvidence.length === 0;
 }
+
+export function hardeningEvidenceSupportsBatchClosure(
+  summary: HardeningEvidenceSummary,
+): boolean {
+  return summary.evidenceStatus === 'ready' && summary.missingEvidence.length === 0;
+}
