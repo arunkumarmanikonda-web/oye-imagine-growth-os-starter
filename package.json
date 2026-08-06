@@ -3,6 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test:e3-reporting-experimentation-institutional-learning": "npm run test:reporting-report-delivery-center && npm run test:reporting-report-publication && npm run test:reporting-report-snapshots && npm run test:reporting-optimization-recommendations && npm run test:reporting-optimization-escalation && vitest run tests/lib/reporting-experimentation-engine.test.ts tests/lib/reporting-institutional-learning.test.ts tests/lib/reporting-automation-center.test.ts",
+    "test:reporting-optimization-escalation": "vitest run tests/lib/reporting-optimization-escalation.test.ts",
+    "test:reporting-optimization-recommendations": "vitest run tests/lib/reporting-optimization-recommendations.test.ts",
+    "test:reporting-report-snapshots": "vitest run tests/lib/reporting-report-snapshots.test.ts",
+    "test:reporting-report-publication": "vitest run tests/lib/reporting-report-publication.test.ts",
+    "test:reporting-report-delivery-center": "vitest run tests/lib/reporting-report-delivery-center.test.ts",
     "test:e2-attribution-dashboard-truth": "npm run test:reporting-dashboard-personas && npm run test:reporting-launch-readiness-dashboard && vitest run tests/lib/reporting-attribution-engine.test.ts tests/lib/reporting-dashboard-truth.test.ts",
     "test:reporting-launch-readiness-dashboard": "vitest run tests/lib/reporting-launch-readiness-dashboard.test.ts",
     "test:reporting-dashboard-personas": "vitest run tests/lib/reporting-dashboard-personas.test.ts tests/lib/reporting-kpi-engine.test.ts tests/lib/reporting-report-snapshots.test.ts",

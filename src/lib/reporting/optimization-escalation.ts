@@ -50,3 +50,13 @@ export function optimizationNeedsImmediateAction(
 ): boolean {
   return escalation.severity === 'critical' || escalation.severity === 'high';
 }
+
+export function optimizationEscalationSupportsLearningLoop(
+  escalation: OptimizationEscalation,
+): boolean {
+  return Boolean(
+    escalation.ownerRole &&
+    escalation.escalationReason &&
+    escalation.dueHours > 0
+  );
+}
