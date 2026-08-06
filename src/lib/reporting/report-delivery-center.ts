@@ -36,3 +36,14 @@ export function reportDeliveryCenterSupportsAutomatedCadence(
     summary.artifactCount > 0,
   );
 }
+
+export function reportDeliveryCenterSupportsBatchEClosure(
+  summary: ReportDeliveryCenterSummary,
+): boolean {
+  return Boolean(
+    reportDeliveryCenterSupportsAutomatedCadence(summary) &&
+    summary.deliveryStatus === 'ready' &&
+    summary.recipientCount > 0 &&
+    summary.artifactCount > 0,
+  );
+}

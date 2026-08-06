@@ -30,3 +30,13 @@ export function institutionalLearningEntryTenantSafe(
   return institutionalLearningEntryReady(entry) &&
     entry.tenantId === tenantId;
 }
+
+export function institutionalLearningLibrarySupportsBatchEClosure(
+  entries: InstitutionalLearningEntry[],
+  tenantId: string,
+): boolean {
+  return Boolean(
+    entries.length > 0 &&
+    entries.every((entry) => institutionalLearningEntryTenantSafe(entry, tenantId)),
+  );
+}

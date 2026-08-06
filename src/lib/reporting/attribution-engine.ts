@@ -70,3 +70,13 @@ export function attributionSummaryHasDisclosure(
     ['low', 'medium', 'high'].includes(summary.confidence),
   );
 }
+
+export function attributionSummarySupportsBatchEClosure(
+  summary: AttributionSummary,
+): boolean {
+  return Boolean(
+    attributionSummaryReady(summary) &&
+    attributionSummaryHasDisclosure(summary) &&
+    summary.limitations.length > 0,
+  );
+}
