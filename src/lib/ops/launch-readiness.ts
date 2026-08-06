@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   LaunchReadinessCheck,
   LaunchReadinessSummary,
   ReadinessStatus,
@@ -34,4 +34,16 @@ export function summarizeLaunchReadiness(
 
 export function launchReadyForProduction(summary: LaunchReadinessSummary): boolean {
   return summary.ready && summary.blockingChecks.length === 0;
+}
+
+export function launchReadinessSupportsBatchClosure(
+  summary: LaunchReadinessSummary,
+): boolean {
+  return Boolean(
+    summary.ready &&
+    summary.failCount === 0 &&
+    summary.pendingCount === 0 &&
+    summary.blockingChecks.length === 0 &&
+    (summary.passCount + summary.waivedCount) > 0
+  );
 }

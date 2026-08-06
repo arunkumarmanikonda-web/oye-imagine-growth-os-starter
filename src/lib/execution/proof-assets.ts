@@ -43,3 +43,16 @@ export function proofExecutionAssetsReady(
   return manifest.assets.length === 5 &&
     manifest.assets.every((asset) => Boolean(asset.title && asset.summary));
 }
+
+export function proofExecutionAssetsSupportBatchDClosure(
+  manifest: ProofExecutionAssetManifest,
+): boolean {
+  const assetTypes = manifest.assets.map((asset) => asset.assetType);
+  return Boolean(
+    proofExecutionAssetsReady(manifest) &&
+    assetTypes.includes('seo_cluster') &&
+    assetTypes.includes('social_calendar') &&
+    assetTypes.includes('creative_set') &&
+    assetTypes.includes('campaign_draft')
+  );
+}
