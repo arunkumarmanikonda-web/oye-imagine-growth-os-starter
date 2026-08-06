@@ -86,3 +86,16 @@ export function personaDashboardReady(
     snapshot.highlights.length >= 3,
   );
 }
+
+export function personaDashboardSupportsKpiFoundation(
+  snapshot: PersonaDashboardSnapshot,
+): boolean {
+  const labels = snapshot.cards.map((card) => card.label);
+
+  return Boolean(
+    personaDashboardReady(snapshot) &&
+    labels.includes('ROAS') &&
+    labels.includes('Revenue') &&
+    labels.includes('Conversion Rate')
+  );
+}

@@ -42,3 +42,22 @@ export function compareKpiSummaries(
     leadDelta: current.leads - previous.leads,
   };
 }
+
+export function analyticsKpiSummarySupportsUnifiedFoundation(
+  summary: AnalyticsKpiSummary,
+): boolean {
+  return Boolean(
+    summary.periodLabel &&
+    summary.visitors >= 0 &&
+    summary.leads >= 0 &&
+    summary.orders >= 0 &&
+    summary.revenue >= 0 &&
+    summary.spend >= 0 &&
+    Number.isFinite(summary.roas) &&
+    Number.isFinite(summary.cpl) &&
+    Number.isFinite(summary.conversionRate) &&
+    Number.isFinite(summary.averageOrderValue) &&
+    Number.isFinite(summary.revenuePerVisitor) &&
+    Number.isFinite(summary.leadToCustomerRate),
+  );
+}

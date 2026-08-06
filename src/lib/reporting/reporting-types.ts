@@ -74,3 +74,31 @@ export interface OptimizationRecommendation {
   rationale: string;
   expectedImpact: string;
 }
+
+export type UnifiedDataSource =
+  | AnalyticsSource
+  | 'site_app'
+  | 'social'
+  | 'email'
+  | 'payments'
+  | 'marketplace'
+  | 'finance'
+  | 'uploads'
+  | 'manual';
+
+export interface UnifiedMetricDefinition {
+  metricKey: string;
+  displayName: string;
+  owner: string;
+  sources: UnifiedDataSource[];
+  formula: string;
+  refreshedBy: string;
+}
+
+export interface KpiGovernanceSummary {
+  version: string;
+  metricCount: number;
+  ownerCount: number;
+  sourceCount: number;
+  ready: boolean;
+}

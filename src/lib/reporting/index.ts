@@ -9,3 +9,5 @@ export * from './report-delivery-center';
 export * from './report-publication';
 export * from './report-snapshots';
 export * from './reporting-types';
+
+export const reportingE1FoundationExportMarker = 'reporting-e1-foundation-exported';
