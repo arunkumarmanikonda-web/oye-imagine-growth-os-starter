@@ -16,3 +16,5 @@ export * from './attribution-engine';
 
 export * from './experimentation-engine';
 export * from './institutional-learning';
+
+export const reportingBatchECloseoutExportMarker = 'reporting-batch-e-closeout-exported';

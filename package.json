@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test:e8-mega-batch-e-closure-proof": "npm run test:e1-unified-data-kpi-foundation && npm run test:e2-attribution-dashboard-truth && npm run test:e3-reporting-experimentation-institutional-learning && vitest run tests/lib/reporting-batch-e-closeout.test.ts",
     "test:e3-reporting-experimentation-institutional-learning": "npm run test:reporting-report-delivery-center && npm run test:reporting-report-publication && npm run test:reporting-report-snapshots && npm run test:reporting-optimization-recommendations && npm run test:reporting-optimization-escalation && vitest run tests/lib/reporting-experimentation-engine.test.ts tests/lib/reporting-institutional-learning.test.ts tests/lib/reporting-automation-center.test.ts",
     "test:reporting-optimization-escalation": "vitest run tests/lib/reporting-optimization-escalation.test.ts",
     "test:reporting-optimization-recommendations": "vitest run tests/lib/reporting-optimization-recommendations.test.ts",

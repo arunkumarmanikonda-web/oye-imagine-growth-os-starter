@@ -58,3 +58,13 @@ export function reportPublicationSupportsMultiFormatDelivery(
     readyFormats.length >= 2
   );
 }
+
+export function reportPublicationSupportsBatchEClosure(
+  plan: ReportPublicationPlan,
+): boolean {
+  return Boolean(
+    reportPublicationSupportsMultiFormatDelivery(plan) &&
+    plan.jobs.length > 0 &&
+    plan.jobs.every((job) => job.decision === 'ready'),
+  );
+}

@@ -44,3 +44,12 @@ export function experimentSummarySupportsLearningLoop(
     ['low', 'medium', 'high'].includes(summary.confidence),
   );
 }
+
+export function experimentSummarySupportsBatchEClosure(
+  summary: ExperimentSummary,
+): boolean {
+  return Boolean(
+    experimentSummarySupportsLearningLoop(summary) &&
+    ['win', 'loss', 'inconclusive', 'pending'].includes(summary.outcome),
+  );
+}

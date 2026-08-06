@@ -113,3 +113,13 @@ export function personaDashboardSupportsDecisionTruth(
     snapshot.highlights.some((highlight) => highlight.toLowerCase().includes('roas'))
   );
 }
+
+export function personaDashboardSupportsBatchEClosure(
+  snapshot: PersonaDashboardSnapshot,
+): boolean {
+  return Boolean(
+    personaDashboardSupportsDecisionTruth(snapshot) &&
+    snapshot.cards.length >= 5 &&
+    snapshot.highlights.length >= 3,
+  );
+}
