@@ -1,0 +1,44 @@
+﻿{
+    "mega_batch":  "G",
+    "sub_batch_id":  "G4",
+    "sub_batch_name":  "Mega Batch G closure and proof",
+    "generated_at_utc":  "2026-08-07T11:24:43Z",
+    "branch":  "mega-batch-g-g4-mega-batch-g-closure-proof",
+    "base_branch":  "mega-batch-g-g3-multi-agent-orchestration-and-grounding",
+    "head_before_proof_commit":  "d9130e1",
+    "proof_assets":  [
+                         {
+                             "type":  "memo",
+                             "path":  "docs/proof/mega-batch-g/g4-closure-memo.md",
+                             "purpose":  "Closure assertion summary for Mega Batch G"
+                         },
+                         {
+                             "type":  "walkthrough",
+                             "path":  "docs/proof/mega-batch-g/g4-search-to-action-walkthrough.md",
+                             "purpose":  "End-to-end governed search-to-action narrative"
+                         },
+                         {
+                             "type":  "manifest",
+                             "path":  "docs/proof/mega-batch-g/g4-evidence-manifest.json",
+                             "purpose":  "Machine-readable proof inventory"
+                         }
+                     ],
+    "evidence_links":  [
+                           {
+                               "id":  "g1",
+                               "description":  "Search, retrieval and knowledge fusion foundation",
+                               "script":  "test:g1-search-retrieval-knowledge-fusion-foundation"
+                           },
+                           {
+                               "id":  "g2",
+                               "description":  "Explainer, action and role-aware intelligence layer",
+                               "script":  "test:g2-explainer-action-role-aware-intelligence-layer"
+                           },
+                           {
+                               "id":  "g3",
+                               "description":  "Multi-agent orchestration and grounding",
+                               "script":  "test:g3-multi-agent-orchestration-and-grounding"
+                           }
+                       ],
+    "closure_rule":  "Close Mega Batch G only when G1-G3 proof is closure-ready and consolidated by G4."
+}
