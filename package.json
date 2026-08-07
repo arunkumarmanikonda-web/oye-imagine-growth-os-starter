@@ -151,6 +151,7 @@
     "test:f4-mega-batch-f-closure-proof": "npm run test:f1-marketplace-onboarding-verification-specialist-readiness && npm run test:f2-proposal-to-delivery-workflow && npm run test:f3-service-operations-communication-auditability",
     "test:g1-search-retrieval-knowledge-fusion-foundation": "npm run test:concierge-retrieval-foundation-suite && vitest run tests/lib/g1-universal-search-foundation.test.ts",
     "test:g2-explainer-action-role-aware-intelligence-layer": "npm run test:concierge-foundation-suite && npm run test:concierge-retrieval-foundation-suite && vitest run tests/lib/g2-role-aware-explainer-action.test.ts",
-    "test:g3-multi-agent-orchestration-and-grounding": "vitest run tests/lib/g3-multi-agent-orchestration-grounding.test.ts"
+    "test:g3-multi-agent-orchestration-and-grounding": "vitest run tests/lib/g3-multi-agent-orchestration-grounding.test.ts",
+    "test:g4-mega-batch-g-closure-proof": "npm run test:g1-search-retrieval-knowledge-fusion-foundation && npm run test:g2-explainer-action-role-aware-intelligence-layer && npm run test:g3-multi-agent-orchestration-and-grounding"
   }
 }
