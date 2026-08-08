@@ -154,6 +154,7 @@
     "test:g3-multi-agent-orchestration-and-grounding": "vitest run tests/lib/g3-multi-agent-orchestration-grounding.test.ts",
     "test:g4-mega-batch-g-closure-proof": "npm run test:g1-search-retrieval-knowledge-fusion-foundation && npm run test:g2-explainer-action-role-aware-intelligence-layer && npm run test:g3-multi-agent-orchestration-and-grounding",
     "test:h1-research-architecture-and-security-baseline": "npm run test:foundation-recovery-auth-suite && npm run test:recovery-config-validation-suite && vitest run tests/lib/platform-tenant-security.test.ts tests/lib/h1-architecture-security-baseline.test.ts",
-    "test:h2-privacy-and-compliance-implementation": "npm run test:foundation-recovery-auth-suite && npm run test:recovery-config-validation-suite && vitest run tests/lib/platform-tenant-security.test.ts tests/lib/platform-approval-policy.test.ts tests/lib/h2-privacy-compliance-implementation.test.ts"
+    "test:h2-privacy-and-compliance-implementation": "npm run test:foundation-recovery-auth-suite && npm run test:recovery-config-validation-suite && vitest run tests/lib/platform-tenant-security.test.ts tests/lib/platform-approval-policy.test.ts tests/lib/h2-privacy-compliance-implementation.test.ts",
+    "test:h3-super-admin-and-enterprise-control-plane": "vitest run tests/lib/h3-super-admin-enterprise-control-plane.test.ts"
   }
 }
