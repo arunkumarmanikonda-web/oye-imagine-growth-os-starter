@@ -1,0 +1,39 @@
+{
+    "batch_id":  "H4",
+    "legacy_tracker_coverage":  "H6",
+    "batch_name":  "DevSecOps, infrastructure and operational hardening",
+    "generated_at_utc":  "2026-08-08T08:18:49Z",
+    "branch":  "mega-batch-h-h4-devsecops-infrastructure-and-operational-hardening",
+    "source_branch":  "mega-batch-h-h3-super-admin-and-enterprise-control-plane",
+    "head_before":  "dc587cf",
+    "tracker_scope":  {
+                          "rebased_objective":  "Harden delivery infrastructure, release safety and operational security so the platform can be run confidently.",
+                          "detailed_scope":  "Make the platform operationally defensible.",
+                          "must_include":  [
+                                               "CI/CD",
+                                               "staging/prod gates",
+                                               "IaC",
+                                               "observability",
+                                               "tracing",
+                                               "alerting",
+                                               "backup/restore",
+                                               "DR readiness",
+                                               "performance testing",
+                                               "release gates",
+                                               "cost governance"
+                                           ]
+                      },
+    "artifacts":  [
+                      "src/lib/platform/h4-devsecops-infrastructure-and-operational-hardening.ts",
+                      "tests/lib/h4-devsecops-infrastructure-and-operational-hardening.test.ts",
+                      "docs/proof/mega-batch-h/h4-cicd-release-gates.md",
+                      "docs/proof/mega-batch-h/h4-observability-backup-dr.md",
+                      "docs/proof/mega-batch-h/h4-performance-and-cost-governance.md",
+                      "docs/proof/mega-batch-h/h4-evidence-register.json"
+                  ],
+    "validation":  {
+                       "build_log":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-h4\\h4-build.log",
+                       "validation_log":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-h4\\h4-validation.log",
+                       "summary_log":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-h4\\h4-summary.txt"
+                   }
+}
