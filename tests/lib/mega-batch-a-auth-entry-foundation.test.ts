@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import {
   getAdminLoginExperience,
-  getClientLoginExperience
+  getClientLoginExperience,
 } from '../../src/lib/recovery/auth-entry-foundation'
 
 describe('mega batch a auth entry foundation', () => {
@@ -11,19 +11,15 @@ describe('mega batch a auth entry foundation', () => {
 
     expect(client.audience).toBe('client')
     expect(admin.audience).toBe('operator')
-    expect(client.route).toBe('/login')
-    expect(admin.route).toBe('/admin/login')
+    expect(client.route).toBe('/login/client')
+    expect(admin.route).toBe('/login/admin')
     expect(client.title).not.toBe(admin.title)
   })
 
   it('keeps operator messaging off the client login experience', () => {
     const client = getClientLoginExperience()
     expect(client.body).not.toContain('operator workspace')
-    expect(client.allowedRedirects).toEqual([
-      '/client',
-      '/client/commercial',
-      '/client/commercial/payments'
-    ])
+    expect(client.allowedRedirects).toEqual(['/client', '/client/finance', '/client/concierge'])
   })
 
   it('keeps client messaging off the admin login experience', () => {
@@ -31,9 +27,9 @@ describe('mega batch a auth entry foundation', () => {
     expect(admin.body).toContain('not intended for client users')
     expect(admin.allowedRedirects).toEqual([
       '/admin',
-      '/admin/content',
-      '/admin/config',
-      '/admin/support'
+      '/admin/ops',
+      '/admin/settings',
+      '/admin/commercial/onboarding-workspace',
     ])
   })
 
@@ -43,11 +39,11 @@ describe('mega batch a auth entry foundation', () => {
 
     expect(client.supportLinks.map((link) => link.label)).toEqual([
       'Need onboarding help',
-      'Email support'
+      'Email support',
     ])
     expect(admin.supportLinks.map((link) => link.label)).toEqual([
       'Operator support',
-      'System contact'
+      'System contact',
     ])
   })
 })

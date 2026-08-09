@@ -1,9 +1,6 @@
-import { cookies } from 'next/headers'
-import {
-  ACCESS_COOKIE_KEYS,
-  getPostLoginDestination,
-  resolveAccessRoleFromCookies,
-} from './recovery/auth-foundation'
+﻿import { cookies } from 'next/headers'
+import { authCookieKeys, resolveAuthSessionFromCookieMap } from './auth/session'
+import { ACTIVE_WORKSPACE_COOKIE_KEY, buildWorkspaceContext } from './recovery/workspace-foundation'
 
 type AdminAuthSuccess = {
   ok: true
@@ -55,8 +52,7 @@ export function authorizeAdminRequest(request: Request): AdminAuthSuccess | Admi
         .trim(),
     },
   ].filter((candidate) => candidate.value.length > 0)
-
-  for (const candidate of headerCandidates) {
+for (const candidate of headerCandidates) {
     const matchedSecret = configuredSecrets.find((entry) => entry.value === candidate.value)
     if (matchedSecret) {
       return {
@@ -75,15 +71,32 @@ export function authorizeAdminRequest(request: Request): AdminAuthSuccess | Admi
 
 export async function getOperatorAccessState() {
   const cookieStore = await cookies()
-  const role = resolveAccessRoleFromCookies({
-    [ACCESS_COOKIE_KEYS.role]: cookieStore.get(ACCESS_COOKIE_KEYS.role)?.value,
-    [ACCESS_COOKIE_KEYS.authReady]: cookieStore.get(ACCESS_COOKIE_KEYS.authReady)?.value,
+  const session = resolveAuthSessionFromCookieMap({
+    [authCookieKeys.lane]: cookieStore.get(authCookieKeys.lane)?.value,
+    [authCookieKeys.email]: cookieStore.get(authCookieKeys.email)?.value,
+    [authCookieKeys.workspaceSlug]: cookieStore.get(authCookieKeys.workspaceSlug)?.value,
+    [authCookieKeys.tenantSlug]: cookieStore.get(authCookieKeys.tenantSlug)?.value,
+    [authCookieKeys.brandSlug]: cookieStore.get(authCookieKeys.brandSlug)?.value,
+    [authCookieKeys.issuedAt]: cookieStore.get(authCookieKeys.issuedAt)?.value,
+  })
+
+  const workspaceCookie = cookieStore.get(ACTIVE_WORKSPACE_COOKIE_KEY)?.value ?? session.workspaceSlug ?? undefined
+  const workspaceContext = buildWorkspaceContext({
+    role: 'operator',
+    cookieWorkspaceId: workspaceCookie,
+    allowedWorkspaceIds: ['workspace_neejee_primary', 'workspace_oye_internal'],
   })
 
   return {
-    role,
-    isOperator: role === 'operator',
-    isAuthenticated: role !== 'anonymous',
-    postLoginDestination: getPostLoginDestination(role),
+    lane: session.lane,
+    email: session.email,
+    isOperator: session.lane === 'admin',
+    isAuthenticated: session.isAuthenticated,
+    workspaceSlug: workspaceContext.activeWorkspaceId,
+    tenantSlug: session.tenantSlug ?? workspaceContext.activeTenantId,
+    brandSlug: session.brandSlug ?? workspaceContext.activeBrandId,
+    postLoginDestination: '/admin',
   }
 }
+
+
