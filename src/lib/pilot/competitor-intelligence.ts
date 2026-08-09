@@ -47,3 +47,10 @@ export function extractTopWhitespace(
     .slice(0, limit)
     .map(([value]) => value);
 }
+
+export function competitorSetHasHighThreat(
+  snapshots: CompetitorSnapshot[],
+  threshold = 80,
+): boolean {
+  return snapshots.some((snapshot) => snapshot.threatScore >= threshold)
+}

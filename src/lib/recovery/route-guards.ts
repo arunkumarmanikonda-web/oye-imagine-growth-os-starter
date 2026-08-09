@@ -38,3 +38,7 @@ export function getRouteAccessDecision(
     reason: 'authenticated',
   }
 }
+
+export function recoveryRouteRequiresRedirect(decision: RouteAccessDecision): boolean {
+  return !decision.allow && Boolean(decision.redirectTo);
+}

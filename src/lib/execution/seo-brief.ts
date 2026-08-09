@@ -45,3 +45,11 @@ export function seoBriefReadyForReview(brief: SeoBrief): boolean {
     brief.metaDescription.length >= 100,
   );
 }
+
+export function seoBriefHasEntityArchitecture(brief: SeoBrief): boolean {
+  return Boolean(
+    brief.internalLinks.length >= 3 &&
+    brief.schemaRecommendations.includes('Organization') &&
+    brief.schemaRecommendations.includes('FAQPage')
+  );
+}

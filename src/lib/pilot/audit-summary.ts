@@ -77,3 +77,9 @@ export function summarizeWebsiteAudit(input: WebsiteAuditInput): WebsiteAuditSum
     readinessScore,
   };
 }
+
+export function websiteAuditNeedsImmediateAttention(
+  summary: WebsiteAuditSummary,
+): boolean {
+  return summary.severity === 'high' || summary.readinessScore < 50
+}

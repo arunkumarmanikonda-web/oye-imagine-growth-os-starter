@@ -86,3 +86,40 @@ export function personaDashboardReady(
     snapshot.highlights.length >= 3,
   );
 }
+
+export function personaDashboardSupportsKpiFoundation(
+  snapshot: PersonaDashboardSnapshot,
+): boolean {
+  const labels = snapshot.cards.map((card) => card.label);
+
+  return Boolean(
+    personaDashboardReady(snapshot) &&
+    labels.includes('ROAS') &&
+    labels.includes('Revenue') &&
+    labels.includes('Conversion Rate')
+  );
+}
+
+export function personaDashboardSupportsDecisionTruth(
+  snapshot: PersonaDashboardSnapshot,
+): boolean {
+  const labels = snapshot.cards.map((card) => card.label);
+
+  return Boolean(
+    personaDashboardReady(snapshot) &&
+    labels.includes('ROAS') &&
+    labels.includes('Revenue') &&
+    labels.includes('Conversion Rate') &&
+    snapshot.highlights.some((highlight) => highlight.toLowerCase().includes('roas'))
+  );
+}
+
+export function personaDashboardSupportsBatchEClosure(
+  snapshot: PersonaDashboardSnapshot,
+): boolean {
+  return Boolean(
+    personaDashboardSupportsDecisionTruth(snapshot) &&
+    snapshot.cards.length >= 5 &&
+    snapshot.highlights.length >= 3,
+  );
+}

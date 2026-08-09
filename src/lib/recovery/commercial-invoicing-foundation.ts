@@ -262,8 +262,8 @@ export function getAdminCommercialInvoicingExperience() {
       },
       {
         id: 'ledger_foundation',
-        label: 'Ledger foundation',
-        summary: 'Bind invoice issue, payment receipt and outstanding balance into one client ledger view.',
+        label: 'Ledger and collections foundation',
+        summary: 'Bind invoice issue, payment receipt, collections posture, and outstanding balance into one client ledger view.',
       },
     ],
   }

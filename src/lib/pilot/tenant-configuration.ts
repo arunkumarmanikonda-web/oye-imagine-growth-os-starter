@@ -37,3 +37,9 @@ export function tenantConfigurationIsComplete(
 ): boolean {
   return summary.isReady && summary.missingFields.length === 0;
 }
+
+export function tenantConfigurationNeedsConnectionSetup(
+  summary: TenantConfigurationSummary,
+): boolean {
+  return !summary.isReady || summary.environment !== 'production_candidate'
+}

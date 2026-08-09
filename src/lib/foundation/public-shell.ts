@@ -59,7 +59,7 @@ export function buildPublicHeroModel(): PublicHeroModel {
     heading: String(hero.heading ?? "World-class digital marketing services powered by AI."),
     subheading: String(
       hero.subheading ??
-        "Premium public, client, and operator surfaces controlled from a single admin foundation."
+        "Premium public, client, and operator surfaces governed through distinct, role-safe foundations."
     ),
     primaryCtaLabel: String(hero.ctaLabel ?? "Start with Oye !magine"),
     primaryCtaHref: String(hero.ctaHref ?? "mailto:hello@oyeimagine.com"),
@@ -85,7 +85,7 @@ export function buildLoginLaneModels(): LoginLaneModel[] {
     },
     {
       key: "admin",
-      title: "Admin workspace",
+      title: "Operator access",
       summary: "Content, legal identity, support operations, CMS control, and workspace administration.",
       href: "/login/admin",
       features: [
@@ -171,7 +171,17 @@ export function buildPublicTrustMarkers(): string[] {
   return [
     "CMS-backed public surfaces",
     "Canonical legal and tax identity",
-    "Dedicated client and admin access lanes",
-    `Pilot-ready workspace for ${neejeeCanonicalBrandProfile.brandName}`,
+    "Dedicated client and operator access lanes",
+    `Trusted operating environment for ${neejeeCanonicalBrandProfile.brandName}`,
   ];
+}
+
+export function publicShellHasDistinctAccessLanes(): boolean {
+  const lanes = buildLoginLaneModels();
+  const trust = buildPublicTrustMarkers();
+
+  return lanes.length >= 2
+    && lanes.some((lane) => lane.key === 'client')
+    && lanes.some((lane) => lane.key === 'admin')
+    && trust.includes('CMS-backed public surfaces');
 }

@@ -58,3 +58,15 @@ export function searchOptimizationReady(
     brief.schemaRecommendations.length >= 1,
   );
 }
+
+export function searchOptimizationSupportsDiscoverabilitySystem(
+  brief: SearchOptimizationBrief,
+): boolean {
+  return Boolean(
+    ['seo', 'aeo', 'geo', 'ai_search'].includes(brief.targetSurface) &&
+    brief.supportingQueries.length >= 3 &&
+    brief.answerEntities.length >= 2 &&
+    brief.zeroClickOpportunities.length >= 3 &&
+    brief.schemaRecommendations.length >= 1
+  );
+}

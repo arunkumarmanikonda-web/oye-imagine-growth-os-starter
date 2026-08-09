@@ -29,3 +29,18 @@ export type LaunchReadinessDashboardSummary = {
   riskLevel: 'low' | 'medium' | 'high';
   nextAction: string;
 };
+
+export type ReportingAutomationInput = {
+  cadence: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'campaign_closure' | 'creative_performance' | 'budget_utilization' | 'profitability';
+  recipients: string[];
+  formats: Array<'pdf' | 'pptx' | 'xlsx' | 'csv' | 'secure_link' | 'email'>;
+  includesInterpretation: boolean;
+};
+
+export type ReportingAutomationSummary = {
+  cadence: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'campaign_closure' | 'creative_performance' | 'budget_utilization' | 'profitability';
+  recipientCount: number;
+  formatCount: number;
+  ready: boolean;
+  blockers: string[];
+};

@@ -41,3 +41,12 @@ export function buildCampaignDraft(input: CampaignDraftInput): CampaignDraft {
 export function campaignNeedsApproval(draft: CampaignDraft): boolean {
   return draft.complianceFlags.length > 0 || draft.budgetAmount > 10000;
 }
+
+export function campaignDraftHasBudgetGuardrails(draft: CampaignDraft): boolean {
+  return Boolean(
+    draft.budgetAmount > 0 &&
+    draft.budgetCurrency &&
+    draft.geoTargets.length > 0 &&
+    draft.adSets.length > 0
+  );
+}

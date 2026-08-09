@@ -141,7 +141,7 @@ export function getAgreementActivationHandoffExperience() {
   return {
     title: 'Agreement to invoice activation handoff',
     subtitle:
-      'Commercial activation bridge between governed agreement issuance and invoice generation readiness.',
+      'Commercial activation bridge between governed agreement issuance, verified activation inputs, and invoice generation readiness.',
     legalIdentity: {
       legalName: organizationProfile.legalName,
       gstin: organizationProfile.gstin,

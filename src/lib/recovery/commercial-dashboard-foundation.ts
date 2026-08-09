@@ -219,7 +219,7 @@ export function buildOperatorWorkflowClosure(input: {
       },
       {
         actionId: 'open_admin_commercial_dashboard',
-        label: 'Open commercial dashboard',
+        label: 'Open commercial truth dashboard',
         route: '/admin/commercial/dashboard',
       },
     ],
@@ -274,17 +274,17 @@ export function getAdminCommercialDashboardExperience() {
       {
         id: 'client_commercial_dashboard',
         label: 'Client commercial dashboard',
-        summary: 'One dashboard for agreement continuity, invoice truth, ledger visibility and support status.',
+        summary: 'One commercial truth across client and operator surfaces for agreement continuity, invoice truth, ledger visibility and support status.',
       },
       {
         id: 'continuity_chain',
         label: 'Continuity chain',
-        summary: 'Maintain visible continuity from agreement execution to billing, support and delivery readiness.',
+        summary: 'Maintain one visible commercial truth from agreement execution to billing, support and delivery readiness.',
       },
       {
         id: 'operator_handoff',
         label: 'Operator workflow closure',
-        summary: 'Close the sales → agreement → finance → delivery chain inside one governed operator workflow.',
+        summary: 'Close the sales-to-agreement-to-finance-to-delivery chain inside one governed operator workflow.',
       },
     ],
   }

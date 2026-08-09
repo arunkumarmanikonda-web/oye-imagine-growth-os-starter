@@ -74,3 +74,104 @@ export interface OptimizationRecommendation {
   rationale: string;
   expectedImpact: string;
 }
+
+export type UnifiedDataSource =
+  | AnalyticsSource
+  | 'site_app'
+  | 'social'
+  | 'email'
+  | 'payments'
+  | 'marketplace'
+  | 'finance'
+  | 'uploads'
+  | 'manual';
+
+export interface UnifiedMetricDefinition {
+  metricKey: string;
+  displayName: string;
+  owner: string;
+  sources: UnifiedDataSource[];
+  formula: string;
+  refreshedBy: string;
+}
+
+export interface KpiGovernanceSummary {
+  version: string;
+  metricCount: number;
+  ownerCount: number;
+  sourceCount: number;
+  ready: boolean;
+}
+
+export type AttributionModel =
+  | 'first_touch'
+  | 'last_touch'
+  | 'linear'
+  | 'time_decay'
+  | 'position_based'
+  | 'custom';
+
+export interface AttributionInput {
+  model: AttributionModel;
+  periodLabel: string;
+  touchpoints: number;
+  conversions: number;
+  revenue: number;
+  confidence: 'low' | 'medium' | 'high';
+  freshnessHours: number;
+  limitations: string[];
+}
+
+export interface AttributionSummary {
+  model: AttributionModel;
+  periodLabel: string;
+  attributedConversions: number;
+  attributedRevenue: number;
+  confidence: 'low' | 'medium' | 'high';
+  freshnessHours: number;
+  limitations: string[];
+  ready: boolean;
+}
+
+export type ReportingCadence =
+  | 'daily'
+  | 'weekly'
+  | 'monthly'
+  | 'quarterly'
+  | 'campaign_closure'
+  | 'creative_performance'
+  | 'budget_utilization'
+  | 'profitability';
+
+export interface ExperimentDefinition {
+  experimentId: string;
+  tenantId: string;
+  workspaceId: string;
+  experimentType: 'ab' | 'multivariate';
+  surface: 'landing_page' | 'creative' | 'offer' | 'audience';
+  hypothesis: string;
+  variants: string[];
+  primaryMetric: string;
+  outcome: 'pending' | 'win' | 'loss' | 'inconclusive';
+  confidence: 'low' | 'medium' | 'high';
+}
+
+export interface ExperimentSummary {
+  experimentId: string;
+  experimentType: 'ab' | 'multivariate';
+  surface: 'landing_page' | 'creative' | 'offer' | 'audience';
+  variantCount: number;
+  outcome: 'pending' | 'win' | 'loss' | 'inconclusive';
+  confidence: 'low' | 'medium' | 'high';
+  ready: boolean;
+}
+
+export interface InstitutionalLearningEntry {
+  learningId: string;
+  tenantId: string;
+  workspaceId: string;
+  title: string;
+  summary: string;
+  evidenceRefs: string[];
+  reusableTags: string[];
+}

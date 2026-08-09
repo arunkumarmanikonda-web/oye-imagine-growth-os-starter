@@ -68,7 +68,7 @@ export function LoginLaneSection(props: { lanes: LoginLaneModel[] }) {
     <section className="oi-container" style={{ paddingTop: 8, paddingBottom: 24 }}>
       <SectionHeader
         eyebrow="Access lanes"
-        title="Separate client and admin entry points"
+        title="Separate client and operator entry points"
         description="Clean, explicit entry surfaces designed for separate operating roles."
       />
       <div className="oi-grid oi-grid--two">
@@ -278,7 +278,7 @@ export function AuthFormShell(props: {
 
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
               <button className="oi-btn oi-btn--primary" type="submit">
-                Continue to {props.lane === "admin" ? "admin workspace" : "client dashboard"}
+                Continue to {props.lane === "admin" ? "operator workspace" : "client dashboard"}
               </button>
               <a className="oi-btn oi-btn--secondary" href={props.helpHref}>
                 {props.helpLabel}
@@ -296,8 +296,8 @@ export function AuthFormShell(props: {
             <strong>Phone:</strong> {props.supportPhone}
           </div>
           <ul className="oi-list" style={{ marginTop: 16 }}>
-            <li>Separate client and admin surfaces</li>
-            <li>Protected routing is active for client and admin lanes</li>
+            <li>Separate client and operator surfaces</li>
+            <li>Protected routing is active for client and operator lanes</li>
             <li>Canonical legal identity is already loaded</li>
           </ul>
         </article>

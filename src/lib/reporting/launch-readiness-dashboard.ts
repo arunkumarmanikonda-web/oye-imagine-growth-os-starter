@@ -47,3 +47,14 @@ export function launchReadinessDashboardReady(
 ): boolean {
   return summary.overallStatus === 'ready' && summary.blockerCount === 0;
 }
+
+export function launchReadinessDashboardSupportsDecisionTruth(
+  summary: LaunchReadinessDashboardSummary,
+): boolean {
+  return Boolean(
+    summary.overallStatus &&
+    summary.riskLevel &&
+    summary.blockerCount >= 0 &&
+    summary.nextAction
+  );
+}

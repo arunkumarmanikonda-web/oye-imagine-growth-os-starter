@@ -67,3 +67,13 @@ export function updateSmsDraft(
 export function resetSmsDraftStore(): void {
   smsDraftRecord = null;
 }
+
+export function smsDraftReadyForLifecycle(
+  record: SmsDraftRecord,
+): boolean {
+  return Boolean(
+    record.status &&
+    record.messages.length >= 3 &&
+    record.audience?.persona
+  );
+}

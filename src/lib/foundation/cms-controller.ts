@@ -14,6 +14,8 @@ export const cmsEditableSurfaces = [
   "offers",
   "cta blocks",
   "footer and legal",
+  "legal identity and trust documents",
+  "publishing governance and approval workflow",
   "faq",
   "seo metadata",
 ] as const;
@@ -28,4 +30,10 @@ export function getCmsControllerSummary(): CmsControllerSummary {
     editableSurfaceCount: cmsEditableSurfaces.length,
     editableSurfaces: [...cmsEditableSurfaces],
   };
+}
+
+export function cmsControllerSupportsPageOperatingSystem(): boolean {
+  return cmsEditableSurfaces.includes('publishing governance and approval workflow')
+    && cmsEditableSurfaces.includes('seo metadata')
+    && cmsEditableSurfaces.includes('legal identity and trust documents');
 }

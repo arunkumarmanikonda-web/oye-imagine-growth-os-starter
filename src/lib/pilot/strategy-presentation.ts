@@ -58,3 +58,19 @@ export function strategyPresentationReadyForReview(
     manifest.sections.every((section) => section.bullets.length > 0),
   );
 }
+
+export function strategyPresentationReadyForExport(
+  manifest: StrategyPresentationManifest,
+): boolean {
+  return (
+    strategyPresentationReadyForReview(manifest) &&
+    manifest.sections.some((section) => section.key === 'goals') &&
+    manifest.sections.some((section) => section.key === 'activation')
+  )
+}
+
+export function strategyPresentationSectionKeys(
+  manifest: StrategyPresentationManifest,
+): string[] {
+  return manifest.sections.map((section) => section.key)
+}

@@ -28,3 +28,9 @@ export function campaignPackageReady(
 ): boolean {
   return summary.packageStatus === 'ready' && summary.missingElements.length === 0;
 }
+
+export function campaignPackageSupportsLaunchControl(
+  summary: CampaignPackageSummary,
+): boolean {
+  return summary.packageStatus === 'ready' && summary.assetCount > 0 && summary.copyVariantCount > 0;
+}

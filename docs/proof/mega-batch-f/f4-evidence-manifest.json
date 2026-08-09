@@ -1,0 +1,33 @@
+{
+    "branch":  "mega-batch-f-f4-mega-batch-f-closure-proof",
+    "megaBatch":  "F",
+    "subBatchId":  "F4",
+    "predecessorRows":  [
+                            "F1",
+                            "F2",
+                            "F3"
+                        ],
+    "objective":  "Close F only after marketplace and managed-services operations are governed end-to-end.",
+    "generatedAt":  "2026-08-07 14:11:04",
+    "baseBranch":  "mega-batch-f-f3-service-operations-communication-auditability",
+    "referenceShaBeforeCommit":  "7afaa7e",
+    "expectedAssets":  [
+                           "F proof pack",
+                           "marketplace-to-delivery walkthrough",
+                           "SLA and communication evidence bundle",
+                           "closure memo"
+                       ],
+    "evidenceChecklist":  [
+                              "runtime screenshots/videos",
+                              "test evidence",
+                              "data snapshots",
+                              "policy/audit evidence",
+                              "change log mapped to F4"
+                          ],
+    "proofAreas":  [
+                       "functional proof",
+                       "visible proof",
+                       "data proof",
+                       "governance proof"
+                   ]
+}

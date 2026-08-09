@@ -1,4 +1,4 @@
-﻿import type { CredentialStatusSummary } from '@/lib/activation/activation-types'
+import type { CredentialStatusSummary } from '@/lib/activation/activation-types'
 import {
   buildCredentialStatusSummary,
   providerReady,
@@ -312,7 +312,13 @@ export function buildCommercialOnboardingWorkspace(
   }
 }
 
-
-
-
-
+export function commercialOnboardingWorkspaceIsOperational(
+  workspace: CommercialOnboardingWorkspace,
+): boolean {
+  return (
+    workspace.readyForCommercialReview &&
+    workspace.onboardingProgress.readyForReview &&
+    workspace.kycVerification.status === 'verified' &&
+    workspace.providerReadiness.status === 'ready'
+  )
+}
