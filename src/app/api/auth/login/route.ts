@@ -1,6 +1,8 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
-import { authCookieKeys, buildAuthCookieRecord, createLoginRedirectPath } from '@/lib/auth/session'
+import { NextRequest, NextResponse } from 'next/server'
+import { buildAuthCookieRecord, createLoginRedirectPath } from '@/lib/auth/session'
 import { ACTIVE_WORKSPACE_COOKIE_KEY, resolveWorkspaceSelection } from '@/lib/recovery/workspace-foundation'
+import { createRecoverySessionPayload } from '@/lib/recovery/auth-session'
+import { RECOVERY_AUTH_COOKIE_KEYS } from '@/lib/recovery/auth-types'
 
 function normalizeLane(value: string | null) {
   const normalized = String(value ?? '').trim().toLowerCase()
@@ -11,7 +13,11 @@ export async function POST(request: NextRequest) {
   const formData = await request.formData()
   const lane = normalizeLane(String(formData.get('lane') ?? formData.get('role') ?? ''))
   const email = String(formData.get('email') ?? '').trim().toLowerCase()
-  const requestedWorkspaceId = String(formData.get('workspaceSlug') ?? '').trim()
+  const displayName = String(formData.get('displayName') ?? '').trim()
+  const requestedWorkspaceIdRaw = String(formData.get('workspaceSlug') ?? '').trim()
+  const requestedWorkspaceId =
+    requestedWorkspaceIdRaw ||
+    (lane === 'admin' ? 'workspace_oye_internal' : 'workspace_neejee_primary')
   const redirectInput = String(formData.get('redirectTo') ?? formData.get('redirect') ?? '').trim()
 
   const loginRoute = lane === 'admin' ? '/login/admin' : '/login/client'
@@ -24,7 +30,7 @@ export async function POST(request: NextRequest) {
     requestedWorkspaceId,
     allowedWorkspaceIds:
       lane === 'admin'
-        ? ['workspace_neejee_primary', 'workspace_oye_internal']
+        ? ['workspace_oye_internal', 'workspace_neejee_primary']
         : ['workspace_neejee_primary'],
   })
 
@@ -36,6 +42,12 @@ export async function POST(request: NextRequest) {
     brandSlug: workspaceSelection.workspace.brandId,
   })
 
+  const recoveryPayload = createRecoverySessionPayload({
+    email,
+    role: lane === 'admin' ? 'operator' : 'client',
+    displayName,
+  })
+
   const destination = createLoginRedirectPath(lane, redirectInput)
   const response = NextResponse.redirect(new URL(destination, request.url))
 
@@ -45,6 +57,30 @@ export async function POST(request: NextRequest) {
       sameSite: 'lax',
       path: '/',
     })
+  })
+
+  response.cookies.set(RECOVERY_AUTH_COOKIE_KEYS.sessionId, recoveryPayload.sessionId, {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+  })
+
+  response.cookies.set(RECOVERY_AUTH_COOKIE_KEYS.role, recoveryPayload.role, {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+  })
+
+  response.cookies.set(RECOVERY_AUTH_COOKIE_KEYS.email, recoveryPayload.email, {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+  })
+
+  response.cookies.set(RECOVERY_AUTH_COOKIE_KEYS.displayName, recoveryPayload.displayName, {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
   })
 
   response.cookies.set(ACTIVE_WORKSPACE_COOKIE_KEY, workspaceSelection.workspace.workspaceId, {
