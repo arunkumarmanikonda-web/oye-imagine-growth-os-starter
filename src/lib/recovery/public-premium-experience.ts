@@ -1,4 +1,4 @@
-export type PublicAction = {
+﻿export type PublicAction = {
   label: string
   href: string
   emphasis: 'primary' | 'secondary' | 'ghost'
@@ -60,7 +60,7 @@ const publicNavigation = [
   { label: 'Marketplace', href: '/marketplace' },
   { label: 'Solutions', href: '/solutions' },
   { label: 'Contact', href: '/contact' },
-  { label: 'Client login', href: '/login' }
+  { label: 'Client login', href: '/login/client' }
 ]
 
 const trustSignals: PublicTrustSignal[] = [
@@ -112,7 +112,7 @@ const homepageSections: PublicSection[] = [
 const homepageActions: PublicAction[] = [
   { label: 'Book a strategy call', href: '/contact', emphasis: 'primary' },
   { label: 'Explore the marketplace', href: '/marketplace', emphasis: 'secondary' },
-  { label: 'Client login', href: '/login', emphasis: 'ghost' }
+  { label: 'Client login', href: '/login/client', emphasis: 'ghost' }
 ]
 
 const marketplaceCategories: MarketplaceCategory[] = [
@@ -162,7 +162,7 @@ export function getPublicHomepageExperience() {
       eyebrow: 'Oye !magine AI Growth OS',
       title: 'The premium operating system for AI-native digital growth.',
       body:
-        'A luxury-corporate growth platform that unifies strategy, execution, commercial operations and governed AI — built to replace mixed-shell demos with a trusted, real operating system.',
+        'A luxury-corporate growth platform that unifies strategy, execution, commercial operations and governed AI â€” built to replace mixed-shell demos with a trusted, real operating system.',
       primaryAction: homepageActions[0],
       secondaryAction: homepageActions[1],
       tertiaryAction: homepageActions[2]
@@ -183,7 +183,7 @@ export function getMarketplaceExperience() {
     categories: marketplaceCategories,
     actions: [
       { label: 'Talk to the team', href: '/contact', emphasis: 'primary' as const },
-      { label: 'Client login', href: '/login', emphasis: 'ghost' as const }
+      { label: 'Client login', href: '/login/client', emphasis: 'ghost' as const }
     ]
   }
 }

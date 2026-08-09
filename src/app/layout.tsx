@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import "./globals.css";
@@ -26,9 +26,10 @@ export default function RootLayout(props: { children: ReactNode }) {
               </Link>
 
               <nav className="oi-nav" aria-label="Primary">
-                <Link href="/">Home</Link>
+                <Link href="/platform">Platform</Link>
                 <Link href="/marketplace">Marketplace</Link>
-                <Link href="/login">Login</Link>
+                <Link href="/solutions">Solutions</Link>
+                <Link href="/login/client">Client login</Link>
                 <a href="mailto:hello@oyeimagine.com">Contact</a>
               </nav>
 
@@ -37,7 +38,7 @@ export default function RootLayout(props: { children: ReactNode }) {
                   hello@oyeimagine.com
                 </a>
                 <Link className="oi-btn oi-btn--primary" href="/marketplace">
-                  Explore services
+                  Explore marketplace
                 </Link>
               </div>
             </div>
