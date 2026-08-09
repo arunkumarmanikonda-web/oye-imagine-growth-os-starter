@@ -1,0 +1,179 @@
+﻿{
+    "id":  "A5",
+    "batch":  "Mega_Batch_A",
+    "name":  "Mega Batch A closure and acceptance proof",
+    "branch":  "mega-batch-a-a5-closure-and-acceptance-proof",
+    "utc":  "2026-08-09T20:57:02Z",
+    "dependencyProofs":  [
+                             "C:\\dev\\oye-imagine-growth-os-starter\\docs\\proof\\mega-batch-a\\A1_IMPLEMENTATION_STATUS.md",
+                             "C:\\dev\\oye-imagine-growth-os-starter\\docs\\proof\\mega-batch-a\\A2_IMPLEMENTATION_STATUS.md",
+                             "C:\\dev\\oye-imagine-growth-os-starter\\docs\\proof\\mega-batch-a\\A3_IMPLEMENTATION_STATUS.md",
+                             "C:\\dev\\oye-imagine-growth-os-starter\\docs\\proof\\mega-batch-a\\A4_IMPLEMENTATION_STATUS.md"
+                         ],
+    "tests":  {
+                  "status":  "PASS",
+                  "log":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-a5\\logs\\vitest-a5.log",
+                  "files":  [
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\a2-auth-access-control-and-workspace-truth.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\a3-legal-identity-cms-governance.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\a4-operator-content-config-support-cleanup.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-admin-studio-closure-foundation.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-ai-assistance-closure-foundation.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-anti-prototype-sweep-closure-foundation.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-auth-entry-foundation.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-auth-foundation.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-charter-acceptance-proof-pack.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-closure-audit.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-cms-controller-closure-foundation.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-config-plane-closure-foundation.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-foundation-public.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-legal-identity-trust-surface-foundation.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-neejee-canonical-truth-foundation.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-operator-foundation.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-public-premium-experience.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-publishing-system-closure-foundation.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-runtime-enforcement.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-session-auth-foundation.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-support-contact-closure-foundation.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-support-content-governance.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-workspace-truth-closure-foundation.test.ts",
+                                "C:\\dev\\oye-imagine-growth-os-starter\\tests\\lib\\mega-batch-a-workspace-truth-foundation.test.ts"
+                            ]
+              },
+    "build":  {
+                  "status":  "PASS",
+                  "log":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-a5\\logs\\build-a5.log"
+              },
+    "clientSession":  {
+                          "status":  "PASS",
+                          "sessionJson":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-a5\\runtime\\client-session.json"
+                      },
+    "operatorSession":  {
+                            "status":  "PASS",
+                            "sessionJson":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-a5\\runtime\\operator-session.json"
+                        },
+    "routes":  {
+                   "/":  {
+                             "status":  200,
+                             "location":  null,
+                             "finalUri":  "http://127.0.0.1:3013/",
+                             "file":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-a5\\runtime\\home.html"
+                         },
+                   "/platform":  {
+                                     "status":  200,
+                                     "location":  null,
+                                     "finalUri":  "http://127.0.0.1:3013/platform",
+                                     "file":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-a5\\runtime\\platform.html"
+                                 },
+                   "/solutions":  {
+                                      "status":  200,
+                                      "location":  null,
+                                      "finalUri":  "http://127.0.0.1:3013/solutions",
+                                      "file":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-a5\\runtime\\solutions.html"
+                                  },
+                   "/marketplace":  {
+                                        "status":  200,
+                                        "location":  null,
+                                        "finalUri":  "http://127.0.0.1:3013/marketplace",
+                                        "file":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-a5\\runtime\\marketplace.html"
+                                    },
+                   "/contact":  {
+                                    "status":  200,
+                                    "location":  null,
+                                    "finalUri":  "http://127.0.0.1:3013/contact",
+                                    "file":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-a5\\runtime\\contact.html"
+                                },
+                   "/login/client":  {
+                                         "status":  200,
+                                         "location":  null,
+                                         "finalUri":  "http://127.0.0.1:3013/login/client",
+                                         "file":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-a5\\runtime\\login-client.html"
+                                     },
+                   "/login/admin":  {
+                                        "status":  200,
+                                        "location":  null,
+                                        "finalUri":  "http://127.0.0.1:3013/login/admin",
+                                        "file":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-a5\\runtime\\login-admin.html"
+                                    },
+                   "/privacy":  {
+                                    "status":  200,
+                                    "location":  null,
+                                    "finalUri":  "http://127.0.0.1:3013/privacy",
+                                    "file":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-a5\\runtime\\privacy.html"
+                                },
+                   "/terms":  {
+                                  "status":  200,
+                                  "location":  null,
+                                  "finalUri":  "http://127.0.0.1:3013/terms",
+                                  "file":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-a5\\runtime\\terms.html"
+                              },
+                   "/legal":  {
+                                  "status":  200,
+                                  "location":  null,
+                                  "finalUri":  "http://127.0.0.1:3013/legal",
+                                  "file":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-a5\\runtime\\legal.html"
+                              },
+                   "/support":  {
+                                    "status":  200,
+                                    "location":  null,
+                                    "finalUri":  "http://127.0.0.1:3013/support",
+                                    "file":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-a5\\runtime\\support.html"
+                                },
+                   "redirect:/client":  {
+                                            "status":  307,
+                                            "location":  "/login/client?redirectTo=%2Fclient",
+                                            "finalUri":  "http://127.0.0.1:3013/client"
+                                        },
+                   "redirect:/admin":  {
+                                           "status":  307,
+                                           "location":  "/login/admin?redirectTo=%2Fadmin",
+                                           "finalUri":  "http://127.0.0.1:3013/admin"
+                                       },
+                   "redirect:/admin/content":  {
+                                                   "status":  307,
+                                                   "location":  "/login/admin?redirectTo=%2Fadmin%2Fcontent",
+                                                   "finalUri":  "http://127.0.0.1:3013/admin/content"
+                                               },
+                   "redirect:/admin/config":  {
+                                                  "status":  307,
+                                                  "location":  "/login/admin?redirectTo=%2Fadmin%2Fconfig",
+                                                  "finalUri":  "http://127.0.0.1:3013/admin/config"
+                                              },
+                   "redirect:/admin/support":  {
+                                                   "status":  307,
+                                                   "location":  "/login/admin?redirectTo=%2Fadmin%2Fsupport",
+                                                   "finalUri":  "http://127.0.0.1:3013/admin/support"
+                                               },
+                   "/client (authenticated)":  {
+                                                   "status":  200,
+                                                   "location":  null,
+                                                   "finalUri":  "http://127.0.0.1:3013/client",
+                                                   "file":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-a5\\runtime\\client-authenticated.html"
+                                               },
+                   "/admin/content (authenticated)":  {
+                                                          "status":  200,
+                                                          "location":  null,
+                                                          "finalUri":  "http://127.0.0.1:3013/admin/content",
+                                                          "file":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-a5\\runtime\\admin-content-authenticated.html"
+                                                      },
+                   "/admin/config (authenticated)":  {
+                                                         "status":  200,
+                                                         "location":  null,
+                                                         "finalUri":  "http://127.0.0.1:3013/admin/config",
+                                                         "file":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-a5\\runtime\\admin-config-authenticated.html"
+                                                     },
+                   "/admin/support (authenticated)":  {
+                                                          "status":  200,
+                                                          "location":  null,
+                                                          "finalUri":  "http://127.0.0.1:3013/admin/support",
+                                                          "file":  "C:\\dev\\oye-imagine-growth-os-starter\\artifacts\\tracker-a5\\runtime\\admin-support-authenticated.html"
+                                                      }
+               },
+    "acceptance":  {
+                       "consolidatedClosure":  "PASS",
+                       "protectedRedirects":  "PASS",
+                       "authenticatedClientAccess":  "PASS",
+                       "authenticatedAdminAccess":  "PASS",
+                       "workspaceTruth":  "PASS"
+                   }
+}
