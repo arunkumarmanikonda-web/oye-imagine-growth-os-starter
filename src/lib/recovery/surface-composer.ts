@@ -179,7 +179,7 @@ export function getClientAccessExperience() {
 export function getOperatorAccessExperience() {
   const experience = getAdminLoginExperience()
   return {
-    eyebrow: 'Operator access',
+    eyebrow: 'Admin workspace',
     ...experience,
   }
 }
