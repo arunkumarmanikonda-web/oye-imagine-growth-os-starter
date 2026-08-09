@@ -1,4 +1,4 @@
-﻿export type LoginAction = {
+export type LoginAction = {
   label: string
   href: string
 }
@@ -45,7 +45,7 @@ export function getAdminLoginExperience(): LoginExperience {
   return {
     audience: 'operator',
     route: '/login/admin',
-    eyebrow: 'Operator access',
+    eyebrow: 'Admin workspace',
     title: 'Operator sign in',
     body:
       'Protected operator authentication for admin control, runtime governance, workspace selection, and support operations. This route is not intended for client users.',
