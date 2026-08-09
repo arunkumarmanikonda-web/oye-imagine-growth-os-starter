@@ -1,4 +1,4 @@
-export type LoginAction = {
+﻿export type LoginAction = {
   label: string
   href: string
 }
@@ -24,39 +24,39 @@ const supportEmailHref = 'mailto:hello@oyeimagine.com'
 export function getClientLoginExperience(): LoginExperience {
   return {
     audience: 'client',
-    route: '/login',
+    route: '/login/client',
     eyebrow: 'Client access',
-    title: 'Sign in to your Oye !magine client workspace.',
+    title: 'Client sign in',
     body:
-      'Use the client login to access commercial records, dashboard visibility, reporting surfaces and governed support for active Oye !magine engagements.',
+      'Role-safe client authentication for live workspace access, governed finance visibility, and canonical Neejee workspace truth.',
     actions: [
-      { label: 'Continue as client', href: '/login' },
-      { label: 'Talk to support', href: '/contact' }
+      { label: 'Continue as client', href: '/login/client' },
+      { label: 'Talk to support', href: '/contact' },
     ],
     supportLinks: [
       { label: 'Need onboarding help', href: '/contact' },
-      { label: 'Email support', href: supportEmailHref }
+      { label: 'Email support', href: supportEmailHref },
     ],
-    allowedRedirects: ['/client', '/client/commercial', '/client/commercial/payments']
+    allowedRedirects: ['/client', '/client/finance', '/client/concierge'],
   }
 }
 
 export function getAdminLoginExperience(): LoginExperience {
   return {
     audience: 'operator',
-    route: '/admin/login',
+    route: '/login/admin',
     eyebrow: 'Operator access',
-    title: 'Sign in to the Oye !magine operator workspace.',
+    title: 'Operator sign in',
     body:
-      'Use the operator login for content governance, support handling, commercial operations and the admin control plane. This route is not intended for client users.',
+      'Protected operator authentication for admin control, runtime governance, workspace selection, and support operations. This route is not intended for client users.',
     actions: [
-      { label: 'Continue as operator', href: '/admin/login' },
-      { label: 'Open support inbox', href: '/admin/support' }
+      { label: 'Continue as operator', href: '/login/admin' },
+      { label: 'Operator support', href: '/contact' },
     ],
     supportLinks: [
-      { label: 'Operator support', href: '/admin/support' },
-      { label: 'System contact', href: supportEmailHref }
+      { label: 'Operator support', href: '/contact' },
+      { label: 'System contact', href: supportEmailHref },
     ],
-    allowedRedirects: ['/admin', '/admin/content', '/admin/config', '/admin/support']
+    allowedRedirects: ['/admin', '/admin/ops', '/admin/settings', '/admin/commercial/onboarding-workspace'],
   }
 }

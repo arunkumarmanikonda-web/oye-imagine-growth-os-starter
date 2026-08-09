@@ -1,4 +1,4 @@
-export type AuthAudience = 'public' | 'client' | 'operator'
+﻿export type AuthAudience = 'public' | 'client' | 'operator'
 export type AuthenticatedRole = 'client' | 'operator'
 
 export type SessionState = {
@@ -17,9 +17,13 @@ export type RouteAccessDecision = {
   reason: string
 }
 
-const publicRoutes = ['/', '/contact', '/marketplace', '/login', '/admin/login'] as const
+const publicRoutes = ['/', '/contact', '/marketplace', '/platform', '/solutions', '/login', '/login/client', '/login/admin'] as const
 const clientPrefixes = ['/client'] as const
 const operatorPrefixes = ['/admin'] as const
+
+function encode(path: string) {
+  return encodeURIComponent(path)
+}
 
 export function normalizePath(pathname: string) {
   if (!pathname) return '/'
@@ -33,7 +37,7 @@ export function normalizePath(pathname: string) {
 export function getRouteAudience(pathname: string): AuthAudience {
   const path = normalizePath(pathname)
 
-  if (path === '/admin/login') return 'public'
+  if (path === '/login/client' || path === '/login/admin' || path === '/login') return 'public'
   if (operatorPrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))) return 'operator'
   if (clientPrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))) return 'client'
   if (publicRoutes.includes(path as (typeof publicRoutes)[number])) return 'public'
@@ -53,7 +57,7 @@ export function resolveSessionAccess(pathname: string, session: SessionState): R
       requiresAuth,
       allowed: true,
       redirectTo: null,
-      reason: 'public-route'
+      reason: 'public-route',
     }
   }
 
@@ -63,8 +67,11 @@ export function resolveSessionAccess(pathname: string, session: SessionState): R
       audience,
       requiresAuth,
       allowed: false,
-      redirectTo: audience === 'operator' ? '/admin/login' : '/login',
-      reason: 'authentication-required'
+      redirectTo:
+        audience === 'operator'
+          ? `/login/admin?redirectTo=${encode(path)}`
+          : `/login/client?redirectTo=${encode(path)}`,
+      reason: 'authentication-required',
     }
   }
 
@@ -75,7 +82,7 @@ export function resolveSessionAccess(pathname: string, session: SessionState): R
       requiresAuth,
       allowed: false,
       redirectTo: '/admin',
-      reason: 'operator-cannot-open-client-route'
+      reason: 'operator-cannot-open-client-route',
     }
   }
 
@@ -86,7 +93,7 @@ export function resolveSessionAccess(pathname: string, session: SessionState): R
       requiresAuth,
       allowed: false,
       redirectTo: '/client',
-      reason: 'client-cannot-open-operator-route'
+      reason: 'client-cannot-open-operator-route',
     }
   }
 
@@ -96,7 +103,7 @@ export function resolveSessionAccess(pathname: string, session: SessionState): R
     requiresAuth,
     allowed: true,
     redirectTo: null,
-    reason: 'authorized'
+    reason: 'authorized',
   }
 }
 
@@ -105,12 +112,12 @@ export function getSessionAccessAudit() {
     publicRoutes,
     clientPrefixes,
     operatorPrefixes,
-    loginEntries: ['/login', '/admin/login'],
+    loginEntries: ['/login/client', '/login/admin'],
     denialMap: {
-      publicToClient: '/login',
-      publicToOperator: '/admin/login',
+      publicToClient: '/login/client',
+      publicToOperator: '/login/admin',
       clientToOperator: '/client',
-      operatorToClient: '/admin'
-    }
+      operatorToClient: '/admin',
+    },
   }
 }

@@ -1,42 +1,33 @@
-import type { Route } from 'next'
+﻿import type { Route } from 'next'
 import Link from 'next/link'
-import { getClientLoginExperience } from '../../lib/recovery/auth-entry-foundation'
+import { getLoginHubExperience } from '@/lib/recovery/surface-composer'
 
-export default function ClientLoginPage() {
-  const experience = getClientLoginExperience()
+export default function LoginHubPage() {
+  const experience = getLoginHubExperience()
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-12 text-white md:px-10">
-      <section className="mx-auto grid w-full max-w-5xl gap-8 rounded-[2rem] border border-white/10 bg-white/5 p-8 lg:grid-cols-[1.1fr_0.9fr]">
-        <article className="space-y-5">
-          <p className="text-sm uppercase tracking-[0.35em] text-cyan-300">{experience.eyebrow}</p>
-          <h1 className="text-4xl font-semibold">{experience.title}</h1>
-          <p className="max-w-2xl text-base leading-8 text-slate-300">{experience.body}</p>
+      <section className="mx-auto max-w-6xl rounded-[2rem] border border-white/10 bg-white/5 p-8">
+        <div className="max-w-3xl">
+          <p className="text-sm uppercase tracking-[0.35em] text-cyan-300">Access hub</p>
+          <h1 className="mt-4 text-4xl font-semibold">{experience.title}</h1>
+          <p className="mt-4 text-base leading-8 text-slate-300">{experience.body}</p>
+        </div>
 
-          <div className="flex flex-wrap gap-3">
-            {experience.actions.map((action) => (
-              <Link
-                key={action.href + action.label}
-                href={action.href as Route}
-                className="rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950"
-              >
-                {action.label}
-              </Link>
-            ))}
-          </div>
-        </article>
-
-        <aside className="rounded-[1.5rem] border border-white/10 bg-black/20 p-6">
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Client help</p>
-          <div className="mt-4 space-y-3">
-            {experience.supportLinks.map((link) => (
-              <Link key={link.href + link.label} href={link.href as Route} className="block rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-200">
-                {link.label}
-              </Link>
-            ))}
-          </div>
-        </aside>
+        <div className="mt-10 grid gap-6 md:grid-cols-2">
+          {experience.cards.map((card) => (
+            <Link
+              key={card.href}
+              href={card.href as Route}
+              className="rounded-[1.75rem] border border-white/10 bg-black/20 p-6 transition hover:border-cyan-300/40"
+            >
+              <div className="text-sm uppercase tracking-[0.25em] text-cyan-300">{card.label}</div>
+              <div className="mt-4 text-sm leading-7 text-slate-300">{card.description}</div>
+            </Link>
+          ))}
+        </div>
       </section>
     </main>
   )
 }
+

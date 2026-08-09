@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import {
   getRouteAudience,
   getSessionAccessAudit,
   normalizePath,
-  resolveSessionAccess
+  resolveSessionAccess,
 } from '../../src/lib/recovery/session-auth-foundation'
 
 describe('mega batch a session auth foundation', () => {
@@ -11,7 +11,8 @@ describe('mega batch a session auth foundation', () => {
     expect(normalizePath('client/commercial')).toBe('/client/commercial')
     expect(getRouteAudience('/')).toBe('public')
     expect(getRouteAudience('/login')).toBe('public')
-    expect(getRouteAudience('/admin/login')).toBe('public')
+    expect(getRouteAudience('/login/client')).toBe('public')
+    expect(getRouteAudience('/login/admin')).toBe('public')
     expect(getRouteAudience('/client/commercial')).toBe('client')
     expect(getRouteAudience('/admin/config')).toBe('operator')
   })
@@ -21,14 +22,14 @@ describe('mega batch a session auth foundation', () => {
 
     expect(resolveSessionAccess('/client/commercial', publicSession)).toMatchObject({
       allowed: false,
-      redirectTo: '/login',
-      reason: 'authentication-required'
+      redirectTo: '/login/client?redirectTo=%2Fclient%2Fcommercial',
+      reason: 'authentication-required',
     })
 
     expect(resolveSessionAccess('/admin/config', publicSession)).toMatchObject({
       allowed: false,
-      redirectTo: '/admin/login',
-      reason: 'authentication-required'
+      redirectTo: '/login/admin?redirectTo=%2Fadmin%2Fconfig',
+      reason: 'authentication-required',
     })
   })
 
@@ -38,7 +39,7 @@ describe('mega batch a session auth foundation', () => {
     expect(resolveSessionAccess('/admin/support', clientSession)).toMatchObject({
       allowed: false,
       redirectTo: '/client',
-      reason: 'client-cannot-open-operator-route'
+      reason: 'client-cannot-open-operator-route',
     })
   })
 
@@ -48,7 +49,7 @@ describe('mega batch a session auth foundation', () => {
     expect(resolveSessionAccess('/client/commercial/payments', operatorSession)).toMatchObject({
       allowed: false,
       redirectTo: '/admin',
-      reason: 'operator-cannot-open-client-route'
+      reason: 'operator-cannot-open-client-route',
     })
   })
 
@@ -58,24 +59,24 @@ describe('mega batch a session auth foundation', () => {
 
     expect(resolveSessionAccess('/client', clientSession)).toMatchObject({
       allowed: true,
-      reason: 'authorized'
+      reason: 'authorized',
     })
 
     expect(resolveSessionAccess('/admin/content', operatorSession)).toMatchObject({
       allowed: true,
-      reason: 'authorized'
+      reason: 'authorized',
     })
   })
 
   it('publishes an audit summary for redirect contracts', () => {
     const audit = getSessionAccessAudit()
 
-    expect(audit.loginEntries).toEqual(['/login', '/admin/login'])
+    expect(audit.loginEntries).toEqual(['/login/client', '/login/admin'])
     expect(audit.denialMap).toEqual({
-      publicToClient: '/login',
-      publicToOperator: '/admin/login',
+      publicToClient: '/login/client',
+      publicToOperator: '/login/admin',
       clientToOperator: '/client',
-      operatorToClient: '/admin'
+      operatorToClient: '/admin',
     })
   })
 })

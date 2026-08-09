@@ -1,39 +1,99 @@
-import type { Route } from 'next'
-import Link from 'next/link'
-import { getOperatorAccessExperience } from '@/lib/recovery/surface-composer'
+﻿import { getAdminLoginExperience } from '@/lib/recovery/auth-entry-foundation'
+import { createLoginRedirectPath } from '@/lib/auth/session'
+import { listWorkspacesForRole } from '@/lib/recovery/workspace-foundation'
 
 type AdminLoginPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 export default async function AdminLoginPage({ searchParams }: AdminLoginPageProps) {
-  const experience = getOperatorAccessExperience()
+  const experience = getAdminLoginExperience()
   const params = (await searchParams) ?? {}
-  const redirect = typeof params.redirect === 'string' ? params.redirect : '/admin'
+  const redirectCandidate =
+    typeof params.redirectTo === 'string'
+      ? params.redirectTo
+      : typeof params.redirect === 'string'
+        ? params.redirect
+        : '/admin'
+  const redirectTo = createLoginRedirectPath('admin', redirectCandidate)
+  const workspaces = listWorkspacesForRole('operator')
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
-      <div className="mx-auto max-w-5xl px-6 py-16">
-        <div className="text-sm uppercase tracking-[0.3em] text-cyan-300">{experience.eyebrow}</div>
-        <h1 className="mt-5 text-5xl font-semibold leading-tight">{experience.title}</h1>
-        <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-300">{experience.body}</p>
+    <main className="min-h-screen bg-slate-950 px-6 py-12 text-white md:px-10">
+      <section className="mx-auto grid max-w-6xl gap-8 rounded-[2rem] border border-cyan-400/20 bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950/30 p-8 lg:grid-cols-[1.05fr_0.95fr]">
+        <article>
+          <p className="text-sm uppercase tracking-[0.35em] text-cyan-300">{experience.eyebrow}</p>
+          <h1 className="mt-4 text-4xl font-semibold">{experience.title}</h1>
+          <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">{experience.body}</p>
 
-        <div className="mt-10 rounded-[2rem] border border-white/10 bg-white/5 p-6">
-          <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Redirect target</div>
-          <div className="mt-3 text-sm text-slate-200">{redirect}</div>
-          <div className="mt-6 text-sm leading-7 text-slate-300">
-            Full operator session authentication and protected route enforcement are the next pass of Mega Batch A. This route now carries split access intent and redirect awareness.
+          <div className="mt-8 rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
+            <div className="text-xs uppercase tracking-[0.25em] text-slate-400">Redirect target</div>
+            <div className="mt-3 text-sm text-slate-200">{redirectTo}</div>
           </div>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link href={redirect as Route} className="rounded-full border border-white/20 px-5 py-3 font-medium text-white">
-              Continue to operator destination
-            </Link>
-            <Link href="/login" className="rounded-full px-5 py-3 font-medium text-cyan-300">
-              Back to access hub
-            </Link>
+
+          <div className="mt-8 rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
+            <div className="text-xs uppercase tracking-[0.25em] text-slate-400">Allowed destinations</div>
+            <div className="mt-3 flex flex-wrap gap-2 text-sm text-slate-200">
+              {experience.allowedRedirects.map((item) => (
+                <span key={item} className="rounded-full border border-white/10 px-3 py-1">
+                  {item}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
-      </div>
+        </article>
+
+        <form action="/api/auth/login" method="post" className="rounded-[1.5rem] border border-white/10 bg-black/20 p-6">
+          <input type="hidden" name="lane" value="admin" />
+          <input type="hidden" name="redirectTo" value={redirectTo} />
+
+          <div className="text-xs uppercase tracking-[0.3em] text-slate-400">Operator workspace truth</div>
+
+          <label className="mt-6 block text-sm text-slate-200">
+            Email
+            <input
+              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none"
+              type="email"
+              name="email"
+              defaultValue="ops@oyeimagine.com"
+              required
+            />
+          </label>
+
+          <label className="mt-4 block text-sm text-slate-200">
+            Display name
+            <input
+              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none"
+              type="text"
+              name="displayName"
+              defaultValue="Oye Operator"
+              required
+            />
+          </label>
+
+          <label className="mt-4 block text-sm text-slate-200">
+            Workspace
+            <select
+              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none"
+              name="workspaceSlug"
+              defaultValue="workspace_oye_internal"
+            >
+              {workspaces.map((workspace) => (
+                <option key={workspace.workspaceId} value={workspace.workspaceId}>
+                  {workspace.brandName} — {workspace.domain}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <button
+            type="submit"
+            className="mt-6 w-full rounded-full border border-cyan-300/30 bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950"
+          >
+            Enter operator workspace
+          </button>
+        </form>
+      </section>
     </main>
   )
 }
