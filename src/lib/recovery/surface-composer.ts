@@ -138,9 +138,9 @@ export function getLoginHubExperience() {
         description: 'Enter the client workspace through the role-safe client sign-in route.'
       },
       {
-        label: 'Operator access',
+        label: 'Admin workspace',
         href: '/login/admin',
-        description: 'Enter the protected operator workspace through the operator sign-in route.'
+        description: 'Enter the protected admin workspace through the operator sign-in route.'
       }
     ]
   }
@@ -179,7 +179,7 @@ export function getClientAccessExperience() {
 export function getOperatorAccessExperience() {
   const experience = getAdminLoginExperience()
   return {
-    eyebrow: 'Operator access',
+    eyebrow: 'Admin workspace',
     ...experience,
   }
 }
