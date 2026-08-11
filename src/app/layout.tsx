@@ -20,12 +20,21 @@ export default function RootLayout(props: { children: ReactNode }) {
       <body>
         <div className="oi-shell">
           <header className="oi-topbar">
-            <div className="oi-container" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+            <div
+  className="oi-container"
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 16,
+    flexWrap: "wrap"
+  }}
+>
               <Link className="oi-brand" href="/">
                 Oye !magine
               </Link>
 
-              <nav className="oi-nav" aria-label="Primary">
+              <nav className="oi-nav" aria-label="Primary" style={{ flexWrap: "wrap", rowGap: 8 }}>
                 <Link href="/platform">Platform</Link>
                 <Link href="/marketplace">Marketplace</Link>
                 <Link href="/solutions">Solutions</Link>
@@ -33,11 +42,28 @@ export default function RootLayout(props: { children: ReactNode }) {
                 <a href="mailto:hello@oyeimagine.com">Contact</a>
               </nav>
 
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                <a className="oi-btn oi-btn--secondary" href="mailto:hello@oyeimagine.com">
+              <div
+  style={{
+    display: "flex",
+    gap: 12,
+    flexWrap: "wrap",
+    width: "100%",
+    justifyContent: "flex-start",
+    alignItems: "stretch"
+  }}
+>
+                <a
+  className="oi-btn oi-btn--secondary"
+  href="mailto:hello@oyeimagine.com"
+  style={{ flex: "1 1 220px", minWidth: 0, justifyContent: "center" }}
+>
                   hello@oyeimagine.com
                 </a>
-                <Link className="oi-btn oi-btn--primary" href="/marketplace">
+                <Link
+  className="oi-btn oi-btn--primary"
+  href="/marketplace"
+  style={{ flex: "1 1 180px", minWidth: 0, justifyContent: "center" }}
+>
                   Explore marketplace
                 </Link>
               </div>
@@ -82,3 +108,4 @@ export default function RootLayout(props: { children: ReactNode }) {
     </html>
   );
 }
+
