@@ -4,6 +4,7 @@ import Link from "next/link";
 import "./globals.css";
 import { buildFooterMeta } from "@/lib/foundation/public-shell";
 import { organizationJsonLd, websiteJsonLd } from '@/lib/seo/site'
+import ContextualPublicLinks from '@/components/public/ContextualPublicLinks'
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://127.0.0.1:3060'),
@@ -60,6 +61,8 @@ export default function RootLayout(props: { children: ReactNode }) {
                 <Link href="/platform">Platform</Link>
                 <Link href="/marketplace">Marketplace</Link>
                 <Link href="/solutions">Solutions</Link>
+                <Link href="/pricing">Pricing</Link>
+                <Link href="/trust">Trust Center</Link>
                 <Link href="/login/client">Client login</Link>
                 <a href="mailto:hello@oyeimagine.com">Contact</a>
               </nav>
@@ -93,6 +96,8 @@ export default function RootLayout(props: { children: ReactNode }) {
           </header>
 
           <div id="main-content" className="oi-main">{props.children}</div>
+
+          <ContextualPublicLinks />
 
           <footer>
             <div className="oi-container oi-py-card-lg">
