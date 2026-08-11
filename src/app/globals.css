@@ -1945,3 +1945,140 @@ img { max-width: 100%; height: auto; display: block; }
 .oi-py-card-lg { padding-top: var(--oi-space-6); padding-bottom: var(--oi-space-9); }
 .oi-mt-2 { margin-top: var(--oi-space-2); }
 .oi-mt-3 { margin-top: var(--oi-space-3); }
+
+/* UI20 PREMIUM POLISH START */
+body {
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.16), transparent 32%),
+    radial-gradient(circle at top right, rgba(124, 58, 237, 0.12), transparent 30%),
+    linear-gradient(180deg, #f8fbff 0%, #f6f8fc 38%, #eef3ff 100%);
+}
+
+.oi-shell {
+  position: relative;
+  min-height: 100vh;
+}
+
+.oi-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  backdrop-filter: blur(18px);
+  background: rgba(255, 255, 255, 0.72);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+}
+
+.oi-main {
+  padding-top: var(--oi-space-6);
+  padding-bottom: var(--oi-space-10);
+}
+
+.oi-hero,
+.oi-stage-hero,
+.oi-bi-hero,
+.oi-pilot-hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top right, rgba(96, 165, 250, 0.18), transparent 36%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(238, 242, 255, 0.88));
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow: 0 24px 64px rgba(37, 99, 235, 0.12);
+}
+
+.oi-display,
+.oi-section-title,
+h1 {
+  letter-spacing: var(--oi-tracking-display);
+  line-height: 1.05;
+}
+
+.oi-page-subtitle,
+.oi-lead,
+.oi-meta-line,
+.oi-footer-copy {
+  color: rgba(15, 23, 42, 0.72);
+}
+
+.oi-card {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.84)),
+    radial-gradient(circle at top right, rgba(96, 165, 250, 0.15), transparent 38%);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: 0 20px 56px rgba(15, 23, 42, 0.10);
+}
+
+.oi-footer,
+.oi-footer-inner {
+  backdrop-filter: blur(12px);
+}
+
+.oi-btn,
+.oi-nav a,
+.oi-nav-link,
+.oi-card {
+  transition:
+    transform 0.24s ease,
+    box-shadow 0.24s ease,
+    background-color 0.24s ease,
+    color 0.24s ease,
+    border-color 0.24s ease,
+    opacity 0.24s ease;
+}
+
+.oi-btn {
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
+}
+
+.oi-btn-primary,
+.oi-btn--primary {
+  background-image: linear-gradient(135deg, #2563eb 0%, #4f46e5 45%, #7c3aed 100%);
+  border: 1px solid rgba(79, 70, 229, 0.28);
+}
+
+.oi-btn-secondary,
+.oi-btn--secondary {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.oi-btn:hover,
+.oi-nav a:hover,
+.oi-nav-link:hover {
+  transform: translateY(-2px);
+}
+
+.oi-btn:active {
+  transform: translateY(0);
+}
+
+.oi-nav a,
+.oi-nav-link {
+  border-radius: 999px;
+  padding: 10px 14px;
+}
+
+.oi-nav a:hover,
+.oi-nav-link:hover {
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--oi-color-brand);
+}
+
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.72);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.16);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+/* UI20 PREMIUM POLISH END */
