@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import "./globals.css";
@@ -18,6 +18,12 @@ export default function RootLayout(props: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-black focus:px-4 focus:py-2 focus:text-white"
+      >
+        Skip to main content
+      </a>
         <div className="oi-shell">
           <header className="oi-topbar">
             <div
@@ -70,7 +76,7 @@ export default function RootLayout(props: { children: ReactNode }) {
             </div>
           </header>
 
-          <main className="oi-main">{props.children}</main>
+          <div id="main-content" className="oi-main">{props.children}</div>
 
           <footer>
             <div className="oi-container" style={{ paddingTop: 24, paddingBottom: 36 }}>
