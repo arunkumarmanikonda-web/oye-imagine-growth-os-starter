@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Route } from "next";
 import type { CSSProperties, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
 
 function cx(...parts: Array<string | false | null | undefined>) {
@@ -45,7 +46,7 @@ export function PublicButtonLink(props: {
           : "oi-btn-primary";
 
   return (
-    <Link href={props.href} className={cx("oi-btn", variantClass, props.className)}>
+    <Link href={props.href as Route} className={cx("oi-btn", variantClass, props.className)}>
       {props.children}
     </Link>
   );
