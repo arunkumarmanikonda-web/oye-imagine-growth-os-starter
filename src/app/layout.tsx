@@ -1,20 +1,36 @@
-import type { Metadata } from "next";
+import type { Metadata } from 'next'
 import type { ReactNode } from "react";
 import Link from "next/link";
 import "./globals.css";
 import { buildFooterMeta } from "@/lib/foundation/public-shell";
+import { organizationJsonLd, websiteJsonLd } from '@/lib/seo/site'
 
 export const metadata: Metadata = {
-  title: {
-    default: "Oye !magine",
-    template: "%s | Oye !magine",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://127.0.0.1:3060'),
+  title: 'OYE Imagine | Enterprise growth experiences',
+  description:
+    'OYE Imagine helps enterprise teams launch guided demos, qualification flows, marketplaces, and conversion-ready public experiences.',
+  alternates: { canonical: '/' },
+  openGraph: {
+    title: 'OYE Imagine | Enterprise growth experiences',
+    description:
+      'OYE Imagine helps enterprise teams launch guided demos, qualification flows, marketplaces, and conversion-ready public experiences.',
+    url: '/',
+    siteName: 'OYE Imagine',
+    type: 'website',
+    images: [{ url: '/favicon.ico' }]
   },
-  description: "AI-native digital marketing services with premium public, client, and operator surfaces.",
-};
-
-const footerMeta = buildFooterMeta();
+  twitter: {
+    card: 'summary',
+    title: 'OYE Imagine | Enterprise growth experiences',
+    description:
+      'OYE Imagine helps enterprise teams launch guided demos, qualification flows, marketplaces, and conversion-ready public experiences.',
+    images: ['/favicon.ico']
+  }
+}
 
 export default function RootLayout(props: { children: ReactNode }) {
+  const footerMeta = buildFooterMeta()
   return (
     <html lang="en">
       <body>
@@ -110,8 +126,8 @@ export default function RootLayout(props: { children: ReactNode }) {
             </div>
           </footer>
         </div>
-      </body>
+            <script type='application/ld+json' dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd()) }} />
+      <script type='application/ld+json' dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd()) }} />    </body>
     </html>
   );
 }
-
