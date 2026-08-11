@@ -40,7 +40,7 @@ export default function RootLayout(props: { children: ReactNode }) {
                 Oye !magine
               </Link>
 
-              <nav className="oi-nav" aria-label="Primary" style={{ flexWrap: "wrap", rowGap: 8 }}>
+              <nav className="oi-nav oi-nav-wrap" aria-label="Primary">
                 <Link href="/platform">Platform</Link>
                 <Link href="/marketplace">Marketplace</Link>
                 <Link href="/solutions">Solutions</Link>
@@ -59,14 +59,14 @@ export default function RootLayout(props: { children: ReactNode }) {
   }}
 >
                 <a
-  className="oi-btn oi-btn--secondary"
+  className="oi-btn oi-btn-secondary"
   href="mailto:hello@oyeimagine.com"
   style={{ flex: "1 1 220px", minWidth: 0, justifyContent: "center" }}
 >
                   hello@oyeimagine.com
                 </a>
                 <Link
-  className="oi-btn oi-btn--primary"
+  className="oi-btn oi-btn-primary"
   href="/marketplace"
   style={{ flex: "1 1 180px", minWidth: 0, justifyContent: "center" }}
 >
@@ -79,18 +79,18 @@ export default function RootLayout(props: { children: ReactNode }) {
           <div id="main-content" className="oi-main">{props.children}</div>
 
           <footer>
-            <div className="oi-container" style={{ paddingTop: 24, paddingBottom: 36 }}>
+            <div className="oi-container oi-py-card-lg">
               <div className="oi-grid oi-grid--two">
                 <article className="oi-card">
                   <div className="oi-card-title">Oye !magine</div>
-                  <p className="oi-page-subtitle" style={{ marginTop: 8 }}>
+                  <p className="oi-page-subtitle oi-mt-2">
                     Premium digital growth systems, managed delivery, client-ready reporting, and admin-controlled content surfaces.
                   </p>
                 </article>
 
                 <article className="oi-card">
                   <div className="oi-card-title">Legal and support identity</div>
-                  <div className="oi-meta-line" style={{ marginTop: 12 }}>
+                  <div className="oi-meta-line oi-mt-3">
                     <strong>Legal name:</strong> {footerMeta.legalName}
                   </div>
                   <div className="oi-meta-line" style={{ marginTop: 8 }}>
