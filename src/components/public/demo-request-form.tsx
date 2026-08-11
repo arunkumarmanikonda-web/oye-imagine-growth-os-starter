@@ -6,13 +6,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 
 import { PublicFormState } from '@/components/public/public-form-state'
-import {
-  PUBLIC_FORM_STATE_LIBRARY,
-  buildPublicFormMessage,
-} from '@/lib/public/public-state-copy'
+import { PUBLIC_FORM_STATE_LIBRARY } from '@/lib/public/public-state-copy'
 
-const leadCaptureSchema = z.object({
-  intent: z.enum(['contact', 'demo', 'audit', 'onboarding', 'qualify', 'scope', 'dsar']),
+const demoRequestSchema = z.object({
   name: z.string().trim().min(2, 'Name is required.'),
   email: z.string().trim().email('Valid email is required.'),
   company: z.string().trim().min(2, 'Company is required.'),
@@ -22,95 +18,62 @@ const leadCaptureSchema = z.object({
   timeline: z.string().trim().min(2, 'Timeline is required.'),
 })
 
-type LeadCaptureValues = z.infer<typeof leadCaptureSchema>
+type DemoRequestValues = z.infer<typeof demoRequestSchema>
 
-export type LeadCaptureFormProps = {
+export type DemoRequestFormProps = {
   className?: string
-  intent?: LeadCaptureValues['intent']
-  title?: string
-  description?: string
-  submitLabel?: string
   [key: string]: unknown
 }
 
-export function LeadCaptureForm({
-  className = '',
-  intent = 'contact',
-  title = 'Shared public intake',
-  description = 'Unified empty, loading, error, and success states for public lead capture.',
-  submitLabel = 'Submit request',
-}: LeadCaptureFormProps) {
+const defaultValues: DemoRequestValues = {
+  name: '',
+  email: '',
+  company: '',
+  useCase: '',
+  painPoints: '',
+  teamSize: '',
+  timeline: '',
+}
+
+export function DemoRequestForm({ className = '' }: DemoRequestFormProps) {
   const [uiState, setUiState] = React.useState<'idle' | 'loading' | 'error' | 'success' | 'empty'>('idle')
   const [requestId, setRequestId] = React.useState('')
   const [errorMessage, setErrorMessage] = React.useState('')
 
-  const form = useForm<LeadCaptureValues>({
-    resolver: zodResolver(leadCaptureSchema),
-    defaultValues: {
-      intent,
-      name: '',
-      email: '',
-      company: '',
-      useCase: '',
-      painPoints: '',
-      teamSize: '',
-      timeline: '',
-    },
+  const form = useForm<DemoRequestValues>({
+    resolver: zodResolver(demoRequestSchema),
+    defaultValues,
   })
-
-  React.useEffect(() => {
-    form.setValue('intent', intent)
-  }, [form, intent])
 
   const values = form.watch()
   const progress = Math.round(
-    (Object.values(values).filter((value) => String(value ?? '').trim().length > 0).length / 8) * 100,
+    (Object.values(values).filter((value) => String(value ?? '').trim().length > 0).length / 7) * 100,
   )
 
-  async function onSubmit(values: LeadCaptureValues) {
+  async function onSubmit(values: DemoRequestValues) {
     setUiState('loading')
     setErrorMessage('')
     setRequestId('')
 
-    const payload = {
-      ...values,
-      message: buildPublicFormMessage([
-        `Use case: ${values.useCase}`,
-        `Pain points: ${values.painPoints}`,
-        `Team size: ${values.teamSize}`,
-        `Timeline: ${values.timeline}`,
-      ]),
-      source: 'public-web',
-    }
-
     try {
-      const response = await fetch('/api/public/submissions', {
+      const response = await fetch('/api/public/demo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(values),
       })
 
       const json = await response.json().catch(() => ({}))
 
       if (!response.ok || !json?.requestId) {
-        throw new Error(json?.error || 'Lead capture submission failed.')
+        throw new Error(json?.error || 'Demo request failed.')
       }
 
       setRequestId(json.requestId)
       setUiState('success')
-      form.reset({
-        intent,
-        name: '',
-        email: '',
-        company: '',
-        useCase: '',
-        painPoints: '',
-        teamSize: '',
-        timeline: '',
-      })
+      form.reset(defaultValues)
     } catch (error) {
       setUiState('error')
-      setErrorMessage(error instanceof Error ? error.message : 'Lead capture submission failed.')
+      setErrorMessage(error instanceof Error ? error.message : 'Demo request failed.')
     }
   }
 
@@ -118,10 +81,12 @@ export function LeadCaptureForm({
     <section className={`space-y-6 ${className}`.trim()}>
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">
-          Shared lead capture
+          Interactive demo request
         </p>
-        <h2 className="text-2xl font-semibold text-slate-900">{title}</h2>
-        <p className="text-sm leading-6 text-slate-600">{description}</p>
+        <h2 className="text-2xl font-semibold text-slate-900">Book a guided walkthrough</h2>
+        <p className="text-sm leading-6 text-slate-600">
+          Shared empty, loading, error, and success states now protect this public booking flow.
+        </p>
         <div className="h-2 overflow-hidden rounded-full bg-slate-200">
           <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${progress}%` }} />
         </div>
@@ -131,24 +96,24 @@ export function LeadCaptureForm({
       {progress === 0 ? (
         <PublicFormState
           state="empty"
-          title="Start the intake"
-          body="Choose the intent and add enough context for persistence, audit proof, and confirmation logging."
+          title="Start your demo request"
+          body="Add your team context and use case to unlock the booking handoff."
         />
       ) : null}
 
       {uiState === 'loading' ? (
         <PublicFormState
           state="loading"
-          title="Submitting intake"
-          body="We are validating the shared submission payload and writing the proof logs."
+          title="Submitting demo request"
+          body="We are validating details, preparing the audit trail, and queuing the booking handoff."
         />
       ) : null}
 
       {uiState === 'error' ? (
         <PublicFormState
           state="error"
-          title="Submission needs attention"
-          body={errorMessage || 'The public intake request did not complete.'}
+          title="Demo request needs attention"
+          body={errorMessage || 'The demo request did not complete.'}
           onRetry={() => {
             setUiState('idle')
             setErrorMessage('')
@@ -157,26 +122,21 @@ export function LeadCaptureForm({
       ) : null}
 
       {uiState === 'success' ? (
-        <PublicFormState
-          state="success"
-          title="Submission completed"
-          body="The shared public intake flow finished successfully."
-          requestId={requestId}
-        />
+        <div className="space-y-4">
+          <PublicFormState
+            state="success"
+            title="Demo request submitted"
+            body="The booking handoff is ready. Continue to the calendar step."
+            requestId={requestId}
+          />
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-900">
+            Calendar handoff enabled. Embed or provider token can be attached later without changing the UX state system.
+          </div>
+        </div>
       ) : null}
 
       <form className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm" onSubmit={form.handleSubmit(onSubmit)}>
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="space-y-2 text-sm md:col-span-2">
-            <span className="font-medium text-slate-700">Intent</span>
-            <select className="w-full rounded-xl border border-slate-300 px-3 py-2" {...form.register('intent')}>
-              {PUBLIC_FORM_STATE_LIBRARY.intents.map((value) => (
-                <option key={value} value={value}>{value}</option>
-              ))}
-            </select>
-            <span className="text-xs text-rose-600">{form.formState.errors.intent?.message}</span>
-          </label>
-
           <label className="space-y-2 text-sm">
             <span className="font-medium text-slate-700">Name</span>
             <input className="w-full rounded-xl border border-slate-300 px-3 py-2" {...form.register('name')} />
@@ -229,11 +189,11 @@ export function LeadCaptureForm({
           disabled={form.formState.isSubmitting}
           className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
         >
-          {submitLabel}
+          Request demo
         </button>
       </form>
     </section>
   )
 }
 
-export default LeadCaptureForm
+export default DemoRequestForm
