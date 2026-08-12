@@ -8,7 +8,7 @@ export const pricingFaqItems: FaqItem[] = [
 
 export const platformFaqItems: FaqItem[] = [
   { question: 'What does the platform centralize?', answer: 'The platform centralizes governed public journeys, reusable modules, qualification logic, and launch operations.' },
-  { question: 'Does it support demos and qualification?', answer: 'Yes. OYE Imagine supports guided demos, qualification workflows, and public conversion journeys.' },
+  { question: 'Does it support guided qualification and conversion journeys?', answer: 'Yes. OYE Imagine supports guided qualification workflows, discovery journeys, and public conversion paths.' },
   { question: 'Can it align to an existing enterprise design system?', answer: 'Yes. The platform can align to existing brand, token, and operational governance standards.' }
 ]
 

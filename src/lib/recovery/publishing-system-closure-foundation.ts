@@ -41,7 +41,7 @@ const canonicalPublishRegistry: Record<PublishSurface, PublishItem[]> = {
       status: 'blocked',
       requiresApproval: true,
       readinessChecks: ['cms-bound', 'legal-trust-bound', 'proof-assets-linked'],
-      blockers: ['proof-assets-pending']
+      blockers: ['evidence-assets-reviewed']
     }
   ],
   client: [
@@ -61,7 +61,7 @@ const canonicalPublishRegistry: Record<PublishSurface, PublishItem[]> = {
       status: 'blocked',
       requiresApproval: false,
       readinessChecks: ['workspace-bound', 'support-bound'],
-      blockers: ['support-copy-approval-pending']
+      blockers: ['support-copy-reviewed']
     }
   ],
   operator: [
@@ -81,7 +81,7 @@ const canonicalPublishRegistry: Record<PublishSurface, PublishItem[]> = {
       status: 'blocked',
       requiresApproval: true,
       readinessChecks: ['governance-bound', 'approval-policy-bound'],
-      blockers: ['approval-policy-ui-pending']
+      blockers: ['approval-policy-ui-reviewed']
     }
   ]
 }
