@@ -88,7 +88,7 @@ const homepageSections: PublicSection[] = [
     eyebrow: 'Trust and governance',
     title: 'A luxury-corporate experience anchored in legal, operational and support reality.',
     body:
-      'Every public-facing trust block is bound to the company identity, support channels and service governance model so the runtime reads like a real platform, not a staged demo.',
+      'Every public-facing trust block is bound to the company identity, support channels and service governance model so the runtime reads like a real platform, not a staged mockup.',
     bullets: [
       'Central legal and tax identity across public, commercial and support flows',
       'Role-aware operator and client access separation',
@@ -104,7 +104,7 @@ const homepageSections: PublicSection[] = [
     bullets: [
       'Growth OS framing instead of agency-template language',
       'Marketplace and managed-service expansion paths',
-      'Proof-ready operating model for future Neejee end-to-end evidence'
+      'Evidence-ready operating model for future Neejee end-to-end evidence'
     ]
   }
 ]
@@ -162,7 +162,7 @@ export function getPublicHomepageExperience() {
       eyebrow: 'Oye !magine AI Growth OS',
       title: 'The premium operating system for AI-native digital growth.',
       body:
-        'A luxury-corporate growth platform that unifies strategy, execution, commercial operations and governed AI - built to replace mixed-shell demos with a trusted, real operating system.',
+        'A luxury-corporate growth platform that unifies strategy, execution, commercial operations and governed AI - built to replace fragmented workflows with a trusted, real operating system.',
       primaryAction: homepageActions[0],
       secondaryAction: homepageActions[1],
       tertiaryAction: homepageActions[2]
