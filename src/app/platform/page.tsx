@@ -1,4 +1,4 @@
-﻿import Link from 'next/link'
+import Link from 'next/link'
 import { getCmsControllerSummary } from '@/lib/foundation/cms-controller'
 import { getContentPublishingExperience, getGovernedPagePaths } from '@/lib/recovery/content-governance-foundation'
 import { getPublishingSystemAudit } from '@/lib/recovery/publishing-system-closure-foundation'
@@ -23,12 +23,12 @@ export default function PlatformPage() {
             <p className='text-sm uppercase tracking-[0.35em] text-cyan-300'>Mega Batch C4</p>
             <h1 className='mt-4 text-4xl font-semibold'>Platform operating system and governed publication control</h1>
             <p className='mt-4 max-w-4xl text-base leading-8 text-slate-300'>
-              The platform route closes the public gap and exposes governed page operations, publication state, and runtime proof readiness.
+              The platform route closes the public gap and exposes governed page operations, publication state, and runtime readiness.
             </p>
             <div className='mt-6 flex flex-wrap gap-3'>
               <Link href='/admin/content' className='rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950'>Open content governance</Link>
               <Link href='/admin/runtime' className='rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white'>Open runtime audit</Link>
-              <Link href='/solutions' className='rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white'>Open Neejee proof surface</Link>
+              <Link href='/solutions' className='rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white'>Open Neejee launch surface</Link>
             </div>
           </div>
           <aside className='rounded-[1.5rem] border border-white/10 bg-black/20 p-6'>

@@ -1,14 +1,28 @@
-﻿import type { MetadataRoute } from 'next'
+import type { MetadataRoute } from 'next'
 
-const baseUrl = 'https://oyeimagine.com'
+const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://oyeimagine.com').replace(/\/$/, '')
+
+const routes = [
+  '/',
+  '/platform',
+  '/solutions',
+  '/marketplace',
+  '/trust',
+  '/pricing',
+  '/contact',
+  '/demo',
+  '/qualification',
+  '/lead-capture',
+  '/accessibility',
+  '/case-studies',
+  '/marketplace/ai',
+  '/marketplace/specialists'
+]
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date()
-  return [
-    { url: baseUrl + '/', lastModified: now, changeFrequency: 'daily' as const, priority: 1 },
-    { url: baseUrl + '/platform', lastModified: now, changeFrequency: 'weekly' as const, priority: 0.9 },
-    { url: baseUrl + '/solutions', lastModified: now, changeFrequency: 'weekly' as const, priority: 0.9 },
-    { url: baseUrl + '/contact', lastModified: now, changeFrequency: 'monthly' as const, priority: 0.7 },
-    { url: baseUrl + '/marketplace', lastModified: now, changeFrequency: 'weekly' as const, priority: 0.8 }
-  ]
+  const lastModified = new Date()
+  return routes.map((path) => ({
+    url: `${siteUrl}${path}`,
+    lastModified
+  }))
 }
