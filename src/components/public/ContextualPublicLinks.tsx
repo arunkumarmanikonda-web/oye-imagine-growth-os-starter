@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import type { Route } from 'next'
 import { usePathname } from 'next/navigation'
 
 type RelatedLink = {
@@ -153,7 +154,7 @@ export default function ContextualPublicLinks() {
             {config.links.map((link) => (
               <Link
                 key={link.href}
-                href={link.href}
+                href={link.href as Route}
                 className='oi-card block rounded-2xl transition-transform duration-200 hover:-translate-y-0.5'
               >
                 <div className='text-base font-semibold text-white'>{link.title}</div>
