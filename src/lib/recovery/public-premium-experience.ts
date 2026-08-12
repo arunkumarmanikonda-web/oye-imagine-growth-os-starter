@@ -74,21 +74,21 @@ const homepageSections: PublicSection[] = [
   {
     id: 'operating-system',
     eyebrow: 'AI-native operating system',
-    title: 'Run growth, delivery and commercial truth from one premium platform.',
+    title: 'Run strategy, delivery, approvals, and commercial operations from one system.',
     body:
-      'Oye !magine unifies strategy, content, execution, reporting, commercial operations and governed AI assistance so operators and clients work from the same source of truth.',
+      'Use one operating layer for public journeys, client collaboration, operator execution, finance visibility, and governed AI workflows instead of stitching together docs, chats, and disconnected tools.',
     bullets: [
-      'Premium product shell with distinct public, client and operator experiences',
-      'Commercial truth spanning agreements, invoices, statements and collections',
-      'Governed content and page operations with auditability and revision control'
+      'Connected public, client, and operator experiences with one runtime and one source of truth',
+      'Commercial operations spanning agreements, invoicing, collections, ledger visibility, and launch readiness',
+      'Governed content, approvals, publishing controls, and AI assistance with auditability'
     ]
   },
   {
     id: 'trust',
     eyebrow: 'Trust and governance',
-    title: 'A luxury-corporate experience anchored in legal, operational and support reality.',
+    title: 'Trust, compliance, and support are built into the runtime - not bolted on after launch.',
     body:
-      'Every public-facing trust block is bound to the company identity, support channels and service governance model so the runtime reads like a real platform, not a staged mockup.',
+      'Identity, jurisdiction, support, legal, and operational context are surfaced across public, client, and operator experiences so buyers can verify the platform before they convert.',
     bullets: [
       'Central legal and tax identity across public, commercial and support flows',
       'Role-aware operator and client access separation',
@@ -98,13 +98,13 @@ const homepageSections: PublicSection[] = [
   {
     id: 'execution',
     eyebrow: 'Execution quality',
-    title: 'From onboarding to execution, the system is built for governed growth work.',
+    title: 'Built for real onboarding, execution, reporting, and commercial follow-through.',
     body:
-      'The public experience frames the product around operator-grade execution, strategic intelligence, accountable billing and AI-supported delivery rather than marketing theater.',
+      'The homepage should clearly explain the real product depth: execution plans, campaign deliverables, launch workflows, billing controls, marketplace expansion, and operator/client access separation.',
     bullets: [
-      'Growth OS framing instead of agency-template language',
-      'Marketplace and managed-service expansion paths',
-      'Evidence-ready operating model for future Neejee end-to-end evidence'
+      'Execution plans, delivery workflows, and operator systems instead of agency-template positioning',
+      'Marketplace, managed-service, and expansion paths connected to the same operating system',
+      'Conversion paths into qualification, lead capture, pricing, trust, and marketplace flows with clearer product proof'
     ]
   }
 ]
@@ -160,9 +160,9 @@ export function getPublicHomepageExperience() {
     navigation: publicNavigation,
     hero: {
       eyebrow: 'Oye !magine AI Growth OS',
-      title: 'The premium operating system for AI-native digital growth.',
+      title: 'The AI Growth OS for strategy, execution, and commercial control.',
       body:
-        'A luxury-corporate growth platform that unifies strategy, execution, commercial operations and governed AI - built to replace fragmented workflows with a trusted, real operating system.',
+        'Oye !magine gives operators, clients, and commercial teams one governed system for growth strategy, execution delivery, approvals, agreements, invoicing, reporting, and AI-assisted operations.',
       primaryAction: homepageActions[0],
       secondaryAction: homepageActions[1],
       tertiaryAction: homepageActions[2]
