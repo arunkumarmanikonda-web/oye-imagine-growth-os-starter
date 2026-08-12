@@ -57,7 +57,7 @@ const relatedMap: Record<string, RelatedConfig> = {
     links: [
       { href: '/platform', title: 'Platform', description: 'Map pricing to platform scope and governance.' },
       { href: '/marketplace', title: 'Marketplace', description: 'See a high-complexity public surface that affects rollout size.' },
-      { href: '/demo', title: 'Book a demo', description: 'Review the guided experience live with the team.' },
+      { href: '/demo', title: 'book a consultation', description: 'Review the guided experience live with the team.' },
       { href: '/trust', title: 'Trust Center', description: 'Confirm operational and governance expectations.' }
     ]
   },
@@ -84,7 +84,7 @@ const relatedMap: Record<string, RelatedConfig> = {
     links: [
       { href: '/platform', title: 'Platform', description: 'Review the public system foundation.' },
       { href: '/pricing', title: 'Pricing', description: 'Understand rollout and implementation guidance.' },
-      { href: '/demo', title: 'Book a demo', description: 'Schedule a guided walkthrough.' },
+      { href: '/demo', title: 'book a consultation', description: 'Schedule a guided walkthrough.' },
       { href: '/trust', title: 'Trust Center', description: 'Review governance and support identity.' }
     ]
   },
@@ -100,7 +100,7 @@ const relatedMap: Record<string, RelatedConfig> = {
   '/qualification': {
     intro: 'Qualification planning is usually reviewed together with demos, lead capture, platform operations, and trust requirements.',
     links: [
-      { href: '/demo', title: 'Book a demo', description: 'See qualification in the broader guided journey.' },
+      { href: '/demo', title: 'book a consultation', description: 'See qualification in the broader guided journey.' },
       { href: '/lead-capture', title: 'Lead capture', description: 'Compare intake flows and conversion patterns.' },
       { href: '/platform', title: 'Platform', description: 'Review the system layer behind qualification logic.' },
       { href: '/trust', title: 'Trust Center', description: 'Review governance and public trust signals.' }
@@ -110,7 +110,7 @@ const relatedMap: Record<string, RelatedConfig> = {
     intro: 'Lead capture decisions usually connect to qualification, demos, pricing, and Trust Center review.',
     links: [
       { href: '/qualification', title: 'Qualification flows', description: 'See how higher-intent paths are structured.' },
-      { href: '/demo', title: 'Book a demo', description: 'Review a related high-intent journey.' },
+      { href: '/demo', title: 'book a consultation', description: 'Review a related high-intent journey.' },
       { href: '/pricing', title: 'Pricing', description: 'Understand rollout and support guidance.' },
       { href: '/trust', title: 'Trust Center', description: 'Validate governance and support details.' }
     ]
