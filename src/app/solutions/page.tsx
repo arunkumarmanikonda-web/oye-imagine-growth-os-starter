@@ -1,4 +1,4 @@
-﻿import Link from 'next/link'
+import Link from 'next/link'
 import { getNeejeeCanonicalAudit } from '@/lib/recovery/neejee-canonical-truth-foundation'
 import { getContentPublishingExperience } from '@/lib/recovery/content-governance-foundation'
 import { getPublishingSystemAudit } from '@/lib/recovery/publishing-system-closure-foundation'
@@ -8,7 +8,7 @@ const proofStages = [
   'Audit and intelligence readiness',
   'Strategy and operating plan generation',
   'Governed page system and route publication',
-  'Client/operator visibility and launch proof',
+  'Client/operator visibility and launch readiness',
 ]
 
 export default function SolutionsPage() {
@@ -27,7 +27,7 @@ export default function SolutionsPage() {
       <section className='mx-auto flex w-full max-w-7xl flex-col gap-8'>
         <header className='grid gap-6 rounded-[2rem] border border-white/10 bg-white/5 p-8 lg:grid-cols-[1.15fr_0.85fr]'>
           <div>
-            <p className='text-sm uppercase tracking-[0.35em] text-cyan-300'>Mega Batch C4 proof surface</p>
+            <p className='text-sm uppercase tracking-[0.35em] text-cyan-300'>Mega Batch C4 launch surface</p>
             <h1 className='mt-4 text-4xl font-semibold'>Neejee end-to-end readiness across governed platform surfaces</h1>
             <p className='mt-4 max-w-4xl text-base leading-8 text-slate-300'>
               This route ties canonical identity, governed publishing, and workspace evidence into one visible closure path for C4.
@@ -53,7 +53,7 @@ export default function SolutionsPage() {
 
         <section className='grid gap-5 lg:grid-cols-2'>
           <article className='rounded-[1.5rem] border border-white/10 bg-white/5 p-6'>
-            <p className='text-sm uppercase tracking-[0.35em] text-cyan-300'>Proof stages</p>
+            <p className='text-sm uppercase tracking-[0.35em] text-cyan-300'>Launch stages</p>
             <ol className='mt-5 space-y-3 text-sm text-slate-300'>
               {proofStages.map((stage, index) => (
                 <li key={stage} className='rounded-xl border border-white/10 bg-black/20 px-4 py-3'>
@@ -91,7 +91,7 @@ export default function SolutionsPage() {
           </article>
 
           <article className='rounded-[1.5rem] border border-white/10 bg-white/5 p-6'>
-            <p className='text-sm uppercase tracking-[0.35em] text-cyan-300'>Neejee public proof footer</p>
+            <p className='text-sm uppercase tracking-[0.35em] text-cyan-300'>Neejee public launch footer</p>
             <div className='mt-5 rounded-xl border border-white/10 bg-black/20 px-4 py-4 text-sm leading-7 text-slate-300'>
               {neejee.publicIdentity.legalFooter}
             </div>

@@ -7,7 +7,7 @@ const studies = [
   },
   {
     title: 'Conversion-path refinement',
-    body: 'Qualification, demo, lead capture, and related public routes were standardized for stronger operational consistency.'
+    body: 'Qualification, strategy call, lead capture, and related public routes were standardized for stronger operational consistency.'
   },
   {
     title: 'SEO and trust uplift',

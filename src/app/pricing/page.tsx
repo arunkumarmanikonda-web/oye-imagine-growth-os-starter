@@ -1,7 +1,7 @@
 const pricingHighlights = [
   {
     title: 'Modular rollout',
-    body: 'Start with one governed public flow, then expand into qualification, demo, marketplace, and partner-facing experiences.'
+    body: 'Start with one governed public flow, then expand into qualification, strategy call, marketplace, and partner-facing experiences.'
   },
   {
     title: 'Enterprise alignment',

@@ -31,7 +31,7 @@ export default function AccessibilityPage() {
             <h2>Scope</h2>
             <p>
               This statement currently applies to the main public website routes, including the home page, contact,
-              demo, qualification, lead-capture, and accessibility pages.
+              strategy call, qualification, lead-capture, and accessibility pages.
             </p>
           </PublicSectionBlock>
 

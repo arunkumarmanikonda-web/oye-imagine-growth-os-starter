@@ -7,7 +7,7 @@ import { buildMetadata, faqPageJsonLd, productJsonLd } from '@/lib/seo/site'
 export const metadata: Metadata = buildMetadata(
   '/platform',
   'Enterprise Commerce Platform | OYE Imagine',
-  'Understand the OYE Imagine platform for governed public growth journeys, qualification, demo workflows, and enterprise commerce presentation.'
+  'Understand the OYE Imagine platform for governed public growth journeys, qualification, guided workflows, and enterprise commerce presentation.'
 )
 
 export default function PlatformLayout({ children }: { children: ReactNode }) {

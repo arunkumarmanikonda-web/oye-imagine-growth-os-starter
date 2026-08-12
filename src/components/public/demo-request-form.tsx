@@ -65,7 +65,7 @@ export function DemoRequestForm({ className = '' }: DemoRequestFormProps) {
       const json = await response.json().catch(() => ({}))
 
       if (!response.ok || !json?.requestId) {
-        throw new Error(json?.error || 'Demo request failed.')
+        throw new Error(json?.error || 'Strategy call request failed.')
       }
 
       setRequestId(json.requestId)
@@ -73,7 +73,7 @@ export function DemoRequestForm({ className = '' }: DemoRequestFormProps) {
       form.reset(defaultValues)
     } catch (error) {
       setUiState('error')
-      setErrorMessage(error instanceof Error ? error.message : 'Demo request failed.')
+      setErrorMessage(error instanceof Error ? error.message : 'Strategy call request failed.')
     }
   }
 
@@ -81,7 +81,7 @@ export function DemoRequestForm({ className = '' }: DemoRequestFormProps) {
     <section className={`space-y-6 ${className}`.trim()}>
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">
-          Interactive demo request
+          Interactive strategy call request
         </p>
         <h2 className="text-2xl font-semibold text-slate-900">Book a guided walkthrough</h2>
         <p className="text-sm leading-6 text-slate-600">
@@ -96,7 +96,7 @@ export function DemoRequestForm({ className = '' }: DemoRequestFormProps) {
       {progress === 0 ? (
         <PublicFormState
           state="empty"
-          title="Start your demo request"
+          title="Start your strategy call request"
           body="Add your team context and use case to unlock the booking handoff."
         />
       ) : null}
@@ -104,7 +104,7 @@ export function DemoRequestForm({ className = '' }: DemoRequestFormProps) {
       {uiState === 'loading' ? (
         <PublicFormState
           state="loading"
-          title="Submitting demo request"
+          title="Submitting strategy call request"
           body="We are validating details, preparing the audit trail, and queuing the booking handoff."
         />
       ) : null}
@@ -112,8 +112,8 @@ export function DemoRequestForm({ className = '' }: DemoRequestFormProps) {
       {uiState === 'error' ? (
         <PublicFormState
           state="error"
-          title="Demo request needs attention"
-          body={errorMessage || 'The demo request did not complete.'}
+          title="Strategy call request needs attention"
+          body={errorMessage || 'The strategy call request did not complete.'}
           onRetry={() => {
             setUiState('idle')
             setErrorMessage('')
@@ -125,7 +125,7 @@ export function DemoRequestForm({ className = '' }: DemoRequestFormProps) {
         <div className="space-y-4">
           <PublicFormState
             state="success"
-            title="Demo request submitted"
+            title="Strategy call request submitted"
             body="The booking handoff is ready. Continue to the calendar step."
             requestId={requestId}
           />
@@ -189,7 +189,7 @@ export function DemoRequestForm({ className = '' }: DemoRequestFormProps) {
           disabled={form.formState.isSubmitting}
           className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
         >
-          Request demo
+          Request strategy call
         </button>
       </form>
     </section>

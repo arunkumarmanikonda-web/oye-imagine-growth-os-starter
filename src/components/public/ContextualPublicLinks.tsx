@@ -38,7 +38,7 @@ const relatedMap: Record<string, RelatedConfig> = {
     links: [
       { href: '/platform', title: 'Platform', description: 'Review the foundation behind the solutions layer.' },
       { href: '/marketplace', title: 'Marketplace', description: 'See a major surface where solutions are applied.' },
-      { href: '/case-studies', title: 'Case studies', description: 'Read implementation-oriented proof points and examples.' },
+      { href: '/case-studies', title: 'Case studies', description: 'Read implementation-oriented results and examples.' },
       { href: '/trust', title: 'Trust Center', description: 'Review governance, delivery, and support signals.' }
     ]
   },
@@ -52,7 +52,7 @@ const relatedMap: Record<string, RelatedConfig> = {
     ]
   },
   '/pricing': {
-    intro: 'Pricing decisions usually depend on platform scope, marketplace complexity, demo needs, and trust requirements.',
+    intro: 'Pricing decisions usually depend on platform scope, marketplace complexity, guided consultation needs, and trust requirements.',
     links: [
       { href: '/platform', title: 'Platform', description: 'Map pricing to platform scope and governance.' },
       { href: '/marketplace', title: 'Marketplace', description: 'See a high-complexity public surface that affects rollout size.' },
@@ -79,7 +79,7 @@ const relatedMap: Record<string, RelatedConfig> = {
     ]
   },
   '/contact': {
-    intro: 'Before reaching out, many teams compare platform scope, pricing, demo availability, and trust signals.',
+    intro: 'Before reaching out, many teams compare platform scope, pricing, consultation availability, and trust signals.',
     links: [
       { href: '/platform', title: 'Platform', description: 'Review the public system foundation.' },
       { href: '/pricing', title: 'Pricing', description: 'Understand rollout and implementation guidance.' },
@@ -88,11 +88,11 @@ const relatedMap: Record<string, RelatedConfig> = {
     ]
   },
   '/demo': {
-    intro: 'Demo evaluation often continues into pricing, qualification logic, platform scope, and trust review.',
+    intro: 'Strategy call evaluation often continues into pricing, qualification logic, platform scope, and trust review.',
     links: [
       { href: '/pricing', title: 'Pricing', description: 'Review delivery scope and rollout guidance.' },
       { href: '/qualification', title: 'Qualification flows', description: 'See how guided intake works alongside demos.' },
-      { href: '/platform', title: 'Platform', description: 'Understand the shared system behind the demo journey.' },
+      { href: '/platform', title: 'Platform', description: 'Understand the shared system behind the strategy call journey.' },
       { href: '/trust', title: 'Trust Center', description: 'Validate governance and support posture.' }
     ]
   },

@@ -132,7 +132,7 @@ export function LeadCaptureForm({
         <PublicFormState
           state="empty"
           title="Start the intake"
-          body="Choose the intent and add enough context for persistence, audit proof, and confirmation logging."
+          body="Choose the intent and add enough context for persistence, audit trail, and confirmation logging."
         />
       ) : null}
 
@@ -140,7 +140,7 @@ export function LeadCaptureForm({
         <PublicFormState
           state="loading"
           title="Submitting intake"
-          body="We are validating the shared submission payload and writing the proof logs."
+          body="We are validating the shared submission payload and writing the submission logs."
         />
       ) : null}
 
