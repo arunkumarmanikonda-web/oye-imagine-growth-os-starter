@@ -78,7 +78,7 @@ export default function SolutionsPage() {
 
         <section className='grid gap-5 lg:grid-cols-[1fr_1fr]'>
           <article className='rounded-[1.5rem] border border-white/10 bg-white/5 p-6'>
-            <p className='text-sm uppercase tracking-[0.35em] text-cyan-300'>Unresolved blocker ledger</p>
+            <p className='text-sm uppercase tracking-[0.35em] text-cyan-300'>Launch readiness ledger</p>
             <div className='mt-5 space-y-3 text-sm text-slate-300'>
               {unresolved.length ? (
                 unresolved.map((item) => (

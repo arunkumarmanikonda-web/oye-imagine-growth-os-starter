@@ -58,7 +58,7 @@ export default function PlatformPage() {
               <div className='mt-5 space-y-3 text-sm text-slate-300'>
                 <div className='flex items-center justify-between gap-3'><span>Published</span><strong className='text-white'>{surface.summary.publishedCount}</strong></div>
                 <div className='flex items-center justify-between gap-3'><span>Ready</span><strong className='text-white'>{surface.summary.readyCount}</strong></div>
-                <div className='flex items-center justify-between gap-3'><span>Blocked</span><strong className='text-white'>{surface.summary.blockedCount}</strong></div>
+                <div className='flex items-center justify-between gap-3'><span>In progress</span><strong className='text-white'>{surface.summary.blockedCount}</strong></div>
               </div>
             </article>
           ))}
