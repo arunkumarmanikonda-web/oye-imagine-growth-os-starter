@@ -34,15 +34,22 @@ function readStringArray(value: unknown): string[] {
 
       if (item && typeof item === "object") {
         const record = item as Record<string, unknown>;
-        return readString(
-          record.label ?? record.title ?? record.name ?? record.value,
-          "",
-        );
+        return readString(record.label ?? record.title ?? record.name ?? record.value, "");
       }
 
       return "";
     })
     .filter(Boolean);
+}
+
+function firstNonEmptyArray(...values: unknown[]): string[] {
+  for (const value of values) {
+    const items = readStringArray(value);
+    if (items.length > 0) {
+      return items;
+    }
+  }
+  return [];
 }
 
 function pickBrandName(
@@ -56,35 +63,43 @@ function pickBrandName(
     readString(strategyRecord.brandName) ||
     readString(pilotRecord.brandName) ||
     readString(pilotRecord.workspaceDisplayName) ||
-    "Neejee Clinics"
+    "Neejee"
   );
 }
 
-function pickPrimaryService(pilot: NeejeePilotRecord): string {
+function pickPrimaryOffer(pilot: NeejeePilotRecord): string {
   const pilotRecord = pilot as unknown as Record<string, unknown>;
-  const services = readStringArray(pilotRecord.services);
+  const namedCategories = firstNonEmptyArray(
+    pilotRecord.productCategories,
+    pilotRecord.categories,
+    pilotRecord.products,
+    pilotRecord.services,
+  );
 
-  if (services.length > 0) {
-    return services[0];
+  if (namedCategories.length > 0) {
+    return namedCategories[0];
   }
 
-  return "Consultation";
+  return (
+    readString(pilotRecord.offer) ||
+    "Indian ethnic fashion, jewellery and accessories"
+  );
 }
 
 function pickGeoTargets(pilot: NeejeePilotRecord): string[] {
   const pilotRecord = pilot as unknown as Record<string, unknown>;
+  const explicit = firstNonEmptyArray(
+    pilotRecord.geoTargets,
+    pilotRecord.locations,
+    pilotRecord.cities,
+  );
 
-  return (
-    readStringArray(pilotRecord.geoTargets) ||
-    readStringArray(pilotRecord.locations) ||
-    readStringArray(pilotRecord.cities)
-  ).length > 0
-    ? (
-        readStringArray(pilotRecord.geoTargets) ||
-        readStringArray(pilotRecord.locations) ||
-        readStringArray(pilotRecord.cities)
-      )
-    : ["Bengaluru"];
+  if (explicit.length > 0) {
+    return explicit;
+  }
+
+  const geo = readString(pilotRecord.geo);
+  return geo ? [geo] : ["India"];
 }
 
 function pickAudience(strategy?: StrategyBriefRecord | null): string[] {
@@ -106,10 +121,7 @@ function pickPillars(strategy?: StrategyBriefRecord | null): string[] {
   return readStringArray(pillars);
 }
 
-function pickLandingPageUrl(
-  pilotId: string,
-  landingPage?: unknown,
-): string {
+function pickLandingPageUrl(pilotId: string, landingPage?: unknown): string {
   const landingPageRecord = (landingPage ?? null) as Record<string, unknown> | null;
 
   return (
@@ -128,36 +140,36 @@ function pickSitelinks(landingPage?: unknown): string[] {
   }
 
   return [
-    "Book Consultation",
-    "Treatment Options",
-    "Success Stories",
-    "Pricing and FAQs",
+    "Shop New Arrivals",
+    "Jewellery & Accessories",
+    "Indian Craft Collections",
+    "Shipping & Support",
   ];
 }
 
 function buildKeywordClusters(
-  service: string,
+  offer: string,
   audience: string[],
 ): Array<{ theme: string; keywords: string[] }> {
-  const lowerService = service.toLowerCase();
+  const normalizedOffer = offer.toLowerCase();
   const primaryAudience =
-    audience.length > 0 ? audience[0].toLowerCase() : "high-intent search traffic";
+    audience.length > 0 ? audience[0].toLowerCase() : "online shoppers";
 
   return [
     {
-      theme: `${service} high intent`,
+      theme: `${offer} purchase intent`,
       keywords: [
-        `best ${lowerService} clinic`,
-        `${lowerService} consultation`,
-        `${lowerService} near me`,
+        `buy ${normalizedOffer} online`,
+        `shop ${normalizedOffer}`,
+        `${normalizedOffer} India`,
       ],
     },
     {
-      theme: "Audience demand capture",
+      theme: "Audience product discovery",
       keywords: [
-        `${primaryAudience} ${lowerService}`,
-        `${lowerService} specialist`,
-        `book ${lowerService} consultation`,
+        `${primaryAudience} ${normalizedOffer}`,
+        `premium ${normalizedOffer} online`,
+        `discover ${normalizedOffer}`,
       ],
     },
   ];
@@ -165,7 +177,7 @@ function buildKeywordClusters(
 
 function buildAdCopy(
   brandName: string,
-  service: string,
+  offer: string,
   pillars: string[],
 ): Array<{
   headline1: string;
@@ -176,20 +188,20 @@ function buildAdCopy(
   const pillarLine =
     pillars.length > 0
       ? pillars.slice(0, 2).join(" • ")
-      : "Trust-first messaging • Low-friction booking";
+      : "Curated Indian craft • Easy online discovery";
 
   return [
     {
-      headline1: `${brandName} ${service}`,
-      headline2: "Book Trusted Specialist Care",
-      description1: `Target high-intent demand for ${service.toLowerCase()} consultations.`,
+      headline1: `${brandName} Online`,
+      headline2: "Discover Indian Craft & Style",
+      description1: `Explore ${offer.toLowerCase()} with a clear path from discovery to purchase.`,
       description2: pillarLine,
     },
     {
-      headline1: `${service} Consultation`,
-      headline2: `Talk To ${brandName}`,
-      description1: "Drive qualified leads with direct response search messaging.",
-      description2: "Strong proof, clear value, and a simple booking path.",
+      headline1: `Shop ${brandName}`,
+      headline2: "Curated Indian Collections",
+      description1: "Reach high-intent shoppers with product-led search messaging.",
+      description2: "Clear value, credible product context and a low-friction shopping path.",
     },
   ];
 }
@@ -206,17 +218,17 @@ export function buildGoogleAdsDraftFromPilot(
   const workspaceId = readString(pilotRecord.workspaceId, "oye-imagine");
   const workspaceDisplayName = readString(
     pilotRecord.workspaceDisplayName,
-    "Oye Imagine",
+    "Oye !magine",
   );
   const brandName = pickBrandName(pilot, strategy);
-  const service = pickPrimaryService(pilot);
+  const offer = pickPrimaryOffer(pilot);
   const audience = pickAudience(strategy);
   const pillars = pickPillars(strategy);
   const landingPageUrl = pickLandingPageUrl(pilotId, landingPage);
   const geoTargets = pickGeoTargets(pilot);
   const objective =
     readString(strategyRecord.objective) ||
-    `Generate qualified ${service.toLowerCase()} consultation demand from search campaigns.`;
+    `Grow qualified ecommerce traffic and purchases for ${brandName} through search campaigns.`;
 
   return createGoogleAdsCampaignDraftRecord({
     pilotId,
@@ -228,8 +240,8 @@ export function buildGoogleAdsDraftFromPilot(
     landingPageUrl,
     geoTargets,
     budgetDailyUsd: 45,
-    keywordClusters: buildKeywordClusters(service, audience),
-    adCopy: buildAdCopy(brandName, service, pillars),
+    keywordClusters: buildKeywordClusters(offer, audience),
+    adCopy: buildAdCopy(brandName, offer, pillars),
     sitelinks: pickSitelinks(landingPage),
   });
 }
