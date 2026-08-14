@@ -14,6 +14,11 @@ function mustChangePassword(user: { app_metadata?: Record<string, unknown> | nul
   return user.app_metadata?.must_change_password === true
 }
 
+function activationState(membership: VerifiedMembership) {
+  const value = membership.metadata?.activationState
+  return typeof value === 'string' ? value : null
+}
+
 export async function updateSession(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -38,11 +43,12 @@ export async function updateSession(request: NextRequest) {
   const isWorkspace = pathname.startsWith('/workspace')
   const isAdmin = pathname.startsWith('/admin') || isApiAdmin
   const isClient = pathname.startsWith('/client') || isApiClient
+  const isOnboarding = pathname === '/onboarding/activation' || pathname.startsWith('/onboarding/activation/')
   const isApiProtected = isApiAdmin || isApiClient
   const isUnifiedLogin = pathname === '/login' || pathname === '/login/admin' || pathname === '/login/client'
   const isSignup = pathname.startsWith('/signup')
   const isPasswordChange = pathname.startsWith('/account/change-password')
-  const protectedRoute = isWorkspace || isAdmin || isClient
+  const protectedRoute = isWorkspace || isAdmin || isClient || isOnboarding
 
   if (!user) {
     if (protectedRoute || isPasswordChange) {
@@ -82,7 +88,10 @@ export async function updateSession(request: NextRequest) {
 
   const memberships = (membershipRows ?? []) as VerifiedMembership[]
   const primary = selectPrimaryMembership(memberships)
-  if ((isUnifiedLogin || isSignup) && primary) return NextResponse.redirect(new URL('/workspace', request.url))
+  if ((isUnifiedLogin || isSignup) && primary) {
+    const state = activationState(primary)
+    return NextResponse.redirect(new URL(state && state !== 'active' ? '/onboarding/activation' : '/workspace', request.url))
+  }
   if (!protectedRoute) return response
   if (!primary) {
     if (isApiProtected) return apiError('access_denied', 403)
@@ -108,6 +117,14 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(mfa)
     }
   }
+
+  const state = activationState(membership)
+  if (state && state !== 'active') {
+    if (isApiProtected) return apiError('commercial_activation_required', 403)
+    if (!isOnboarding) return NextResponse.redirect(new URL('/onboarding/activation', request.url))
+    return response
+  }
+  if (isOnboarding && state === 'active') return NextResponse.redirect(new URL('/workspace', request.url))
 
   const permission = permissionForPathname(pathname)
   if (permission) {
