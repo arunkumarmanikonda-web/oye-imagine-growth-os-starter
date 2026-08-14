@@ -57,19 +57,6 @@ export function resolvePermissionDecision(input: {
   permission: string
 }): EffectivePermissionDecision {
   const permission = input.permission.trim()
-  if (input.roleKey === 'platform_owner') {
-    const denied = input.overrides.find(
-      (override) =>
-        override.effect === 'deny' &&
-        overrideAppliesToMembership(override, input.membership) &&
-        permissionPatternMatches(override.permission_key, permission),
-    )
-    if (denied) {
-      return { permission, allowed: false, source: 'explicit_deny', matchedPattern: denied.permission_key }
-    }
-    return { permission, allowed: true, source: 'platform_owner', matchedPattern: '*' }
-  }
-
   const applicable = input.overrides.filter((override) =>
     overrideAppliesToMembership(override, input.membership),
   )
@@ -78,6 +65,10 @@ export function resolvePermissionDecision(input: {
   )
   if (denied) {
     return { permission, allowed: false, source: 'explicit_deny', matchedPattern: denied.permission_key }
+  }
+
+  if (input.roleKey === 'platform_owner') {
+    return { permission, allowed: true, source: 'platform_owner', matchedPattern: '*' }
   }
 
   const allowed = applicable.find(
@@ -97,9 +88,7 @@ export function resolvePermissionDecision(input: {
 
 const ROUTE_PERMISSION_PREFIXES: Array<[string, string]> = [
   ['/admin/access-control', 'platform.access'],
-  ['/api/admin/access/', 'platform.access'],
   ['/admin/config', 'platform.config'],
-  ['/api/admin/config/', 'platform.config'],
   ['/admin/brand-intelligence', 'brand.view'],
   ['/admin/creative', 'creative.view'],
   ['/admin/content', 'content.view'],
@@ -117,7 +106,18 @@ const ROUTE_PERMISSION_PREFIXES: Array<[string, string]> = [
   ['/workspace', 'workspace.view'],
 ]
 
+function normalizedPermissionPath(pathname: string) {
+  if (pathname.startsWith('/api/admin/')) return pathname.replace('/api/admin/', '/admin/')
+  if (pathname === '/api/admin') return '/admin'
+  if (pathname.startsWith('/api/client/')) return pathname.replace('/api/client/', '/client/')
+  if (pathname === '/api/client') return '/client'
+  return pathname
+}
+
 export function permissionForPathname(pathname: string) {
-  const match = ROUTE_PERMISSION_PREFIXES.find(([prefix]) => pathname === prefix || pathname.startsWith(`${prefix}/`) || pathname.startsWith(prefix))
+  const normalized = normalizedPermissionPath(pathname)
+  const match = ROUTE_PERMISSION_PREFIXES.find(
+    ([prefix]) => normalized === prefix || normalized.startsWith(`${prefix}/`),
+  )
   return match?.[1] ?? null
 }
