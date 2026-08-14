@@ -1,36 +1,25 @@
-import { getOperatorControlPlaneExperience } from '@/lib/recovery/operator-control-plane-foundation'
+'use client'
 
-export default function AdminContentPage() {
-  const experience = getOperatorControlPlaneExperience()
+import { FormEvent, useCallback, useEffect, useState } from 'react'
 
-  return (
-    <main className="min-h-screen bg-slate-950 px-6 py-12 text-white md:px-10">
-      <section className="mx-auto max-w-6xl rounded-[2rem] border border-white/10 bg-white/5 p-8">
-        <p className="text-sm uppercase tracking-[0.35em] text-cyan-300">Operator content</p>
-        <h1 className="mt-4 text-4xl font-semibold">Content operations and publishing governance</h1>
-        <p className="mt-4 max-w-3xl text-base leading-8 text-slate-300">
-          Governed operator content surfaces for publishing control, runtime integrity and launch-safe review.
-        </p>
+type PageRow={slug:string;title:string;audience:string;page_type:string;status:string;layout_key:string;data:Record<string,unknown>;seo:Record<string,unknown>;updated_at:string}
+type Claim={claim_key:string;claim_pattern:string;capability:string;minimum_state:string;current_state:string;approved_at:string|null}
 
-        <div className="mt-8 grid gap-6 md:grid-cols-2">
-          {experience.contentOperations.map((card) => (
-            <article key={card.title} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-6">
-              <h2 className="text-xl font-semibold">{card.title}</h2>
-              <p className="mt-3 text-sm leading-7 text-slate-300">{card.summary}</p>
-              <ul className="mt-4 space-y-3 text-sm leading-7 text-slate-300">
-                {card.checkpoints.map((item) => (
-                  <li key={item}>• {item}</li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-
-        <div className="mt-8 rounded-[1.5rem] border border-white/10 bg-black/20 p-6 text-sm leading-7 text-slate-300">
-          <p>Canonical workspace: {experience.operatorIdentity.canonicalWorkspace}</p>
-          <p className="mt-2">{experience.operatorIdentity.governanceNote}</p>
-        </div>
-      </section>
-    </main>
-  )
+export default function AdminContentPage(){
+  const[pages,setPages]=useState<PageRow[]>([]);const[claims,setClaims]=useState<Claim[]>([]);const[slug,setSlug]=useState('homepage');const[title,setTitle]=useState('Homepage');const[body,setBody]=useState('');const[notice,setNotice]=useState('');const[versions,setVersions]=useState<any[]>([])
+  const load=useCallback(async()=>{const[p,c]=await Promise.all([fetch('/api/admin/cms/pages',{cache:'no-store'}),fetch('/api/admin/cms/claims',{cache:'no-store'})]);const pj=await p.json();const cj=await c.json();if(pj.ok)setPages(pj.pages||[]);if(cj.ok)setClaims(cj.claims||[])},[])
+  useEffect(()=>{void load()},[load])
+  async function api(payload:Record<string,unknown>){const r=await fetch('/api/admin/cms/pages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const j=await r.json();setNotice(j.ok?'Action completed.':`${j.code||'error'}${j.blockers?`: ${j.blockers.map((b:any)=>b.claimKey).join(', ')}`:''}`);await load();return j}
+  async function save(event:FormEvent){event.preventDefault();await api({action:'save_draft',page:{slug,title,audience:'public',pageType:'marketing',layoutKey:'public',data:{body},seo:{title,description:body.slice(0,160)},visibilityRules:{}}})}
+  async function loadVersions(pageSlug:string){const r=await fetch(`/api/admin/cms/pages?slug=${encodeURIComponent(pageSlug)}`,{cache:'no-store'});const j=await r.json();if(j.ok)setVersions(j.versions||[]);setSlug(pageSlug)}
+  return <main className="min-h-screen bg-[#111] px-6 py-10 text-[#fffdf8]"><section className="mx-auto max-w-7xl">
+    <p className="text-xs font-black uppercase tracking-[0.24em] text-[#fdca5a]">Governed CMS</p><h1 className="mt-3 text-4xl font-black tracking-[-0.05em]">Draft. Review. Approve. Publish. Roll back.</h1><p className="mt-4 max-w-3xl text-sm leading-7 text-white/60">Public content is versioned and audited. Publishing is blocked when a registered high-risk capability claim exceeds its evidence state.</p>
+    {notice?<p className="mt-5 rounded-xl bg-[#f7adc8] p-4 font-bold text-black">{notice}</p>:null}
+    <div className="mt-8 grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
+      <form onSubmit={save} className="rounded-[2rem] border border-white/15 bg-white/[0.06] p-6"><h2 className="text-xl font-black">Page editor</h2><label className="mt-4 block text-xs font-bold uppercase tracking-[0.18em] text-white/50">Slug</label><input value={slug} onChange={e=>setSlug(e.target.value)} className="mt-2 w-full rounded-xl border border-white/15 bg-black p-3"/><label className="mt-4 block text-xs font-bold uppercase tracking-[0.18em] text-white/50">Title</label><input value={title} onChange={e=>setTitle(e.target.value)} className="mt-2 w-full rounded-xl border border-white/15 bg-black p-3"/><label className="mt-4 block text-xs font-bold uppercase tracking-[0.18em] text-white/50">Body</label><textarea rows={10} value={body} onChange={e=>setBody(e.target.value)} className="mt-2 w-full rounded-xl border border-white/15 bg-black p-3"/><button className="mt-4 w-full rounded-full bg-[#fdca5a] px-5 py-3 font-black text-black">Save draft</button></form>
+      <div className="rounded-[2rem] border border-white/15 bg-white/[0.06] p-6"><h2 className="text-xl font-black">Pages</h2><div className="mt-4 grid gap-3">{pages.map(page=><div key={page.slug} className="rounded-xl border border-white/10 bg-black/30 p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-black">{page.title}</p><p className="text-xs text-white/50">/{page.slug} · {page.status}</p></div><button onClick={()=>void loadVersions(page.slug)} className="rounded-full border border-white/20 px-3 py-1 text-xs font-bold">Versions</button></div><div className="mt-3 flex flex-wrap gap-2"><button onClick={()=>void api({action:'review',slug:page.slug})} className="rounded-full border border-white/20 px-3 py-1 text-xs">Review</button><button onClick={()=>void api({action:'approve',slug:page.slug})} className="rounded-full bg-[#f7adc8] px-3 py-1 text-xs font-black text-black">Approve</button><button onClick={()=>void api({action:'publish',slug:page.slug})} className="rounded-full bg-[#fdca5a] px-3 py-1 text-xs font-black text-black">Publish</button></div></div>)}</div></div>
+    </div>
+    {versions.length?<section className="mt-6 rounded-[2rem] border border-white/15 bg-white/[0.06] p-6"><h2 className="text-xl font-black">Version history: {slug}</h2><div className="mt-4 grid gap-3">{versions.map(v=><div key={v.version_label} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/30 p-4"><div><p className="font-bold">{v.version_label}</p><p className="text-xs text-white/50">{v.published_at} · {v.published_by||'unknown'}</p></div><button onClick={()=>void api({action:'rollback',slug,version:v.version_label})} className="rounded-full border border-[#fdca5a] px-3 py-1 text-xs font-bold text-[#fdca5a]">Publish rollback</button></div>)}</div></section>:null}
+    <section className="mt-6 rounded-[2rem] border border-white/15 bg-white/[0.06] p-6"><h2 className="text-xl font-black">Capability claims register</h2><div className="mt-4 grid gap-3 md:grid-cols-2">{claims.map(claim=><div key={claim.claim_key} className="rounded-xl border border-white/10 bg-black/30 p-4"><p className="font-black">{claim.capability}</p><p className="mt-1 text-xs text-white/50">Pattern: “{claim.claim_pattern}”</p><p className="mt-2 text-sm">{claim.current_state} → minimum {claim.minimum_state}</p><p className={`mt-2 text-xs font-bold ${claim.approved_at?'text-emerald-300':'text-amber-300'}`}>{claim.approved_at?'Evidence approved':'Approval required before publish'}</p></div>)}</div></section>
+  </section></main>
 }
