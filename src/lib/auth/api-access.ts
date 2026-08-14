@@ -4,6 +4,7 @@ import {
   type VerifiedAccessLane,
   type VerifiedMembership,
 } from '@/lib/auth/verified-membership'
+import { decidePermission, loadPermissionSet, type ResolvedPermissionSet } from '@/lib/auth/access-resolver'
 
 export type ApiVerifiedMembership = VerifiedMembership & {
   metadata?: Record<string, unknown> | null
@@ -16,6 +17,7 @@ export type ApiAccessContext = {
   membership: ApiVerifiedMembership
   memberships: ApiVerifiedMembership[]
   assuranceLevel: 'aal1' | 'aal2'
+  permissionSet: ResolvedPermissionSet
 }
 
 export class ApiAccessError extends Error {
@@ -24,6 +26,7 @@ export class ApiAccessError extends Error {
     | 'unauthenticated'
     | 'access_denied'
     | 'mfa_required'
+    | 'password_change_required'
     | 'access_control_unavailable'
 
   constructor(
@@ -44,6 +47,15 @@ function metadataString(
 ) {
   const value = membership.metadata?.[key]
   return typeof value === 'string' && value.trim() ? value.trim() : null
+}
+
+function mustChangePassword(claims: Record<string, unknown> | undefined) {
+  const appMetadata = claims?.app_metadata
+  return Boolean(
+    appMetadata &&
+      typeof appMetadata === 'object' &&
+      (appMetadata as Record<string, unknown>).must_change_password === true,
+  )
 }
 
 export function membershipMatchesTenant(
@@ -113,13 +125,19 @@ export async function requireApiAccess(input: {
   lane: VerifiedAccessLane
   tenantId?: string | null
   workspaceId?: string | null
+  permission?: string | null
 }): Promise<ApiAccessContext> {
   const supabase = await createSupabaseServerClient()
   const { data: claimsData, error: claimsError } = await supabase.auth.getClaims()
-  const subject = claimsData?.claims?.sub
+  const claims = claimsData?.claims as Record<string, unknown> | undefined
+  const subject = claims?.sub
 
   if (claimsError || typeof subject !== 'string' || !subject) {
     throw new ApiAccessError(401, 'unauthenticated', 'Verified sign-in is required.')
+  }
+
+  if (mustChangePassword(claims)) {
+    throw new ApiAccessError(403, 'password_change_required', 'A password change is required before this account can continue.')
   }
 
   const { data: membershipRows, error: membershipError } = await supabase
@@ -177,7 +195,34 @@ export async function requireApiAccess(input: {
     }
   }
 
-  const emailClaim = claimsData?.claims?.email
+  let permissionSet: ResolvedPermissionSet
+  try {
+    permissionSet = await loadPermissionSet({ supabase, subject, membership })
+  } catch {
+    throw new ApiAccessError(
+      503,
+      'access_control_unavailable',
+      'Permission controls are unavailable.',
+    )
+  }
+
+  if (input.permission) {
+    const decision = decidePermission({
+      roleKey: membership.role_key,
+      membership,
+      permissionSet,
+      permission: input.permission,
+    })
+    if (!decision.allowed) {
+      throw new ApiAccessError(
+        403,
+        'access_denied',
+        `Permission ${input.permission} is not granted for this identity.`,
+      )
+    }
+  }
+
+  const emailClaim = claims?.email
   return {
     subject,
     email: typeof emailClaim === 'string' ? emailClaim : null,
@@ -185,5 +230,6 @@ export async function requireApiAccess(input: {
     membership,
     memberships,
     assuranceLevel,
+    permissionSet,
   }
 }
