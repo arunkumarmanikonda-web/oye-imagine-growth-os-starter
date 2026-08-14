@@ -1,69 +1,74 @@
-import { NextResponse } from "next/server";
-import { generateGoogleAdsDraft } from "@/lib/admin/google-ads-generator";
+import { NextResponse } from 'next/server'
+import { ApiAccessError, requireApiAccess } from '@/lib/auth/api-access'
+import { generateGoogleAdsDraft } from '@/lib/admin/google-ads-generator'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object" && !Array.isArray(value);
+  return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
+function privateJson(body: unknown, status = 200) {
+  return NextResponse.json(body, {
+    status,
+    headers: { 'Cache-Control': 'private, no-store' },
+  })
 }
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json().catch(() => ({}));
+    await requireApiAccess({ lane: 'admin' })
+
+    const body = await request.json().catch(() => ({}))
 
     if (!isRecord(body)) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "Request body must be a JSON object.",
-        },
-        { status: 400 },
-      );
+      return privateJson(
+        { ok: false, error: 'Request body must be a JSON object.' },
+        400,
+      )
     }
 
     const pilotId =
-      typeof body.pilotId === "string" && body.pilotId.trim().length > 0
+      typeof body.pilotId === 'string' && body.pilotId.trim().length > 0
         ? body.pilotId.trim()
-        : undefined;
+        : undefined
 
-    const forceRegenerate = body.forceRegenerate === true;
-
+    const forceRegenerate = body.forceRegenerate === true
     const googleAdsDraft = generateGoogleAdsDraft({
       pilotId,
       forceRegenerate,
-    });
+    })
 
     const workspaceDisplayName =
-      typeof (googleAdsDraft as Record<string, unknown>).workspaceDisplayName === "string" &&
-      ((googleAdsDraft as Record<string, unknown>).workspaceDisplayName as string).trim().length > 0
+      typeof (googleAdsDraft as Record<string, unknown>).workspaceDisplayName ===
+        'string' &&
+      ((googleAdsDraft as Record<string, unknown>).workspaceDisplayName as string)
+        .trim().length > 0
         ? ((googleAdsDraft as Record<string, unknown>).workspaceDisplayName as string).trim()
-        : "Oye Imagine";
+        : 'Oye !magine'
 
-    return NextResponse.json(
+    return privateJson(
       {
         ok: true,
+        executionState: 'draft_only',
+        externalGoogleAdsMutationPerformed: false,
         workspaceDisplayName,
         googleAdsDraft,
       },
-      { status: 201 },
-    );
+      201,
+    )
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-
-    if (message.startsWith("Pilot not found:")) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: message,
-        },
-        { status: 404 },
-      );
+    if (error instanceof ApiAccessError) {
+      return privateJson(
+        { ok: false, error: error.message, code: error.code },
+        error.status,
+      )
     }
 
-    return NextResponse.json(
-      {
-        ok: false,
-        error: message,
-      },
-      { status: 500 },
-    );
+    const message = error instanceof Error ? error.message : 'Unknown error'
+
+    if (message.startsWith('Pilot not found:')) {
+      return privateJson({ ok: false, error: message }, 404)
+    }
+
+    return privateJson({ ok: false, error: message }, 500)
   }
 }
