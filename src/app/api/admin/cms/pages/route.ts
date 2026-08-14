@@ -1,0 +1,9 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { ApiAccessError, requireApiAccess } from '@/lib/auth/api-access'
+import { listPages, saveDraft, setPageStatus, publishPage, rollbackPage, listVersions } from '@/lib/cms/governed-cms'
+
+function json(body:unknown,status=200){return NextResponse.json(body,{status,headers:{'Cache-Control':'private, no-store'}})}
+
+export async function GET(request:NextRequest){try{await requireApiAccess({lane:'admin'});const slug=request.nextUrl.searchParams.get('slug');return json({ok:true,pages:slug?undefined:await listPages(),versions:slug?await listVersions(slug):undefined})}catch(error){if(error instanceof ApiAccessError)return json({ok:false,code:error.code},error.status);return json({ok:false,code:'cms_read_failed'},500)}}
+
+export async function POST(request:NextRequest){try{const access=await requireApiAccess({lane:'admin'});const body=await request.json();if(!body||typeof body!=='object')return json({ok:false,code:'invalid_request'},400);const action=String((body as any).action||'save_draft');const actor=access.email||access.subject;if(action==='save_draft'){const page=await saveDraft((body as any).page,actor);return json({ok:true,page})}if(action==='review'||action==='approve'||action==='draft'){const page=await setPageStatus(String((body as any).slug),action==='approve'?'approved':action==='review'?'review':'draft',actor);return json({ok:true,page})}if(action==='publish')return json(await publishPage(String((body as any).slug),actor));if(action==='rollback')return json(await rollbackPage(String((body as any).slug),String((body as any).version),actor));return json({ok:false,code:'unsupported_action'},400)}catch(error){if(error instanceof ApiAccessError)return json({ok:false,code:error.code},error.status);const code=error instanceof Error?error.message.split(':')[0]:'cms_write_failed';return json({ok:false,code,error:'CMS action failed.'},code==='cms_page_not_approved'?409:500)}}
