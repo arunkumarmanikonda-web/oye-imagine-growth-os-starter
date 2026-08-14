@@ -1,0 +1,6 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { ApiAccessError, requireApiAccess } from '@/lib/auth/api-access'
+import { growthHealthTarget, guardedRecommendationTarget } from '@/lib/integrations/growth-closed-loop'
+function json(body:unknown,status=200){return NextResponse.json(body,{status,headers:{'Cache-Control':'private, no-store'}})}
+export async function GET(request:NextRequest){try{const access=await requireApiAccess({lane:'admin'});return json({ok:true,...await growthHealthTarget(access,request.nextUrl.searchParams.get('workspaceId')||undefined)})}catch(error){if(error instanceof ApiAccessError)return json({ok:false,code:error.code},error.status);return json({ok:false,code:'growth_health_failed'},500)}}
+export async function POST(request:NextRequest){try{const access=await requireApiAccess({lane:'admin'});const body=await request.json();return json({ok:true,...await guardedRecommendationTarget(access,{workspaceId:body?.workspaceId,startDate:String(body?.startDate||''),endDate:String(body?.endDate||'')})},201)}catch(error){if(error instanceof ApiAccessError)return json({ok:false,code:error.code},error.status);return json({ok:false,code:'budget_recommendation_failed',error:'Recommendation could not be created.'},500)}}
