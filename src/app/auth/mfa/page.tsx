@@ -3,6 +3,7 @@ import MfaGate from './MfaGate'
 import { createLoginRedirectPath } from '@/lib/auth/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import {
+  membershipHasWorkspaceAuthority,
   selectMembershipForLane,
   type VerifiedMembership,
 } from '@/lib/auth/verified-membership'
@@ -38,7 +39,7 @@ export default async function MfaPage({ searchParams }: MfaPageProps) {
     'admin',
   )
 
-  if (!membership) {
+  if (!membership || !membershipHasWorkspaceAuthority(membership)) {
     redirect('/login/admin?error=access_denied')
   }
 
