@@ -57,7 +57,7 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        <div className={`social-mobile-panel ${open ? 'is-open' : ''}`} aria-hidden={!open}>
+        {open ? <div className="social-mobile-panel is-open">
           <div className="social-mobile-panel-inner">
             <div className="social-mobile-intro"><span>One identity</span><strong>The right workspace appears after sign in.</strong></div>
             <nav aria-label="Mobile navigation">
@@ -65,7 +65,7 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
             </nav>
             <div className="social-mobile-actions"><Link href="/signup">Create customer account</Link><Link href="/login">Sign in</Link><Link href="/contact">Contact us</Link></div>
           </div>
-        </div>
+        </div> : null}
       </header>
 
       <main id="main-content" className="oi-main">{children}</main>
