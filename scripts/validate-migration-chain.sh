@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+psql -v ON_ERROR_STOP=1 <<'SQL'
+create extension if not exists pgcrypto;
+create extension if not exists "uuid-ossp";
+
+do $$ begin create role anon nologin; exception when duplicate_object then null; end $$;
+do $$ begin create role authenticated nologin; exception when duplicate_object then null; end $$;
+do $$ begin create role service_role nologin bypassrls; exception when duplicate_object then null; end $$;
+
+create schema if not exists auth;
+create schema if not exists storage;
+
+create table if not exists auth.users (
+  id uuid primary key default gen_random_uuid(),
+  email text,
+  raw_app_meta_data jsonb default '{}'::jsonb,
+  raw_user_meta_data jsonb default '{}'::jsonb,
+  created_at timestamptz default now()
+);
+
+create or replace function auth.uid() returns uuid
+language sql stable as $$ select null::uuid $$;
+create or replace function auth.role() returns text
+language sql stable as $$ select 'authenticated'::text $$;
+create or replace function auth.jwt() returns jsonb
+language sql stable as $$ select '{}'::jsonb $$;
+
+create table if not exists storage.buckets (
+  id text primary key,
+  name text unique not null,
+  owner uuid,
+  public boolean default false,
+  file_size_limit bigint,
+  allowed_mime_types text[],
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create table if not exists storage.objects (
+  id uuid primary key default gen_random_uuid(),
+  bucket_id text references storage.buckets(id),
+  name text not null,
+  owner uuid,
+  metadata jsonb,
+  path_tokens text[] generated always as (string_to_array(name, '/')) stored,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+SQL
+
+mapfile -t migrations < <(find supabase/migrations -maxdepth 1 -type f -name '*.sql' | sort)
+
+for migration in "${migrations[@]}"; do
+  echo "==> validating ${migration}"
+  # Migration files may include their own BEGIN/COMMIT. Execute exactly as authored.
+  psql -v ON_ERROR_STOP=1 -f "$migration"
+done
+
+psql -v ON_ERROR_STOP=1 <<'SQL'
+do $$
+declare
+  required text[] := array[
+    'execution_landing_page_publications','execution_campaign_packages','execution_channel_publish_readiness','execution_approval_bound_decisions','execution_proof_packages',
+    'content_plan_runs','landing_page_drafts','campaign_drafts','seo_briefs','social_calendar_entries','creative_asset_drafts',
+    'search_optimization_briefs','channel_qa_reports','publish_guardrail_decisions','proof_execution_assets',
+    'reporting_delivery_centers','launch_readiness_dashboards','ops_support_handoffs','ops_dependency_signoffs','ops_hardening_evidence',
+    'organization_profiles','support_channels','support_mail_logs','tenant_brand_profiles','cms_pages','cms_sections','cms_promotions','cms_people_profiles','cms_faqs','cms_publish_versions','cms_audit_events',
+    'core_brands','core_workspaces','onboarding_intakes','brand_profiles','strategy_artifacts','website_audit_runs','competitor_snapshots','onboarding_activation_checklists',
+    'strategy_presentation_manifests','client_portal_snapshots','operator_work_items','pilot_tenant_configurations','pilot_website_audit_runs','pilot_competitor_landscapes','pilot_commercial_activation_checks','pilot_state_transitions',
+    'external_provider_credentials','tenant_activation_readiness_snapshots','deployment_verification_runs','external_dependency_register',
+    'provider_config_profiles','provider_secret_material','config_sync_jobs','analytics_kpi_runs','report_snapshots','optimization_recommendations',
+    'admin_health_checks','tenant_usage_snapshots','launch_readiness_reviews','persona_dashboard_snapshots','report_publication_jobs','optimization_escalations','super_admin_operational_snapshots','managed_service_workspace_snapshots'
+  ];
+  item text;
+begin
+  foreach item in array required loop
+    if to_regclass('public.' || item) is null then
+      raise exception 'required table missing after migration replay: %', item;
+    end if;
+  end loop;
+end $$;
+SQL
+
+echo "Migration chain validated successfully in disposable PostgreSQL."
