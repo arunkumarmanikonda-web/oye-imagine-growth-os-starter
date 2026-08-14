@@ -1,3 +1,4 @@
+import type { Route } from 'next'
 import Link from 'next/link'
 import PremiumWorkspaceShell from '@/components/app/PremiumWorkspaceShell'
 import { requireWorkspaceIdentity } from '@/lib/auth/workspace-access'
@@ -42,7 +43,7 @@ export default async function WorkspacePage() {
             <div className="workspace-section-head"><div><small>Today</small><h2>Your operating feed</h2></div><span className="live-pill"><i /> live workspace</span></div>
             <article className="workspace-feed-item feature">
               <div className="feed-icon">✺</div>
-              <div><small>Oye intelligence</small><h3>Start from the business truth, then decide the next best action.</h3><p>Your role controls which tools can act, which require approval and which are read-only.</p><div className="feed-actions"><Link href={role.quickActions[0]?.href ?? '/workspace'}>Open next action</Link><Link href="/admin/ai-concierge">Ask Oye</Link></div></div>
+              <div><small>Oye intelligence</small><h3>Start from the business truth, then decide the next best action.</h3><p>Your role controls which tools can act, which require approval and which are read-only.</p><div className="feed-actions"><Link href={(role.quickActions[0]?.href ?? '/workspace') as Route}>Open next action</Link><Link href="/admin/ai-concierge">Ask Oye</Link></div></div>
             </article>
             <article className="workspace-feed-item">
               <div className="feed-icon yellow">◎</div><div><small>Workspace scope</small><h3>{membership.workspace_id}</h3><p>Tenant and brand authority are revalidated from your signed-in identity, not from a browser-selected role.</p></div>
@@ -56,7 +57,7 @@ export default async function WorkspacePage() {
             <section className="workspace-quick-card">
               <div className="workspace-section-head"><div><small>Quick actions</small><h2>Move work forward</h2></div></div>
               <div className="workspace-quick-list">
-                {role.quickActions.map((action, index) => <Link href={action.href} key={action.label}><span>{String(index + 1).padStart(2, '0')}</span><div><strong>{action.label}</strong><small>{action.detail}</small></div><b>→</b></Link>)}
+                {role.quickActions.map((action, index) => <Link href={action.href as Route} key={action.label}><span>{String(index + 1).padStart(2, '0')}</span><div><strong>{action.label}</strong><small>{action.detail}</small></div><b>→</b></Link>)}
               </div>
             </section>
             <section className="workspace-scope-card">

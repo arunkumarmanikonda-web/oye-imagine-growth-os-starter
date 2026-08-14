@@ -1,3 +1,4 @@
+import type { Route } from 'next'
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import type { WorkspaceIdentity } from '@/lib/auth/workspace-access'
@@ -25,7 +26,7 @@ export default function PremiumWorkspaceShell({
 
         <nav className="app-rail-nav">
           {role.nav.map((item) => (
-            <Link key={`${item.href}-${item.label}`} href={item.href} className="app-rail-link">
+            <Link key={`${item.href}-${item.label}`} href={item.href as Route} className="app-rail-link">
               <span className="app-rail-glyph" aria-hidden="true">{item.glyph}</span>
               <span>{item.label}</span>
             </Link>
