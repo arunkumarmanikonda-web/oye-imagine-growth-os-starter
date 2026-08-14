@@ -1,0 +1,156 @@
+{
+  "capturedAt": "2026-08-14",
+  "gitSha": "5d55ec6966257601dcd676d7c9da6de04764c4c9",
+  "supabaseProjectRef": "bqhaifivpcwwiauiynlv",
+  "gitMigrationFileCount": 45,
+  "productionLedgerCount": 30,
+  "ledgeredLogicalNames": [
+    "core",
+    "workspace_seed",
+    "fix_seed_function",
+    "admin_audit_rls",
+    "context_switch_audit_hardening",
+    "fix_admin_audit_action_column",
+    "workspace_notes",
+    "workspace_notes_archive",
+    "workspace_settings",
+    "workspace_setting_versions",
+    "workspace_setting_versions_restore",
+    "rls_hardening_workspace_settings",
+    "admin_audit_onboarding_saved",
+    "admin_audit_strategy_saved",
+    "admin_audit_execution_saved",
+    "marketplace_mvp",
+    "marketplace_specialists",
+    "marketplace_request_assignment",
+    "marketplace_proposals",
+    "marketplace_request_status_proposed",
+    "marketplace_request_events",
+    "commercial_finance_foundation",
+    "commercial_workflow_persistence",
+    "core_control_plane_part1",
+    "private_security_schema",
+    "auth_membership_security",
+    "creative_asset_platform_foundation",
+    "creative_asset_platform_hardening",
+    "commercial_security_hardening",
+    "remaining_function_search_path_hardening"
+  ],
+  "productionPublicTables": [
+    "admin_audit_events",
+    "audit_events",
+    "brands",
+    "commercial_approval_requests",
+    "commercial_audit_events",
+    "commercial_contracts",
+    "commercial_invoices",
+    "commercial_ledger_entries",
+    "commercial_media_balance_accounts",
+    "commercial_mutation_ops",
+    "commercial_subscriptions",
+    "commercial_tenant_snapshots",
+    "core_ai_providers",
+    "core_ai_task_routes",
+    "core_approval_policies",
+    "core_feature_flags",
+    "core_role_definitions",
+    "core_tenant_feature_entitlements",
+    "core_tenant_memberships",
+    "creative_asset_buckets",
+    "creative_asset_rights",
+    "creative_asset_versions",
+    "creative_assets",
+    "creative_generation_jobs",
+    "creative_generation_limits",
+    "integration_accounts",
+    "marketplace_proposals",
+    "marketplace_request_events",
+    "marketplace_requests",
+    "marketplace_services",
+    "marketplace_specialists",
+    "tenants",
+    "workspace_notes",
+    "workspace_setting_versions",
+    "workspace_settings",
+    "workspaces"
+  ],
+  "unledgeredGitMigrations": [
+    {
+      "file": "20260731_execution_integration_closeout.sql",
+      "expectedTables": ["execution_landing_page_publications", "execution_campaign_packages", "execution_channel_publish_readiness", "execution_approval_bound_decisions", "execution_proof_packages"],
+      "productionObjectState": "absent"
+    },
+    {
+      "file": "20260731_execution_stack_part1.sql",
+      "expectedTables": ["content_plan_runs", "landing_page_drafts", "campaign_drafts"],
+      "productionObjectState": "absent"
+    },
+    {
+      "file": "20260731_execution_stack_part2.sql",
+      "expectedTables": ["seo_briefs", "social_calendar_entries", "creative_asset_drafts"],
+      "productionObjectState": "absent"
+    },
+    {
+      "file": "20260731_execution_stack_part3.sql",
+      "expectedTables": ["search_optimization_briefs", "channel_qa_reports", "publish_guardrail_decisions", "proof_execution_assets"],
+      "productionObjectState": "absent"
+    },
+    {
+      "file": "20260731_launch_hardening_closeout.sql",
+      "expectedTables": ["reporting_delivery_centers", "launch_readiness_dashboards", "ops_support_handoffs", "ops_dependency_signoffs", "ops_hardening_evidence"],
+      "productionObjectState": "absent"
+    },
+    {
+      "file": "20260731_mega_batch_a_foundations.sql",
+      "expectedTables": ["organization_profiles", "support_channels", "support_mail_logs", "tenant_brand_profiles", "cms_pages", "cms_sections", "cms_promotions", "cms_people_profiles", "cms_faqs", "cms_publish_versions", "cms_audit_events"],
+      "productionObjectState": "absent"
+    },
+    {
+      "file": "20260731_neejee_pilot_foundation_part1.sql",
+      "expectedTables": ["core_brands", "core_workspaces", "onboarding_intakes", "brand_profiles", "strategy_artifacts"],
+      "productionObjectState": "absent"
+    },
+    {
+      "file": "20260731_neejee_pilot_foundation_part2.sql",
+      "expectedTables": ["website_audit_runs", "competitor_snapshots", "onboarding_activation_checklists"],
+      "productionObjectState": "absent"
+    },
+    {
+      "file": "20260731_neejee_pilot_foundation_part3.sql",
+      "expectedTables": ["strategy_presentation_manifests", "client_portal_snapshots", "operator_work_items"],
+      "productionObjectState": "absent"
+    },
+    {
+      "file": "20260731_pilot_integration_closeout.sql",
+      "expectedTables": ["pilot_tenant_configurations", "pilot_website_audit_runs", "pilot_competitor_landscapes", "pilot_commercial_activation_checks", "pilot_state_transitions"],
+      "productionObjectState": "absent"
+    },
+    {
+      "file": "20260731_production_activation_foundations.sql",
+      "expectedTables": ["external_provider_credentials", "tenant_activation_readiness_snapshots", "deployment_verification_runs", "external_dependency_register"],
+      "productionObjectState": "absent"
+    },
+    {
+      "file": "20260731_recovery_config_control_plane.sql",
+      "expectedTables": ["provider_config_profiles", "provider_secret_material", "config_sync_jobs"],
+      "productionObjectState": "absent"
+    },
+    {
+      "file": "20260731_reporting_optimization_part1.sql",
+      "expectedTables": ["analytics_kpi_runs", "report_snapshots", "optimization_recommendations"],
+      "productionObjectState": "absent"
+    },
+    {
+      "file": "20260731_reporting_optimization_part2.sql",
+      "expectedTables": ["admin_health_checks", "tenant_usage_snapshots", "launch_readiness_reviews"],
+      "productionObjectState": "absent"
+    },
+    {
+      "file": "20260731_reporting_optimization_part4.sql",
+      "expectedTables": ["persona_dashboard_snapshots", "report_publication_jobs", "optimization_escalations", "super_admin_operational_snapshots", "managed_service_workspace_snapshots"],
+      "productionObjectState": "absent"
+    }
+  ],
+  "conclusion": "real_schema_gap",
+  "nextGate": "P0-014 staging/development-branch validation before any production replay"
+}
