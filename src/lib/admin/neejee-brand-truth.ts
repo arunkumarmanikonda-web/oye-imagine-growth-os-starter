@@ -28,18 +28,9 @@ export const neejeeBrandTruth = {
   },
   experience: {
     ai: [
-      {
-        name: 'Mirror',
-        purpose: 'Visualise wearable products such as sarees on the shopper',
-      },
-      {
-        name: 'Space',
-        purpose: 'Visualise home and craft objects such as stoneware in the shopper environment',
-      },
-      {
-        name: 'Concierge',
-        purpose: 'Assist product and gift discovery through conversational guidance',
-      },
+      { name: 'Mirror', purpose: 'Visualise wearable products such as sarees on the shopper' },
+      { name: 'Space', purpose: 'Visualise home and craft objects such as stoneware in the shopper environment' },
+      { name: 'Concierge', purpose: 'Assist product and gift discovery through conversational guidance' },
     ],
     sellerOnboarding:
       'Seller application includes contact details, business details, document/KYC evidence, validation and OTP-based verification before review.',
@@ -121,6 +112,31 @@ export const neejeeBrandTruth = {
 } as const
 
 export type NeejeeBrandTruth = typeof neejeeBrandTruth
+
+type LooseBrandContext = Record<string, unknown>
+
+export function isNeejeeContext(value: unknown): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const record = value as LooseBrandContext
+  const candidates = [
+    record.id,
+    record.pilotId,
+    record.brandName,
+    record.companyName,
+    record.website,
+  ]
+    .filter((item): item is string => typeof item === 'string')
+    .map((item) => item.trim().toLowerCase())
+
+  return candidates.some(
+    (item) =>
+      item === 'neejee' ||
+      item === 'neejee-pilot' ||
+      item === 'https://neejee.com' ||
+      item === 'https://www.neejee.com' ||
+      item.includes('neejee.com'),
+  )
+}
 
 export function containsNeejeeDomainContamination(value: unknown): boolean {
   const serialized = JSON.stringify(value).toLowerCase()
