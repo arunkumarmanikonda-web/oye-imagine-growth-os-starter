@@ -1,4 +1,4 @@
-import { roleLane, rolePriority, type WorkspaceLane } from './role-routing'
+import { roleLane, rolePriority, roleRequiresMfa, type WorkspaceLane } from './role-routing'
 
 export type VerifiedAccessLane = WorkspaceLane
 
@@ -13,11 +13,41 @@ export type VerifiedMembership = {
   metadata?: Record<string, unknown> | null
 }
 
+function metadataString(membership: Pick<VerifiedMembership, 'metadata'>, key: string) {
+  const value = membership.metadata?.[key]
+  return typeof value === 'string' && value.trim() ? value.trim() : null
+}
+
+function metadataBoolean(membership: Pick<VerifiedMembership, 'metadata'>, key: string) {
+  const value = membership.metadata?.[key]
+  return typeof value === 'boolean' ? value : null
+}
+
+export function membershipExperienceRoleKey(membership: Pick<VerifiedMembership, 'role_key' | 'metadata'>) {
+  return metadataString(membership, 'experienceRoleKey') ?? membership.role_key
+}
+
+export function membershipLane(membership: Pick<VerifiedMembership, 'role_key' | 'metadata'>): VerifiedAccessLane {
+  const configured = metadataString(membership, 'accessLane')
+  if (configured === 'admin' || configured === 'client') return configured
+  return roleLane(membershipExperienceRoleKey(membership))
+}
+
+export function membershipRequiresMfa(membership: Pick<VerifiedMembership, 'role_key' | 'metadata'>) {
+  const configured = metadataBoolean(membership, 'requiresMfa')
+  if (configured !== null) return configured
+  return roleRequiresMfa(membershipExperienceRoleKey(membership))
+}
+
+export function membershipPriority(membership: Pick<VerifiedMembership, 'role_key' | 'metadata'>) {
+  return rolePriority(membershipExperienceRoleKey(membership))
+}
+
 export function membershipAllowsLane(
-  membership: Pick<VerifiedMembership, 'role_key' | 'status'>,
+  membership: Pick<VerifiedMembership, 'role_key' | 'status' | 'metadata'>,
   lane: VerifiedAccessLane,
 ) {
-  return membership.status === 'active' && roleLane(membership.role_key) === lane
+  return membership.status === 'active' && membershipLane(membership) === lane
 }
 
 export function selectMembershipForLane(
@@ -27,7 +57,7 @@ export function selectMembershipForLane(
   return (
     memberships
       .filter((membership) => membershipAllowsLane(membership, lane))
-      .sort((a, b) => rolePriority(a.role_key) - rolePriority(b.role_key))
+      .sort((a, b) => membershipPriority(a) - membershipPriority(b))
       .find((membership) => membershipHasWorkspaceAuthority(membership)) ?? null
   )
 }
@@ -38,7 +68,7 @@ export function selectPrimaryMembership(
   return (
     [...memberships]
       .filter((membership) => membership.status === 'active')
-      .sort((a, b) => rolePriority(a.role_key) - rolePriority(b.role_key))
+      .sort((a, b) => membershipPriority(a) - membershipPriority(b))
       .find((membership) => membershipHasWorkspaceAuthority(membership)) ?? null
   )
 }

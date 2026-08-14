@@ -20,6 +20,8 @@ const experiences: Record<string, RoleExperience> = {
     description: 'Platform control, tenants, growth execution, AI, commercial governance and trust operations.',
     nav: [
       { label: 'Command center', href: '/workspace', glyph: '✦' },
+      { label: 'Access control', href: '/admin/access-control', glyph: '◉' },
+      { label: 'Platform config', href: '/admin/config', glyph: '⚙' },
       { label: 'Brand intelligence', href: '/admin/brand-intelligence', glyph: '◎' },
       { label: 'Creative studio', href: '/admin/creative', glyph: '◐' },
       { label: 'Growth execution', href: '/admin/execution-plan', glyph: '↗' },
@@ -30,9 +32,10 @@ const experiences: Record<string, RoleExperience> = {
       { label: 'Privacy', href: '/admin/privacy', glyph: '◈' },
     ],
     quickActions: [
+      { label: 'Manage access', href: '/admin/access-control', detail: 'Users, roles and granular permissions' },
+      { label: 'Configure providers', href: '/admin/config', detail: 'Keys, routes and platform capabilities' },
       { label: 'Create campaign', href: '/admin/execution-plan', detail: 'Strategy to governed execution' },
       { label: 'Generate creative', href: '/admin/creative', detail: 'Images, copy and video jobs' },
-      { label: 'Connect channel', href: '/admin/integrations', detail: 'Google, analytics and messaging' },
     ],
   },
   tenant_admin: {
