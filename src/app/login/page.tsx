@@ -1,33 +1,54 @@
-﻿import type { Route } from 'next'
 import Link from 'next/link'
-import { getLoginHubExperience } from '@/lib/recovery/surface-composer'
 
-export default function LoginHubPage() {
-  const experience = getLoginHubExperience()
+const errorCopy: Record<string, string> = {
+  missing_credentials: 'Enter your email and password to continue.',
+  invalid_credentials: 'We could not verify those credentials.',
+  identity_verification_failed: 'Your identity could not be verified. Please try again.',
+  access_control_unavailable: 'Access controls are temporarily unavailable. Please try again shortly.',
+  access_denied: 'This account does not yet have an active Oye !magine workspace membership.',
+}
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
+  const params = await searchParams
+  const message = params.error ? errorCopy[params.error] ?? 'Sign in could not be completed.' : null
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-12 text-white md:px-10">
-      <section className="mx-auto max-w-6xl rounded-[2rem] border border-white/10 bg-white/5 p-8">
-        <div className="max-w-3xl">
-          <p className="text-sm uppercase tracking-[0.35em] text-cyan-300">Access hub</p>
-          <h1 className="mt-4 text-4xl font-semibold">{experience.title}</h1>
-          <p className="mt-4 text-base leading-8 text-slate-300">{experience.body}</p>
+    <main className="auth-premium-page">
+      <section className="auth-premium-visual">
+        <div className="auth-orbit auth-orbit-yellow" aria-hidden="true" />
+        <div className="auth-orbit auth-orbit-pink" aria-hidden="true" />
+        <div className="auth-visual-content">
+          <p className="premium-eyebrow">One identity. The right workspace.</p>
+          <h1>Sign in once.<br />Oye takes you where you belong.</h1>
+          <p>Super users, marketers, designers, approvers, analysts, partners and clients all enter through the same secure door. Your verified role decides what you can see and do.</p>
+          <div className="auth-role-cloud" aria-label="Supported workspace roles">
+            {['Super User','Client Admin','Digital Marketer','Designer','Account Manager','Finance','Analyst','Partner','Viewer'].map((role, index) => (
+              <span key={role} className={index % 3 === 0 ? 'is-yellow' : index % 3 === 1 ? 'is-pink' : ''}>{role}</span>
+            ))}
+          </div>
         </div>
+      </section>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-2">
-          {experience.cards.map((card) => (
-            <Link
-              key={card.href}
-              href={card.href as Route}
-              className="rounded-[1.75rem] border border-white/10 bg-black/20 p-6 transition hover:border-cyan-300/40"
-            >
-              <div className="text-sm uppercase tracking-[0.25em] text-cyan-300">{card.label}</div>
-              <div className="mt-4 text-sm leading-7 text-slate-300">{card.description}</div>
-            </Link>
-          ))}
+      <section className="auth-premium-form-wrap">
+        <div className="auth-premium-card">
+          <Link href="/" className="auth-logo-link"><img src="/brand/oye-imagine-logo.webp" alt="Oye !magine" /></Link>
+          <div className="auth-form-heading"><p>Welcome back</p><h2>Continue to your workspace</h2><span>Your access scope is resolved automatically after your identity is verified.</span></div>
+          {message ? <div className="auth-error" role="alert">{message}</div> : null}
+          <form action="/api/auth/login" method="post" className="auth-premium-form">
+            <label>Email address<input type="email" name="email" autoComplete="username" required placeholder="you@company.com" /></label>
+            <label>Password<input type="password" name="password" autoComplete="current-password" required placeholder="Your password" /></label>
+            <div className="auth-form-meta"><label className="auth-checkbox"><input type="checkbox" name="remember" /> <span>Keep me signed in</span></label><Link href="/contact">Need help?</Link></div>
+            <button type="submit" className="auth-submit">Sign in securely <span aria-hidden="true">→</span></button>
+          </form>
+          <div className="auth-divider"><span>New to Oye !magine?</span></div>
+          <Link className="auth-create-link" href="/signup">Create a customer account</Link>
+          <p className="auth-security-note"><span aria-hidden="true">◈</span> Privileged roles are automatically challenged for MFA. Role selection is never trusted from the browser.</p>
         </div>
       </section>
     </main>
   )
 }
-

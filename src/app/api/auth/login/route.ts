@@ -1,22 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { buildAuthCookieRecord, createLoginRedirectPath } from '@/lib/auth/session'
+import { buildAuthCookieRecord } from '@/lib/auth/session'
 import {
   membershipHasWorkspaceAuthority,
-  selectMembershipForLane,
-  type VerifiedAccessLane,
+  selectPrimaryMembership,
   type VerifiedMembership,
 } from '@/lib/auth/verified-membership'
+import { roleLane, roleRequiresMfa } from '@/lib/auth/role-routing'
 import { ACTIVE_WORKSPACE_COOKIE_KEY } from '@/lib/recovery/workspace-foundation'
 import { RECOVERY_AUTH_COOKIE_KEYS } from '@/lib/recovery/auth-types'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
-function normalizeLane(value: string | null): VerifiedAccessLane {
-  const normalized = String(value ?? '').trim().toLowerCase()
-  return normalized === 'admin' || normalized === 'operator' ? 'admin' : 'client'
-}
-
-function loginErrorRedirect(request: NextRequest, lane: VerifiedAccessLane, code: string) {
-  const url = new URL(lane === 'admin' ? '/login/admin' : '/login/client', request.url)
+function loginErrorRedirect(request: NextRequest, code: string) {
+  const url = new URL('/login', request.url)
   url.searchParams.set('error', code)
   const response = NextResponse.redirect(url)
   response.headers.set('Cache-Control', 'private, no-store')
@@ -33,20 +28,18 @@ function mfaRedirect(request: NextRequest, destination: string) {
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData()
-  const requestedLane = normalizeLane(String(formData.get('lane') ?? formData.get('role') ?? ''))
   const email = String(formData.get('email') ?? '').trim().toLowerCase()
   const password = String(formData.get('password') ?? '')
-  const redirectInput = String(formData.get('redirectTo') ?? formData.get('redirect') ?? '').trim()
 
   if (!email || !password) {
-    return loginErrorRedirect(request, requestedLane, 'missing_credentials')
+    return loginErrorRedirect(request, 'missing_credentials')
   }
 
   const supabase = await createSupabaseServerClient()
   const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
 
   if (signInError) {
-    return loginErrorRedirect(request, requestedLane, 'invalid_credentials')
+    return loginErrorRedirect(request, 'invalid_credentials')
   }
 
   const {
@@ -56,37 +49,38 @@ export async function POST(request: NextRequest) {
 
   if (userError || !user?.id || !user.email) {
     await supabase.auth.signOut()
-    return loginErrorRedirect(request, requestedLane, 'identity_verification_failed')
+    return loginErrorRedirect(request, 'identity_verification_failed')
   }
 
   const { data: membershipRows, error: membershipError } = await supabase
     .from('core_tenant_memberships')
-    .select('membership_id,tenant_id,user_id,role_key,brand_id,workspace_id,status')
+    .select('membership_id,tenant_id,user_id,role_key,brand_id,workspace_id,status,metadata')
     .eq('user_id', user.id)
     .eq('status', 'active')
 
   if (membershipError) {
     await supabase.auth.signOut()
-    return loginErrorRedirect(request, requestedLane, 'access_control_unavailable')
+    return loginErrorRedirect(request, 'access_control_unavailable')
   }
 
   const memberships = (membershipRows ?? []) as VerifiedMembership[]
-  const membership = selectMembershipForLane(memberships, requestedLane)
+  const membership = selectPrimaryMembership(memberships)
 
   if (!membership || !membershipHasWorkspaceAuthority(membership)) {
     await supabase.auth.signOut()
-    return loginErrorRedirect(request, requestedLane, 'access_denied')
+    return loginErrorRedirect(request, 'access_denied')
   }
 
-  const destination = createLoginRedirectPath(requestedLane, redirectInput)
+  const lane = roleLane(membership.role_key)
+  const destination = '/workspace'
 
-  if (requestedLane === 'admin') {
+  if (roleRequiresMfa(membership.role_key)) {
     const { data: aalData, error: aalError } =
       await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
 
     if (aalError) {
       await supabase.auth.signOut()
-      return loginErrorRedirect(request, requestedLane, 'access_control_unavailable')
+      return loginErrorRedirect(request, 'access_control_unavailable')
     }
 
     if (aalData.currentLevel !== 'aal2') {
@@ -97,10 +91,10 @@ export async function POST(request: NextRequest) {
   const response = NextResponse.redirect(new URL(destination, request.url))
   response.headers.set('Cache-Control', 'private, no-store')
 
-  // These cookies carry UI context only. Authentication and authorization must be
-  // revalidated from Supabase Auth + core_tenant_memberships on protected requests.
+  // Context cookies are presentation hints only. Protected requests must resolve
+  // authority again from Supabase Auth + core_tenant_memberships.
   const contextCookies = buildAuthCookieRecord({
-    lane: requestedLane,
+    lane,
     email: user.email.toLowerCase(),
     workspaceSlug: membership.workspace_id!,
     tenantSlug: membership.tenant_id,
@@ -135,7 +129,7 @@ export async function POST(request: NextRequest) {
     sameSite: 'lax',
     path: '/',
   })
-  response.cookies.set('oye_active_role', requestedLane, {
+  response.cookies.set('oye_active_role', membership.role_key, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
