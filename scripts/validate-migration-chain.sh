@@ -47,6 +47,16 @@ create table if not exists storage.objects (
   path_tokens text[] generated always as (string_to_array(name, '/')) stored,
   created_at timestamptz default now(), updated_at timestamptz default now()
 );
+create or replace function storage.foldername(name text)
+returns text[]
+language sql
+immutable
+as $$
+  select case
+    when coalesce(array_length(string_to_array(name, '/'), 1), 0) <= 1 then array[]::text[]
+    else (string_to_array(name, '/'))[1:array_length(string_to_array(name, '/'), 1)-1]
+  end
+$$;
 SQL
 then
   fail_with_summary "Supabase-compatible bootstrap" "$bootstrap_log"
