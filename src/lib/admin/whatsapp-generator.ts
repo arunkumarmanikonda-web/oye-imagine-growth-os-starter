@@ -6,27 +6,25 @@ import * as emailSequenceStore from "@/lib/admin/email-sequence-store";
 import * as smsStore from "@/lib/admin/sms-store";
 import { createWhatsappDraftRecord } from "@/lib/admin/whatsapp-schema";
 import { saveWhatsappDraft } from "@/lib/admin/whatsapp-store";
+import {
+  isNeejeeContext,
+  neejeeBrandTruth,
+} from "@/lib/admin/neejee-brand-truth";
 
 type LooseRecord = Record<string, unknown>;
 type Getter = (id: string) => unknown;
 
 function resolveGetter(moduleValue: unknown, names: string[]): Getter {
   const table = moduleValue as LooseRecord;
-
   for (const name of names) {
     let candidate: unknown;
-
     try {
       candidate = table[name];
     } catch {
       candidate = undefined;
     }
-
-    if (typeof candidate === "function") {
-      return candidate as Getter;
-    }
+    if (typeof candidate === "function") return candidate as Getter;
   }
-
   throw new Error(`Unable to resolve getter. Tried: ${names.join(", ")}`);
 }
 
@@ -37,186 +35,140 @@ function asRecord(value: unknown): LooseRecord {
 function readPath(source: unknown, path: string): unknown {
   const parts = path.split(".");
   let current: unknown = source;
-
   for (const part of parts) {
-    if (current === null || current === undefined) {
-      return undefined;
-    }
-
+    if (current === null || current === undefined) return undefined;
     if (Array.isArray(current)) {
       const index = Number(part);
-      if (!Number.isInteger(index)) {
-        return undefined;
-      }
-
+      if (!Number.isInteger(index)) return undefined;
       current = current[index];
       continue;
     }
-
-    if (typeof current !== "object") {
-      return undefined;
-    }
-
+    if (typeof current !== "object") return undefined;
     current = (current as LooseRecord)[part];
   }
-
   return current;
 }
 
 function pickString(source: unknown, paths: string[], fallback = ""): string {
   for (const path of paths) {
     const value = readPath(source, path);
-    if (typeof value === "string") {
-      const trimmed = value.trim();
-      if (trimmed.length > 0) {
-        return trimmed;
-      }
-    }
+    if (typeof value === "string" && value.trim()) return value.trim();
   }
-
   return fallback;
 }
 
 function truncate(value: string, maxLength: number): string {
   const normalized = value.replace(/\s+/g, " ").trim();
-  if (normalized.length <= maxLength) {
-    return normalized;
-  }
-
-  return `${normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd()}ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦`;
+  if (normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
 }
 
-const getPilot = resolveGetter(pilotStore, [
-  "getPilot",
-  "getPilotRecord",
-  "getPilotDraft",
-]);
+const getPilot = resolveGetter(pilotStore, ["getPilot", "getPilotRecord", "getPilotDraft"]);
+const getStrategy = resolveGetter(strategyStore, ["getStrategy", "getStrategyRecord", "getStrategyBrief", "getStrategyDraft"]);
+const getLandingPage = resolveGetter(landingPageStore, ["getLandingPageBrief", "getLandingPageDraft", "getLandingPage"]);
+const getGoogleAds = resolveGetter(googleAdsStore, ["getGoogleAdsDraft", "getGoogleAds"]);
+const getEmailSequence = resolveGetter(emailSequenceStore, ["getEmailSequenceDraft", "getEmailSequence"]);
+const getSms = resolveGetter(smsStore, ["getSmsDraft", "getSms"]);
 
-const getStrategy = resolveGetter(strategyStore, [
-  "getStrategy",
-  "getStrategyRecord",
-  "getStrategyBrief",
-  "getStrategyDraft",
-]);
+function buildNeejeeWhatsappDraft(pilotId: string, pilot: LooseRecord) {
+  const workspaceId = pickString(pilot, ["workspaceId"], "workspace_neejee_primary");
+  const destination = neejeeBrandTruth.identity.website;
 
-const getLandingPage = resolveGetter(landingPageStore, [
-  "getLandingPageBrief",
-  "getLandingPageDraft",
-  "getLandingPage",
-]);
-
-const getGoogleAds = resolveGetter(googleAdsStore, [
-  "getGoogleAdsDraft",
-  "getGoogleAds",
-]);
-
-const getEmailSequence = resolveGetter(emailSequenceStore, [
-  "getEmailSequenceDraft",
-  "getEmailSequence",
-]);
-
-const getSms = resolveGetter(smsStore, [
-  "getSmsDraft",
-  "getSms",
-]);
+  return createWhatsappDraftRecord({
+    id: `whatsapp-${pilotId}`,
+    pilotId,
+    workspaceId,
+    status: "draft",
+    senderName: "Neejee",
+    goal: "Support consented shopper discovery, cart/order service or relevant product guidance without cold B2B outreach.",
+    messages: [
+      {
+        id: `${pilotId}-whatsapp-1`,
+        body: truncate(
+          `Hello from Neejee. If you opted in to continue your discovery, you can return to the piece, collection or craft story that interested you here: ${destination}`,
+          340,
+        ),
+      },
+      {
+        id: `${pilotId}-whatsapp-2`,
+        body: truncate(
+          "A useful Neejee follow-up should add context, not pressure: maker, region, technique, material, availability or order information must come from current approved product data.",
+          340,
+        ),
+      },
+      {
+        id: `${pilotId}-whatsapp-3`,
+        body: truncate(
+          "If you want help finding the right piece or gift, continue with Neejee's relevant discovery journey. Mirror, Space or Concierge should be offered only where that experience is actually available.",
+          340,
+        ),
+      },
+    ],
+    notes: [
+      "Draft only. Production WhatsApp requires opt-in, approved templates where applicable, opt-out handling and verified provider/account configuration.",
+      "Replace generic links with consented shopper-specific product/cart/order links before execution.",
+      "Do not invent stock, price, shipping, returns, discount or provenance claims.",
+    ],
+  });
+}
 
 export function buildWhatsappDraftFromPilot(pilotId: string) {
   const pilotValue = getPilot(pilotId);
-  if (!pilotValue) {
-    throw new Error(`Pilot not found for ID "${pilotId}"`);
-  }
+  if (!pilotValue) throw new Error(`Pilot not found for ID "${pilotId}"`);
 
   const pilot = asRecord(pilotValue);
+  if (isNeejeeContext(pilot)) return buildNeejeeWhatsappDraft(pilotId, pilot);
+
   const strategy = asRecord(getStrategy(pilotId));
   const landingPage = asRecord(getLandingPage(pilotId));
   const googleAds = asRecord(getGoogleAds(pilotId));
   const emailSequence = asRecord(getEmailSequence(pilotId));
   const smsDraft = asRecord(getSms(pilotId));
 
-  const workspaceId =
-    pickString(pilot, ["workspaceId"], "") ||
-    pickString(strategy, ["workspaceId"], "") ||
-    "workspace-demo";
-
-  const companyName = pickString(pilot, [
-    "companyName",
-    "company.name",
-    "businessName",
-    "brandName",
-    "workspaceName",
-  ], "your team");
-
-  const contactName = pickString(pilot, [
-    "contactName",
-    "contact.name",
-    "ownerName",
-    "founderName",
-  ], "");
-
+  const workspaceId = pickString(pilot, ["workspaceId"], "") || pickString(strategy, ["workspaceId"], "") || "workspace-demo";
+  const companyName = pickString(
+    pilot,
+    ["companyName", "company.name", "businessName", "brandName", "workspaceName"],
+    "Client",
+  );
+  const contactName = pickString(pilot, ["contactName", "contact.name", "ownerName", "founderName"], "");
   const senderName = contactName ? `${contactName} at ${companyName}` : companyName;
-
-  const audience = pickString(strategy, [
-    "audience",
-    "primaryAudience",
-    "customerSegment",
-  ], pickString(pilot, ["audience", "targetAudience"], "qualified prospects"));
-
-  const goal = pickString(strategy, [
-    "goal",
-    "primaryGoal",
-    "objective",
-  ], pickString(pilot, ["goal", "primaryGoal"], "book more qualified conversations"));
-
-  const headline = pickString(landingPage, [
-    "headline",
-    "heroHeadline",
-    "title",
-  ], "A clearer path to better conversion");
-
-  const valueProp = pickString(landingPage, [
-    "subheadline",
-    "valueProposition",
-    "description",
-    "heroSubheadline",
-  ], "A focused message that helps prospects understand the next step faster");
-
-  const adProof = pickString(googleAds, [
-    "headlines.0",
-    "messages.0.body",
-    "ads.0.headline",
-    "ads.0.copy",
-  ], "The strongest paid hooks are already proving what gets attention");
-
-  const emailProof = pickString(emailSequence, [
-    "emails.0.subject",
-    "messages.0.subject",
-    "messages.0.body",
-  ], "The email sequence is already aligned around the same offer");
-
-  const smsProof = pickString(smsDraft, [
-    "messages.0.body",
-    "messages.1.body",
-  ], "The SMS touchpoints reinforce the same concise value proposition");
-
-  const callToAction = pickString(strategy, [
-    "callToAction",
-    "cta",
-  ], "Want me to send the best next step?");
-
-  const messageOne = truncate(
-    `Hi - ${headline}. ${valueProp}. I'm reaching out for ${audience}. If this is relevant, I can send the quick version here. - ${senderName}`,
-    340,
+  const audience = pickString(
+    strategy,
+    ["audience", "primaryAudience", "customerSegment"],
+    pickString(pilot, ["audience", "targetAudience"], "qualified audience"),
   );
-
-  const messageTwo = truncate(
-    `Quick proof point: ${adProof}. We kept this aligned with email and SMS too - ${emailProof}. ${smsProof}`,
-    340,
+  const goal = pickString(
+    strategy,
+    ["goal", "primaryGoal", "objective"],
+    pickString(pilot, ["goal", "primaryGoal"], "support a relevant next action"),
   );
-
-  const messageThree = truncate(
-    `If the goal is to ${goal.toLowerCase()}, this WhatsApp sequence can move people from interest to reply without changing the story across channels. ${callToAction}`,
-    340,
+  const headline = pickString(
+    landingPage,
+    ["hero.headline", "headline", "heroHeadline", "title"],
+    "A clearer next step",
   );
+  const valueProp = pickString(
+    landingPage,
+    ["hero.subheadline", "subheadline", "valueProposition", "description", "heroSubheadline"],
+    "A focused message and next action",
+  );
+  const adProof = pickString(
+    googleAds,
+    ["headlines.0", "messages.0.body", "ads.0.headline", "ads.0.copy"],
+    "Use only approved campaign proof",
+  );
+  const emailProof = pickString(
+    emailSequence,
+    ["emails.0.subject", "messages.0.subject", "messages.0.body"],
+    "Keep lifecycle messages aligned",
+  );
+  const smsProof = pickString(
+    smsDraft,
+    ["messages.0.body", "messages.1.body"],
+    "Keep short-message claims consistent",
+  );
+  const callToAction = pickString(strategy, ["callToAction", "cta"], "Continue if this remains relevant.");
 
   return createWhatsappDraftRecord({
     id: `whatsapp-${pilotId}`,
@@ -228,20 +180,18 @@ export function buildWhatsappDraftFromPilot(pilotId: string) {
     messages: [
       {
         id: `${pilotId}-whatsapp-1`,
-        body: messageOne,
+        body: truncate(`Hello. ${headline}. ${valueProp}. This is intended for ${audience}. - ${senderName}`, 340),
       },
       {
         id: `${pilotId}-whatsapp-2`,
-        body: messageTwo,
+        body: truncate(`Relevant proof: ${adProof}. Email: ${emailProof}. SMS: ${smsProof}.`, 340),
       },
       {
         id: `${pilotId}-whatsapp-3`,
-        body: messageThree,
+        body: truncate(`If the goal is to ${goal.toLowerCase()}, keep the next action consistent. ${callToAction}`, 340),
       },
     ],
-    notes: [
-      "Generated from pilot, strategy, landing page, Google Ads, email sequence, and SMS assets for cross-channel consistency.",
-    ],
+    notes: ["Draft only; production WhatsApp requires consent and provider/compliance verification."],
   });
 }
 
