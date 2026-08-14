@@ -1,7 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-psql -v ON_ERROR_STOP=1 <<'SQL'
+summary_file="${GITHUB_STEP_SUMMARY:-/tmp/migration-summary.md}"
+
+fail_with_summary() {
+  local title="$1"
+  local log_file="$2"
+  {
+    echo "## Migration validation failure"
+    echo
+    echo "**Stage:** ${title}"
+    echo
+    echo '```text'
+    tail -n 120 "$log_file" 2>/dev/null || true
+    echo '```'
+  } >> "$summary_file"
+  cat "$log_file" >&2 || true
+  exit 1
+}
+
+bootstrap_log=/tmp/migration-bootstrap.log
+if ! psql -v ON_ERROR_STOP=1 >"$bootstrap_log" 2>&1 <<'SQL'
 create extension if not exists pgcrypto;
 create extension if not exists "uuid-ossp";
 
@@ -20,12 +39,9 @@ create table if not exists auth.users (
   created_at timestamptz default now()
 );
 
-create or replace function auth.uid() returns uuid
-language sql stable as $$ select null::uuid $$;
-create or replace function auth.role() returns text
-language sql stable as $$ select 'authenticated'::text $$;
-create or replace function auth.jwt() returns jsonb
-language sql stable as $$ select '{}'::jsonb $$;
+create or replace function auth.uid() returns uuid language sql stable as $$ select null::uuid $$;
+create or replace function auth.role() returns text language sql stable as $$ select 'authenticated'::text $$;
+create or replace function auth.jwt() returns jsonb language sql stable as $$ select '{}'::jsonb $$;
 
 create table if not exists storage.buckets (
   id text primary key,
@@ -49,16 +65,22 @@ create table if not exists storage.objects (
   updated_at timestamptz default now()
 );
 SQL
+then
+  fail_with_summary "Supabase-compatible bootstrap" "$bootstrap_log"
+fi
 
 mapfile -t migrations < <(find supabase/migrations -maxdepth 1 -type f -name '*.sql' | sort)
 
 for migration in "${migrations[@]}"; do
   echo "==> validating ${migration}"
-  # Migration files may include their own BEGIN/COMMIT. Execute exactly as authored.
-  psql -v ON_ERROR_STOP=1 -f "$migration"
+  migration_log=/tmp/migration-current.log
+  if ! psql -v ON_ERROR_STOP=1 -f "$migration" >"$migration_log" 2>&1; then
+    fail_with_summary "$migration" "$migration_log"
+  fi
 done
 
-psql -v ON_ERROR_STOP=1 <<'SQL'
+verify_log=/tmp/migration-verify.log
+if ! psql -v ON_ERROR_STOP=1 >"$verify_log" 2>&1 <<'SQL'
 do $$
 declare
   required text[] := array[
@@ -82,5 +104,14 @@ begin
   end loop;
 end $$;
 SQL
+then
+  fail_with_summary "required object verification" "$verify_log"
+fi
+
+{
+  echo "## Migration validation passed"
+  echo
+  echo "Replayed ${#migrations[@]} migration files in a disposable PostgreSQL 17 environment."
+} >> "$summary_file"
 
 echo "Migration chain validated successfully in disposable PostgreSQL."
