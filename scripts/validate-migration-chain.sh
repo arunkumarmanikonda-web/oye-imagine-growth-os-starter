@@ -23,55 +23,61 @@ bootstrap_log=/tmp/migration-bootstrap.log
 if ! psql -v ON_ERROR_STOP=1 >"$bootstrap_log" 2>&1 <<'SQL'
 create extension if not exists pgcrypto;
 create extension if not exists "uuid-ossp";
-
 do $$ begin create role anon nologin; exception when duplicate_object then null; end $$;
 do $$ begin create role authenticated nologin; exception when duplicate_object then null; end $$;
 do $$ begin create role service_role nologin bypassrls; exception when duplicate_object then null; end $$;
-
 create schema if not exists auth;
 create schema if not exists storage;
-
 create table if not exists auth.users (
-  id uuid primary key default gen_random_uuid(),
-  email text,
+  id uuid primary key default gen_random_uuid(), email text,
   raw_app_meta_data jsonb default '{}'::jsonb,
   raw_user_meta_data jsonb default '{}'::jsonb,
   created_at timestamptz default now()
 );
-
 create or replace function auth.uid() returns uuid language sql stable as $$ select null::uuid $$;
 create or replace function auth.role() returns text language sql stable as $$ select 'authenticated'::text $$;
 create or replace function auth.jwt() returns jsonb language sql stable as $$ select '{}'::jsonb $$;
-
 create table if not exists storage.buckets (
-  id text primary key,
-  name text unique not null,
-  owner uuid,
-  public boolean default false,
-  file_size_limit bigint,
-  allowed_mime_types text[],
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  id text primary key, name text unique not null, owner uuid, public boolean default false,
+  file_size_limit bigint, allowed_mime_types text[], created_at timestamptz default now(), updated_at timestamptz default now()
 );
-
 create table if not exists storage.objects (
-  id uuid primary key default gen_random_uuid(),
-  bucket_id text references storage.buckets(id),
-  name text not null,
-  owner uuid,
-  metadata jsonb,
+  id uuid primary key default gen_random_uuid(), bucket_id text references storage.buckets(id),
+  name text not null, owner uuid, metadata jsonb,
   path_tokens text[] generated always as (string_to_array(name, '/')) stored,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  created_at timestamptz default now(), updated_at timestamptz default now()
 );
 SQL
 then
   fail_with_summary "Supabase-compatible bootstrap" "$bootstrap_log"
 fi
 
-mapfile -t migrations < <(find supabase/migrations -maxdepth 1 -type f -name '*.sql' | sort)
+mapfile -t pre_20260731 < <(find supabase/migrations -maxdepth 1 -type f -name '*.sql' | sort | awk -F/ '$NF < "20260731_"')
+mapfile -t post_20260731 < <(find supabase/migrations -maxdepth 1 -type f -name '*.sql' | sort | awk -F/ '$NF > "20260731_zzzzzzzz.sql"')
+
+ordered_20260731=(
+  "supabase/migrations/20260731_core_control_plane_part1.sql"
+  "supabase/migrations/20260731_mega_batch_a_foundations.sql"
+  "supabase/migrations/20260731_neejee_pilot_foundation_part1.sql"
+  "supabase/migrations/20260731_neejee_pilot_foundation_part2.sql"
+  "supabase/migrations/20260731_neejee_pilot_foundation_part3.sql"
+  "supabase/migrations/20260731_execution_stack_part1.sql"
+  "supabase/migrations/20260731_execution_stack_part2.sql"
+  "supabase/migrations/20260731_execution_stack_part3.sql"
+  "supabase/migrations/20260731_execution_integration_closeout.sql"
+  "supabase/migrations/20260731_pilot_integration_closeout.sql"
+  "supabase/migrations/20260731_production_activation_foundations.sql"
+  "supabase/migrations/20260731_recovery_config_control_plane.sql"
+  "supabase/migrations/20260731_reporting_optimization_part1.sql"
+  "supabase/migrations/20260731_reporting_optimization_part2.sql"
+  "supabase/migrations/20260731_reporting_optimization_part4.sql"
+  "supabase/migrations/20260731_launch_hardening_closeout.sql"
+)
+
+migrations=("${pre_20260731[@]}" "${ordered_20260731[@]}" "${post_20260731[@]}")
 
 for migration in "${migrations[@]}"; do
+  [[ -f "$migration" ]] || fail_with_summary "missing migration file: $migration" /dev/null
   echo "==> validating ${migration}"
   migration_log=/tmp/migration-current.log
   if ! psql -v ON_ERROR_STOP=1 -f "$migration" >"$migration_log" 2>&1; then
@@ -111,7 +117,7 @@ fi
 {
   echo "## Migration validation passed"
   echo
-  echo "Replayed ${#migrations[@]} migration files in a disposable PostgreSQL 17 environment."
+  echo "Replayed ${#migrations[@]} migration files in dependency-safe order on disposable PostgreSQL 17."
 } >> "$summary_file"
 
 echo "Migration chain validated successfully in disposable PostgreSQL."
