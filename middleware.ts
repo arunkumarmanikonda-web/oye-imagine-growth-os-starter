@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 import {
   membershipHasWorkspaceAuthority,
@@ -7,6 +7,12 @@ import {
   type VerifiedMembership,
 } from './src/lib/auth/verified-membership'
 import { env } from './src/lib/env'
+
+type SupabaseCookieToSet = {
+  name: string
+  value: string
+  options: CookieOptions
+}
 
 function requestedLane(pathname: string): VerifiedAccessLane {
   return pathname.startsWith('/admin') ? 'admin' : 'client'
@@ -39,7 +45,7 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: SupabaseCookieToSet[]) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           response = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) => {
