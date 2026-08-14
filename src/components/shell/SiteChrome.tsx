@@ -1,12 +1,13 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 const appPrefixes = ['/workspace', '/admin', '/client', '/auth/mfa']
-const primaryNav = [
+const primaryNav: Array<{ label: string; href: Route }> = [
   { label: 'About', href: '/about' },
   { label: 'Platform', href: '/platform' },
   { label: 'Solutions', href: '/solutions' },
