@@ -1,209 +1,121 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server'
 
-import { requireAdmin } from "@/lib/admin-route";
-import { type NeejeePilotInput, type PilotStatus } from "@/lib/admin/pilot-schema";
-import { getPilot, savePilot } from "@/lib/admin/pilot-store";
+import { ApiAccessError, requireApiAccess } from '@/lib/auth/api-access'
+import { type NeejeePilotInput, type PilotStatus } from '@/lib/admin/pilot-schema'
+import { loadPilotProfile, savePilotProfile } from '@/lib/admin/pilot-persistence'
 import {
   getWorkspacePilotControlSnapshotLive,
   saveWorkspacePilotControlSnapshotLive,
-} from "@/lib/admin/workspace-live";
-import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
+} from '@/lib/admin/workspace-live'
+import { getWorkspaceDisplayName } from '@/lib/admin/workspace-branding'
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 const pilotStatuses = new Set<PilotStatus>([
-  "draft",
-  "in_progress",
-  "ready_for_review",
-  "approved",
-]);
+  'draft',
+  'in_progress',
+  'ready_for_review',
+  'approved',
+])
 
 const pilotKeys = new Set([
-  "id",
-  "workspaceDisplayName",
-  "brandName",
-  "website",
-  "industry",
-  "geo",
-  "targetAudience",
-  "offer",
-  "monthlyBudget",
-  "primaryChannels",
-  "competitors",
-  "goals",
-  "successMetrics",
-  "status",
-  "lastUpdatedAt",
-]);
+  'id','workspaceDisplayName','brandName','website','industry','geo','targetAudience','offer',
+  'monthlyBudget','primaryChannels','competitors','goals','successMetrics','status','lastUpdatedAt',
+])
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object" && !Array.isArray(value);
+  return !!value && typeof value === 'object' && !Array.isArray(value)
 }
 
-function hasOwn(source: Record<string, unknown>, key: string): boolean {
-  return Object.prototype.hasOwnProperty.call(source, key);
+function hasOwn(source: Record<string, unknown>, key: string) {
+  return Object.prototype.hasOwnProperty.call(source, key)
 }
 
 function normalizeLines(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => (typeof item === "string" ? item.trim() : ""))
-      .filter(Boolean);
-  }
-
-  if (typeof value === "string") {
-    return value
-      .split(/\r?\n|,/)
-      .map((item) => item.trim())
-      .filter(Boolean);
-  }
-
-  return [];
+  if (Array.isArray(value)) return value.map((item) => typeof item === 'string' ? item.trim() : '').filter(Boolean)
+  if (typeof value === 'string') return value.split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean)
+  return []
 }
 
 function toPilotPatch(source: Record<string, unknown>): NeejeePilotInput {
-  const patch: NeejeePilotInput = {};
-
-  if (hasOwn(source, "id")) patch.id = String(source.id ?? "");
-  if (hasOwn(source, "workspaceDisplayName")) {
-    patch.workspaceDisplayName = String(source.workspaceDisplayName ?? "");
+  const patch: NeejeePilotInput = {}
+  if (hasOwn(source, 'id')) patch.id = String(source.id ?? '')
+  if (hasOwn(source, 'workspaceDisplayName')) patch.workspaceDisplayName = String(source.workspaceDisplayName ?? '')
+  if (hasOwn(source, 'brandName')) patch.brandName = String(source.brandName ?? '')
+  if (hasOwn(source, 'website')) patch.website = String(source.website ?? '')
+  if (hasOwn(source, 'industry')) patch.industry = String(source.industry ?? '')
+  if (hasOwn(source, 'geo')) patch.geo = String(source.geo ?? '')
+  if (hasOwn(source, 'targetAudience')) patch.targetAudience = String(source.targetAudience ?? '')
+  if (hasOwn(source, 'offer')) patch.offer = String(source.offer ?? '')
+  if (hasOwn(source, 'monthlyBudget')) patch.monthlyBudget = String(source.monthlyBudget ?? '')
+  if (hasOwn(source, 'primaryChannels')) patch.primaryChannels = normalizeLines(source.primaryChannels)
+  if (hasOwn(source, 'competitors')) patch.competitors = normalizeLines(source.competitors)
+  if (hasOwn(source, 'goals')) patch.goals = normalizeLines(source.goals)
+  if (hasOwn(source, 'successMetrics')) patch.successMetrics = normalizeLines(source.successMetrics)
+  if (hasOwn(source, 'status')) {
+    const status = String(source.status ?? '') as PilotStatus
+    if (pilotStatuses.has(status)) patch.status = status
   }
-  if (hasOwn(source, "brandName")) patch.brandName = String(source.brandName ?? "");
-  if (hasOwn(source, "website")) patch.website = String(source.website ?? "");
-  if (hasOwn(source, "industry")) patch.industry = String(source.industry ?? "");
-  if (hasOwn(source, "geo")) patch.geo = String(source.geo ?? "");
-  if (hasOwn(source, "targetAudience")) {
-    patch.targetAudience = String(source.targetAudience ?? "");
-  }
-  if (hasOwn(source, "offer")) patch.offer = String(source.offer ?? "");
-  if (hasOwn(source, "monthlyBudget")) {
-    patch.monthlyBudget = String(source.monthlyBudget ?? "");
-  }
-  if (hasOwn(source, "primaryChannels")) {
-    patch.primaryChannels = normalizeLines(source.primaryChannels);
-  }
-  if (hasOwn(source, "competitors")) {
-    patch.competitors = normalizeLines(source.competitors);
-  }
-  if (hasOwn(source, "goals")) {
-    patch.goals = normalizeLines(source.goals);
-  }
-  if (hasOwn(source, "successMetrics")) {
-    patch.successMetrics = normalizeLines(source.successMetrics);
-  }
-  if (hasOwn(source, "status")) {
-    const status = String(source.status ?? "") as PilotStatus;
-    if (pilotStatuses.has(status)) {
-      patch.status = status;
-    }
-  }
-  if (hasOwn(source, "lastUpdatedAt")) {
-    patch.lastUpdatedAt = String(source.lastUpdatedAt ?? "");
-  }
-
-  return patch;
+  if (hasOwn(source, 'lastUpdatedAt')) patch.lastUpdatedAt = String(source.lastUpdatedAt ?? '')
+  return patch
 }
 
-function extractSnapshotPatch(source: Record<string, unknown>): Record<string, unknown> {
-  const patch: Record<string, unknown> = {};
-
+function extractSnapshotPatch(source: Record<string, unknown>) {
+  const patch: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(source)) {
-    if (key === "pilot") continue;
-    if (pilotKeys.has(key)) continue;
-    patch[key] = value;
+    if (key === 'pilot' || pilotKeys.has(key)) continue
+    patch[key] = value
   }
-
-  return patch;
+  return patch
 }
 
-function hasPilotPatch(source: NeejeePilotInput): boolean {
-  return Object.keys(source).length > 0;
+function privateJson(body: unknown, status = 200) {
+  return NextResponse.json(body, { status, headers: { 'Cache-Control': 'private, no-store' } })
 }
 
-export async function GET(request: NextRequest) {
-  const unauthorized = requireAdmin(request);
-  if (unauthorized) return unauthorized;
-
-  const snapshot = await getWorkspacePilotControlSnapshotLive();
-  const pilot = getPilot();
-
-  return NextResponse.json(
-    {
-      ok: true,
-      workspaceDisplayName: getWorkspaceDisplayName(),
-      snapshot,
-      pilot,
-    },
-    {
-      status: 200,
-      headers: {
-        "Cache-Control": "no-store",
-      },
-    },
-  );
+export async function GET() {
+  try {
+    const access = await requireApiAccess({ lane: 'admin' })
+    const [snapshot, pilot] = await Promise.all([
+      getWorkspacePilotControlSnapshotLive(),
+      loadPilotProfile(access.membership),
+    ])
+    return privateJson({ ok: true, workspaceDisplayName: getWorkspaceDisplayName(), snapshot, pilot })
+  } catch (error) {
+    if (error instanceof ApiAccessError) return privateJson({ ok: false, code: error.code, error: error.message }, error.status)
+    return privateJson({ ok: false, code: 'pilot_read_failed', error: 'Unable to load pilot.' }, 500)
+  }
 }
 
 export async function PUT(request: NextRequest) {
-  const unauthorized = requireAdmin(request);
-  if (unauthorized) return unauthorized;
-
-  let body: unknown;
-
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: "Invalid JSON body",
-      },
-      { status: 400 },
-    );
-  }
+    const access = await requireApiAccess({ lane: 'admin' })
+    let body: unknown
+    try { body = await request.json() } catch { return privateJson({ ok: false, error: 'Invalid JSON body' }, 400) }
+    if (!isRecord(body)) return privateJson({ ok: false, error: 'Expected an object body' }, 400)
 
-  if (!isRecord(body)) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: "Expected an object body",
-      },
-      { status: 400 },
-    );
-  }
+    const snapshotPatch = extractSnapshotPatch(body)
+    const explicitPilotPatch = isRecord(body.pilot) ? toPilotPatch(body.pilot) : {}
+    const topLevelPilotPatch = toPilotPatch(body)
+    const pilotPatch = Object.keys(explicitPilotPatch).length ? explicitPilotPatch : topLevelPilotPatch
 
-  const snapshotPatch = extractSnapshotPatch(body);
-  const explicitPilotPatch = isRecord(body.pilot) ? toPilotPatch(body.pilot) : {};
-  const topLevelPilotPatch = toPilotPatch(body);
-  const pilotPatch = hasPilotPatch(explicitPilotPatch)
-    ? explicitPilotPatch
-    : topLevelPilotPatch;
-
-  const snapshot =
-    Object.keys(snapshotPatch).length > 0
+    const snapshot = Object.keys(snapshotPatch).length
       ? await saveWorkspacePilotControlSnapshotLive(snapshotPatch)
-      : await getWorkspacePilotControlSnapshotLive();
+      : await getWorkspacePilotControlSnapshotLive()
 
-  const pilot = hasPilotPatch(pilotPatch)
-    ? savePilot({
-        ...pilotPatch,
-        workspaceDisplayName:
-          pilotPatch.workspaceDisplayName ?? getWorkspaceDisplayName(),
-      })
-    : getPilot();
+    const pilot = Object.keys(pilotPatch).length
+      ? await savePilotProfile({
+          membership: access.membership,
+          actorUserId: access.subject,
+          actorEmail: access.email,
+          patch: { ...pilotPatch, workspaceDisplayName: pilotPatch.workspaceDisplayName ?? getWorkspaceDisplayName() },
+        })
+      : await loadPilotProfile(access.membership)
 
-  return NextResponse.json(
-    {
-      ok: true,
-      workspaceDisplayName: getWorkspaceDisplayName(),
-      snapshot,
-      pilot,
-    },
-    {
-      status: 200,
-      headers: {
-        "Cache-Control": "no-store",
-      },
-    },
-  );
+    return privateJson({ ok: true, workspaceDisplayName: getWorkspaceDisplayName(), snapshot, pilot })
+  } catch (error) {
+    if (error instanceof ApiAccessError) return privateJson({ ok: false, code: error.code, error: error.message }, error.status)
+    return privateJson({ ok: false, code: 'pilot_write_failed', error: 'Unable to persist pilot.' }, 500)
+  }
 }
