@@ -10,6 +10,7 @@ import {
   type VerifiedMembership,
 } from '@/lib/auth/verified-membership'
 import { getRoleExperience, roleRequiresMfa } from '@/lib/auth/role-routing'
+import { loadPermissionSet, type ResolvedPermissionSet } from '@/lib/auth/access-resolver'
 
 export type WorkspaceIdentity = {
   subject: string
@@ -18,6 +19,16 @@ export type WorkspaceIdentity = {
   memberships: VerifiedMembership[]
   role: ReturnType<typeof getRoleExperience>
   assuranceLevel: 'aal1' | 'aal2'
+  permissionSet: ResolvedPermissionSet
+}
+
+function mustChangePassword(claims: Record<string, unknown> | null | undefined) {
+  const appMetadata = claims?.app_metadata
+  return Boolean(
+    appMetadata &&
+      typeof appMetadata === 'object' &&
+      (appMetadata as Record<string, unknown>).must_change_password === true,
+  )
 }
 
 export async function requireWorkspaceIdentity(input?: {
@@ -26,11 +37,17 @@ export async function requireWorkspaceIdentity(input?: {
 }): Promise<WorkspaceIdentity> {
   const supabase = await createSupabaseServerClient()
   const { data: claimsData, error: claimsError } = await supabase.auth.getClaims()
-  const subject = claimsData?.claims?.sub
+  const claims = claimsData?.claims as Record<string, unknown> | undefined
+  const subject = claims?.sub
 
   if (claimsError || typeof subject !== 'string' || !subject) {
     const path = input?.redirectTo ? `?next=${encodeURIComponent(input.redirectTo)}` : ''
     redirect(`/login${path}` as Route)
+  }
+
+  if (mustChangePassword(claims)) {
+    const destination = input?.redirectTo || '/workspace'
+    redirect(`/account/change-password?next=${encodeURIComponent(destination)}` as Route)
   }
 
   const { data: membershipRows, error: membershipError } = await supabase
@@ -65,7 +82,14 @@ export async function requireWorkspaceIdentity(input?: {
     }
   }
 
-  const emailClaim = claimsData?.claims?.email
+  let permissionSet: ResolvedPermissionSet
+  try {
+    permissionSet = await loadPermissionSet({ supabase, subject, membership })
+  } catch {
+    redirect('/login?error=access_control_unavailable' as Route)
+  }
+
+  const emailClaim = claims?.email
   return {
     subject,
     email: typeof emailClaim === 'string' ? emailClaim : null,
@@ -73,5 +97,6 @@ export async function requireWorkspaceIdentity(input?: {
     memberships,
     role,
     assuranceLevel,
+    permissionSet,
   }
 }
