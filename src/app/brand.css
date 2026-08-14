@@ -16,7 +16,6 @@
   --oye-radius-xl: 34px;
   --oye-radius-lg: 24px;
 
-  /* Compatibility bridge for the existing component vocabulary. */
   --bg: var(--oye-canvas);
   --surface: var(--oye-paper);
   --surface-soft: var(--oye-canvas-soft);
@@ -37,9 +36,7 @@
   --shadow-lg: 0 34px 90px rgba(17, 17, 17, 0.14);
 }
 
-html {
-  background: var(--oye-canvas);
-}
+html { background: var(--oye-canvas); }
 
 body {
   color: var(--oye-ink);
@@ -49,15 +46,8 @@ body {
     linear-gradient(180deg, var(--oye-canvas-soft) 0%, var(--oye-canvas) 54%, #ddd9d3 100%);
 }
 
-::selection {
-  color: var(--oye-ink);
-  background: var(--oye-pink);
-}
-
-:focus-visible {
-  outline: 3px solid var(--oye-ink);
-  outline-offset: 3px;
-}
+::selection { color: var(--oye-ink); background: var(--oye-pink); }
+:focus-visible { outline: 3px solid var(--oye-ink); outline-offset: 3px; }
 
 .oi-topbar {
   background: rgba(231, 229, 226, 0.9);
@@ -76,26 +66,11 @@ body {
 .oye-wordmark {
   display: inline-flex;
   align-items: center;
-  gap: 11px;
   color: var(--oye-ink);
   font-weight: 950;
   letter-spacing: -0.055em;
   font-size: 1.28rem;
   white-space: nowrap;
-}
-
-.oye-wordmark::before {
-  content: "✦";
-  display: inline-grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border: 2px solid var(--oye-ink);
-  border-radius: 50% 50% 50% 10%;
-  background: var(--oye-yellow);
-  box-shadow: 4px 4px 0 var(--oye-ink);
-  font-size: 1.05rem;
-  transform: rotate(-5deg);
 }
 
 .oye-public-nav {
@@ -122,17 +97,9 @@ body {
   transition: background 140ms ease, transform 140ms ease;
 }
 
-.oye-public-nav a:hover {
-  background: var(--oye-yellow-soft);
-  transform: translateY(-1px);
-}
+.oye-public-nav a:hover { background: var(--oye-yellow-soft); transform: translateY(-1px); }
 
-.oye-header-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-}
+.oye-header-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
 
 .oye-sign-in,
 .oye-book-demo {
@@ -148,19 +115,10 @@ body {
   font-weight: 900;
 }
 
-.oye-sign-in {
-  background: var(--oye-paper);
-}
-
-.oye-book-demo {
-  background: var(--oye-yellow);
-  box-shadow: 4px 4px 0 var(--oye-ink);
-}
-
+.oye-sign-in { background: var(--oye-paper); }
+.oye-book-demo { background: var(--oye-yellow); box-shadow: 4px 4px 0 var(--oye-ink); }
 .oye-book-demo:hover,
-.oye-sign-in:hover {
-  transform: translate(-1px, -1px);
-}
+.oye-sign-in:hover { transform: translate(-1px, -1px); }
 
 .oi-btn-primary,
 .oi-btn--primary {
@@ -193,10 +151,7 @@ body {
   background: var(--oye-yellow-soft);
 }
 
-.oi-pill-orange {
-  color: var(--oye-ink);
-  background: var(--oye-pink-soft);
-}
+.oi-pill-orange { color: var(--oye-ink); background: var(--oye-pink-soft); }
 
 .oi-panel,
 .oi-card,
@@ -216,10 +171,7 @@ body {
     linear-gradient(155deg, #111111 0%, #282622 100%);
 }
 
-.oi-bullet {
-  border: 1px solid var(--oye-ink);
-  background: var(--oye-pink);
-}
+.oi-bullet { border: 1px solid var(--oye-ink); background: var(--oye-pink); }
 
 .oi-input:focus,
 .oi-textarea:focus {
@@ -271,46 +223,22 @@ body {
 }
 
 @media (max-width: 1060px) {
-  .oye-public-header {
-    grid-template-columns: 1fr auto;
-    padding: 14px 0;
-  }
-
+  .oye-public-header { grid-template-columns: 1fr auto; padding: 14px 0; }
   .oye-public-nav {
     grid-column: 1 / -1;
     justify-self: stretch;
     overflow-x: auto;
     scrollbar-width: thin;
   }
-
-  .oye-public-nav a {
-    flex: 0 0 auto;
-  }
+  .oye-public-nav a { flex: 0 0 auto; }
 }
 
 @media (max-width: 680px) {
-  .oye-public-header {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-
-  .oye-header-actions {
-    justify-content: stretch;
-  }
-
+  .oye-public-header { grid-template-columns: 1fr; gap: 10px; }
+  .oye-header-actions { justify-content: stretch; }
   .oye-sign-in,
-  .oye-book-demo {
-    flex: 1 1 0;
-  }
-
-  .oye-wordmark::before {
-    width: 36px;
-    height: 36px;
-  }
-
-  .oye-footer-grid {
-    grid-template-columns: 1fr;
-  }
+  .oye-book-demo { flex: 1 1 0; }
+  .oye-footer-grid { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {
