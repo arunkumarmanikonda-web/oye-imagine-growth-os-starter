@@ -1,5 +1,6 @@
 import 'server-only'
 
+import type { Route } from 'next'
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import {
@@ -29,7 +30,7 @@ export async function requireWorkspaceIdentity(input?: {
 
   if (claimsError || typeof subject !== 'string' || !subject) {
     const path = input?.redirectTo ? `?next=${encodeURIComponent(input.redirectTo)}` : ''
-    redirect(`/login${path}`)
+    redirect(`/login${path}` as Route)
   }
 
   const { data: membershipRows, error: membershipError } = await supabase
@@ -39,7 +40,7 @@ export async function requireWorkspaceIdentity(input?: {
     .eq('status', 'active')
 
   if (membershipError) {
-    redirect('/login?error=access_control_unavailable')
+    redirect('/login?error=access_control_unavailable' as Route)
   }
 
   const memberships = (membershipRows ?? []) as VerifiedMembership[]
@@ -48,7 +49,7 @@ export async function requireWorkspaceIdentity(input?: {
     : selectPrimaryMembership(memberships)
 
   if (!membership) {
-    redirect('/login?error=access_denied')
+    redirect('/login?error=access_denied' as Route)
   }
 
   const role = getRoleExperience(membership.role_key)
@@ -56,11 +57,11 @@ export async function requireWorkspaceIdentity(input?: {
 
   if (roleRequiresMfa(membership.role_key)) {
     const { data: aalData, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
-    if (aalError) redirect('/login?error=access_control_unavailable')
+    if (aalError) redirect('/login?error=access_control_unavailable' as Route)
     assuranceLevel = aalData.currentLevel === 'aal2' ? 'aal2' : 'aal1'
     if (assuranceLevel !== 'aal2') {
       const destination = input?.redirectTo || '/workspace'
-      redirect(`/auth/mfa?redirect=${encodeURIComponent(destination)}`)
+      redirect(`/auth/mfa?redirect=${encodeURIComponent(destination)}` as Route)
     }
   }
 
