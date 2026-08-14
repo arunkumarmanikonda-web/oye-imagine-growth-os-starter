@@ -1,4 +1,16 @@
-export const CREATIVE_ASSET_BUCKET = 'creative-assets' as const
+export const OYE_ASSET_BUCKET = 'oyeimagine-assets' as const
+export const CLIENT_ASSET_BUCKET_PREFIX = 'client-' as const
+export const CLIENT_ASSET_BUCKET_SUFFIX = '-assets' as const
+
+export const creativeAssetRoots = [
+  'brand-assets',
+  'generated',
+  'campaigns',
+  'exports',
+  'rights',
+  'imports',
+] as const
+export type CreativeAssetRoot = (typeof creativeAssetRoots)[number]
 
 export const creativeAssetKinds = [
   'image',
@@ -113,7 +125,7 @@ export interface CreativeAssetRecord {
   campaignId?: string | null
   parentAssetId?: string | null
   sourceGenerationJobId?: string | null
-  storageBucket: typeof CREATIVE_ASSET_BUCKET
+  storageBucket: string
   storagePath: string
   assetKind: CreativeAssetKind
   purpose: string
@@ -183,23 +195,40 @@ function safePathSegment(value: string, label: string): string {
   return normalized
 }
 
+export function buildClientAssetBucketId(tenantSlug: string): string {
+  const normalized = tenantSlug
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+
+  if (!normalized) throw new Error('tenantSlug cannot be normalized to a safe bucket id')
+  if (normalized === 'oye-imagine') return OYE_ASSET_BUCKET
+  return `${CLIENT_ASSET_BUCKET_PREFIX}${normalized}${CLIENT_ASSET_BUCKET_SUFFIX}`
+}
+
 export function buildCreativeAssetPath(input: {
-  tenantId: string
+  root: CreativeAssetRoot
   workspaceId: string
   assetId: string
   fileName: string
 }): string {
+  if (!creativeAssetRoots.includes(input.root)) {
+    throw new Error('root is not an allowed creative asset root')
+  }
+
   return [
-    safePathSegment(input.tenantId, 'tenantId'),
+    input.root,
     safePathSegment(input.workspaceId, 'workspaceId'),
     safePathSegment(input.assetId, 'assetId'),
     safePathSegment(input.fileName, 'fileName'),
   ].join('/')
 }
 
-export function getCreativeAssetTenantFromPath(storagePath: string): string | null {
-  const [tenantId] = storagePath.split('/')
-  return tenantId?.trim() || null
+export function getCreativeAssetRootFromPath(storagePath: string): CreativeAssetRoot | null {
+  const [root] = storagePath.split('/')
+  return creativeAssetRoots.includes(root as CreativeAssetRoot) ? (root as CreativeAssetRoot) : null
 }
 
 export function isPublishingEligible(asset: Pick<CreativeAssetRecord, 'status' | 'approvedBy' | 'approvedAt'>): boolean {
