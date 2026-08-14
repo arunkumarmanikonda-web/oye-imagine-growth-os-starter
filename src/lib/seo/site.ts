@@ -4,7 +4,7 @@ export const siteName = 'Oye !magine'
 export const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.oyeimagine.com').replace(/\/$/, '')
 export const defaultDescription =
   'Oye !magine is an AI-assisted Growth OS connecting strategy, creative execution, approvals, campaigns, analytics and commercial governance.'
-export const defaultOgImage = '/favicon.ico'
+export const defaultOgImage = '/brand/oye-imagine-logo.webp'
 
 export type FaqItem = {
   question: string
@@ -44,7 +44,7 @@ export function organizationJsonLd() {
     name: siteName,
     legalName: 'Oye Imagine Private Limited',
     url: siteUrl,
-    logo: `${siteUrl}/favicon.ico`,
+    logo: `${siteUrl}${defaultOgImage}`,
   }
 }
 
