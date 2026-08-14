@@ -38,3 +38,13 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
       - name: Validate migration chain in disposable PostgreSQL
         run: bash scripts/validate-migration-chain.sh
+      - name: Upload migration validation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-validation-logs
+          path: |
+            /tmp/migration-*.log
+            /tmp/migration-summary.md
+          if-no-files-found: ignore
+          retention-days: 2
