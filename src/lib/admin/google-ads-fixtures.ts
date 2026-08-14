@@ -1,3 +1,4 @@
+import { neejeeBrandTruth } from "@/lib/admin/neejee-brand-truth";
 import {
   createGoogleAdsCampaignDraftRecord,
   type GoogleAdsCampaignDraftRecord,
@@ -6,50 +7,55 @@ import {
 export function createDefaultGoogleAdsCampaignDraftFixture(): GoogleAdsCampaignDraftRecord {
   return createGoogleAdsCampaignDraftRecord({
     pilotId: "neejee-pilot",
-    workspaceId: "oye-imagine",
-    workspaceDisplayName: process.env.NEXT_PUBLIC_WORKSPACE_DISPLAY_NAME ?? "Oye Imagine",
-    brandName: "Neejee Clinics",
-    objective: "Generate qualified hair transplant and skin clinic consultation demand.",
-    landingPageUrl: "/landing/neejee-pilot",
-    geoTargets: ["Bengaluru", "Whitefield", "Indiranagar"],
+    workspaceId: "workspace_neejee_primary",
+    workspaceDisplayName: process.env.NEXT_PUBLIC_WORKSPACE_DISPLAY_NAME ?? "Oye !magine",
+    brandName: neejeeBrandTruth.identity.displayName,
+    objective:
+      "Capture qualified product-discovery and purchase intent for Neejee while preserving provenance-led brand language.",
+    landingPageUrl: neejeeBrandTruth.identity.website,
+    geoTargets: ["India"],
     budgetDailyUsd: 45,
     keywordClusters: [
       {
-        theme: "Hair transplant high intent",
+        theme: "Indian craft discovery",
         keywords: [
-          "best hair transplant clinic",
-          "hair transplant consultation",
-          "hair transplant near me",
+          "buy Indian craft online",
+          "curated Indian artisan products",
+          "authentic Indian craft online",
         ],
       },
       {
-        theme: "Skin clinic consultations",
+        theme: "Category purchase intent",
         keywords: [
-          "skin clinic consultation",
-          "dermatology clinic near me",
-          "best skin clinic bengaluru",
+          "shop Indian sarees online",
+          "Indian jewellery and accessories online",
+          "Indian craft home decor online",
         ],
       },
     ],
     adCopy: [
       {
-        headline1: "Neejee Clinics Consultation",
-        headline2: "Book Trusted Specialist Care",
-        description1: "High-intent search campaign focused on consultation conversions.",
-        description2: "Clear next step, strong proof, and low-friction booking flow.",
+        headline1: "Discover Neejee",
+        headline2: "Found. Personal.",
+        description1:
+          "Explore curated craft through maker, region, technique and story.",
+        description2:
+          "Find textiles, jewellery, accessories, home objects and meaningful gifts.",
       },
       {
-        headline1: "Hair & Skin Specialists",
-        headline2: "Talk To The Neejee Team",
-        description1: "Target motivated prospects comparing treatment options.",
-        description2: "Drive bookings with trust-first messaging and direct CTAs.",
+        headline1: "Craft Worth Knowing",
+        headline2: "Shop Curated Finds",
+        description1:
+          "Move from discovery to purchase with provenance-rich product context.",
+        description2:
+          "Quiet curation, distinctive products and a considered shopping journey.",
       },
     ],
     sitelinks: [
-      "Book Consultation",
-      "Treatment Options",
-      "Success Stories",
-      "Pricing and FAQs",
+      "New Arrivals",
+      "Founder's Edit",
+      "Discover the Craft",
+      "Gift Discovery",
     ],
   });
 }

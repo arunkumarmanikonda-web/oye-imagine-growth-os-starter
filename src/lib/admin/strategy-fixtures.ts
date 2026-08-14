@@ -1,5 +1,5 @@
 import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
-
+import { neejeeBrandTruth } from "@/lib/admin/neejee-brand-truth";
 import {
   createStrategyBriefRecord,
   type StrategyBriefRecord,
@@ -10,121 +10,115 @@ export function createDefaultStrategyBriefFixture(): StrategyBriefRecord {
 
   return createStrategyBriefRecord({
     workspaceDisplayName,
-    brandName: "Neejee Clinics",
+    brandName: neejeeBrandTruth.identity.displayName,
     pilotId: "neejee-pilot",
     status: "draft",
     positioning:
-      "Neejee should position itself as a measurable, operator-friendly growth engine for modern clinics and healthcare businesses.",
-    offerSummary:
-      "Start with a focused pilot covering onboarding clarity, strategy generation, landing page planning, SEO clusters, and paid media readiness.",
+      "Neejee should win through founder-led discovery, provenance and quiet editorial commerce: make the maker, region, technique and meaning of each product easier to discover without turning the experience into a generic discount marketplace.",
+    offerSummary: neejeeBrandTruth.business.model,
     marketSummary:
-      "Clinic operators need dependable lead generation, clear governance, and execution visibility without adding internal complexity.",
+      "Customers can find Indian craft across many marketplaces, but Neejee's opportunity is to make authentic, provenance-led discovery feel curated, personal and trustworthy across textiles, jewellery, accessories, home objects, art, decor and gifting.",
     messagingPillars: [
       {
-        title: "Revenue clarity",
+        title: "Found with provenance",
         description:
-          "Show a direct path from channel activity to qualified consultations and booked appointments.",
+          "Lead with maker, region, technique, material and origin so discovery carries meaning rather than only a product title and price.",
       },
       {
-        title: "Operator trust",
+        title: "Personal discovery",
         description:
-          "Highlight governance, visibility, and approval-based execution suitable for healthcare teams.",
+          "Use founder curation, editorial storytelling, gifting and AI-assisted discovery to help shoppers find products that feel considered rather than anonymous.",
       },
       {
-        title: "Execution speed",
+        title: "Commerce with restraint",
         description:
-          "Reduce time from strategy to launch with reusable playbooks and structured workflows.",
+          "Build conversion around clarity, trust, product context and ease of purchase without allowing discount language to dominate the brand.",
       },
     ],
     audienceSegments: [
       {
-        name: "Founders and clinic owners",
+        name: "Craft- and design-conscious shoppers",
         painPoints: [
-          "Unpredictable lead flow",
-          "Agency opacity",
-          "Weak attribution across channels",
+          "Authentic products are difficult to discover online",
+          "Mass marketplaces strip away maker and provenance context",
+          "It is hard to judge distinctiveness and trust from anonymous listings",
         ],
         buyingSignals: [
-          "Actively reviewing monthly spend",
-          "Requests weekly reporting",
-          "Needs rapid pilot proof",
+          "Searches by craft, region, technique, material or category",
+          "Engages with maker stories, journal content or curated edits",
+          "Uses product visualisation or comparison before purchase",
         ],
       },
       {
-        name: "Multi-location operators",
+        name: "Meaning-led gift and home buyers",
         painPoints: [
-          "Fragmented execution",
-          "Inconsistent brand messaging",
-          "No unified growth dashboard",
+          "Generic gifts feel impersonal",
+          "Home and lifestyle purchases are hard to imagine in context",
+          "Curated, story-rich products are scattered across sources",
         ],
         buyingSignals: [
-          "Expanding to new geographies",
-          "Hiring marketing coordinators",
-          "Requires approval workflow",
+          "Browses founder edits and new arrivals",
+          "Uses Concierge or Space for guided discovery",
+          "Returns to journal, collections or email drops",
         ],
       },
     ],
     channelRecommendations: [
       {
         channel: "SEO",
-        objective: "Capture high-intent search demand",
-        rationale: "Build durable demand capture for treatment, clinic, and geo-intent queries.",
+        objective: "Capture product, craft, technique, region and care/discovery intent",
+        rationale: neejeeBrandTruth.growth.channelIntent.seo,
       },
       {
         channel: "Google Ads",
-        objective: "Drive qualified consultation demand",
-        rationale: "Convert urgent and commercial-intent queries with strict budget control.",
+        objective: "Capture purchase and high-intent product discovery",
+        rationale: neejeeBrandTruth.growth.channelIntent.googleAds,
       },
       {
         channel: "Meta Ads",
-        objective: "Create retargeting and offer amplification",
-        rationale: "Support remarketing, social proof, and creative testing for lead quality uplift.",
+        objective: "Drive visual discovery, retargeting and commerce conversion",
+        rationale: neejeeBrandTruth.growth.channelIntent.metaAds,
       },
     ],
     plan30Days: [
       {
-        label: "Foundation",
+        label: "Truth and measurement",
         actions: [
-          "Finalize positioning",
-          "Approve ICP and geo priorities",
-          "Lock landing page brief",
+          "Lock category, provenance and claims taxonomy from live catalogue data",
+          "Map ecommerce events from product view through purchase",
+          "Build initial search and creative themes from real products, crafts and regions",
         ],
       },
     ],
     plan60Days: [
       {
-        label: "Launch",
+        label: "Controlled launch",
         actions: [
-          "Publish landing page",
-          "Activate SEO topic cluster",
-          "Launch first paid media experiments",
+          "Launch provenance-rich SEO and landing experiments",
+          "Run approved paid-search and visual-discovery tests only after provider verification",
+          "Start lifecycle journeys around new arrivals, discovery and cart/purchase behaviour",
         ],
       },
     ],
     plan90Days: [
       {
-        label: "Optimization",
+        label: "Learn and scale",
         actions: [
-          "Scale winning channels",
-          "Refine messaging by segment",
-          "Introduce executive dashboard reporting",
+          "Scale categories, queries and creative themes with verified purchase evidence",
+          "Increase use of Mirror, Space and Concierge where they improve discovery",
+          "Refine acquisition and retention by product, craft, audience and channel economics",
         ],
       },
     ],
-    successMetrics: [
-      "Qualified leads",
-      "Consultation bookings",
-      "Cost per lead",
-      "Landing page conversion rate",
-    ],
+    successMetrics: [...neejeeBrandTruth.growth.primaryMetrics],
     assumptions: [
-      "Client can approve strategy within 48 hours",
-      "Landing page build resources are available",
-      "Tracking stack can be configured during pilot",
+      "Product, catalogue and ecommerce analytics data can be ingested with sufficient freshness",
+      "Provenance and product claims used in campaigns are backed by approved source data",
+      "External channel execution remains approval-gated until provider-side verification is complete",
     ],
     blockers: [
-      "No final compliance review flow yet",
-      "Production RBAC still pending for approval actions",
+      "Live paid-media execution remains blocked until provider account and external resource-ID verification exists",
+      "Time-sensitive commercial claims must be refreshed from Neejee before publication",
     ],
   });
 }

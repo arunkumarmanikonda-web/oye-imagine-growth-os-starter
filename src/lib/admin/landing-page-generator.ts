@@ -1,6 +1,10 @@
 import { getPilot } from "@/lib/admin/pilot-store";
 import { getStrategyBrief } from "@/lib/admin/strategy-store";
 import {
+  isNeejeeContext,
+  neejeeBrandTruth,
+} from "@/lib/admin/neejee-brand-truth";
+import {
   createDefaultLandingPageBrief,
   getLandingPageBrief,
   saveLandingPageBrief,
@@ -22,38 +26,17 @@ function readString(value: unknown, fallback = ""): string {
 }
 
 function readStringArray(value: unknown): string[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
+  if (!Array.isArray(value)) return [];
   return value
     .map((item) => {
-      if (typeof item === "string") {
-        return item.trim();
-      }
-
+      if (typeof item === "string") return item.trim();
       if (item && typeof item === "object") {
         const record = item as Record<string, unknown>;
-        return readString(
-          record.label ?? record.title ?? record.name ?? record.value,
-          "",
-        );
+        return readString(record.label ?? record.title ?? record.name ?? record.value, "");
       }
-
       return "";
     })
     .filter(Boolean);
-}
-
-function pickPrimaryService(pilot: NeejeePilotRecord): string {
-  const pilotRecord = pilot as unknown as Record<string, unknown>;
-  const services = readStringArray(pilotRecord.services);
-
-  if (services.length > 0) {
-    return services[0];
-  }
-
-  return "care";
 }
 
 function pickBrandName(
@@ -62,33 +45,22 @@ function pickBrandName(
 ): string {
   const strategyRecord = (strategy ?? null) as unknown as Record<string, unknown>;
   const pilotRecord = pilot as unknown as Record<string, unknown>;
-
   return (
     readString(strategyRecord.brandName) ||
     readString(pilotRecord.brandName) ||
     readString(pilotRecord.workspaceDisplayName) ||
-    "Neejee Clinics"
+    "Client"
   );
 }
 
 function pickAudience(strategy?: StrategyBriefRecord | null): string[] {
-  if (!strategy) {
-    return [];
-  }
-
+  if (!strategy) return [];
   const strategyRecord = strategy as unknown as Record<string, unknown>;
   const audienceSegments = strategyRecord.audienceSegments;
-
-  if (!Array.isArray(audienceSegments)) {
-    return [];
-  }
-
+  if (!Array.isArray(audienceSegments)) return [];
   return audienceSegments
     .map((segment) => {
-      if (!segment || typeof segment !== "object") {
-        return "";
-      }
-
+      if (!segment || typeof segment !== "object") return "";
       const record = segment as Record<string, unknown>;
       return readString(record.name ?? record.label ?? record.title, "");
     })
@@ -96,23 +68,13 @@ function pickAudience(strategy?: StrategyBriefRecord | null): string[] {
 }
 
 function pickChannels(strategy?: StrategyBriefRecord | null): string[] {
-  if (!strategy) {
-    return [];
-  }
-
+  if (!strategy) return [];
   const strategyRecord = strategy as unknown as Record<string, unknown>;
   const channels = strategyRecord.channelRecommendations;
-
-  if (!Array.isArray(channels)) {
-    return [];
-  }
-
+  if (!Array.isArray(channels)) return [];
   return channels
     .map((channel) => {
-      if (!channel || typeof channel !== "object") {
-        return "";
-      }
-
+      if (!channel || typeof channel !== "object") return "";
       const record = channel as Record<string, unknown>;
       return readString(record.channel ?? record.name ?? record.label, "");
     })
@@ -120,108 +82,31 @@ function pickChannels(strategy?: StrategyBriefRecord | null): string[] {
 }
 
 function pickPillars(strategy?: StrategyBriefRecord | null): string[] {
-  if (!strategy) {
-    return [];
-  }
-
+  if (!strategy) return [];
   const strategyRecord = strategy as unknown as Record<string, unknown>;
   const pillars = strategyRecord.messagingPillars ?? strategyRecord.pillars;
-
-  if (!Array.isArray(pillars)) {
-    return [];
-  }
-
+  if (!Array.isArray(pillars)) return [];
   return pillars
     .map((pillar) => {
-      if (!pillar || typeof pillar !== "object") {
-        return "";
-      }
-
+      if (!pillar || typeof pillar !== "object") return "";
       const record = pillar as Record<string, unknown>;
       return readString(record.title ?? record.name ?? record.label, "");
     })
     .filter(Boolean);
 }
 
-function buildSections(
-  brandName: string,
-  primaryService: string,
-  audience: string[],
-  pillars: string[],
-): LandingPageSection[] {
-  const audienceLine =
-    audience.length > 0
-      ? audience.join(", ")
-      : "high-intent patients evaluating treatment options";
-
-  const pillarBullets =
-    pillars.length > 0
-      ? pillars.slice(0, 3)
-      : [
-          "Clear treatment outcomes and next steps",
-          "Trust-building proof and clinician credibility",
-          "Low-friction conversion path to consultation",
-        ];
-
-  return [
-    {
-      id: "problem",
-      title: `Why ${primaryService} decisions stall`,
-      description: `${brandName} needs a landing page that reduces uncertainty, explains the care journey, and gives visitors a clear next action.`,
-      bullets: [
-        "Prospects need fast clarity on fit, outcomes, and timeline",
-        "The page should remove friction before the first call",
-        "Proof and process need to appear above the fold",
-      ],
-    },
-    {
-      id: "solution",
-      title: `How ${brandName} helps`,
-      description: `Position ${brandName} as the trusted partner for ${primaryService} with a clear, modern patient journey.`,
-      bullets: pillarBullets,
-    },
-    {
-      id: "audience",
-      title: "Who this page is for",
-      description: `Primary audience: ${audienceLine}.`,
-      bullets: [
-        "Visitors researching options",
-        "Warm leads comparing providers",
-        "Referrals needing faster decision support",
-      ],
-    },
-    {
-      id: "cta",
-      title: "Primary conversion path",
-      description:
-        "Drive visitors to book a consultation with a short, confidence-building call to action.",
-      bullets: [
-        "Primary CTA: Book a consultation",
-        "Secondary CTA: Speak to the team",
-        "Keep form friction low and expectation-setting high",
-      ],
-    },
-  ];
-}
-
-export function buildLandingPageBriefFromPilot(
+function buildNeejeeLandingPageBrief(
   pilot: NeejeePilotRecord,
   strategy?: StrategyBriefRecord | null,
 ): LandingPageBriefRecord {
   const pilotRecord = pilot as unknown as Record<string, unknown>;
   const strategyRecord = (strategy ?? null) as unknown as Record<string, unknown>;
-
-  const pilotId = readString(pilotRecord.pilotId, "neejee-pilot");
-  const workspaceId = readString(pilotRecord.workspaceId, "default-workspace");
-  const workspaceDisplayName = readString(
-    pilotRecord.workspaceDisplayName,
-    "Oye Imagine",
-  );
-  const brandName = pickBrandName(pilot, strategy);
-  const primaryService = pickPrimaryService(pilot);
+  const pilotId = readString(pilotRecord.pilotId, pilot.id || "neejee-pilot");
+  const workspaceId = readString(pilotRecord.workspaceId, "workspace_neejee_primary");
+  const workspaceDisplayName = readString(pilotRecord.workspaceDisplayName, "Oye !magine");
+  const channels = pickChannels(strategy);
   const audience = pickAudience(strategy);
   const pillars = pickPillars(strategy);
-  const channels = pickChannels(strategy);
 
   const brief = createDefaultLandingPageBrief();
   const record = brief as unknown as Record<string, any>;
@@ -230,65 +115,106 @@ export function buildLandingPageBriefFromPilot(
   record.workspaceId = workspaceId;
   record.workspaceDisplayName = workspaceDisplayName;
   record.status = "draft";
-  record.brandName = brandName;
-  record.objective = `Convert qualified ${primaryService.toLowerCase()} demand into booked consultations.`;
+  record.brandName = neejeeBrandTruth.identity.displayName;
+  record.objective =
+    "Move relevant shoppers from craft and product discovery into product views, add-to-cart and completed purchases while preserving provenance and brand restraint.";
   record.audienceSummary =
-    audience.length > 0
-      ? audience.join(", ")
-      : "High-intent prospects actively evaluating providers.";
-  record.positioningStatement = `${brandName} offers a clear, trustworthy path from first visit to booked consultation for patients exploring ${primaryService.toLowerCase()}.`;
+    audience.length > 0 ? audience.join(", ") : neejeeBrandTruth.audience.slice(0, 3).join(", ");
+  record.positioningStatement =
+    "Neejee makes authentic craft easier to find, understand and buy by connecting product discovery with maker, region, technique, story and a considered commerce experience.";
 
   record.hero = {
-    eyebrow: `${brandName} landing page brief`,
-    headline: `Book a confident next step with ${brandName}`,
-    subheadline: `Turn high-intent visitors into consultation bookings with a focused page for ${primaryService.toLowerCase()}.`,
-    primaryCta: "Book a consultation",
-    secondaryCta: "Speak to the team",
+    eyebrow: `${neejeeBrandTruth.identity.displayName} · ${neejeeBrandTruth.identity.tagline}`,
+    headline: "Find craft worth knowing. Find something personal.",
+    subheadline:
+      "Discover textiles, jewellery, accessories, home objects and meaningful gifts through the people, places and techniques behind them.",
+    primaryCta: "Explore the collection",
+    secondaryCta: "Discover the craft",
   };
 
   record.ctas = [
-    {
-      label: "Book a consultation",
-      href: "/contact",
-      variant: "primary",
-    },
-    {
-      label: "Speak to the team",
-      href: "/contact?intent=talk",
-      variant: "secondary",
-    },
+    { label: "Explore the collection", href: neejeeBrandTruth.identity.website, variant: "primary" },
+    { label: "Discover the craft", href: `${neejeeBrandTruth.identity.website}/about`, variant: "secondary" },
+    { label: "Find a meaningful gift", href: neejeeBrandTruth.identity.website, variant: "secondary" },
   ];
 
-  record.sections = buildSections(brandName, primaryService, audience, pillars);
+  const pillarBullets = pillars.length > 0
+    ? pillars.slice(0, 3)
+    : ["Maker and origin context", "Founder-led curation", "Quiet, provenance-led commerce"];
+
+  record.sections = [
+    {
+      id: "discovery",
+      title: "Discovery before discount",
+      description:
+        "Give the shopper a reason to care about the piece before reducing it to price, promotion or generic catalogue language.",
+      bullets: [
+        "Maker, region, technique and material context",
+        "Relevant product and collection pathways",
+        "Editorial stories that deepen discovery without blocking purchase",
+      ],
+    },
+    {
+      id: "provenance",
+      title: "Why this piece belongs here",
+      description:
+        "Use only approved product-specific provenance and authenticity evidence; do not generalise claims that are not backed by source data.",
+      bullets: pillarBullets,
+    },
+    {
+      id: "experience",
+      title: "Help shoppers imagine the product in their life",
+      description:
+        "Use Neejee AI only where it meaningfully reduces uncertainty or helps discovery.",
+      bullets: [
+        "Mirror for wearable visualisation",
+        "Space for home-object visualisation",
+        "Concierge for guided product and gift discovery",
+      ],
+    },
+    {
+      id: "conversion",
+      title: "Make the next commercial action obvious",
+      description:
+        "The landing experience should connect discovery to a product, collection or relevant purchase path rather than a generic lead form.",
+      bullets: [
+        "Primary conversion: product or collection exploration",
+        "Commerce outcomes: product view, add-to-cart, checkout and purchase",
+        "Secondary retention: relevant email subscription or return discovery",
+      ],
+    },
+  ] satisfies LandingPageSection[];
 
   record.proofPoints = [
     {
-      label: "Clear value proposition",
-      value: `${brandName} makes the next step simple and low friction.`,
+      label: "Provenance-led discovery",
+      value: "Maker, region, technique and material belong in the product story when source evidence exists.",
     },
     {
       label: "Strategic channel alignment",
       value:
         channels.length > 0
-          ? `Supports demand capture from ${channels.slice(0, 3).join(", ")}.`
-          : "Supports demand capture from search, referrals, and remarketing.",
+          ? `Supports relevant demand from ${channels.slice(0, 3).join(", ")}.`
+          : "Supports search, visual discovery and lifecycle commerce journeys.",
     },
     {
-      label: "Trust-first UX",
-      value: "Balances credibility, clarity, and conversion focus.",
+      label: "AI with a shopping purpose",
+      value: "Mirror, Space and Concierge are used as discovery/visualisation utilities rather than decorative AI claims.",
     },
   ];
 
   record.assets = [
     {
       type: "logo",
-      label: "Primary logo",
-      url: "/logo.svg",
+      label: "Neejee approved logo",
+      url: "",
+      description: "Resolve the approved logo from the Neejee tenant asset bucket rather than a generic Oye asset.",
     },
     {
       type: "image",
-      label: "Hero image",
-      url: "/images/hero-placeholder.jpg",
+      label: "Approved product/craft imagery",
+      url: "",
+      description: "Use product, maker, process, material or origin imagery with rights/provenance metadata.",
     },
   ];
 
@@ -298,20 +224,124 @@ export function buildLandingPageBriefFromPilot(
     pilotUpdatedAt: readString(pilotRecord.updatedAt),
   };
 
-  if (!record.seo || typeof record.seo !== "object") {
-    record.seo = {};
-  }
-
-  record.seo.title = `${brandName} | ${primaryService} Consultation`;
-  record.seo.description = `Landing page brief for ${brandName} focused on ${primaryService.toLowerCase()} conversion and consultation booking.`;
+  if (!record.seo || typeof record.seo !== "object") record.seo = {};
+  record.seo.title = "Neejee | Found. Personal. | Indian craft discovery and commerce";
+  record.seo.description =
+    "Discover curated textiles, jewellery, accessories, home objects and gifts through maker, region, technique and story at Neejee.";
   record.seo.keywords = [
-    brandName,
-    primaryService,
-    workspaceDisplayName,
-    "consultation",
-    "landing page brief",
+    "Neejee",
+    "Indian craft",
+    "artisan products",
+    "sarees",
+    "jewellery and accessories",
+    "home craft",
+    "gift discovery",
   ];
 
+  return brief;
+}
+
+function buildGenericSections(
+  brandName: string,
+  offer: string,
+  audience: string[],
+  pillars: string[],
+): LandingPageSection[] {
+  const audienceLine = audience.length > 0 ? audience.join(", ") : "high-intent prospects";
+  const pillarBullets = pillars.length > 0
+    ? pillars.slice(0, 3)
+    : ["Clear value proposition", "Trust-building proof", "Low-friction next action"];
+
+  return [
+    {
+      id: "problem",
+      title: `Why ${offer} decisions stall`,
+      description: `${brandName} needs a landing page that reduces uncertainty and gives visitors a clear next action.`,
+      bullets: [
+        "Prospects need fast clarity on fit, value and timeline",
+        "The page should remove friction before conversion",
+        "Proof and process should appear close to the decision point",
+      ],
+    },
+    {
+      id: "solution",
+      title: `How ${brandName} helps`,
+      description: `Position ${brandName} around a clear, credible path to ${offer}.`,
+      bullets: pillarBullets,
+    },
+    {
+      id: "audience",
+      title: "Who this page is for",
+      description: `Primary audience: ${audienceLine}.`,
+      bullets: ["Visitors researching options", "Warm prospects comparing alternatives", "Decision-makers needing faster clarity"],
+    },
+    {
+      id: "cta",
+      title: "Primary conversion path",
+      description: "Drive visitors to one relevant next action with clear expectation setting.",
+      bullets: ["Primary CTA: Continue", "Secondary CTA: Learn more", "Keep friction proportionate to user intent"],
+    },
+  ];
+}
+
+export function buildLandingPageBriefFromPilot(
+  pilot: NeejeePilotRecord,
+  strategy?: StrategyBriefRecord | null,
+): LandingPageBriefRecord {
+  if (isNeejeeContext(pilot)) {
+    return buildNeejeeLandingPageBrief(pilot, strategy);
+  }
+
+  const pilotRecord = pilot as unknown as Record<string, unknown>;
+  const strategyRecord = (strategy ?? null) as unknown as Record<string, unknown>;
+  const pilotId = readString(pilotRecord.pilotId, pilot.id || "pilot");
+  const workspaceId = readString(pilotRecord.workspaceId, "default-workspace");
+  const workspaceDisplayName = readString(pilotRecord.workspaceDisplayName, "Oye !magine");
+  const brandName = pickBrandName(pilot, strategy);
+  const offer = readString(pilotRecord.offer, "the core offer");
+  const audience = pickAudience(strategy);
+  const pillars = pickPillars(strategy);
+  const channels = pickChannels(strategy);
+
+  const brief = createDefaultLandingPageBrief();
+  const record = brief as unknown as Record<string, any>;
+  record.pilotId = pilotId;
+  record.workspaceId = workspaceId;
+  record.workspaceDisplayName = workspaceDisplayName;
+  record.status = "draft";
+  record.brandName = brandName;
+  record.objective = `Convert qualified demand for ${offer} into a relevant next action.`;
+  record.audienceSummary = audience.length > 0 ? audience.join(", ") : "High-intent prospects actively evaluating options.";
+  record.positioningStatement = `${brandName} should present a clear, trustworthy path from first visit to the next commercial action.`;
+  record.hero = {
+    eyebrow: `${brandName} landing page brief`,
+    headline: `Take a confident next step with ${brandName}`,
+    subheadline: `Turn relevant visitors into qualified action with a focused page around ${offer}.`,
+    primaryCta: "Continue",
+    secondaryCta: "Learn more",
+  };
+  record.ctas = [
+    { label: "Continue", href: "/contact", variant: "primary" },
+    { label: "Learn more", href: "/contact?intent=talk", variant: "secondary" },
+  ];
+  record.sections = buildGenericSections(brandName, offer, audience, pillars);
+  record.proofPoints = [
+    { label: "Clear value proposition", value: `${brandName} makes the next step clear and low friction.` },
+    {
+      label: "Strategic channel alignment",
+      value: channels.length > 0 ? `Supports demand from ${channels.slice(0, 3).join(", ")}.` : "Supports relevant acquisition channels.",
+    },
+    { label: "Trust-first UX", value: "Balances credibility, clarity and conversion focus." },
+  ];
+  record.generatedFrom = {
+    strategyStatus: readString(strategyRecord.status, "draft"),
+    strategyUpdatedAt: readString(strategyRecord.updatedAt),
+    pilotUpdatedAt: readString(pilotRecord.updatedAt),
+  };
+  if (!record.seo || typeof record.seo !== "object") record.seo = {};
+  record.seo.title = `${brandName} | ${offer}`;
+  record.seo.description = `Landing page brief for ${brandName} focused on qualified conversion around ${offer}.`;
+  record.seo.keywords = [brandName, offer, workspaceDisplayName, "landing page brief"];
   return brief;
 }
 
@@ -329,9 +359,9 @@ export function generateLandingPageBrief(
 
   const pilot = getPilot();
   if (!pilot || (pilot as unknown as Record<string, unknown>).pilotId !== pilotId) {
-    throw new Error(`Pilot not found: ${pilotId}`);
+    const stableId = (pilot as unknown as Record<string, unknown> | null)?.id;
+    if (stableId !== pilotId) throw new Error(`Pilot not found: ${pilotId}`);
   }
-
 
   const strategyCandidate = getStrategyBrief();
   const strategy =
