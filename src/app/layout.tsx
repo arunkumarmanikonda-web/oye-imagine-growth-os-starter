@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import './globals.css'
 import './brand.css'
+import './premium-social.css'
 import SiteChrome from '@/components/shell/SiteChrome'
 import { organizationJsonLd, websiteJsonLd } from '@/lib/seo/site'
 
