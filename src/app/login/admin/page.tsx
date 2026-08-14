@@ -13,6 +13,10 @@ function errorMessage(code: string | undefined) {
       return 'The email address or password is incorrect.'
     case 'identity_verification_failed':
       return 'We could not verify this identity. Please try again.'
+    case 'unauthenticated':
+      return 'Your verified session is no longer available. Sign in again.'
+    case 'mfa_required':
+      return 'Privileged access requires a verified second factor.'
     case 'access_control_unavailable':
       return 'Access control is temporarily unavailable. No access has been granted.'
     case 'access_denied':
@@ -43,7 +47,7 @@ export default async function AdminLoginPage({ searchParams }: AdminLoginPagePro
           <h1 className="mt-4 text-4xl font-semibold">{experience.title}</h1>
           <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">{experience.body}</p>
           <div className="mt-8 rounded-[1.5rem] border border-white/10 bg-black/20 p-5 text-sm leading-7 text-slate-300">
-            Operator access is verified against Oye !magine identity and membership records. Selecting this login route does not grant an operator role.
+            Operator access is verified against Oye !magine identity and membership records. Password verification is followed by mandatory MFA assurance before privileged pages or APIs are available.
           </div>
         </article>
 
