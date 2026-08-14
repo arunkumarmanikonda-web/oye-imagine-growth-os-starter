@@ -24,9 +24,13 @@ as $$
     from public.core_tenant_memberships membership
     join public.core_role_definitions role_definition
       on role_definition.role_key = membership.role_key
-    where membership.tenant_id = p_tenant_id
-      and membership.user_id = (select auth.uid())::text
+    where membership.user_id = (select auth.uid())::text
       and membership.status = 'active'
+      and (
+        membership.role_key = 'platform_owner'
+        or membership.tenant_id = p_tenant_id
+        or membership.metadata ->> 'operationalTenantId' = p_tenant_id
+      )
       and (
         role_definition.permissions ? '*'
         or role_definition.permissions ? p_permission
@@ -43,7 +47,7 @@ create or replace function private.enforce_creative_asset_authority()
 returns trigger
 language plpgsql
 security definer
-set search_path = ''
+set search_path = 'pg_catalog'
 as $$
 declare
   caller_role text := coalesce((select auth.role()), '');
@@ -81,16 +85,20 @@ begin
   end if;
 
   if new.status = 'approved' then
-    if new.approved_by is null then
-      new.approved_by := caller_uid;
-    end if;
-    if new.approved_at is null then
-      new.approved_at := now();
-    end if;
+    if new.approved_by is null then new.approved_by := caller_uid; end if;
+    if new.approved_at is null then new.approved_at := now(); end if;
   end if;
 
   if new.status = 'publishing_ready' and (new.approved_by is null or new.approved_at is null) then
     raise exception 'creative asset must be approved before publishing_ready';
+  end if;
+
+  if new.status = 'publishing_ready' and exists (
+    select 1 from public.creative_asset_rights rights
+    where rights.asset_id = new.asset_id
+      and (rights.rights_status = 'expired' or (rights.valid_until is not null and rights.valid_until <= now()))
+  ) then
+    raise exception 'creative asset rights have expired';
   end if;
 
   return new;
@@ -107,19 +115,24 @@ create trigger trg_creative_assets_authority
 before insert or update on public.creative_assets
 for each row execute function private.enforce_creative_asset_authority();
 
-revoke insert, update, delete on public.creative_generation_jobs from authenticated;
-grant select on public.creative_generation_jobs to authenticated;
+-- Registry is readable only for buckets the caller is entitled to use.
+grant select on public.creative_asset_buckets to authenticated;
+drop policy if exists creative_asset_buckets_permission_select on public.creative_asset_buckets;
+create policy creative_asset_buckets_permission_select
+on public.creative_asset_buckets for select to authenticated
+using ((select private.has_tenant_permission(tenant_id::text, 'creative.view')));
 
-revoke insert, update, delete on public.creative_asset_versions from authenticated;
+-- Assets can be created/updated by entitled users, but cannot be directly deleted.
+grant select, insert, update on public.creative_assets to authenticated;
 grant select on public.creative_asset_versions to authenticated;
+grant select, insert, update on public.creative_asset_rights to authenticated;
+grant select on public.creative_generation_jobs to authenticated;
+grant select on public.creative_generation_limits to authenticated;
 
+revoke insert, update, delete on public.creative_generation_jobs from authenticated;
+revoke insert, update, delete on public.creative_asset_versions from authenticated;
+revoke delete on public.creative_asset_rights from authenticated;
 revoke delete on public.creative_assets from authenticated;
-
--- Replace membership-only policies with explicit creative permissions.
-drop policy if exists creative_assets_member_select on public.creative_assets;
-drop policy if exists creative_assets_member_insert on public.creative_assets;
-drop policy if exists creative_assets_member_update on public.creative_assets;
-drop policy if exists creative_assets_member_delete on public.creative_assets;
 
 create policy creative_assets_permission_select
 on public.creative_assets for select to authenticated
@@ -132,26 +145,31 @@ on public.creative_assets for update to authenticated
 using ((select private.has_tenant_permission(tenant_id, 'creative.update')))
 with check ((select private.has_tenant_permission(tenant_id, 'creative.update')));
 
-drop policy if exists creative_asset_versions_member_select on public.creative_asset_versions;
-drop policy if exists creative_asset_versions_member_insert on public.creative_asset_versions;
-drop policy if exists creative_asset_versions_member_update on public.creative_asset_versions;
-drop policy if exists creative_asset_versions_member_delete on public.creative_asset_versions;
 create policy creative_asset_versions_permission_select
 on public.creative_asset_versions for select to authenticated
 using ((select private.has_tenant_permission(tenant_id, 'creative.view')));
 
-drop policy if exists creative_generation_jobs_member_select on public.creative_generation_jobs;
-drop policy if exists creative_generation_jobs_member_insert on public.creative_generation_jobs;
-drop policy if exists creative_generation_jobs_member_update on public.creative_generation_jobs;
+create policy creative_asset_rights_permission_select
+on public.creative_asset_rights for select to authenticated
+using ((select private.has_tenant_permission(tenant_id, 'creative.view')));
+create policy creative_asset_rights_permission_insert
+on public.creative_asset_rights for insert to authenticated
+with check ((select private.has_tenant_permission(tenant_id, 'creative.update')));
+create policy creative_asset_rights_permission_update
+on public.creative_asset_rights for update to authenticated
+using ((select private.has_tenant_permission(tenant_id, 'creative.update')))
+with check ((select private.has_tenant_permission(tenant_id, 'creative.update')));
+
 create policy creative_generation_jobs_permission_select
 on public.creative_generation_jobs for select to authenticated
 using ((select private.has_tenant_permission(tenant_id, 'creative.view')));
 
-drop policy if exists creative_generation_limits_member_select on public.creative_generation_limits;
 create policy creative_generation_limits_permission_select
 on public.creative_generation_limits for select to authenticated
 using ((select private.has_tenant_permission(tenant_id, 'creative.generate')));
 
+-- Supabase Storage is private. Access follows the registry rather than trusting
+-- a caller-supplied path prefix. The first path segment must be a governed root.
 drop policy if exists creative_assets_storage_select on storage.objects;
 drop policy if exists creative_assets_storage_insert on storage.objects;
 drop policy if exists creative_assets_storage_update on storage.objects;
@@ -160,33 +178,55 @@ drop policy if exists creative_assets_storage_delete on storage.objects;
 create policy creative_assets_storage_select
 on storage.objects for select to authenticated
 using (
-  bucket_id = 'creative-assets'
-  and (select private.has_tenant_permission((storage.foldername(name))[1], 'creative.view'))
+  exists (
+    select 1 from public.creative_asset_buckets bucket_registry
+    where bucket_registry.bucket_id = storage.objects.bucket_id
+      and bucket_registry.status = 'active'
+      and private.has_tenant_permission(bucket_registry.tenant_id::text, 'creative.view')
+  )
 );
 
 create policy creative_assets_storage_insert
 on storage.objects for insert to authenticated
 with check (
-  bucket_id = 'creative-assets'
-  and (select private.has_tenant_permission((storage.foldername(name))[1], 'creative.create'))
+  (storage.foldername(name))[1] in ('brand-assets','generated','campaigns','exports','rights','imports')
+  and exists (
+    select 1 from public.creative_asset_buckets bucket_registry
+    where bucket_registry.bucket_id = storage.objects.bucket_id
+      and bucket_registry.status = 'active'
+      and private.has_tenant_permission(bucket_registry.tenant_id::text, 'creative.create')
+  )
 );
 
 create policy creative_assets_storage_update
 on storage.objects for update to authenticated
 using (
-  bucket_id = 'creative-assets'
-  and (select private.has_tenant_permission((storage.foldername(name))[1], 'creative.update'))
+  exists (
+    select 1 from public.creative_asset_buckets bucket_registry
+    where bucket_registry.bucket_id = storage.objects.bucket_id
+      and bucket_registry.status = 'active'
+      and private.has_tenant_permission(bucket_registry.tenant_id::text, 'creative.update')
+  )
 )
 with check (
-  bucket_id = 'creative-assets'
-  and (select private.has_tenant_permission((storage.foldername(name))[1], 'creative.update'))
+  (storage.foldername(name))[1] in ('brand-assets','generated','campaigns','exports','rights','imports')
+  and exists (
+    select 1 from public.creative_asset_buckets bucket_registry
+    where bucket_registry.bucket_id = storage.objects.bucket_id
+      and bucket_registry.status = 'active'
+      and private.has_tenant_permission(bucket_registry.tenant_id::text, 'creative.update')
+  )
 );
 
 create policy creative_assets_storage_delete
 on storage.objects for delete to authenticated
 using (
-  bucket_id = 'creative-assets'
-  and (select private.has_tenant_permission((storage.foldername(name))[1], 'creative.delete'))
+  exists (
+    select 1 from public.creative_asset_buckets bucket_registry
+    where bucket_registry.bucket_id = storage.objects.bucket_id
+      and bucket_registry.status = 'active'
+      and private.has_tenant_permission(bucket_registry.tenant_id::text, 'creative.delete')
+  )
 );
 
 commit;
