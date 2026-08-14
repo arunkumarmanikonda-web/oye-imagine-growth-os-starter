@@ -1,4 +1,7 @@
 import Link from 'next/link'
+import { buildMetadata } from '@/lib/seo/site'
+
+export const metadata = buildMetadata('/about', 'About', 'Why Oye !magine is building one governed AI-assisted Growth Operating System across brand truth, strategy, creative, execution, analytics and commercial control.')
 
 const principles = [
   ['Brand truth before generation', 'AI should know what is approved, current and source-backed before it creates anything customer-facing.'],

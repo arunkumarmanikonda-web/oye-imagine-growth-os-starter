@@ -1,5 +1,8 @@
 import Link from 'next/link'
 import { getContactExperience } from '../../lib/recovery/public-premium-experience'
+import { buildMetadata } from '@/lib/seo/site'
+
+export const metadata = buildMetadata('/contact', 'Contact', 'Talk to Oye !magine about AI-assisted growth operations, client onboarding, managed growth, enterprise deployment, integrations or platform access.')
 
 export default function ContactPage() {
   const experience = getContactExperience()
