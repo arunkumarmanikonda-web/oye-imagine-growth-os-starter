@@ -36,7 +36,8 @@ export const publicPrototypeDenylist = [
   'SETUP READINESS',
   '100%',
   '6/6 checks ready',
-  'Open admin workspace'
+  'Open admin workspace',
+  'The homepage should clearly explain',
 ] as const
 
 const legalIdentity = {
@@ -52,91 +53,91 @@ const legalIdentity = {
     'Suite No.11 A-116, Urbtech Trade Centre, Sector-132 Maharishi Nagar, Noida / Greater Noida, Gautambuddha Nagar, Uttar Pradesh 201304',
   supportEmail: 'hello@oyeimagine.com',
   supportPhone: '+91 8 988 988 988',
-  domain: 'oyeimagine.com'
+  domain: 'oyeimagine.com',
 }
 
 const publicNavigation = [
   { label: 'Platform', href: '/platform' },
-  { label: 'Marketplace', href: '/marketplace' },
   { label: 'Solutions', href: '/solutions' },
-  { label: 'Contact', href: '/contact' },
-  { label: 'Client login', href: '/login/client' }
+  { label: 'Marketplace', href: '/marketplace' },
+  { label: 'Pricing', href: '/pricing' },
+  { label: 'Trust', href: '/trust' },
 ]
 
 const trustSignals: PublicTrustSignal[] = [
   { label: 'Legal entity', value: legalIdentity.legalName },
   { label: 'GSTIN', value: legalIdentity.gstin },
   { label: 'Support', value: legalIdentity.supportEmail },
-  { label: 'Location', value: 'Noida NCR, India' }
+  { label: 'Location', value: 'Noida NCR, India' },
 ]
 
 const homepageSections: PublicSection[] = [
   {
-    id: 'operating-system',
-    eyebrow: 'AI-native operating system',
-    title: 'Run strategy, delivery, approvals, and commercial operations from one system.',
+    id: 'understand',
+    eyebrow: 'Understand',
+    title: 'Build one governed view of the brand before generating the next campaign.',
     body:
-      'Use one operating layer for public journeys, client collaboration, operator execution, finance visibility, and governed AI workflows instead of stitching together docs, chats, and disconnected tools.',
+      'Bring brand context, digital diagnostics, goals, audiences and commercial constraints into one operating layer so strategy starts from known facts rather than disconnected prompts.',
     bullets: [
-      'Connected public, client, and operator experiences with one runtime and one source of truth',
-      'Commercial operations spanning agreements, invoicing, collections, ledger visibility, and launch readiness',
-      'Governed content, approvals, publishing controls, and AI assistance with auditability'
-    ]
+      'Brand and workspace context designed to remain tenant-specific',
+      'Audit, competitor and strategy workflows with explicit evidence boundaries',
+      'Human review before high-impact execution steps',
+    ],
   },
   {
-    id: 'trust',
-    eyebrow: 'Trust and governance',
-    title: 'Trust, compliance, and support are built into the runtime - not bolted on after launch.',
+    id: 'create',
+    eyebrow: 'Imagine + Create',
+    title: 'Turn strategy into structured creative and campaign work without locking the system to one AI provider.',
     body:
-      'Identity, jurisdiction, support, legal, and operational context are surfaced across public, client, and operator experiences so buyers can verify the platform before they convert.',
+      'Oye !magine is being built around provider-neutral AI routing, reusable brand context, creative generation, page systems and channel-ready campaign packages rather than a single-model prompt wrapper.',
     bullets: [
-      'Central legal and tax identity across public, commercial and support flows',
-      'Role-aware operator and client access separation',
-      'Contact, support and company trust surfaced in the runtime'
-    ]
+      'Creative, copy and campaign workflows designed around provider-neutral routing',
+      'Approvals, versioning and provenance before content becomes publishing-ready',
+      'Client-specific assets remain separated from Oye !magine brand assets',
+    ],
   },
   {
-    id: 'execution',
-    eyebrow: 'Execution quality',
-    title: 'Built for real onboarding, execution, reporting, and commercial follow-through.',
+    id: 'govern',
+    eyebrow: 'Approve + Learn',
+    title: 'Keep humans, budgets and evidence in the loop as the operating system becomes more autonomous.',
     body:
-      'The homepage should clearly explain the real product depth: execution plans, campaign deliverables, launch workflows, billing controls, marketplace expansion, and operator/client access separation.',
+      'Commercial controls, reporting, approvals and auditability are treated as part of the product architecture. External-channel execution is only presented as live after the relevant provider connection and execution evidence are verified.',
     bullets: [
-      'Execution plans, delivery workflows, and operator systems instead of agency-template positioning',
-      'Marketplace, managed-service, and expansion paths connected to the same operating system',
-      'Conversion paths into qualification, lead capture, pricing, trust, and marketplace flows with clearer product proof'
-    ]
-  }
+      'Controlled autonomy instead of silent publishing or spend escalation',
+      'Reporting designed to distinguish live, stale, disconnected and unverified data',
+      'Commercial and marketplace workflows developed around traceable approval states',
+    ],
+  },
 ]
 
 const homepageActions: PublicAction[] = [
-  { label: 'Book a strategy call', href: '/contact', emphasis: 'primary' },
-  { label: 'Explore the marketplace', href: '/marketplace', emphasis: 'secondary' },
-  { label: 'Client login', href: '/login/client', emphasis: 'ghost' }
+  { label: 'Book a live walkthrough', href: '/contact', emphasis: 'primary' },
+  { label: 'Explore the platform', href: '/platform', emphasis: 'secondary' },
+  { label: 'Client sign in', href: '/login/client', emphasis: 'ghost' },
 ]
 
 const marketplaceCategories: MarketplaceCategory[] = [
   {
     name: 'Growth strategy and diagnostics',
     description:
-      'Structured onboarding, audits, competitor intelligence and strategy-generation workflows for brands that need a governed growth operating system.',
+      'Structured onboarding, audits, competitor intelligence and strategy workflows for brands that need a governed growth operating system.',
     href: '/marketplace#strategy',
-    proofPoint: 'Strategy, audit and page-system readiness'
+    proofPoint: 'Strategy, audit and page-system foundations',
   },
   {
     name: 'Execution and content operations',
     description:
-      'SEO, content, creative, paid media, social and reporting capabilities designed to be executed under approvals, budgets and role-specific control.',
+      'SEO, content, creative, paid media, social and reporting capabilities designed to operate under approvals, budgets and role-specific control.',
     href: '/marketplace#execution',
-    proofPoint: 'Execution systems planned across SEO, paid, social and CRM'
+    proofPoint: 'Execution foundations across SEO, paid, social and lifecycle operations',
   },
   {
     name: 'Commercial and managed services',
     description:
-      'Commercial truth, collections, support and managed-service workflows built for premium B2B delivery and operator visibility.',
+      'Commercial, support and managed-service workflows designed for premium B2B delivery and operator visibility.',
     href: '/marketplace#commercial',
-    proofPoint: 'Commercial OS foundations already established'
-  }
+    proofPoint: 'Commercial OS foundations with production hardening in progress',
+  },
 ]
 
 const contactChannels: ContactChannel[] = [
@@ -144,14 +145,14 @@ const contactChannels: ContactChannel[] = [
     label: 'Email',
     value: legalIdentity.supportEmail,
     href: 'mailto:hello@oyeimagine.com',
-    supportWindow: 'Response workflow foundation via Resend-backed support operations'
+    supportWindow: 'For product walkthroughs, onboarding, commercial questions and support',
   },
   {
     label: 'Phone',
     value: legalIdentity.supportPhone,
     href: 'tel:+918988988988',
-    supportWindow: 'Business support line for discovery, onboarding and client coordination'
-  }
+    supportWindow: 'Business support line for discovery, onboarding and client coordination',
+  },
 ]
 
 export function getPublicHomepageExperience() {
@@ -160,16 +161,17 @@ export function getPublicHomepageExperience() {
     navigation: publicNavigation,
     hero: {
       eyebrow: 'Oye !magine AI Growth OS',
-      title: 'The AI Growth OS for strategy, execution, and commercial control.',
+      title: 'Your growth operation. One intelligent system.',
       body:
-        'Oye !magine gives operators, clients, and commercial teams one governed system for growth strategy, execution delivery, approvals, agreements, invoicing, reporting, and AI-assisted operations.',
+        'Connect brand intelligence, strategy, creative workflows, approvals, campaign operations, analytics and commercial governance around one controlled growth loop.',
       primaryAction: homepageActions[0],
       secondaryAction: homepageActions[1],
-      tertiaryAction: homepageActions[2]
+      tertiaryAction: homepageActions[2],
     },
     trustSignals,
     sections: homepageSections,
-    actions: homepageActions
+    actions: homepageActions,
+    growthLoop: ['Understand', 'Imagine', 'Create', 'Approve', 'Launch', 'Learn', 'Grow'],
   }
 }
 
@@ -179,26 +181,26 @@ export function getMarketplaceExperience() {
     navigation: publicNavigation,
     headline: 'Discover governed growth capabilities, not disconnected services.',
     intro:
-      'The marketplace entry surface frames Oye !magine around managed capabilities, strategic depth and operational truth so prospects understand the platform as a premium operating system.',
+      'The Oye !magine marketplace is designed to connect strategic depth, specialist delivery and managed capabilities to the same operating system rather than sending clients into a separate service directory.',
     categories: marketplaceCategories,
     actions: [
       { label: 'Talk to the team', href: '/contact', emphasis: 'primary' as const },
-      { label: 'Client login', href: '/login/client', emphasis: 'ghost' as const }
-    ]
+      { label: 'Client sign in', href: '/login/client', emphasis: 'ghost' as const },
+    ],
   }
 }
 
 export function getContactExperience() {
   return {
     legalIdentity,
-    headline: 'Speak with Oye !magine',
+    headline: 'See Oye !magine around your own growth operation.',
     intro:
-      'Use the support and contact channels below for strategy discussions, onboarding, commercial questions or governed client support.',
+      'Talk to the team about a product walkthrough, pilot, managed-growth engagement or enterprise deployment.',
     supportChannels: contactChannels,
     trustPanel: {
       legalName: legalIdentity.legalName,
       gstin: legalIdentity.gstin,
-      principalAddress: legalIdentity.principalAddress
-    }
+      principalAddress: legalIdentity.principalAddress,
+    },
   }
 }
