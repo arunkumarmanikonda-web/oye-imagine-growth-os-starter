@@ -1,0 +1,12 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { ApiAccessError, requireApiAccess } from '@/lib/auth/api-access'
+import { deleteKnowledgeSource, ingestBrandKnowledge, retrieveBrandKnowledge } from '@/lib/ai/brand-memory'
+
+function json(body:unknown,status=200){return NextResponse.json(body,{status,headers:{'Cache-Control':'private, no-store'}})}
+export const runtime='nodejs';export const dynamic='force-dynamic'
+
+export async function GET(request:NextRequest){try{const access=await requireApiAccess({lane:'admin'});const query=request.nextUrl.searchParams.get('q')||'';const workspaceId=request.nextUrl.searchParams.get('workspaceId')||undefined;if(!query.trim())return json({ok:false,code:'query_required'},400);return json({ok:true,...await retrieveBrandKnowledge({access,workspaceId,query,limit:Number(request.nextUrl.searchParams.get('limit')||8)})})}catch(error){if(error instanceof ApiAccessError)return json({ok:false,code:error.code},error.status);const code=error instanceof Error?error.message.split(':')[0]:'knowledge_read_failed';return json({ok:false,code,error:'Knowledge retrieval failed.'},code.includes('denied')?403:500)}}
+
+export async function POST(request:NextRequest){try{const access=await requireApiAccess({lane:'admin'});const body=await request.json();if(!body||typeof body!=='object')return json({ok:false,code:'invalid_request'},400);const result=await ingestBrandKnowledge({access,workspaceId:body.workspaceId,sourceType:body.sourceType,title:String(body.title||''),sourceUri:body.sourceUri,versionLabel:body.versionLabel,content:String(body.content||''),metadata:body.metadata});return json({ok:true,...result},201)}catch(error){if(error instanceof ApiAccessError)return json({ok:false,code:error.code},error.status);const code=error instanceof Error?error.message.split(':')[0]:'knowledge_ingest_failed';return json({ok:false,code,error:'Knowledge ingestion failed.'},code.includes('required')?400:code.includes('denied')?403:500)}}
+
+export async function DELETE(request:NextRequest){try{const access=await requireApiAccess({lane:'admin'});const body=await request.json();const sourceId=String(body?.sourceId||'');if(!sourceId)return json({ok:false,code:'source_id_required'},400);return json(await deleteKnowledgeSource(access,sourceId,body?.workspaceId))}catch(error){if(error instanceof ApiAccessError)return json({ok:false,code:error.code},error.status);return json({ok:false,code:'knowledge_delete_failed',error:'Knowledge source could not be deleted.'},500)}}
