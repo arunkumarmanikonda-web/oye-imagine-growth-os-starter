@@ -30,6 +30,10 @@ grant select on public.core_feature_flags to authenticated;
 grant select on public.core_tenant_feature_entitlements to authenticated;
 grant select on public.core_approval_policies to authenticated;
 
+-- Memberships keep stable control-plane identifiers while metadata maps them to
+-- the operational UUID identifiers already used by existing production tables.
+-- Authorization helpers accept either form so legacy/commercial rows can be
+-- protected without forcing a risky whole-database identifier rewrite.
 create or replace function private.current_user_has_tenant_membership(p_tenant_id text)
 returns boolean
 language sql
@@ -40,9 +44,12 @@ as $$
   select exists (
     select 1
     from public.core_tenant_memberships membership
-    where membership.tenant_id = p_tenant_id
-      and membership.user_id = (select auth.uid())::text
+    where membership.user_id = (select auth.uid())::text
       and membership.status = 'active'
+      and (
+        membership.tenant_id = p_tenant_id
+        or membership.metadata ->> 'operationalTenantId' = p_tenant_id
+      )
   );
 $$;
 
@@ -76,7 +83,8 @@ on public.core_approval_policies for select to authenticated
 using ((select private.current_user_has_tenant_membership(tenant_id)));
 
 -- Bootstrap the existing verified platform administrator only when both the
--- auth identity and canonical platform role exist. This remains idempotent.
+-- auth identity and canonical platform role exist. Operational IDs are resolved
+-- dynamically from the existing production-style tenant/brand/workspace records.
 insert into public.core_tenant_memberships (
   membership_id,
   tenant_id,
@@ -97,7 +105,32 @@ select
   'workspace_oye_internal',
   'active',
   '{"autonomyMax":"L2"}'::jsonb,
-  '{"source":"verified_auth_bootstrap","purpose":"initial platform owner"}'::jsonb
+  jsonb_strip_nulls(jsonb_build_object(
+    'source', 'verified_auth_bootstrap',
+    'purpose', 'initial platform owner',
+    'operationalTenantId', (
+      select tenant.id::text
+      from public.tenants tenant
+      where tenant.slug = 'oye-imagine'
+      limit 1
+    ),
+    'operationalBrandId', (
+      select brand.id::text
+      from public.brands brand
+      join public.tenants tenant on tenant.id = brand.tenant_id
+      where tenant.slug = 'oye-imagine'
+      order by brand.created_at asc
+      limit 1
+    ),
+    'operationalWorkspaceId', (
+      select workspace.id::text
+      from public.workspaces workspace
+      join public.tenants tenant on tenant.id = workspace.tenant_id
+      where tenant.slug = 'oye-imagine'
+        and workspace.slug = 'core-platform'
+      limit 1
+    )
+  ))
 from auth.users auth_user
 where lower(auth_user.email) = lower('admin@oyeimagine.com')
   and exists (
