@@ -26,6 +26,14 @@ function mfaRedirect(request: NextRequest, destination: string) {
   return response
 }
 
+function passwordChangeRedirect(request: NextRequest, destination: string) {
+  const url = new URL('/account/change-password', request.url)
+  url.searchParams.set('next', destination)
+  const response = NextResponse.redirect(url)
+  response.headers.set('Cache-Control', 'private, no-store')
+  return response
+}
+
 export async function POST(request: NextRequest) {
   const formData = await request.formData()
   const email = String(formData.get('email') ?? '').trim().toLowerCase()
@@ -73,6 +81,10 @@ export async function POST(request: NextRequest) {
 
   const lane = roleLane(membership.role_key)
   const destination = '/workspace'
+
+  if (user.app_metadata?.must_change_password === true) {
+    return passwordChangeRedirect(request, destination)
+  }
 
   if (roleRequiresMfa(membership.role_key)) {
     const { data: aalData, error: aalError } =
