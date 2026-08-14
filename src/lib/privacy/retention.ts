@@ -100,16 +100,18 @@ export async function runRetention(access: ApiAccessContext, input: {
   let affectedCount = 0
   let status: 'completed' | 'needs_approval' | 'blocked' = 'completed'
   let safeErrorCode: string | null = null
+  const policyTable = String(policy.target_table || '')
 
   if (policy.action === 'review' || policy.action === 'anonymize') {
     status = 'needs_approval'
     safeErrorCode = policy.action === 'anonymize' ? 'retention_anonymize_manual_mapping_required' : 'retention_review_required'
-  } else if (policy.protected_record_class || !isDeletableTarget(policy.target_table)) {
+  } else if (policy.protected_record_class || !isDeletableTarget(policyTable)) {
     status = 'blocked'
     safeErrorCode = 'retention_delete_target_protected'
   } else {
-    const timestampColumn = deletableTargets[policy.target_table].timestamp
-    let countQuery = admin.from(policy.target_table).select('*', { count: 'exact', head: true }).eq('tenant_id', target.tenantId).lt(timestampColumn, cutoff)
+    const table: RetentionTarget = policyTable
+    const timestampColumn = deletableTargets[table].timestamp
+    let countQuery = admin.from(table).select('*', { count: 'exact', head: true }).eq('tenant_id', target.tenantId).lt(timestampColumn, cutoff)
     if (target.workspaceId) countQuery = countQuery.eq('workspace_id', target.workspaceId)
     const countResult = await countQuery
     if (countResult.error) throw new Error(`retention_count_failed:${countResult.error.message}`)
@@ -117,7 +119,7 @@ export async function runRetention(access: ApiAccessContext, input: {
 
     if (input.mode === 'execute') {
       await requireExecutionApproval(target.tenantId, policy.retention_policy_id, input.approvalId)
-      let deleteQuery = admin.from(policy.target_table).delete({ count: 'exact' }).eq('tenant_id', target.tenantId).lt(timestampColumn, cutoff)
+      let deleteQuery = admin.from(table).delete({ count: 'exact' }).eq('tenant_id', target.tenantId).lt(timestampColumn, cutoff)
       if (target.workspaceId) deleteQuery = deleteQuery.eq('workspace_id', target.workspaceId)
       const deletion = await deleteQuery
       if (deletion.error) throw new Error(`retention_delete_failed:${deletion.error.message}`)
