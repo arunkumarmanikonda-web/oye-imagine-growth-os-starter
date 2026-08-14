@@ -1,8 +1,8 @@
 export {
-  getOnboardingSnapshotLive as getWorkspaceOnboardingSnapshotLive,
-  saveOnboardingSnapshotLive as saveWorkspaceOnboardingSnapshotLive,
-  getBrandIntelligenceSnapshotLive as getWorkspaceBrandIntelligenceSnapshotLive,
-  saveBrandIntelligenceSnapshotLive as saveWorkspaceBrandIntelligenceSnapshotLive,
-  getPilotControlSnapshotLive as getWorkspacePilotControlSnapshotLive,
-  savePilotControlSnapshotLive as saveWorkspacePilotControlSnapshotLive,
-} from "@/lib/admin/neejee-live";
+  getWorkspaceOnboardingSnapshotLive,
+  saveWorkspaceOnboardingSnapshotLive,
+  getWorkspaceBrandIntelligenceSnapshotLive,
+  saveWorkspaceBrandIntelligenceSnapshotLive,
+  getWorkspacePilotControlSnapshotLive,
+  saveWorkspacePilotControlSnapshotLive,
+} from '@/lib/admin/workspace-live-persistent'
