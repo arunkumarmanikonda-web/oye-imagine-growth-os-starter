@@ -23,6 +23,14 @@ function loginErrorRedirect(request: NextRequest, lane: VerifiedAccessLane, code
   return response
 }
 
+function mfaRedirect(request: NextRequest, destination: string) {
+  const url = new URL('/auth/mfa', request.url)
+  url.searchParams.set('redirect', destination)
+  const response = NextResponse.redirect(url)
+  response.headers.set('Cache-Control', 'private, no-store')
+  return response
+}
+
 export async function POST(request: NextRequest) {
   const formData = await request.formData()
   const requestedLane = normalizeLane(String(formData.get('lane') ?? formData.get('role') ?? ''))
@@ -41,8 +49,6 @@ export async function POST(request: NextRequest) {
     return loginErrorRedirect(request, requestedLane, 'invalid_credentials')
   }
 
-  // Re-fetch identity from the Auth server. Do not authorize from a caller-provided
-  // email, lane, or an unverified cookie/session object.
   const {
     data: { user },
     error: userError,
@@ -73,6 +79,21 @@ export async function POST(request: NextRequest) {
   }
 
   const destination = createLoginRedirectPath(requestedLane, redirectInput)
+
+  if (requestedLane === 'admin') {
+    const { data: aalData, error: aalError } =
+      await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+
+    if (aalError) {
+      await supabase.auth.signOut()
+      return loginErrorRedirect(request, requestedLane, 'access_control_unavailable')
+    }
+
+    if (aalData.currentLevel !== 'aal2') {
+      return mfaRedirect(request, destination)
+    }
+  }
+
   const response = NextResponse.redirect(new URL(destination, request.url))
   response.headers.set('Cache-Control', 'private, no-store')
 
@@ -102,8 +123,6 @@ export async function POST(request: NextRequest) {
     path: '/',
   })
 
-  // Transitional shell context. The middleware no longer treats these values as
-  // identity proof; they are only used after the Supabase token is verified.
   response.cookies.set('oye_session_state', 'authenticated', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -123,7 +142,6 @@ export async function POST(request: NextRequest) {
     path: '/',
   })
 
-  // Remove the deterministic recovery-session mechanism from the authenticated path.
   for (const cookieKey of Object.values(RECOVERY_AUTH_COOKIE_KEYS)) {
     response.cookies.set(cookieKey, '', {
       httpOnly: true,

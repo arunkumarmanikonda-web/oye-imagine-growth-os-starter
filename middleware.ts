@@ -29,6 +29,16 @@ function accessRedirect(request: NextRequest, lane: VerifiedAccessLane, code: st
   return response
 }
 
+function mfaRedirect(request: NextRequest) {
+  const url = request.nextUrl.clone()
+  url.pathname = '/auth/mfa'
+  url.search = ''
+  url.searchParams.set('redirect', request.nextUrl.pathname)
+  const response = NextResponse.redirect(url)
+  response.headers.set('Cache-Control', 'private, no-store')
+  return response
+}
+
 export async function middleware(request: NextRequest) {
   const lane = requestedLane(request.nextUrl.pathname)
 
@@ -56,8 +66,6 @@ export async function middleware(request: NextRequest) {
     },
   )
 
-  // The legacy Oye cookies are intentionally ignored as identity proof.
-  // Supabase verifies the JWT signature before any protected route is allowed.
   const { data: claimsData, error: claimsError } = await supabase.auth.getClaims()
   const subject = claimsData?.claims?.sub
 
@@ -84,9 +92,23 @@ export async function middleware(request: NextRequest) {
     return accessRedirect(request, lane, 'access_denied')
   }
 
+  if (lane === 'admin') {
+    const { data: aalData, error: aalError } =
+      await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+
+    if (aalError) {
+      return accessRedirect(request, lane, 'access_control_unavailable')
+    }
+
+    if (aalData.currentLevel !== 'aal2') {
+      return mfaRedirect(request)
+    }
+  }
+
   response.headers.set('Cache-Control', 'private, no-store')
   response.headers.set('x-oye-auth-source', 'supabase-verified')
   response.headers.set('x-oye-access-lane', lane)
+  if (lane === 'admin') response.headers.set('x-oye-auth-aal', 'aal2')
   return response
 }
 
