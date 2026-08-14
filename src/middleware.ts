@@ -12,6 +12,7 @@ export const config = {
     '/client/:path*',
     '/api/admin/:path*',
     '/api/client/:path*',
+    '/onboarding/activation/:path*',
     '/account/change-password',
     '/login',
     '/login/admin',
