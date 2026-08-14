@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
+  assuranceLevelAllowsLane,
   membershipMatchesTenant,
   membershipMatchesWorkspace,
+  privilegedAccessRequiresAal2,
   selectApiMembership,
   type ApiVerifiedMembership,
 } from '@/lib/auth/api-access'
@@ -72,5 +74,17 @@ describe('central API authorization policy', () => {
     ).toBe('membership_platform_owner_primary')
     expect(membershipMatchesTenant(platformOwner, 'tenant-uuid-neejee')).toBe(true)
     expect(membershipMatchesWorkspace(platformOwner, 'workspace-uuid-neejee')).toBe(true)
+  })
+
+  it('requires AAL2 for privileged admin access', () => {
+    expect(privilegedAccessRequiresAal2('admin')).toBe(true)
+    expect(assuranceLevelAllowsLane('admin', 'aal1')).toBe(false)
+    expect(assuranceLevelAllowsLane('admin', null)).toBe(false)
+    expect(assuranceLevelAllowsLane('admin', 'aal2')).toBe(true)
+  })
+
+  it('does not force AAL2 onto the ordinary client lane', () => {
+    expect(privilegedAccessRequiresAal2('client')).toBe(false)
+    expect(assuranceLevelAllowsLane('client', 'aal1')).toBe(true)
   })
 })
