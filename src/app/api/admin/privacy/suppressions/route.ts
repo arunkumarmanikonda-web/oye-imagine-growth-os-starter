@@ -1,0 +1,9 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { ApiAccessError, requireApiAccess } from '@/lib/auth/api-access'
+import { releaseSuppression, suppressSubject } from '@/lib/privacy/consent'
+
+const json=(body:unknown,status=200)=>NextResponse.json(body,{status,headers:{'Cache-Control':'private, no-store'}})
+export const runtime='nodejs';export const dynamic='force-dynamic'
+
+export async function POST(request:NextRequest){try{const access=await requireApiAccess({lane:'admin'});const body=await request.json();const suppression=await suppressSubject(access,{workspaceId:body.workspaceId,subject:String(body.subject||''),channel:body.channel,scope:body.scope,reason:String(body.reason||'operator_suppression'),source:String(body.source||'operator'),reversible:body.reversible});return json({ok:true,suppression},201)}catch(error){if(error instanceof ApiAccessError)return json({ok:false,code:error.code},error.status);const code=error instanceof Error?error.message.split(':')[0]:'privacy_suppression_failed';return json({ok:false,code,error:'Suppression was not recorded.'},code.includes('required')||code.includes('invalid')?400:code.includes('denied')?403:500)}}
+export async function DELETE(request:NextRequest){try{const access=await requireApiAccess({lane:'admin'});const body=await request.json();const id=String(body.suppressionId||'');if(!id)return json({ok:false,code:'suppression_id_required'},400);return json({ok:true,suppression:await releaseSuppression(access,id)})}catch(error){if(error instanceof ApiAccessError)return json({ok:false,code:error.code},error.status);const code=error instanceof Error?error.message.split(':')[0]:'privacy_suppression_release_failed';return json({ok:false,code,error:'Suppression was not released.'},code.includes('irreversible')?409:code.includes('not_found')?404:500)}}
