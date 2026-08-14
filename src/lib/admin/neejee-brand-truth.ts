@@ -62,8 +62,8 @@ export const neejeeBrandTruth = {
       'Email subscription conversion',
     ],
     channelIntent: {
-      seo: 'Capture high-intent product, craft, technique, region and care/discovery searches with provenance-rich content.',
-      googleAds: 'Capture purchase and product-discovery intent without inventing medical, local-service or consultation demand.',
+      seo: 'Capture high-intent product, craft, technique, region and product-care searches with provenance-rich content.',
+      googleAds: 'Capture purchase and product-discovery intent using current product, category and provenance evidence tied to verified commerce conversion goals.',
       metaAds: 'Drive visual discovery, collection storytelling, retargeting and commerce conversion.',
       lifecycle: 'Use new arrivals, limited edits, craft stories and relevant product discovery to deepen repeat engagement.',
     },
