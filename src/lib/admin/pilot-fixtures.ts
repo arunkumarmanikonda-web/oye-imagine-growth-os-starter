@@ -12,16 +12,22 @@ export function createDefaultPilotFixture(
     id: "neejee-pilot",
     workspaceDisplayName: getWorkspaceDisplayName(),
     brandName: "Neejee",
-    website: "",
-    industry: "Healthcare",
+    website: "https://neejee.com",
+    industry: "Indian ethnic fashion, jewellery, accessories and craft-led e-commerce",
     geo: "India",
-    targetAudience: "",
-    offer: "",
+    targetAudience:
+      "Shoppers seeking curated Indian ethnic fashion, jewellery, accessories and craft-led products online",
+    offer:
+      "Curated Indian craft-led fashion, jewellery and accessories with a premium digital shopping experience",
     monthlyBudget: "",
     primaryChannels: ["seo", "google-ads", "meta-ads"],
     competitors: [],
-    goals: ["Increase qualified leads", "Improve brand visibility"],
-    successMetrics: ["Qualified leads", "CTR", "CPL"],
+    goals: [
+      "Increase qualified ecommerce traffic",
+      "Grow product discovery and online sales",
+      "Improve repeatable customer acquisition efficiency",
+    ],
+    successMetrics: ["Purchases", "Revenue", "ROAS", "CTR", "CPA"],
     status: "draft",
     ...overrides,
   });
