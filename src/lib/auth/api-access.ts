@@ -15,11 +15,16 @@ export type ApiAccessContext = {
   lane: VerifiedAccessLane
   membership: ApiVerifiedMembership
   memberships: ApiVerifiedMembership[]
+  assuranceLevel: 'aal1' | 'aal2'
 }
 
 export class ApiAccessError extends Error {
   status: 401 | 403 | 503
-  code: 'unauthenticated' | 'access_denied' | 'access_control_unavailable'
+  code:
+    | 'unauthenticated'
+    | 'access_denied'
+    | 'mfa_required'
+    | 'access_control_unavailable'
 
   constructor(
     status: 401 | 403 | 503,
@@ -93,6 +98,17 @@ export function selectApiMembership(input: {
   )
 }
 
+export function privilegedAccessRequiresAal2(lane: VerifiedAccessLane) {
+  return lane === 'admin'
+}
+
+export function assuranceLevelAllowsLane(
+  lane: VerifiedAccessLane,
+  currentLevel: string | null | undefined,
+) {
+  return !privilegedAccessRequiresAal2(lane) || currentLevel === 'aal2'
+}
+
 export async function requireApiAccess(input: {
   lane: VerifiedAccessLane
   tenantId?: string | null
@@ -138,6 +154,29 @@ export async function requireApiAccess(input: {
     )
   }
 
+  let assuranceLevel: 'aal1' | 'aal2' = 'aal1'
+  if (privilegedAccessRequiresAal2(input.lane)) {
+    const { data: aalData, error: aalError } =
+      await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+
+    if (aalError) {
+      throw new ApiAccessError(
+        503,
+        'access_control_unavailable',
+        'MFA assurance could not be verified.',
+      )
+    }
+
+    assuranceLevel = aalData.currentLevel === 'aal2' ? 'aal2' : 'aal1'
+    if (!assuranceLevelAllowsLane(input.lane, assuranceLevel)) {
+      throw new ApiAccessError(
+        403,
+        'mfa_required',
+        'Multi-factor authentication is required for privileged access.',
+      )
+    }
+  }
+
   const emailClaim = claimsData?.claims?.email
   return {
     subject,
@@ -145,5 +184,6 @@ export async function requireApiAccess(input: {
     lane: input.lane,
     membership,
     memberships,
+    assuranceLevel,
   }
 }
