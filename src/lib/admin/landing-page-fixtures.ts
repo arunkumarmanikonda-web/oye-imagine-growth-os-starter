@@ -1,5 +1,5 @@
 import { getWorkspaceDisplayName } from "@/lib/admin/workspace-branding";
-
+import { neejeeBrandTruth } from "@/lib/admin/neejee-brand-truth";
 import {
   createLandingPageBriefRecord,
   type LandingPageBriefRecord,
@@ -10,88 +10,93 @@ export function createDefaultLandingPageBriefFixture(): LandingPageBriefRecord {
 
   return createLandingPageBriefRecord({
     workspaceDisplayName,
-    brandName: "Neejee Clinics",
+    brandName: neejeeBrandTruth.identity.displayName,
     pilotId: "neejee-pilot",
     strategyId: "neejee-strategy-brief",
     status: "draft",
     hero: {
-      headline: "Neejee Clinics growth operating system for modern healthcare teams",
+      headline: "Find craft worth knowing. Find something personal.",
       subheadline:
-        "Launch measurable patient-demand systems with operator visibility, approval guardrails, and faster execution.",
-      primaryCta: "Book a strategy session",
-      secondaryCta: "Review pilot plan",
+        "A provenance-led commerce page for discovering textiles, jewellery, accessories, home objects and meaningful gifts through maker, region, technique and story.",
+      primaryCta: "Explore the collection",
+      secondaryCta: "Discover the craft",
     },
     sections: [
       {
-        id: "positioning",
-        title: "Why Neejee",
+        id: "discovery",
+        title: "Discovery before discount",
         description:
-          "Translate strategy into a landing page that explains trust, outcomes, and execution clarity for clinics.",
+          "Help shoppers understand what makes a piece distinctive before asking them to buy it.",
         bullets: [
-          "Governed operator workflow",
-          "Qualified demand generation",
-          "Clear reporting and approval controls",
+          "Maker, region, technique and material context",
+          "Founder-led curation and editorial storytelling",
+          "Clear route from discovery to relevant product detail",
         ],
       },
       {
-        id: "offer",
-        title: "What the pilot delivers",
+        id: "commerce",
+        title: "A clear path to purchase",
         description:
-          "Show the immediate value of the pilot with practical deliverables and a measurable execution path.",
+          "Keep the page commercially useful while preserving Neejee's quiet, personal and provenance-led brand posture.",
         bullets: [
-          "Strategy brief",
-          "Landing page planning",
-          "SEO and paid media readiness",
+          "Product discovery and collection pathways",
+          "Trust and product-specific proof near the decision point",
+          "Low-friction route to product, cart and checkout",
         ],
       },
       {
-        id: "proof",
-        title: "Why buyers should trust the process",
+        id: "experience",
+        title: "See it. Place it. Find the right one.",
         description:
-          "Reinforce operator trust with transparent systems, proof points, and compliance-aware execution language.",
+          "Use relevant Neejee AI experiences to reduce uncertainty and deepen discovery rather than as generic AI decoration.",
         bullets: [
-          "Approval checkpoints",
-          "Operator-facing reporting",
-          "Performance visibility by channel",
+          "Mirror for wearable visualisation",
+          "Space for home-object visualisation",
+          "Concierge for guided product and gift discovery",
         ],
       },
     ],
     seoMeta: {
-      title: "Neejee Clinics | Strategy-led growth operating system",
+      title: "Neejee | Found. Personal. | Indian craft discovery and commerce",
       description:
-        "Strategy-led landing page brief for Neejee Clinics focused on qualified demand, trust, and measurable execution.",
+        "Discover curated craft, textiles, jewellery, accessories, home objects and gifts through maker, region, technique and story at Neejee.",
       keywords: [
-        "Neejee Clinics",
-        "healthcare growth system",
-        "clinic lead generation",
-        "landing page strategy",
+        "Neejee",
+        "Indian craft",
+        "artisan products",
+        "sarees",
+        "jewellery and accessories",
+        "home craft",
+        "gift discovery",
       ],
     },
     ctas: [
-      "Book a strategy session",
-      "Review pilot plan",
-      "Request channel roadmap",
+      "Explore the collection",
+      "Discover the craft",
+      "Find a meaningful gift",
     ],
     proofPoints: [
-      "Built from pilot strategy brief",
-      "Mapped to qualified lead goals",
-      "Structured for governed execution",
+      "Maker, region and technique belong in approved product context",
+      "Founder-led curation and editorial discovery",
+      "AI-assisted try-on, home visualisation and gift discovery",
     ],
     assets: [
       {
         type: "logo",
-        label: "Neejee primary logo",
-        description: "Use the approved brand logo in the hero and footer.",
+        label: "Neejee approved logo",
+        description: "Use the current approved Neejee brand asset from the client asset library.",
       },
       {
-        type: "testimonial",
-        label: "Operator testimonial",
-        description: "Short credibility quote from a healthcare operator persona.",
+        type: "image",
+        label: "Product and craft imagery",
+        description:
+          "Use approved product, maker, material, process or origin imagery with recorded rights/provenance.",
       },
       {
         type: "illustration",
-        label: "Governed growth workflow",
-        description: "Visual showing strategy, approvals, launch, and reporting loop.",
+        label: "Neejee AI discovery experience",
+        description:
+          "Show Mirror, Space or Concierge only when the relevant experience is actually available for the promoted product journey.",
       },
     ],
   });
