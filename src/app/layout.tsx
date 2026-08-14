@@ -8,6 +8,7 @@ import { organizationJsonLd, websiteJsonLd } from '@/lib/seo/site'
 import ContextualPublicLinks from '@/components/public/ContextualPublicLinks'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.oyeimagine.com'
+const brandLogo = '/brand/oye-imagine-logo.webp'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -25,14 +26,14 @@ export const metadata: Metadata = {
     url: '/',
     siteName: 'Oye !magine',
     type: 'website',
-    images: [{ url: '/favicon.ico', alt: 'Oye !magine' }],
+    images: [{ url: brandLogo, alt: 'Oye !magine' }],
   },
   twitter: {
     card: 'summary',
     title: 'Oye !magine | AI Growth OS',
     description:
       'Connect strategy, creation, approvals, campaigns, analytics and commercial governance in one growth operating system.',
-    images: ['/favicon.ico'],
+    images: [brandLogo],
   },
 }
 
@@ -53,7 +54,9 @@ export default function RootLayout(props: { children: ReactNode }) {
           <header className="oi-topbar">
             <div className="oi-container oye-public-header">
               <Link className="oye-wordmark" href="/" aria-label="Oye !magine home">
-                Oye !magine
+                {/* Derived directly from the supplied official Oye logo source. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="oye-brand-logo" src={brandLogo} alt="Oye !magine" />
               </Link>
 
               <nav className="oye-public-nav" aria-label="Primary navigation">
