@@ -1,4 +1,8 @@
 import { getPilot } from "@/lib/admin/pilot-store";
+import {
+  isNeejeeContext,
+  neejeeBrandTruth,
+} from "@/lib/admin/neejee-brand-truth";
 import type { NeejeePilotRecord } from "@/lib/admin/pilot-schema";
 
 import { saveStrategyBrief } from "./strategy-store";
@@ -12,11 +16,7 @@ import type {
 
 function toCurrencyLabel(value: string): string {
   const normalized = value.trim();
-  if (!normalized) {
-    return "controlled pilot budget";
-  }
-
-  return normalized;
+  return normalized || "controlled pilot budget";
 }
 
 function normalizeChannelName(value: string): string {
@@ -31,6 +31,149 @@ function normalizeChannelName(value: string): string {
       return lower.charAt(0).toUpperCase() + lower.slice(1);
     })
     .join(" ");
+}
+
+function buildNeejeeStrategyBrief(pilot: NeejeePilotRecord): StrategyBriefRecord {
+  const channels = pilot.primaryChannels.length > 0
+    ? pilot.primaryChannels
+    : ["seo", "google-ads", "meta-ads"];
+
+  const channelRecommendations: ChannelRecommendation[] = channels.map((channel) => {
+    const normalized = normalizeChannelName(channel);
+    const lower = channel.toLowerCase();
+
+    if (lower === "seo") {
+      return {
+        channel: normalized,
+        objective: "Capture product, craft, technique, region and care/discovery intent",
+        rationale: neejeeBrandTruth.growth.channelIntent.seo,
+      };
+    }
+
+    if (lower.includes("google")) {
+      return {
+        channel: normalized,
+        objective: "Capture high-intent product discovery and purchase demand",
+        rationale: neejeeBrandTruth.growth.channelIntent.googleAds,
+      };
+    }
+
+    if (lower.includes("meta")) {
+      return {
+        channel: normalized,
+        objective: "Drive visual discovery, retargeting and commerce conversion",
+        rationale: neejeeBrandTruth.growth.channelIntent.metaAds,
+      };
+    }
+
+    return {
+      channel: normalized,
+      objective: "Deepen relevant product discovery and repeat engagement",
+      rationale: neejeeBrandTruth.growth.channelIntent.lifecycle,
+    };
+  });
+
+  const messagingPillars: StrategyPillar[] = [
+    {
+      title: "Found with provenance",
+      description:
+        "Make maker, region, technique, material and origin part of the product value so discovery carries meaning rather than only catalogue metadata.",
+    },
+    {
+      title: "Personal discovery",
+      description:
+        "Use founder curation, editorial craft stories, gifting and AI-assisted discovery to help shoppers find products that feel considered rather than anonymous.",
+    },
+    {
+      title: "Commerce with restraint",
+      description:
+        "Improve conversion through clarity, trust, product context and ease of purchase without allowing generic discount language to dominate the brand.",
+    },
+  ];
+
+  const audienceSegments: AudienceSegment[] = [
+    {
+      name: "Craft- and design-conscious shoppers",
+      painPoints: [
+        "Authentic and distinctive products are difficult to discover online",
+        "Mass marketplaces often remove maker and provenance context",
+        "It is hard to assess distinctiveness and trust from anonymous listings",
+      ],
+      buyingSignals: [
+        "Searches by craft, region, technique, material or category",
+        "Engages with maker stories, journal content or curated edits",
+        "Uses product visualisation or comparison before purchase",
+      ],
+    },
+    {
+      name: "Meaning-led gift and home buyers",
+      painPoints: [
+        "Generic gifts feel impersonal",
+        "Home and lifestyle products can be difficult to imagine in context",
+        "Curated, story-rich products are fragmented across many sources",
+      ],
+      buyingSignals: [
+        "Browses founder edits and new arrivals",
+        "Uses Concierge or Space for guided discovery",
+        "Returns to collections, journal content or email drops",
+      ],
+    },
+  ];
+
+  return saveStrategyBrief({
+    pilotId: pilot.id,
+    workspaceDisplayName: pilot.workspaceDisplayName,
+    brandName: neejeeBrandTruth.identity.displayName,
+    status: "generated",
+    positioning:
+      "Neejee should win through founder-led discovery, provenance and quiet editorial commerce: make India's living craft easier to find, understand and buy without becoming a generic discount marketplace.",
+    offerSummary: neejeeBrandTruth.business.model,
+    marketSummary:
+      "The opportunity is not another anonymous product grid. Neejee can create a trusted discovery layer across textiles, jewellery, accessories, home objects, art, decor and gifting by preserving the maker, region, technique and meaning behind the product.",
+    messagingPillars,
+    audienceSegments,
+    channelRecommendations,
+    plan30Days: [
+      {
+        label: "Truth and measurement",
+        actions: [
+          "Lock category, provenance and claims taxonomy from live product data",
+          "Map ecommerce events from product view through purchase",
+          "Build initial search and creative themes from real products, crafts and regions",
+        ],
+      },
+    ],
+    plan60Days: [
+      {
+        label: "Controlled launch",
+        actions: [
+          "Launch provenance-rich SEO and landing experiments",
+          "Run approved paid-search and visual-discovery tests only after provider verification",
+          "Start lifecycle journeys around new arrivals, discovery and cart/purchase behaviour",
+        ],
+      },
+    ],
+    plan90Days: [
+      {
+        label: "Learn and scale",
+        actions: [
+          "Scale categories, queries and creative themes using verified purchase evidence",
+          "Increase use of Mirror, Space and Concierge where they improve discovery",
+          "Refine acquisition and retention by product, craft, audience and channel economics",
+        ],
+      },
+    ],
+    successMetrics: [...neejeeBrandTruth.growth.primaryMetrics],
+    assumptions: [
+      "Product, catalogue and ecommerce analytics data can be ingested with sufficient freshness",
+      "Provenance and product claims used in campaigns are backed by approved source data",
+      "External channel execution remains approval-gated until provider-side verification is complete",
+    ],
+    blockers: [
+      "Live paid-media execution remains blocked until provider account and external resource-ID verification exists",
+      "Time-sensitive commercial claims must be refreshed from Neejee before publication",
+    ],
+  });
 }
 
 function createMessagingPillars(pilot: NeejeePilotRecord): StrategyPillar[] {
@@ -153,24 +296,22 @@ function createAssumptions(pilot: NeejeePilotRecord): string[] {
 
 function createBlockers(pilot: NeejeePilotRecord): string[] {
   const blockers = [
-    "Production RBAC and approval hardening still pending",
-    "Compliance review workflow is not fully automated yet",
+    "Production provider execution must remain approval-gated until verified",
+    "Claims used in public campaign assets require approved source evidence",
   ];
 
-  if (pilot.competitors.length === 0) {
-    blockers.push("Competitor inputs are still sparse");
-  }
-
-  if (pilot.successMetrics.length === 0) {
-    blockers.push("Success metrics need stronger quantification");
-  }
-
+  if (pilot.competitors.length === 0) blockers.push("Competitor inputs are still sparse");
+  if (pilot.successMetrics.length === 0) blockers.push("Success metrics need stronger quantification");
   return blockers;
 }
 
 export function buildStrategyBriefFromPilot(
   pilot: NeejeePilotRecord = getPilot(),
 ): StrategyBriefRecord {
+  if (isNeejeeContext(pilot)) {
+    return buildNeejeeStrategyBrief(pilot);
+  }
+
   const plans = createPlanMilestones(pilot);
 
   return saveStrategyBrief({
@@ -189,15 +330,13 @@ export function buildStrategyBriefFromPilot(
     plan90Days: plans.plan90Days,
     successMetrics: pilot.successMetrics.length > 0
       ? pilot.successMetrics
-      : ["Qualified leads", "Consultation rate", "Cost per lead"],
+      : ["Qualified leads", "Conversion rate", "Cost per acquisition"],
     assumptions: createAssumptions(pilot),
     blockers: createBlockers(pilot),
   });
 }
 
-export function generateStrategyBrief(
-  pilotId?: string,
-): StrategyBriefRecord {
+export function generateStrategyBrief(pilotId?: string): StrategyBriefRecord {
   const pilot = getPilot();
 
   if (pilotId && pilot.id !== pilotId) {
