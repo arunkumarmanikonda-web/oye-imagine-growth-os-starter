@@ -15,10 +15,29 @@ type SupabaseCookieToSet = {
 }
 
 function requestedLane(pathname: string): VerifiedAccessLane {
-  return pathname.startsWith('/admin') ? 'admin' : 'client'
+  return pathname.startsWith('/admin') || pathname.startsWith('/api/admin') ? 'admin' : 'client'
 }
 
-function accessRedirect(request: NextRequest, lane: VerifiedAccessLane, code: string) {
+function isApiRequest(pathname: string) {
+  return pathname.startsWith('/api/')
+}
+
+function apiFailure(code: string, status: 401 | 403 | 503) {
+  const response = NextResponse.json(
+    { ok: false, code, error: code },
+    { status },
+  )
+  response.headers.set('Cache-Control', 'private, no-store')
+  return response
+}
+
+function accessFailure(request: NextRequest, lane: VerifiedAccessLane, code: string) {
+  if (isApiRequest(request.nextUrl.pathname)) {
+    const status: 401 | 403 | 503 =
+      code === 'unauthenticated' ? 401 : code === 'access_control_unavailable' ? 503 : 403
+    return apiFailure(code, status)
+  }
+
   const url = request.nextUrl.clone()
   url.pathname = lane === 'admin' ? '/login/admin' : '/login/client'
   url.search = ''
@@ -29,7 +48,11 @@ function accessRedirect(request: NextRequest, lane: VerifiedAccessLane, code: st
   return response
 }
 
-function mfaRedirect(request: NextRequest) {
+function mfaFailure(request: NextRequest) {
+  if (isApiRequest(request.nextUrl.pathname)) {
+    return apiFailure('mfa_required', 403)
+  }
+
   const url = request.nextUrl.clone()
   url.pathname = '/auth/mfa'
   url.search = ''
@@ -43,7 +66,7 @@ export async function middleware(request: NextRequest) {
   const lane = requestedLane(request.nextUrl.pathname)
 
   if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    return accessRedirect(request, lane, 'access_control_unavailable')
+    return accessFailure(request, lane, 'access_control_unavailable')
   }
 
   let response = NextResponse.next({ request })
@@ -70,7 +93,7 @@ export async function middleware(request: NextRequest) {
   const subject = claimsData?.claims?.sub
 
   if (claimsError || typeof subject !== 'string' || !subject) {
-    return accessRedirect(request, lane, 'unauthenticated')
+    return accessFailure(request, lane, 'unauthenticated')
   }
 
   const { data: membershipRows, error: membershipError } = await supabase
@@ -80,7 +103,7 @@ export async function middleware(request: NextRequest) {
     .eq('status', 'active')
 
   if (membershipError) {
-    return accessRedirect(request, lane, 'access_control_unavailable')
+    return accessFailure(request, lane, 'access_control_unavailable')
   }
 
   const membership = selectMembershipForLane(
@@ -89,7 +112,7 @@ export async function middleware(request: NextRequest) {
   )
 
   if (!membership || !membershipHasWorkspaceAuthority(membership)) {
-    return accessRedirect(request, lane, 'access_denied')
+    return accessFailure(request, lane, 'access_denied')
   }
 
   if (lane === 'admin') {
@@ -97,11 +120,11 @@ export async function middleware(request: NextRequest) {
       await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
 
     if (aalError) {
-      return accessRedirect(request, lane, 'access_control_unavailable')
+      return accessFailure(request, lane, 'access_control_unavailable')
     }
 
     if (aalData.currentLevel !== 'aal2') {
-      return mfaRedirect(request)
+      return mfaFailure(request)
     }
   }
 
@@ -113,5 +136,10 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/client/:path*', '/admin/:path*'],
+  matcher: [
+    '/client/:path*',
+    '/admin/:path*',
+    '/api/client/:path*',
+    '/api/admin/:path*',
+  ],
 }
