@@ -1,34 +1,38 @@
 import { describe, expect, it } from 'vitest'
 import {
-  CREATIVE_ASSET_BUCKET,
+  OYE_ASSET_BUCKET,
+  buildClientAssetBucketId,
   buildCreativeAssetPath,
   creativeProviderDefinitions,
-  getCreativeAssetTenantFromPath,
+  getCreativeAssetRootFromPath,
   getCreativeProviderReadiness,
   isPublishingEligible,
 } from '@/lib/creative/asset-platform'
 
 describe('creative asset platform foundation', () => {
-  it('uses a private canonical bucket name and tenant-first storage path', () => {
+  it('derives a dedicated private bucket id for Oye and each client tenant', () => {
+    expect(buildClientAssetBucketId('oye-imagine')).toBe(OYE_ASSET_BUCKET)
+    expect(buildClientAssetBucketId('neejee')).toBe('client-neejee-assets')
+    expect(buildClientAssetBucketId('Acme India')).toBe('client-acme-india-assets')
+  })
+
+  it('uses governed roots inside a tenant-specific bucket', () => {
     const path = buildCreativeAssetPath({
-      tenantId: 'tenant_neejee',
+      root: 'generated',
       workspaceId: 'workspace_neejee_primary',
       assetId: 'asset_123',
       fileName: 'instagram-story.webp',
     })
 
-    expect(CREATIVE_ASSET_BUCKET).toBe('creative-assets')
-    expect(path).toBe(
-      'tenant_neejee/workspace_neejee_primary/asset_123/instagram-story.webp',
-    )
-    expect(getCreativeAssetTenantFromPath(path)).toBe('tenant_neejee')
+    expect(path).toBe('generated/workspace_neejee_primary/asset_123/instagram-story.webp')
+    expect(getCreativeAssetRootFromPath(path)).toBe('generated')
   })
 
   it('rejects path traversal and nested caller-controlled path segments', () => {
     expect(() =>
       buildCreativeAssetPath({
-        tenantId: '../tenant_other',
-        workspaceId: 'workspace_neejee_primary',
+        root: 'brand-assets',
+        workspaceId: '../workspace_other',
         assetId: 'asset_123',
         fileName: 'post.webp',
       }),
@@ -36,7 +40,7 @@ describe('creative asset platform foundation', () => {
 
     expect(() =>
       buildCreativeAssetPath({
-        tenantId: 'tenant_neejee',
+        root: 'campaigns',
         workspaceId: 'workspace/other',
         assetId: 'asset_123',
         fileName: 'post.webp',
