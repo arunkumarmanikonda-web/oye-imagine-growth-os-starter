@@ -101,7 +101,7 @@ export async function googleAuthorizationUrl(access: ApiAccessContext, requested
   url.searchParams.set('include_granted_scopes', 'true')
   url.searchParams.set('scope', googleScopes.join(' '))
   url.searchParams.set('state', signGoogleOAuthState(payload))
-  return { url: url.toString(), tenantId: target.tenantId, workspaceId: target.workspaceId }
+  return { authorizationUrl: url.toString(), tenantId: target.tenantId, workspaceId: target.workspaceId }
 }
 
 async function exchangeCode(code: string) {
