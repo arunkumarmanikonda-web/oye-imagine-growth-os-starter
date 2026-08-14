@@ -1,7 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
-import { selectMembershipForLane, selectPrimaryMembership, type VerifiedMembership } from '@/lib/auth/verified-membership'
-import { roleRequiresMfa } from '@/lib/auth/role-routing'
+import { membershipRequiresMfa, selectMembershipForLane, selectPrimaryMembership, type VerifiedMembership } from '@/lib/auth/verified-membership'
 import { loadPermissionSet, decidePermission } from '@/lib/auth/access-resolver'
 import { permissionForPathname } from '@/lib/auth/permissions'
 
@@ -83,7 +82,6 @@ export async function updateSession(request: NextRequest) {
 
   const memberships = (membershipRows ?? []) as VerifiedMembership[]
   const primary = selectPrimaryMembership(memberships)
-
   if ((isUnifiedLogin || isSignup) && primary) return NextResponse.redirect(new URL('/workspace', request.url))
   if (!protectedRoute) return response
   if (!primary) {
@@ -91,18 +89,13 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(new URL('/login?error=access_denied', request.url))
   }
 
-  const membership = isAdmin
-    ? selectMembershipForLane(memberships, 'admin')
-    : isClient
-      ? selectMembershipForLane(memberships, 'client')
-      : primary
-
+  const membership = isAdmin ? selectMembershipForLane(memberships, 'admin') : isClient ? selectMembershipForLane(memberships, 'client') : primary
   if (!membership) {
     if (isApiProtected) return apiError('access_denied', 403)
     return NextResponse.redirect(new URL('/workspace?error=scope', request.url))
   }
 
-  if (roleRequiresMfa(membership.role_key)) {
+  if (membershipRequiresMfa(membership)) {
     const { data: aalData, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
     if (aalError) {
       if (isApiProtected) return apiError('access_control_unavailable', 503)
@@ -120,12 +113,7 @@ export async function updateSession(request: NextRequest) {
   if (permission) {
     try {
       const permissionSet = await loadPermissionSet({ supabase, subject: user.id, membership })
-      const decision = decidePermission({
-        roleKey: membership.role_key,
-        membership,
-        permissionSet,
-        permission,
-      })
+      const decision = decidePermission({ roleKey: membership.role_key, membership, permissionSet, permission })
       if (!decision.allowed) {
         if (isApiProtected) return apiError('access_denied', 403)
         return NextResponse.redirect(new URL('/workspace?error=permission', request.url))
