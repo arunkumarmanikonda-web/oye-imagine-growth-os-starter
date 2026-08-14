@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 
-export const siteName = 'OYE Imagine'
-export const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'http://127.0.0.1:3060').replace(/\/$/, '')
+export const siteName = 'Oye !magine'
+export const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.oyeimagine.com').replace(/\/$/, '')
 export const defaultDescription =
-  'OYE Imagine helps enterprise teams launch guided demos, qualification flows, marketplaces, and conversion-ready public experiences.'
+  'Oye !magine is an AI-assisted Growth OS connecting strategy, creative execution, approvals, campaigns, analytics and commercial governance.'
 export const defaultOgImage = '/favicon.ico'
 
 export type FaqItem = {
@@ -26,14 +26,14 @@ export function buildMetadata(path: string, title: string, description: string):
       url: path,
       siteName,
       type: 'website',
-      images: [{ url: defaultOgImage }]
+      images: [{ url: defaultOgImage, alt: 'Oye !magine' }],
     },
     twitter: {
       card: 'summary',
       title,
       description,
-      images: [defaultOgImage]
-    }
+      images: [defaultOgImage],
+    },
   }
 }
 
@@ -42,8 +42,9 @@ export function organizationJsonLd() {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: siteName,
+    legalName: 'Oye Imagine Private Limited',
     url: siteUrl,
-    logo: `${siteUrl}/favicon.ico`
+    logo: `${siteUrl}/favicon.ico`,
   }
 }
 
@@ -52,7 +53,7 @@ export function websiteJsonLd() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: siteName,
-    url: siteUrl
+    url: siteUrl,
   }
 }
 
@@ -67,9 +68,9 @@ export function faqPageJsonLd(path: string, title: string, items: FaqItem[]) {
       name: item.question,
       acceptedAnswer: {
         '@type': 'Answer',
-        text: item.answer
-      }
-    }))
+        text: item.answer,
+      },
+    })),
   }
 }
 
@@ -82,7 +83,7 @@ export function productJsonLd(path: string, name: string, description: string) {
     url: absoluteUrl(path),
     brand: {
       '@type': 'Brand',
-      name: siteName
-    }
+      name: siteName,
+    },
   }
 }
