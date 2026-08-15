@@ -1,5 +1,6 @@
+'use client'
+
 import { getWorkspaceDisplayName, getWorkspaceSurfaceLabel } from "@/lib/admin/workspace-branding";
-"use client";
 
 import { useEffect, useMemo, useState } from "react";
 

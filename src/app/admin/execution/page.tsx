@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 import { ExecutionStatusDetailRail, type ExecutionStatusDetailRailSummary } from "./execution-status-detail-rail";
 import { getWorkspaceDisplayName, getWorkspaceSurfaceLabel } from "@/lib/admin/workspace-branding";
