@@ -6,16 +6,16 @@ import { buildMetadata, faqPageJsonLd, productJsonLd } from '@/lib/seo/site'
 
 export const metadata: Metadata = buildMetadata(
   '/marketplace',
-  'Marketplace Operations | OYE Imagine',
-  'See how OYE Imagine supports marketplace discovery, governed submissions, enterprise catalog presentation, and public growth operations.'
+  'Specialist Marketplace | Oye !magine',
+  'Discover how the Oye !magine specialist marketplace is designed to govern scoped requests, proposals, specialist delivery, approvals, and commercial handoff.'
 )
 
 export default function MarketplaceLayout({ children }: { children: ReactNode }) {
   const faqJsonLd = faqPageJsonLd('/marketplace', 'Marketplace FAQ', marketplaceFaqItems)
   const productJsonLdData = productJsonLd(
     '/marketplace',
-    'OYE Imagine Marketplace',
-    'A governed enterprise marketplace surface for public discovery, submission flows, and moderated publishing.'
+    'Oye !magine Specialist Marketplace',
+    'A governed specialist-services marketplace designed around scoped requests, proposals, approvals, deliverables, and commercial controls.'
   )
 
   return (
