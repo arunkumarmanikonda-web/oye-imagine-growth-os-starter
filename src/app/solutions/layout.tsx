@@ -6,8 +6,8 @@ import { buildMetadata, faqPageJsonLd } from '@/lib/seo/site'
 
 export const metadata: Metadata = buildMetadata(
   '/solutions',
-  'Enterprise Solutions | OYE Imagine',
-  'Explore OYE Imagine solutions for teams that need governed public funnels, operational clarity, and enterprise-grade launch surfaces.'
+  'Growth Operations Solutions | Oye !magine',
+  'Explore Oye !magine solutions for brands, growth teams, agencies, commerce operators, managed growth engagements, and multi-brand organisations.'
 )
 
 export default function SolutionsLayout({ children }: { children: ReactNode }) {
