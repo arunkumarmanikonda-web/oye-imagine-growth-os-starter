@@ -1,5 +1,6 @@
 import 'server-only'
 
+import type { Metadata } from 'next'
 import { unstable_noStore as noStore } from 'next/cache'
 import { getPublishedPage } from '@/lib/cms/governed-cms'
 
@@ -42,4 +43,30 @@ export async function getCmsMarketingPage(slug: string): Promise<CmsMarketingPag
   const data = page.data as MarketingPageDocument
   if (!data || !Array.isArray(data.sections) || typeof data.title !== 'string') throw new Error(`published_cms_page_invalid:${slug}`)
   return { slug: page.slug, title: page.title, seo: page.seo ?? {}, data, published_at: page.published_at }
+}
+
+export function cmsMarketingMetadata(page: CmsMarketingPage): Metadata {
+  const title = page.seo.title ?? page.title
+  const description = page.seo.description ?? page.data.body
+  const path = `/${page.slug}`
+
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      title,
+      description,
+      url: path,
+      siteName: 'Oye !magine',
+      type: 'website',
+      images: [{ url: '/brand/oye-imagine-logo.webp', alt: 'Oye !magine' }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['/brand/oye-imagine-logo.webp'],
+    },
+  }
 }
