@@ -24,8 +24,11 @@ jobs:
       - name: install
         run: npm ci
 
-      - name: admin ops release surfaces
-        run: npm run test:admin-ops-release-surfaces
+      - name: admin ops panels
+        run: npm run test:admin-ops-panels
+
+      - name: admin ops runtime bridge
+        run: npm run test:admin-ops-runtime-bridge
 
       - name: production activation suite
         run: npm run test:activation-production-suite
