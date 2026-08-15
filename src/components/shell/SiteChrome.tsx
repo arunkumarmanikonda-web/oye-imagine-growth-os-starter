@@ -80,7 +80,8 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
           </section>
           <section className="premium-footer-links">
             <div><strong>Product</strong><Link href="/platform">Platform</Link><Link href="/solutions">Solutions</Link><Link href="/integrations">Integrations</Link><Link href="/pricing">Pricing</Link></div>
-            <div><strong>Company</strong><Link href="/about">About</Link><Link href="/customers">Customers</Link><Link href="/contact">Contact</Link><Link href="/trust">Trust Center</Link></div>
+            <div><strong>Company</strong><Link href="/about">About</Link><Link href="/customers">Customers</Link><Link href="/contact">Contact</Link><Link href="/status">Status</Link></div>
+            <div><strong>Trust & legal</strong><Link href="/trust">Trust Center</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/cookies">Cookies</Link><Link href="/dpa">DPA</Link><Link href="/subprocessors">Subprocessors</Link><Link href="/accessibility">Accessibility</Link></div>
             <div><strong>Access</strong><Link href="/login">Universal sign in</Link><Link href="/signup">Create customer account</Link><Link href="/marketplace">Marketplace</Link></div>
           </section>
         </div>
