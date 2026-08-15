@@ -1,222 +1,128 @@
-import type { Metadata, Route } from 'next'
-import Link from 'next/link'
+import type { Metadata } from 'next'
+import { LegalPolicyPage, type LegalPolicySection } from '@/components/public/LegalPolicyPage'
 
 export const metadata: Metadata = {
-  title: 'Privacy and compliance | Oye !magine AI Growth OS',
-  description:
-    'Review how Oye !magine handles data, access control, retention, support, and operational governance across the AI Growth OS.',
+  title: 'Privacy Policy | Oye !magine',
+  description: 'Privacy notice for Oye !magine websites, customer workspaces, support, commercial operations and AI-assisted Growth OS services.',
+  alternates: { canonical: '/privacy' },
 }
 
-const collectionItems = [
-  'Business and contact details shared during qualification, onboarding, support, billing, or commercial review.',
-  'Workspace content and operating records needed to deliver execution, approvals, reporting, invoicing, and governed support.',
-  'Technical usage and audit context required to secure access, investigate issues, and maintain reliable platform operations.',
+const sections: LegalPolicySection[] = [
+  {
+    title: '1. Who we are and when this policy applies',
+    paragraphs: [
+      'Oye Imagine Private Limited (Oye !magine, we, us or our) operates oyeimagine.com and the Oye !magine AI Growth OS. This policy applies to personal data processed through our public website, account registration, customer workspaces, commercial and support interactions, platform operations and related managed services.',
+      'Depending on the activity, Oye !magine may determine why and how personal data is processed for its own business operations, or may process data on documented instructions from a customer. Contractual data-processing terms may further define those roles for a particular customer engagement.',
+    ],
+  },
+  {
+    title: '2. Personal data we may collect',
+    bullets: [
+      'Identity and contact information such as name, business email, telephone number, employer, job role and communication preferences.',
+      'Account, authentication and security information, including role, workspace membership, login events, MFA state, access-control decisions, device/session context and audit records.',
+      'Commercial information including selected plan, billing contacts, GST and invoicing details, contracts, orders, payment status and support history.',
+      'Customer-provided workspace data such as brand assets, briefs, catalogues, documents, creative material, campaign information, analytics inputs and other content submitted for the contracted service.',
+      'Technical information such as IP address, browser/device data, request logs, diagnostics, security events, cookie identifiers where used and product interaction telemetry.',
+      'Information contained in enquiries, support tickets, demos, onboarding, feedback, research or other communications with us.',
+    ],
+  },
+  {
+    title: '3. Why we process personal data',
+    bullets: [
+      'Provide, secure, administer and support accounts, workspaces and subscribed services.',
+      'Perform onboarding, customer support, approvals, reporting, billing, commercial administration and managed-service delivery.',
+      'Authenticate users, enforce permissions, investigate abuse or incidents, preserve auditability and maintain platform reliability.',
+      'Generate or assist with strategy, content, analysis and other AI-enabled outputs requested within an authorised workspace.',
+      'Improve service quality, reliability and user experience using appropriately governed operational data and feedback.',
+      'Comply with applicable legal, tax, accounting, regulatory, fraud-prevention and dispute-resolution requirements.',
+      'Send service communications and, where permitted and appropriately consented, relevant commercial communications.',
+    ],
+  },
+  {
+    title: '4. Legal grounds, notice and consent',
+    paragraphs: [
+      'We process personal data only where an appropriate legal basis or permitted purpose applies under applicable law. Where consent is required, the relevant interface or communication should identify the purpose and provide a mechanism to withdraw consent where required. Certain processing may instead be necessary to provide a requested service, perform a contract, meet legal obligations, protect systems or pursue other lawful purposes recognised by applicable law.',
+    ],
+  },
+  {
+    title: '5. AI-assisted processing',
+    paragraphs: [
+      'Oye !magine may route authorised workspace inputs to configured AI or technology providers to perform requested functions. Access is intended to remain tenant and workspace scoped, and high-impact publishing, spend and financial actions remain subject to configured permissions and approval controls.',
+      'Customers should not submit special-category, highly sensitive or regulated information unless the applicable agreement and product configuration expressly permit it. AI output should be reviewed before it is relied upon for consequential business, legal, financial or regulated decisions.',
+    ],
+  },
+  {
+    title: '6. Service providers and subprocessors',
+    paragraphs: [
+      'We may use hosting, database, communications, analytics, security, AI, payment, support and other service providers where needed to operate the service. The providers actually used for a customer may depend on the enabled features and configured integrations.',
+      'Our current public subprocessor information is maintained on the Subprocessors page. A listed capability is not, by itself, a statement that every provider is connected to every customer workspace.',
+    ],
+  },
+  {
+    title: '7. International processing',
+    paragraphs: [
+      'Some technology providers may process information from infrastructure located outside the customer’s home jurisdiction. Where cross-border processing occurs, we will apply the contractual and legal measures required for the relevant processing context and applicable law. Enterprise customers should review any agreed data-residency or transfer commitments in their order form or DPA.',
+    ],
+  },
+  {
+    title: '8. Retention and deletion',
+    paragraphs: [
+      'We retain personal data for as long as reasonably required to provide the service, maintain security and auditability, fulfil the applicable customer agreement, resolve disputes, and comply with legal, tax, accounting or regulatory requirements. Retention periods therefore vary by data type and contractual context.',
+      'When data is no longer required, it should be deleted, anonymised or securely archived as appropriate. Customer offboarding and deletion commitments may be specified more precisely in an applicable order form or DPA.',
+    ],
+  },
+  {
+    title: '9. Security and access control',
+    paragraphs: [
+      'We use organisational and technical controls designed to restrict data to authorised users and workspaces, including role-based access, explicit permission overrides, authentication controls, audit records and approval boundaries. No internet service can guarantee absolute security, and customers remain responsible for protecting their credentials, authorised users and connected third-party accounts.',
+    ],
+  },
+  {
+    title: '10. Your choices and privacy requests',
+    bullets: [
+      'Request information about personal data associated with you and how it is being used, where applicable.',
+      'Request correction, updating or completion of inaccurate personal data, where applicable.',
+      'Request deletion or erasure where applicable and not overridden by lawful retention requirements.',
+      'Withdraw consent where processing depends on consent, without affecting processing already lawfully carried out.',
+      'Opt out of non-essential commercial communications using the mechanism provided in the communication or by contacting us.',
+      'Raise a grievance or privacy concern through hello@oyeimagine.com. We may need to verify identity and the relevant account or organisation before acting on a request.',
+    ],
+  },
+  {
+    title: '11. Cookies and similar technologies',
+    paragraphs: [
+      'Our use of browser storage, cookies and similar technologies is described in the Cookie Policy. Essential technologies may be required for security, authentication and service operation. Non-essential analytics or marketing technologies, if enabled, should be subject to the applicable notice and consent controls.',
+    ],
+  },
+  {
+    title: '12. Children',
+    paragraphs: [
+      'Oye !magine is a business service and is not directed to children. Customers must not use the platform to process children’s personal data unless the applicable agreement, lawful basis, product configuration and required safeguards expressly support that processing.',
+    ],
+  },
+  {
+    title: '13. Changes to this policy',
+    paragraphs: [
+      'We may update this policy to reflect legal, product, provider or operational changes. Material changes will be published with a revised effective date and, where required, communicated through an appropriate customer or product channel.',
+    ],
+  },
+  {
+    title: '14. Contact and grievance handling',
+    paragraphs: [
+      'Questions, privacy requests and grievances may be sent to hello@oyeimagine.com. Please identify the relevant organisation, workspace and request type so we can route the matter correctly. Additional contractual privacy contacts may be specified in an enterprise agreement or DPA.',
+    ],
+  },
 ]
-
-const usageItems = [
-  'Operate onboarding, delivery, approvals, reporting, billing, and support workflows.',
-  'Maintain service continuity, role-aware access, and accountable operational records.',
-  'Respond to legal, tax, governance, and buyer-review requirements tied to active commercial relationships.',
-]
-
-const controlItems = [
-  'Role-aware access separation across public, client, and operator experiences.',
-  'Operational need-to-know access instead of broad shared visibility.',
-  'Governed publishing, support, and workflow handling with auditable runtime context.',
-]
-
-const retentionItems = [
-  'We retain only the records needed for accountable service operation, support continuity, billing, governance, and legal obligations.',
-  'Retention windows depend on the operational record type, active commercial relationship, and mandatory compliance requirements.',
-  'When records are no longer required, they should be deleted, archived, or minimized according to the governing workflow.',
-]
-
-const requestItems = [
-  'Ask what data category or workflow you want reviewed.',
-  'Confirm the workspace, company, or commercial context tied to the request.',
-  'Route the request through governed support so the correct operator or legal owner can respond.',
-]
-
-const reviewLinks = [
-  { href: '/trust', label: 'Trust Center' },
-  { href: '/accessibility', label: 'Accessibility' },
-  { href: '/contact', label: 'Contact and support' },
-  { href: '/platform', label: 'Platform' },
-]
-
-function SectionList({ items }: { items: string[] }) {
-  return (
-    <ul className="mt-4 space-y-3 text-sm leading-7 text-slate-700">
-      {items.map((item) => (
-        <li key={item} className="flex gap-3">
-          <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-slate-900" />
-          <span>{item}</span>
-        </li>
-      ))}
-    </ul>
-  )
-}
 
 export default function PrivacyPage() {
   return (
-    <main className="bg-white text-slate-950">
-      <section className="border-b border-slate-200 bg-slate-50">
-        <div className="mx-auto max-w-6xl px-6 py-16 sm:px-8 lg:px-10 lg:py-24">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
-            Privacy and compliance center
-          </p>
-          <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-            Privacy, access control, and operational governance for the AI Growth OS.
-          </h1>
-          <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-700">
-            This page explains how Oye !magine handles client, operator, prospect, support, and
-            commercial data across qualification, onboarding, delivery, approvals, invoicing,
-            reporting, and governed support workflows.
-          </p>
-
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <div className="text-sm font-semibold text-slate-900">Data minimization</div>
-              <p className="mt-2 text-sm leading-7 text-slate-700">
-                Collect only what is needed for accountable onboarding, delivery, support, and
-                commercial operations.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <div className="text-sm font-semibold text-slate-900">Role-aware access</div>
-              <p className="mt-2 text-sm leading-7 text-slate-700">
-                Access should be restricted by workspace, user role, and operational need instead
-                of broad shared visibility.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <div className="text-sm font-semibold text-slate-900">Governed retention</div>
-              <p className="mt-2 text-sm leading-7 text-slate-700">
-                Records should remain available only as long as they are required for service,
-                governance, legal, or billing accountability.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-6 py-16 sm:px-8 lg:px-10">
-        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
-              What this page covers
-            </h2>
-            <p className="mt-4 text-base leading-8 text-slate-700">
-              Oye !magine positions trust, compliance, support, and legal identity as part of the
-              runtime rather than a last-minute add-on. This privacy entry gives buyers and teams a
-              single public reference point for data handling expectations before they convert,
-              onboard, or request governed support.
-            </p>
-          </div>
-
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-            <h3 className="text-base font-semibold text-slate-950">Related review paths</h3>
-            <div className="mt-4 flex flex-wrap gap-3">
-              {reviewLinks.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href as Route}
-                  className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-900 hover:text-slate-950"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-            <p className="mt-4 text-sm leading-7 text-slate-600">
-              For support-led requests, start from the contact route so the request can be handled
-              in the correct commercial or workspace context.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto grid max-w-6xl gap-8 px-6 pb-16 sm:px-8 lg:grid-cols-2 lg:px-10">
-        <div className="rounded-3xl border border-slate-200 p-8">
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
-            Data we may process
-          </h2>
-          <SectionList items={collectionItems} />
-        </div>
-
-        <div className="rounded-3xl border border-slate-200 p-8">
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
-            Why it is used
-          </h2>
-          <SectionList items={usageItems} />
-        </div>
-
-        <div className="rounded-3xl border border-slate-200 p-8">
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
-            Access and workspace controls
-          </h2>
-          <SectionList items={controlItems} />
-        </div>
-
-        <div className="rounded-3xl border border-slate-200 p-8">
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
-            Retention and deletion posture
-          </h2>
-          <SectionList items={retentionItems} />
-        </div>
-      </section>
-
-      <section className="border-y border-slate-200 bg-slate-50">
-        <div className="mx-auto grid max-w-6xl gap-8 px-6 py-16 sm:px-8 lg:grid-cols-2 lg:px-10">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
-              Security and governance expectations
-            </h2>
-            <p className="mt-4 text-base leading-8 text-slate-700">
-              The public site already describes a governed operating model with client and operator
-              separation, approval controls, legal identity, and support context. This page extends
-              that same posture into a buyer-readable privacy and compliance reference.
-            </p>
-            <p className="mt-4 text-base leading-8 text-slate-700">
-              Teams evaluating the platform should use this page together with the Trust Center,
-              contact routes, and commercial workflows to understand how privacy responsibilities are
-              handled in day-to-day operations.
-            </p>
-          </div>
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-8">
-            <h3 className="text-lg font-semibold text-slate-950">Request handling</h3>
-            <SectionList items={requestItems} />
-            <p className="mt-6 text-sm leading-7 text-slate-600">
-              Accessibility-related support can also be raised through{' '}
-              <a className="font-medium text-slate-900 underline underline-offset-4" href="mailto:hello@oyeimagine.com">
-                hello@oyeimagine.com
-              </a>
-              .
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-6 py-16 sm:px-8 lg:px-10">
-        <div className="rounded-3xl border border-slate-200 bg-white p-8">
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
-            Buyer review checklist
-          </h2>
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {[
-              'Public explanation of what data is collected and why',
-              'Clear statement of role-aware access expectations',
-              'Retention and accountable-record posture explained',
-              'Trust, accessibility, contact, and platform review paths linked',
-            ].map((item) => (
-              <div key={item} className="rounded-2xl border border-slate-200 p-5 text-sm leading-7 text-slate-700">
-                {item}
-              </div>
-            ))}
-          </div>
-          <p className="mt-6 text-sm leading-7 text-slate-600">Last reviewed: 2026-08-12</p>
-        </div>
-      </section>
-    </main>
+    <LegalPolicyPage
+      eyebrow="Privacy"
+      title="Privacy Policy"
+      summary="How Oye !magine handles personal data across the public website, account access, customer workspaces, commercial operations, support and AI-assisted Growth OS services."
+      effectiveDate="15 August 2026"
+      sections={sections}
+      notice="This public notice is an operational policy baseline and is being maintained against applicable Indian data-protection requirements. Customer-specific contractual commitments in an executed order form or DPA take precedence where they expressly differ."
+    />
   )
 }
