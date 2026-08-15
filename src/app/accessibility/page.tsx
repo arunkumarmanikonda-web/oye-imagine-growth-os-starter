@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import { buildMetadata } from '@/lib/seo/site'
 import {
   PublicCard,
   PublicContainer,
@@ -6,10 +6,11 @@ import {
   PublicSectionBlock
 } from '../../components/public/PublicPrimitives'
 
-export const metadata: Metadata = {
-  title: 'Accessibility Statement | Oye !magine',
-  description: 'Review the Oye !magine accessibility commitment, target standard, current scope and feedback route.'
-}
+export const metadata = buildMetadata(
+  '/accessibility',
+  'Accessibility Statement | Oye !magine',
+  'Review the Oye !magine accessibility commitment, WCAG 2.2 AA target, current scope and feedback route.'
+)
 
 export default function AccessibilityPage() {
   return (
