@@ -75,43 +75,46 @@ const homepageSections: PublicSection[] = [
   {
     id: 'understand',
     eyebrow: 'Understand',
-    title: 'Build one governed view of the brand before generating the next campaign.',
+    title: 'Give the system the business context before asking it to generate the next answer.',
     body:
-      'Bring brand context, digital diagnostics, goals, audiences and commercial constraints into one operating layer so strategy starts from known facts rather than disconnected prompts.',
+      'Bring the website, catalogue, brand assets, goals, audiences, market context and commercial constraints into one governed operating context so recommendations begin with evidence rather than isolated prompts.',
     bullets: [
-      'Brand and workspace context designed to remain tenant-specific',
-      'Audit, competitor and strategy workflows with explicit evidence boundaries',
-      'Human review before high-impact execution steps',
+      'Tenant-specific brand and workspace memory',
+      'Audit, competitor, research and strategy workflows with evidence boundaries',
+      'Ask Oye search across the information each user is authorised to see',
+      'Human review before high-impact execution',
     ],
   },
   {
     id: 'create',
     eyebrow: 'Imagine + Create',
-    title: 'Turn strategy into structured creative and campaign work without locking the system to one AI provider.',
+    title: 'Turn strategy into creative, content and campaign work without losing brand context.',
     body:
-      'Oye !magine is being built around provider-neutral AI routing, reusable brand context, creative generation, page systems and channel-ready campaign packages rather than a single-model prompt wrapper.',
+      'Oye routes AI capabilities behind one product experience and keeps strategy, copy, creative assets, content plans, campaign work, versions and approvals connected to the same operating memory.',
     bullets: [
-      'Creative, copy and campaign workflows designed around provider-neutral routing',
-      'Approvals, versioning and provenance before content becomes publishing-ready',
-      'Client-specific assets remain separated from Oye !magine brand assets',
+      'Provider-neutral AI routing by capability and task',
+      'Creative, copy, SEO, content and campaign workflows',
+      'Approvals, versions and provenance before work becomes execution-ready',
+      'Private customer assets remain separated by tenant and workspace',
     ],
   },
   {
     id: 'govern',
-    eyebrow: 'Approve + Learn',
-    title: 'Keep humans, budgets and evidence in the loop as the operating system becomes more autonomous.',
+    eyebrow: 'Approve + Launch + Learn',
+    title: 'Automate the work that should move quickly. Keep authority around the actions that carry risk.',
     body:
-      'Commercial controls, reporting, approvals and auditability are treated as part of the product architecture. External-channel execution is only presented as live after the relevant provider connection and execution evidence are verified.',
+      'Permissions, approval routing, commercial controls, reporting and evidence are part of the operating model. Publishing, spend, financial actions and external execution remain bounded by assigned authority and verified connections.',
     bullets: [
-      'Controlled autonomy instead of silent publishing or spend escalation',
-      'Reporting designed to distinguish live, stale, disconnected and unverified data',
-      'Commercial and marketplace workflows developed around traceable approval states',
+      'Role defaults plus explicit per-user allow and deny overrides',
+      'Approval-bound publishing, spend and financial actions',
+      'Reporting that distinguishes live, stale, disconnected and unverified data',
+      'Outcome-linked learning without exposing one client’s private truth to another',
     ],
   },
 ]
 
 const homepageActions: PublicAction[] = [
-  { label: 'Book a live walkthrough', href: '/contact', emphasis: 'primary' },
+  { label: 'Start your workspace', href: '/signup', emphasis: 'primary' },
   { label: 'Explore the platform', href: '/platform', emphasis: 'secondary' },
   { label: 'Client sign in', href: '/login/client', emphasis: 'ghost' },
 ]
@@ -122,21 +125,21 @@ const marketplaceCategories: MarketplaceCategory[] = [
     description:
       'Structured onboarding, audits, competitor intelligence and strategy workflows for brands that need a governed growth operating system.',
     href: '/marketplace#strategy',
-    proofPoint: 'Strategy, audit and page-system foundations',
+    proofPoint: 'Research, audit and strategy inside the same brand context',
   },
   {
     name: 'Execution and content operations',
     description:
-      'SEO, content, creative, paid media, social and reporting capabilities designed to operate under approvals, budgets and role-specific control.',
+      'SEO, content, creative, paid media, social and reporting capabilities operating under approvals, budgets and role-specific control.',
     href: '/marketplace#execution',
-    proofPoint: 'Execution foundations across SEO, paid, social and lifecycle operations',
+    proofPoint: 'Connected creative, content, campaign and reporting workflows',
   },
   {
     name: 'Commercial and managed services',
     description:
-      'Commercial, support and managed-service workflows designed for premium B2B delivery and operator visibility.',
+      'Commercial controls, specialist delivery and managed-growth workflows for customers that want software plus accountable human execution.',
     href: '/marketplace#commercial',
-    proofPoint: 'Commercial OS foundations with production hardening in progress',
+    proofPoint: 'Commercial OS, approvals and managed delivery controls',
   },
 ]
 
@@ -161,9 +164,9 @@ export function getPublicHomepageExperience() {
     navigation: publicNavigation,
     hero: {
       eyebrow: 'Oye !magine AI Growth OS',
-      title: 'Your growth operation. One intelligent system.',
+      title: 'One AI-native operating system for the work behind growth.',
       body:
-        'Connect brand intelligence, strategy, creative workflows, approvals, campaign operations, analytics and commercial governance around one controlled growth loop.',
+        'Oye !magine brings brand intelligence, research, strategy, creative, content, SEO, campaign workflows, approvals, analytics and commercial control into one governed workspace. AI can assist, automate and learn while critical publishing, spend and financial actions stay within assigned authority.',
       primaryAction: homepageActions[0],
       secondaryAction: homepageActions[1],
       tertiaryAction: homepageActions[2],
@@ -179,9 +182,9 @@ export function getMarketplaceExperience() {
   return {
     legalIdentity,
     navigation: publicNavigation,
-    headline: 'Discover governed growth capabilities, not disconnected services.',
+    headline: 'Add specialist execution without creating a second operating system.',
     intro:
-      'The Oye !magine marketplace is designed to connect strategic depth, specialist delivery and managed capabilities to the same operating system rather than sending clients into a separate service directory.',
+      'The Oye !magine marketplace connects strategic depth, specialist delivery and managed capabilities to the same briefs, permissions, approvals, customer boundaries and evidence already inside the platform.',
     categories: marketplaceCategories,
     actions: [
       { label: 'Talk to the team', href: '/contact', emphasis: 'primary' as const },
@@ -193,9 +196,9 @@ export function getMarketplaceExperience() {
 export function getContactExperience() {
   return {
     legalIdentity,
-    headline: 'See Oye !magine around your own growth operation.',
+    headline: 'Start with the business problem. We can map the right Oye operating model from there.',
     intro:
-      'Talk to the team about a product walkthrough, pilot, managed-growth engagement or enterprise deployment.',
+      'Talk to the team about a product walkthrough, pilot, managed-growth engagement, enterprise deployment, integration requirement or partner model.',
     supportChannels: contactChannels,
     trustPanel: {
       legalName: legalIdentity.legalName,

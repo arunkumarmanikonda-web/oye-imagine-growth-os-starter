@@ -96,6 +96,7 @@ const ROUTE_PERMISSION_PREFIXES: Array<[string, string]> = [
   ['/admin/google-ads', 'campaign.view'],
   ['/admin/campaign-summary', 'reporting.view'],
   ['/admin/integrations', 'integration.view'],
+  ['/admin/commercial/enquiries', 'commercial.enquiry.view'],
   ['/admin/commercial', 'finance.view'],
   ['/admin/marketplace', 'marketplace.view'],
   ['/admin/agents', 'ai.agent.manage'],

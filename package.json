@@ -6,7 +6,7 @@
     "@hookform/resolvers": "^5.7.1",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.110.7",
-    "next": "^15.5.2",
+    "next": "^15.5.22",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.85.0",
@@ -23,7 +23,7 @@
     "supabase": "^2.109.1",
     "typescript": "^5.9.2",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^2.1.9"
+    "vitest": "^4.1.10"
   },
   "scripts": {
     "build": "next build",
