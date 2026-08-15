@@ -4,25 +4,31 @@ const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://oyeimagine.com').r
 
 const routes = [
   '/',
+  '/about',
   '/platform',
   '/solutions',
+  '/customers',
+  '/customers/neejee',
+  '/integrations',
   '/marketplace',
-  '/trust',
   '/pricing',
+  '/trust',
   '/contact',
-  '/demo',
-  '/qualification',
-  '/lead-capture',
+  '/privacy',
+  '/terms',
+  '/cookies',
+  '/dpa',
+  '/subprocessors',
   '/accessibility',
-  '/case-studies',
-  '/marketplace/ai',
-  '/marketplace/specialists'
 ]
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date()
+
   return routes.map((path) => ({
     url: `${siteUrl}${path}`,
-    lastModified
+    lastModified,
+    changeFrequency: path === '/' ? 'daily' : 'weekly',
+    priority: path === '/' ? 1 : 0.7,
   }))
 }
