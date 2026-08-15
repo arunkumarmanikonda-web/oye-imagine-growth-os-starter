@@ -1,9 +1,15 @@
+import type { Metadata } from 'next'
 import {
   PublicCard,
   PublicContainer,
   PublicMain,
   PublicSectionBlock
-} from "../../components/public/PublicPrimitives";
+} from '../../components/public/PublicPrimitives'
+
+export const metadata: Metadata = {
+  title: 'Accessibility Statement | Oye !magine',
+  description: 'Review the Oye !magine accessibility commitment, target standard, current scope and feedback route.'
+}
 
 export default function AccessibilityPage() {
   return (
@@ -13,51 +19,56 @@ export default function AccessibilityPage() {
           <p className="oi-eyebrow">Accessibility</p>
           <h1>Accessibility statement</h1>
           <p className="oi-lead">
-            Oye !magine is committed to providing a website experience that is usable and accessible to the broadest
-            possible audience, including people using assistive technology and keyboard-only navigation.
+            Oye !magine is committed to making its public website and core product experiences usable by as many people as reasonably possible, including people who navigate with a keyboard, screen reader, zoom or other assistive technology.
           </p>
 
           <PublicSectionBlock>
-            <h2>Current accessibility support</h2>
+            <h2>Accessibility target</h2>
+            <p>
+              Our target for customer-facing web experiences is WCAG 2.2 Level AA. This is an ongoing engineering and content standard rather than a claim that every current route has already completed independent WCAG conformance certification.
+            </p>
+          </PublicSectionBlock>
+
+          <PublicSectionBlock>
+            <h2>Current design and engineering practices</h2>
             <ul className="oi-list">
-              <li>Keyboard-accessible navigation and interactive controls on public routes</li>
-              <li>Visible focus handling and skip-link support for main content</li>
-              <li>Accessible page structure with headings and primary content landmarks</li>
-              <li>Automated accessibility regression checks for key public routes</li>
+              <li>Keyboard-operable navigation and form controls on customer-facing routes</li>
+              <li>Visible focus handling and a skip link to the primary page content</li>
+              <li>Semantic headings, labels and primary content landmarks</li>
+              <li>Responsive layouts intended to support zoom and smaller viewports</li>
+              <li>Accessibility regressions treated as release defects when they affect core customer journeys</li>
             </ul>
           </PublicSectionBlock>
 
           <PublicSectionBlock>
             <h2>Scope</h2>
             <p>
-              This statement currently applies to the main public website routes, including the home page, contact,
-              strategy call, qualification, lead-capture, and accessibility pages.
+              This statement covers the primary public website, account access and customer-facing Growth OS experiences. Third-party services connected by a customer may have separate accessibility characteristics that are controlled by those providers.
+            </p>
+          </PublicSectionBlock>
+
+          <PublicSectionBlock>
+            <h2>Known limitations and verification</h2>
+            <p>
+              Accessibility testing is a continuing release activity. A complete independent WCAG audit, assistive-technology matrix and formal conformance report should not be inferred from this statement unless such evidence is published separately.
             </p>
           </PublicSectionBlock>
 
           <PublicSectionBlock>
             <h2>Feedback and support</h2>
             <p>
-              If you encounter an accessibility barrier, please contact us at{" "}
-              <a href="mailto:hello@oyeimagine.com">hello@oyeimagine.com</a>{" "}
-              with the page URL, the issue you observed, and the assistive technology or browser you were using.
-            </p>
-          </PublicSectionBlock>
-
-          <PublicSectionBlock>
-            <h2>Ongoing improvement</h2>
-            <p>
-              We review accessibility findings continuously and prioritize remediation for issues affecting navigation,
-              forms, content structure, and readability.
+              If you encounter an accessibility barrier, please contact us at{' '}
+              <a href="mailto:hello@oyeimagine.com">hello@oyeimagine.com</a>{' '}
+              or through the Contact page with the affected URL, a description of the issue and, if relevant, the browser or assistive technology you were using.
             </p>
           </PublicSectionBlock>
 
           <PublicSectionBlock>
             <h2>Last reviewed</h2>
-            <p>2026-08-11</p>
+            <p>15 August 2026</p>
           </PublicSectionBlock>
         </PublicCard>
       </PublicContainer>
     </PublicMain>
-  );
+  )
 }
