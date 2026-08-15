@@ -1,10 +1,9 @@
 import type { Metadata } from 'next'
 import { CmsMarketingPageView } from '@/components/public/CmsMarketingPage'
-import { getCmsMarketingPage } from '@/lib/public/cms-marketing'
+import { cmsMarketingMetadata, getCmsMarketingPage } from '@/lib/public/cms-marketing'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const page = await getCmsMarketingPage('customers')
-  return { title: page.seo.title ?? page.title, description: page.seo.description }
+  return cmsMarketingMetadata(await getCmsMarketingPage('customers'))
 }
 
 export default async function CustomersPage() {
