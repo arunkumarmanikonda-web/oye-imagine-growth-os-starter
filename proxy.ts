@@ -62,7 +62,7 @@ function mfaFailure(request: NextRequest) {
   return response
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const lane = requestedLane(request.nextUrl.pathname)
 
   if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
