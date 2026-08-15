@@ -1,10 +1,11 @@
-import type { Metadata } from 'next'
 import { PolicyPage } from '@/components/public/PolicyPage'
+import { buildMetadata } from '@/lib/seo/site'
 
-export const metadata: Metadata = {
-  title: 'Cookie Policy | Oye !magine',
-  description: 'Review how Oye !magine uses essential, preference, analytics and marketing cookies and similar technologies.',
-}
+export const metadata = buildMetadata(
+  '/cookies',
+  'Cookie Policy | Oye !magine',
+  'Review how Oye !magine uses essential, preference, analytics and marketing cookies and similar technologies.'
+)
 
 export default function CookiesPage() {
   return (
