@@ -1,6 +1,7 @@
 'use client'
 
 import { FormEvent, useEffect, useState } from 'react'
+import Link from 'next/link'
 
 type SubmitState = 'idle' | 'sending' | 'success' | 'error'
 
@@ -100,7 +101,7 @@ export function PublicContactForm() {
 
           <label className="hidden" aria-hidden="true">Website<input name="website" tabIndex={-1} autoComplete="off" /></label>
 
-          <label className="flex items-start gap-3 rounded-2xl border border-black/15 bg-[var(--oye-paper)] p-4 text-sm leading-6"><input name="consentToContact" type="checkbox" required className="mt-1 h-4 w-4 accent-black" /><span>I agree that Oye !magine may contact me about this enquiry. *</span></label>
+          <label className="flex items-start gap-3 rounded-2xl border border-black/15 bg-[var(--oye-paper)] p-4 text-sm leading-6"><input name="consentToContact" type="checkbox" required className="mt-1 h-4 w-4 accent-black" /><span>I agree that Oye !magine may contact me about this enquiry and acknowledge the <Link href="/privacy" target="_blank" className="font-black underline underline-offset-2">Privacy Notice</Link>. *</span></label>
 
           {state === 'success' ? <div role="status" className="rounded-2xl border-2 border-black bg-[var(--oye-yellow)] p-4 font-black">Enquiry received. It is now in the Oye commercial inbox.</div> : null}
           {state === 'error' ? <div role="alert" className="rounded-2xl border-2 border-black bg-[var(--oye-pink)] p-4 font-black">{error}</div> : null}

@@ -6,9 +6,9 @@ import { OperatorActionBridgePanel } from "../../src/app/admin/ops/operator-acti
 describe("admin ops operator action bridge panel", () => {
   it("renders bridge metrics, next action, and blockers", () => {
     const html = renderToStaticMarkup(
-      <OperatorActionBridgePanel
-        companyName="Neejee"
-        bridge={{
+      React.createElement(OperatorActionBridgePanel, {
+        companyName: "Neejee",
+        bridge: {
           operatorQueueCount: 1,
           operatorQueueTypes: ["activation"],
           highestPriority: "medium",
@@ -34,8 +34,8 @@ describe("admin ops operator action bridge panel", () => {
             "activation: activation gate",
           ],
           continuityReady: true,
-        }}
-      />,
+        },
+      }),
     );
 
     expect(html).toContain("Operator action bridge");
@@ -52,14 +52,15 @@ describe("admin ops operator action bridge panel", () => {
     expect(queueSummaryMatches).toHaveLength(1);
     expect(html).toContain("commercial: commercial review");
     expect(html).toContain("Required providers are not production ready");
-    expect(html).toContain("\u2022 commercial: commercial review");
+    expect(html).toContain("• commercial: commercial review");
+    expect(html).not.toContain("\\u2022");
     expect(html).not.toContain("â€¢");
     expect(html).not.toContain("Ã¢â‚¬Â¢");
   });
 
   it("returns no markup when the bridge is absent", () => {
     const html = renderToStaticMarkup(
-      <OperatorActionBridgePanel companyName={null} bridge={null} />,
+      React.createElement(OperatorActionBridgePanel, { companyName: null, bridge: null }),
     );
 
     expect(html).toBe("");

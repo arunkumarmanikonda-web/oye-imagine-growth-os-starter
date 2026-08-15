@@ -5,6 +5,7 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { validateNewPassword } from '@/lib/auth/password-policy'
 import { createClientActivation } from '@/lib/commercial/activation-runtime'
 import type { BillingCadence } from '@/lib/commercial/client-activation-journey'
+import { PUBLIC_PRIVACY_VERSION, PUBLIC_TERMS_VERSION } from '@/lib/legal/public-legal-versions'
 
 function slugify(value: string) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 42) || 'brand'
@@ -25,10 +26,22 @@ export async function POST(request: NextRequest) {
   const email = String(formData.get('email') ?? '').trim().toLowerCase()
   const password = String(formData.get('password') ?? '')
   const acceptedTerms = String(formData.get('terms') ?? '') === 'on'
+  const termsVersion = String(formData.get('termsVersion') ?? '')
+  const privacyVersion = String(formData.get('privacyVersion') ?? '')
   const requestedPlan = String(formData.get('plan') ?? 'starter').trim().toLowerCase()
   const billingCadence: BillingCadence = formData.get('billingCadence') === 'annual' ? 'annual' : 'monthly'
+  const legalAcceptedAt = new Date().toISOString()
 
-  if (!fullName || !companyName || !brandName || !email || !acceptedTerms || !validateNewPassword(password).valid) {
+  if (
+    !fullName ||
+    !companyName ||
+    !brandName ||
+    !email ||
+    !acceptedTerms ||
+    termsVersion !== PUBLIC_TERMS_VERSION ||
+    privacyVersion !== PUBLIC_PRIVACY_VERSION ||
+    !validateNewPassword(password).valid
+  ) {
     return signupRedirect(request, { error: 'invalid_signup', plan: requestedPlan })
   }
 
@@ -105,6 +118,14 @@ export async function POST(request: NextRequest) {
   stableBrandId = `brand_${tenantSlug.replace(/-/g, '_')}`
   stableWorkspaceId = `workspace_${tenantSlug.replace(/-/g, '_')}_primary`
 
+  const legalAcceptance = {
+    accepted: true,
+    acceptedAt: legalAcceptedAt,
+    source: 'self_service_signup',
+    termsVersion,
+    privacyVersion,
+  }
+
   const { error: coreBrandError } = await admin.from('core_brands').insert({
     brand_id: stableBrandId,
     tenant_id: stableTenantId,
@@ -112,7 +133,7 @@ export async function POST(request: NextRequest) {
     legal_entity_name: companyName,
     website_url: website || null,
     status: 'active',
-    metadata: { operationalTenantId: tenant.id, operationalBrandId: brand.id, createdBy: 'self_service_signup', selectedPlan: plan.plan_key },
+    metadata: { operationalTenantId: tenant.id, operationalBrandId: brand.id, createdBy: 'self_service_signup', selectedPlan: plan.plan_key, legalAcceptance },
   })
   if (coreBrandError) { await rollbackProvisioning(); return signupRedirect(request, { error: 'workspace_provision_failed', plan: requestedPlan }) }
 
@@ -130,6 +151,7 @@ export async function POST(request: NextRequest) {
       onboardingState: 'brand_learning',
       activationState: 'brand_learning',
       modulesEnabled: false,
+      legalAcceptance,
     },
   })
   if (coreWorkspaceError) { await rollbackProvisioning(); return signupRedirect(request, { error: 'workspace_provision_failed', plan: requestedPlan }) }
@@ -159,6 +181,7 @@ export async function POST(request: NextRequest) {
       modulesEnabled: false,
       edition: plan.plan_key,
       billingCadence,
+      legalAcceptance,
     },
   })
   if (membershipError) { await rollbackProvisioning(); return signupRedirect(request, { error: 'workspace_provision_failed', plan: requestedPlan }) }

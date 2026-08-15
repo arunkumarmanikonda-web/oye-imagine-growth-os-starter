@@ -1,17 +1,25 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
+import { buildMetadata } from '@/lib/seo/site'
+
+export const metadata: Metadata = buildMetadata(
+  '/marketplace/specialists',
+  'Marketplace Specialists | Oye !magine',
+  'Learn how Oye !magine governs specialist discovery, scoped assignments, proposals, approvals and delivery inside the Growth OS.'
+)
 
 const specialistHighlights = [
   {
-    title: 'Specialist discovery',
-    body: 'Showcase curated specialists through a governed public listing experience with clear positioning and cleaner navigation depth.'
+    title: 'Scoped specialist discovery',
+    body: 'Specialist availability is presented only when the relevant service lane and onboarding state are ready for customer use.'
   },
   {
-    title: 'Submission review',
-    body: 'Support operator-reviewed specialist onboarding flows that align with marketplace governance and public trust expectations.'
+    title: 'Governed assignment',
+    body: 'Requests, proposals and workspace access are designed to stay inside the customer scope, with explicit permissions and approval boundaries.'
   },
   {
-    title: 'Cross-linked conversion',
-    body: 'Connect specialist discovery to platform, solutions, pricing, and Trust Center pages to reduce isolation and improve crawl depth.'
+    title: 'Evidence-led delivery',
+    body: 'Deliverables, approvals and commercial records are intended to remain traceable instead of turning specialist work into an off-platform handoff.'
   }
 ]
 
@@ -20,18 +28,16 @@ export default function MarketplaceSpecialistsPage() {
     <main className='oi-section'>
       <div className='oi-container'>
         <div className='oi-card'>
-          <p className='text-xs font-semibold uppercase tracking-[0.3em] text-slate-400'>Marketplace category</p>
-          <h1 className='mt-3 text-4xl font-semibold text-white'>Marketplace specialists</h1>
+          <p className='text-xs font-semibold uppercase tracking-[0.3em] text-slate-400'>Specialist marketplace</p>
+          <h1 className='mt-3 text-4xl font-semibold text-white'>Human expertise, scoped by the same governance as the Growth OS.</h1>
           <p className='mt-4 max-w-3xl text-base leading-7 text-slate-300'>
-            The specialists category helps teams present vetted specialist capabilities in a public marketplace surface while
-            preserving governed navigation, stronger cross-linking, and trust-oriented browsing paths.
+            Oye !magine is designed to route appropriate work to vetted specialists without exposing unrelated customer data or pretending that every service lane is automatically available. Specialist availability depends on onboarding, scope, commercial terms and the permissions assigned to the engagement.
           </p>
           <p className='mt-4 text-sm leading-7 text-slate-300'>
             Continue into the <Link href='/marketplace' className='text-white underline underline-offset-4'>Marketplace</Link>,
             <Link href='/platform' className='ml-1 text-white underline underline-offset-4'>Platform</Link>,
-            <Link href='/solutions' className='ml-1 text-white underline underline-offset-4'>Solutions</Link>,
             <Link href='/pricing' className='ml-1 text-white underline underline-offset-4'>Pricing</Link>,
-            and <Link href='/trust' className='ml-1 text-white underline underline-offset-4'>Trust Center</Link>.
+            or <Link href='/contact?interest=managed' className='ml-1 text-white underline underline-offset-4'>discuss a managed engagement</Link>.
           </p>
         </div>
 

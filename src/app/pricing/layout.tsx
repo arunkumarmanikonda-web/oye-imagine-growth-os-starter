@@ -6,16 +6,16 @@ import { buildMetadata, faqPageJsonLd, productJsonLd } from '@/lib/seo/site'
 
 export const metadata: Metadata = buildMetadata(
   '/pricing',
-  'Pricing | OYE Imagine',
-  'Review OYE Imagine pricing guidance for enterprise growth experiences, modular rollout planning, and governed public journey implementation.'
+  'Plans and Pricing | Oye !magine',
+  'Compare Oye !magine editions for AI-assisted growth operations, governance, analytics, agency workflows, managed growth, and white-label delivery.'
 )
 
 export default function PricingLayout({ children }: { children: ReactNode }) {
   const faqJsonLd = faqPageJsonLd('/pricing', 'Pricing FAQ', pricingFaqItems)
   const productJsonLdData = productJsonLd(
     '/pricing',
-    'OYE Imagine Plans',
-    'Enterprise pricing guidance for public growth journeys, modular rollout, and governed experience delivery.'
+    'Oye !magine Plans',
+    'Subscription editions for governed AI-assisted growth operations, from Starter and Growth through Commerce, Agency, Enterprise, Managed Growth, and White Label.'
   )
 
   return (
