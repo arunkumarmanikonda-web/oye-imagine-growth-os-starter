@@ -1,10 +1,11 @@
-import type { Metadata } from 'next'
 import { PolicyPage } from '@/components/public/PolicyPage'
+import { buildMetadata } from '@/lib/seo/site'
 
-export const metadata: Metadata = {
-  title: 'Subprocessors | Oye !magine',
-  description: 'Review the categories of infrastructure and external service providers Oye !magine may use to deliver configured services.',
-}
+export const metadata = buildMetadata(
+  '/subprocessors',
+  'Subprocessors | Oye !magine',
+  'Review the categories of infrastructure and external service providers Oye !magine may use to deliver configured services.'
+)
 
 export default function SubprocessorsPage() {
   return (
