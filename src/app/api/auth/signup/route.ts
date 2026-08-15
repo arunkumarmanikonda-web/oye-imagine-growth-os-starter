@@ -6,6 +6,8 @@ import { validateNewPassword } from '@/lib/auth/password-policy'
 import { createClientActivation } from '@/lib/commercial/activation-runtime'
 import type { BillingCadence } from '@/lib/commercial/client-activation-journey'
 
+const LEGAL_VERSION = '2026-08-15'
+
 function slugify(value: string) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 42) || 'brand'
 }
@@ -25,10 +27,22 @@ export async function POST(request: NextRequest) {
   const email = String(formData.get('email') ?? '').trim().toLowerCase()
   const password = String(formData.get('password') ?? '')
   const acceptedTerms = String(formData.get('terms') ?? '') === 'on'
+  const termsVersion = String(formData.get('termsVersion') ?? '')
+  const privacyVersion = String(formData.get('privacyVersion') ?? '')
+  const acceptedAt = new Date().toISOString()
   const requestedPlan = String(formData.get('plan') ?? 'starter').trim().toLowerCase()
   const billingCadence: BillingCadence = formData.get('billingCadence') === 'annual' ? 'annual' : 'monthly'
 
-  if (!fullName || !companyName || !brandName || !email || !acceptedTerms || !validateNewPassword(password).valid) {
+  if (
+    !fullName ||
+    !companyName ||
+    !brandName ||
+    !email ||
+    !acceptedTerms ||
+    termsVersion !== LEGAL_VERSION ||
+    privacyVersion !== LEGAL_VERSION ||
+    !validateNewPassword(password).valid
+  ) {
     return signupRedirect(request, { error: 'invalid_signup', plan: requestedPlan })
   }
 
@@ -53,7 +67,18 @@ export async function POST(request: NextRequest) {
   const { data: signupData, error: signupError } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { full_name: fullName, company_name: companyName } },
+    options: {
+      data: {
+        full_name: fullName,
+        company_name: companyName,
+        legal_acceptance: {
+          terms_version: termsVersion,
+          privacy_version: privacyVersion,
+          accepted_at: acceptedAt,
+          source: 'self_service_signup',
+        },
+      },
+    },
   })
 
   if (signupError || !signupData.user?.id) return signupRedirect(request, { error: 'account_creation_failed', plan: requestedPlan })
@@ -159,9 +184,32 @@ export async function POST(request: NextRequest) {
       modulesEnabled: false,
       edition: plan.plan_key,
       billingCadence,
+      legalAcceptance: {
+        termsVersion,
+        privacyVersion,
+        acceptedAt,
+        source: 'self_service_signup',
+      },
     },
   })
   if (membershipError) { await rollbackProvisioning(); return signupRedirect(request, { error: 'workspace_provision_failed', plan: requestedPlan }) }
+
+  const { error: consentError } = await admin.from('privacy_consent_events').insert({
+    consent_event_id: crypto.randomUUID(),
+    tenant_id: tenant.id,
+    workspace_id: workspace.id,
+    subject_key: userId,
+    channel: 'web',
+    purpose: 'platform_terms_and_privacy_notice',
+    decision: 'granted',
+    notice_version: LEGAL_VERSION,
+    source: 'self_service_signup',
+    lawful_basis: 'contract_and_notice_acknowledgement',
+    actor_id: userId,
+    metadata: { termsVersion, privacyVersion, email },
+    occurred_at: acceptedAt,
+  })
+  if (consentError) { await rollbackProvisioning(); return signupRedirect(request, { error: 'workspace_provision_failed', plan: requestedPlan }) }
 
   const { data: flags, error: flagsError } = await admin.from('core_feature_flags').select('flag_key')
   if (flagsError) { await rollbackProvisioning(); return signupRedirect(request, { error: 'workspace_provision_failed', plan: requestedPlan }) }
