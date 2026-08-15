@@ -6,16 +6,16 @@ import { buildMetadata, faqPageJsonLd, productJsonLd } from '@/lib/seo/site'
 
 export const metadata: Metadata = buildMetadata(
   '/platform',
-  'Enterprise Commerce Platform | OYE Imagine',
-  'Understand the OYE Imagine platform for governed public growth journeys, qualification, guided workflows, and enterprise commerce presentation.'
+  'AI Growth OS Platform | Oye !magine',
+  'Explore the Oye !magine AI Growth OS for brand intelligence, strategy, creative and content operations, approvals, campaigns, analytics, permissions, and commercial governance.'
 )
 
 export default function PlatformLayout({ children }: { children: ReactNode }) {
   const faqJsonLd = faqPageJsonLd('/platform', 'Platform FAQ', platformFaqItems)
   const productJsonLdData = productJsonLd(
     '/platform',
-    'OYE Imagine Platform',
-    'A governed enterprise growth platform for public demos, qualification, marketplaces, and presentation modules.'
+    'Oye !magine AI Growth OS',
+    'A governed growth operating system for brand intelligence, strategy, creative and content operations, campaign orchestration, analytics, approvals, permissions, and commercial control.'
   )
 
   return (
