@@ -4,19 +4,25 @@ const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://oyeimagine.com').r
 
 const routes = [
   '/',
+  '/about',
   '/platform',
   '/solutions',
+  '/customers',
+  '/customers/neejee',
+  '/integrations',
   '/marketplace',
-  '/trust',
+  '/marketplace/specialists',
   '/pricing',
+  '/trust',
   '/contact',
-  '/demo',
-  '/qualification',
-  '/lead-capture',
+  '/signup',
   '/accessibility',
-  '/case-studies',
-  '/marketplace/ai',
-  '/marketplace/specialists'
+  '/privacy',
+  '/terms',
+  '/cookies',
+  '/dpa',
+  '/subprocessors',
+  '/status'
 ]
 
 export default function sitemap(): MetadataRoute.Sitemap {
