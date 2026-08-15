@@ -1,10 +1,11 @@
-import type { Metadata } from 'next'
 import { PolicyPage } from '@/components/public/PolicyPage'
+import { buildMetadata } from '@/lib/seo/site'
 
-export const metadata: Metadata = {
-  title: 'Data Processing Addendum | Oye !magine',
-  description: 'Review the Oye !magine Data Processing Addendum framework for customer data processed through the AI Growth OS.',
-}
+export const metadata = buildMetadata(
+  '/dpa',
+  'Data Processing Addendum | Oye !magine',
+  'Review the Oye !magine Data Processing Addendum framework for customer data processed through the AI Growth OS.'
+)
 
 export default function DpaPage() {
   return (
