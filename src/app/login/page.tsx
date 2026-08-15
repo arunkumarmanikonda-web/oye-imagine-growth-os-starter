@@ -41,12 +41,13 @@ export default async function LoginPage({
           <form action="/api/auth/login" method="post" className="auth-premium-form">
             <label>Email address<input type="email" name="email" autoComplete="username" required placeholder="you@company.com" /></label>
             <label>Password<input type="password" name="password" autoComplete="current-password" required placeholder="Your password" /></label>
-            <div className="auth-form-meta"><label className="auth-checkbox"><input type="checkbox" name="remember" /> <span>Keep me signed in</span></label><Link href="/contact">Need help?</Link></div>
+            <div className="auth-form-meta"><label className="auth-checkbox"><input type="checkbox" name="remember" /> <span>Keep me signed in</span></label><Link href="/forgot-password">Forgot password?</Link></div>
             <button type="submit" className="auth-submit">Sign in securely <span aria-hidden="true">→</span></button>
           </form>
           <div className="auth-divider"><span>New to Oye !magine?</span></div>
           <Link className="auth-create-link" href="/signup">Create a customer account</Link>
           <p className="auth-security-note"><span aria-hidden="true">◈</span> Privileged roles are automatically challenged for MFA. Role selection is never trusted from the browser.</p>
+          <p className="mt-4 text-center text-xs text-black/55">Need account help beyond password recovery? <Link href="/contact" className="font-semibold underline underline-offset-4">Contact support</Link></p>
         </div>
       </section>
     </main>
