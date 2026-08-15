@@ -14,6 +14,10 @@ function priorityClass(priority: string): string {
   return "text-slate-700 bg-slate-100";
 }
 
+function bullet(item: string) {
+  return `• ${item}`;
+}
+
 type OperatorActionBridgePanelProps = {
   companyName: string | null;
   bridge: OperatorLaunchActionBridgeSummary | null | undefined;
@@ -28,9 +32,7 @@ export function OperatorActionBridgePanel({ companyName, bridge }: OperatorActio
         <div className="max-w-3xl">
           <p className="oi-kicker">Operator action bridge</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">{companyName ?? "Selected workspace"}</h2>
-          <p className="mt-3 text-sm leading-6 text-slate-600">
-            Operator-facing launch action summary derived from release evidence, continuity state, managed-services queue pressure, and launch-readiness blockers.
-          </p>
+          <p className="mt-3 text-sm leading-6 text-slate-600">Operator-facing launch action summary derived from release evidence, continuity state, managed-services queue pressure, and launch-readiness blockers.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <span className={`rounded-full px-3 py-1 text-xs font-semibold ${priorityClass(bridge.highestPriority)}`}>Highest priority: {bridge.highestPriority}</span>
@@ -43,10 +45,7 @@ export function OperatorActionBridgePanel({ companyName, bridge }: OperatorActio
         <div className="rounded-[24px] border border-slate-200 bg-white p-5"><div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Operator queues</div><div className="mt-3 text-3xl font-semibold text-slate-950">{bridge.operatorQueueCount}</div></div>
         <div className="rounded-[24px] border border-slate-200 bg-white p-5"><div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Activation queues</div><div className="mt-3 text-3xl font-semibold text-slate-950">{bridge.activationQueueCount}</div></div>
         <div className="rounded-[24px] border border-slate-200 bg-white p-5"><div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Queue owner</div><div className="mt-3 text-lg font-semibold text-slate-950">{bridge.nextBestActionOwnerRole}</div></div>
-        <div className="rounded-[24px] border border-slate-200 bg-white p-5">
-          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Queue types</div>
-          <div className="mt-3 flex flex-wrap gap-2">{bridge.operatorQueueTypes.map((item) => <span key={item} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{item}</span>)}</div>
-        </div>
+        <div className="rounded-[24px] border border-slate-200 bg-white p-5"><div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Queue types</div><div className="mt-3 flex flex-wrap gap-2">{bridge.operatorQueueTypes.map((item) => <span key={item} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{item}</span>)}</div></div>
       </div>
 
       <section className="mt-6 rounded-[24px] border border-slate-200 bg-white p-6">
@@ -64,17 +63,11 @@ export function OperatorActionBridgePanel({ companyName, bridge }: OperatorActio
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <section className="rounded-[24px] border border-slate-200 bg-white p-6"><h3 className="text-lg font-semibold text-slate-950">Next best action</h3><p className="mt-3 text-sm leading-6 text-slate-700">{bridge.nextBestAction}</p></section>
-        <section className="rounded-[24px] border border-slate-200 bg-white p-6">
-          <h3 className="text-lg font-semibold text-slate-950">Blocking checks</h3>
-          {bridge.blockingChecks.length ? <ul className="mt-3 space-y-2 text-sm text-slate-700">{bridge.blockingChecks.map((item) => <li key={item}>{"• "}{item}</li>)}</ul> : <p className="mt-3 text-sm text-emerald-700">No blocking checks.</p>}
-        </section>
+        <section className="rounded-[24px] border border-slate-200 bg-white p-6"><h3 className="text-lg font-semibold text-slate-950">Blocking checks</h3>{bridge.blockingChecks.length ? <ul className="mt-3 space-y-2 text-sm text-slate-700">{bridge.blockingChecks.map((item) => <li key={item}>{bullet(item)}</li>)}</ul> : <p className="mt-3 text-sm text-emerald-700">No blocking checks.</p>}</section>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <section className="rounded-[24px] border border-slate-200 bg-white p-6">
-          <h3 className="text-lg font-semibold text-slate-950">Shared blockers</h3>
-          {bridge.sharedBlockers.length ? <ul className="mt-3 space-y-2 text-sm text-slate-700">{bridge.sharedBlockers.map((item) => <li key={item}>{"• "}{item}</li>)}</ul> : <p className="mt-3 text-sm text-emerald-700">No shared blockers.</p>}
-        </section>
+        <section className="rounded-[24px] border border-slate-200 bg-white p-6"><h3 className="text-lg font-semibold text-slate-950">Shared blockers</h3>{bridge.sharedBlockers.length ? <ul className="mt-3 space-y-2 text-sm text-slate-700">{bridge.sharedBlockers.map((item) => <li key={item}>{bullet(item)}</li>)}</ul> : <p className="mt-3 text-sm text-emerald-700">No shared blockers.</p>}</section>
         <section className="rounded-[24px] border border-slate-200 bg-white p-6"><h3 className="text-lg font-semibold text-slate-950">Continuity</h3><p className="mt-3"><span className={toneClass(bridge.continuityReady)}>{bridge.continuityReady ? "Continuity ready" : "Continuity blocked"}</span></p></section>
       </div>
     </section>
