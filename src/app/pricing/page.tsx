@@ -1,3 +1,4 @@
+import type { Route } from 'next'
 import Link from 'next/link'
 import { formatInr, getPublishedPricingCatalog } from '@/lib/public/pricing-runtime'
 import { buildMetadata } from '@/lib/seo/site'
@@ -56,7 +57,7 @@ export default async function PricingPage() {
               </ul>
 
               <div className="mt-auto pt-7">
-                <Link href={plan.cta_href} className="flex w-full items-center justify-between rounded-full border-2 border-black bg-black px-5 py-3.5 text-sm font-black text-white transition hover:-translate-y-0.5">
+                <Link href={plan.cta_href as Route} className="flex w-full items-center justify-between rounded-full border-2 border-black bg-black px-5 py-3.5 text-sm font-black text-white transition hover:-translate-y-0.5">
                   <span>{plan.cta_label}</span><span aria-hidden="true">→</span>
                 </Link>
               </div>
