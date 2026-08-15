@@ -6,9 +6,9 @@ import { CommercialEvidencePanel } from "../../src/app/admin/ops/commercial-evid
 describe("admin ops commercial evidence panel", () => {
   it("renders canonical evidence statuses and blockers", () => {
     const html = renderToStaticMarkup(
-      <CommercialEvidencePanel
-        companyName="Neejee"
-        evidence={{
+      React.createElement(CommercialEvidencePanel, {
+        companyName: "Neejee",
+        evidence: {
           companyName: "Neejee",
           commercialReviewStatus: "blocked",
           commercialReviewBlockers: ["Required providers are not production ready"],
@@ -22,8 +22,8 @@ describe("admin ops commercial evidence panel", () => {
             "Required providers are not production ready",
             "eSign provider not ready",
           ],
-        }}
-      />,
+        },
+      }),
     );
 
     expect(html).toContain("Commercial evidence bridge");
@@ -35,14 +35,15 @@ describe("admin ops commercial evidence panel", () => {
     expect(html).toContain("Required providers are not production ready");
     expect(html).toContain("esign: business verification incomplete");
     expect(html).toContain("eSign provider not ready");
-    expect(html).toContain("\u2022 Required providers are not production ready");
+    expect(html).toContain("• Required providers are not production ready");
+    expect(html).not.toContain("\\u2022");
     expect(html).not.toContain("â€¢");
     expect(html).not.toContain("Ã¢â‚¬Â¢");
   });
 
   it("returns no markup when evidence is absent", () => {
     const html = renderToStaticMarkup(
-      <CommercialEvidencePanel companyName={null} evidence={null} />,
+      React.createElement(CommercialEvidencePanel, { companyName: null, evidence: null }),
     );
 
     expect(html).toBe("");
