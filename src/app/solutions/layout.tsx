@@ -6,8 +6,8 @@ import { buildMetadata, faqPageJsonLd } from '@/lib/seo/site'
 
 export const metadata: Metadata = buildMetadata(
   '/solutions',
-  'Enterprise Solutions | OYE Imagine',
-  'Explore OYE Imagine solutions for teams that need governed public funnels, operational clarity, and enterprise-grade launch surfaces.'
+  'Oye !magine Solutions | Growth operating models',
+  'Explore Oye !magine operating models for e-commerce, growing businesses, enterprise teams, agencies, managed growth and white-label partners.'
 )
 
 export default function SolutionsLayout({ children }: { children: ReactNode }) {
@@ -16,8 +16,8 @@ export default function SolutionsLayout({ children }: { children: ReactNode }) {
   return (
     <>
       {children}
-      <script type='application/ld+json' dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
-      <FaqSection title='Solutions FAQ' items={solutionsFaqItems} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      <FaqSection title="Solutions FAQ" items={solutionsFaqItems} />
     </>
   )
 }
