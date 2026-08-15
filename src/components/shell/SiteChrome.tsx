@@ -68,7 +68,7 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
         </div> : null}
       </header>
 
-      <main id="main-content" className="oi-main">{children}</main>
+      <div id="main-content" className="oi-main">{children}</div>
 
       <footer className="premium-footer">
         <div className="premium-footer-grid">
