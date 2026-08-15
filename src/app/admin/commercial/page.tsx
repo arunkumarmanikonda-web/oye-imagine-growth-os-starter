@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { getOperatorCommercialOperationsExperience } from '../../../lib/recovery/commercial-operations-foundation'
 
 export default function AdminCommercialPage() {
@@ -19,6 +20,10 @@ export default function AdminCommercialPage() {
               </div>
             ))}
           </div>
+
+          <Link href="/admin/commercial/enquiries" className="mt-6 flex items-center justify-between rounded-2xl border border-white/15 bg-[var(--oye-yellow)] px-5 py-4 text-sm font-black text-black transition hover:-translate-y-0.5">
+            <span>Open public enquiry inbox</span><span aria-hidden="true">→</span>
+          </Link>
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
