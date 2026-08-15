@@ -4,8 +4,8 @@ import { buildMetadata } from '@/lib/seo/site'
 
 export const metadata: Metadata = buildMetadata(
   '/contact',
-  'Contact OYE Imagine | Talk to the team',
-  'Connect with OYE Imagine to plan enterprise-ready guided flows, qualification funnels, and governed public growth experiences.'
+  'Contact Oye !magine | Talk to the Growth OS team',
+  'Talk to Oye !magine about plans, enterprise deployments, managed growth, white-label operations, integrations, security or specialist support.'
 )
 
 export default function ContactLayout({ children }: { children: ReactNode }) {
