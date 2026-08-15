@@ -1,4 +1,5 @@
 import { ProviderVaultConsole } from '@/components/admin/ProviderVaultConsole';
+import { PricingCatalogConsole } from '@/components/admin/PricingCatalogConsole';
 import { getOperatorControlPlaneExperience } from '@/lib/recovery/operator-control-plane-foundation';
 
 export default function AdminConfigPage() {
@@ -12,12 +13,14 @@ export default function AdminConfigPage() {
           Configure Oye once. Let the platform wire the operating stack.
         </h1>
         <p className="mt-5 max-w-4xl text-base leading-8 text-slate-300">
-          Provider credentials, capability routing, integration requests and production readiness belong here. Client experiences remain provider-neutral and continue to present Oye !magine as the operating layer.
+          Provider credentials, capability routing, public pricing, integration requests and production readiness belong here. Client experiences remain provider-neutral and continue to present Oye !magine as the operating layer.
         </p>
 
         <div className="mt-10">
           <ProviderVaultConsole />
         </div>
+
+        <PricingCatalogConsole />
 
         <section className="mt-10 grid gap-5 md:grid-cols-2">
           {experience.configOperations.map((card) => (
