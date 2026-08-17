@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "issue": "P0-013",
-  "capturedAt": "2026-08-17",
+  "capturedAt": "2026-08-18",
   "conclusion": "parity_reconciled",
   "application": {
     "repository": "arunkumarmanikonda-web/oye-imagine-growth-os-starter",
-    "gitSha": "b82e77d227f29554b55143a00c80fab74d82a82d",
+    "gitSha": "349dd91ccdd5025530d0023a7a4be088202aed48",
     "branch": "main",
     "vercelProject": "oye-imagine-growth-os-starter",
-    "productionDeploymentId": "dpl_BpfjNhjAwRFxRHfthgcZTHaYQZaQ",
+    "productionDeploymentId": "dpl_4nhgYWYu3kUVW58BUoZ7DdpQsvhM",
     "productionDeploymentState": "READY",
     "domains": ["oyeimagine.com", "www.oyeimagine.com"]
   },
@@ -17,17 +17,17 @@
     "projectName": "oye-imagine-growth-os-20260721-1440",
     "health": "ACTIVE_HEALTHY",
     "postgresVersion": "17.6.1",
-    "productionLedgerCount": 75,
-    "productionLedgerLastVersion": "20260817083219",
-    "productionLedgerLastName": "reconcile_commercial_enquiry_permissions",
+    "productionLedgerCount": 78,
+    "productionLedgerLastVersion": "20260817205833",
+    "productionLedgerLastName": "harden_public_function_schema_default_acl",
     "pgNetSchema": "extensions"
   },
   "gitMigrations": {
-    "fileCount": 75,
+    "fileCount": 78,
     "duplicateVersionCount": 0,
     "canonicalLexicalReplay": "passed",
     "canonicalReplayWorkflow": "migration-chain-validation",
-    "canonicalReplayRunId": 32010575462,
+    "canonicalReplayRunId": 32068803961,
     "productionOnly": [],
     "gitOnly": []
   },
@@ -66,6 +66,24 @@
       "productionLedgerVersion": "20260817081617",
       "productionLedgerName": "sensitive_provider_grant_hardening",
       "provenance": "forward source migration applied after clean replay"
+    },
+    {
+      "sourceFile": "20260817205337_harden_public_table_noncrud_privileges.sql",
+      "productionLedgerVersion": "20260817205337",
+      "productionLedgerName": "harden_public_table_noncrud_privileges",
+      "provenance": "managed production hardening applied and then source-controlled with the exact production version"
+    },
+    {
+      "sourceFile": "20260817205803_harden_public_function_execute_privileges.sql",
+      "productionLedgerVersion": "20260817205803",
+      "productionLedgerName": "harden_public_function_execute_privileges",
+      "provenance": "managed production hardening applied and then source-controlled with the exact production version"
+    },
+    {
+      "sourceFile": "20260817205833_harden_public_function_schema_default_acl.sql",
+      "productionLedgerVersion": "20260817205833",
+      "productionLedgerName": "harden_public_function_schema_default_acl",
+      "provenance": "managed production hardening applied and then source-controlled with the exact production version"
     }
   ],
   "liveControls": {
@@ -73,6 +91,9 @@
     "postReconciliationSearchPathFunctions": 9,
     "postReconciliationSearchPath": "pg_catalog, public",
     "credentialClientTableGrants": [],
+    "browserNonCrudTablePrivileges": 0,
+    "browserExecutablePublicFunctions": 0,
+    "publicFunctionDefaultAcl": ["postgres", "service_role"],
     "commercialEnquiryPermissions": {
       "commercial.enquiry.view": "low",
       "commercial.enquiry.manage": "medium",
@@ -96,6 +117,7 @@
   },
   "remainingOutsideP0013": [
     "Supabase Auth leaked-password protection remains disabled and is tracked as a separate Auth/security configuration blocker.",
-    "MFA/AAL2 and other spend/autonomy P0 gates remain separate from migration parity."
+    "The production administrator still requires a real password change and MFA enrollment before AAL2 evidence can be completed.",
+    "External provider adapters are registered, but production credential, account, resource and publish-readiness evidence is absent; consequential provider execution remains blocked until real third-party authorization exists."
   ]
 }
