@@ -73,7 +73,9 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
       <footer className="institutional-footer">
         <div className="institutional-footer-top">
           <section className="institutional-footer-thesis">
-            <img src="/brand/oye-imagine-logo.webp" alt="Oye !magine" />
+            <div className="inline-flex rounded-2xl bg-[#f4f1e9] px-4 py-3 shadow-[0_14px_34px_rgba(0,0,0,.18)]">
+              <img src="/brand/oye-imagine-logo.webp" alt="Oye !magine" style={{ filter: 'none', opacity: 1 }} />
+            </div>
             <h2>Growth, operated as a governed system.</h2>
             <p>Strategy, intelligence, creation, specialist delivery, approvals, commercial controls and performance evidence in one operating environment.</p>
             <Link href="/contact">Discuss an enterprise or managed-growth rollout <span>↗</span></Link>
@@ -81,11 +83,15 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
           <section className="institutional-footer-links">
             <div><strong>Platform</strong><Link href="/platform">Growth OS</Link><Link href="/solutions">Solutions</Link><Link href="/integrations">Integrations</Link><Link href="/pricing">Commercial model</Link></div>
             <div><strong>Marketplace</strong><Link href="/marketplace">Capabilities</Link><Link href="/customers">Customer models</Link><Link href="/contact">Start an engagement</Link></div>
-            <div><strong>Company</strong><Link href="/about">About</Link><Link href="/trust">Trust & governance</Link><Link href="/status">Status</Link><Link href="/contact">Contact</Link></div>
+            <div><strong>Company</strong><Link href="/about">About</Link><Link href="/about#oye-leadership-heading">Founders & Directors</Link><Link href="/trust">Trust & governance</Link><Link href="/status">Status</Link><Link href="/contact">Contact</Link></div>
             <div><strong>Legal</strong><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/dpa">DPA</Link><Link href="/subprocessors">Subprocessors</Link><Link href="/accessibility">Accessibility</Link></div>
           </section>
         </div>
-        <div className="institutional-footer-bottom"><span>© 2026 Oye Imagine Private Limited</span><span>AI Growth OS · Curated Marketplace · Managed Growth</span><span>India · Built for global operations</span></div>
+        <div className="institutional-footer-bottom">
+          <span>© 2026 Oye Imagine Private Limited</span>
+          <span>AI Growth OS · Curated Marketplace · Managed Growth</span>
+          <span>India · Built for global operations</span>
+        </div>
       </footer>
     </div>
   )
