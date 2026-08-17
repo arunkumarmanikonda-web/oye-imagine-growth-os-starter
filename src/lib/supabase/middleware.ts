@@ -104,7 +104,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(new URL('/workspace?error=scope', request.url))
   }
 
-  if (membershipRequiresMfa(membership)) {
+  // Privileged administration is always AAL2. Role metadata may additionally require MFA elsewhere.
+  if (isAdmin || membershipRequiresMfa(membership)) {
     const { data: aalData, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
     if (aalError) {
       if (isApiProtected) return apiError('access_control_unavailable', 503)

@@ -31,6 +31,9 @@ jobs:
       - name: Verify final Supabase migration parity closure
         run: node scripts/verify-final-supabase-parity-snapshot.mjs
 
+      - name: Verify admin AAL2 coverage
+        run: node scripts/verify-admin-aal2-coverage.mjs
+
       - name: Run validation suite
         shell: pwsh
         run: ./scripts/Invoke-GrowthOsValidation.ps1
