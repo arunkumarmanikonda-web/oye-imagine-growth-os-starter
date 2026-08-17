@@ -1,40 +1,41 @@
 const leaders = [
   {
     name: 'Arun Kumar Manikonda',
-    role: 'Managing Director',
+    role: 'Founder & Managing Director',
     image: 'https://indiagully.com/static/team/arun-manikonda.jpg',
     linkedin: 'https://www.linkedin.com/in/arun-kumar-manikonda-74056748/',
-    bio: 'Founder-operator with two decades of experience across hospitality, real estate, entertainment and transaction-led businesses. Former Managing Director of Entertainment City Limited. Arun leads the enterprise vision and operating model behind Oye !magine.',
-  },
-  {
-    name: 'Pavan Kumar Manikonda',
-    role: 'Executive Director',
-    image: 'https://indiagully.com/static/team/pavan-manikonda.jpg',
-    linkedin: 'https://in.linkedin.com/in/pavan-kumar-manikonda-49254421',
-    bio: 'Hospitality and operations leader with 18+ years across hotel management, HORECA supply, brand onboarding and operating delivery. Pavan brings execution discipline, service depth and partner operations to the group.',
-  },
-  {
-    name: 'Amit Jhingan',
-    role: 'President, Real Estate',
-    image: 'https://indiagully.com/static/team/amit-jhingan.png',
-    linkedin: 'https://www.linkedin.com/in/amit-jhingan-11631451/',
-    bio: 'Commercial and real-estate leader with 15+ years of pan-India experience spanning retail leasing, commercial transactions and hospitality asset advisory. Amit strengthens the group’s asset, commercial and market-development perspective.',
+    bio: 'Founder and enterprise operator with nearly two decades of leadership across hospitality, destination entertainment, real estate, strategic advisory and transaction-led businesses. Arun has led complex consumer-facing operations at executive and managing-director level, with direct responsibility across revenue, growth, commercial strategy, partnerships, governance and business transformation. At Oye !magine, he leads the company vision, institutional strategy and the development of an AI-native growth operating model built for accountable enterprise execution.',
   },
   {
     name: 'Nidhi Chauhan',
-    role: 'Leadership, Sales & Marketing',
+    role: 'Co-Founder',
     image: '/leadership/nidhi-chauhan.webp',
     linkedin: 'https://www.linkedin.com/in/nidhi-chauhan-2a5543168/',
-    bio: 'Seasoned sales and marketing professional across hospitality and destination entertainment. For the past four years, Nidhi has led Sales & Marketing for Worlds of Wonder at Entertainment City Limited, bringing hands-on revenue, partnerships, consumer acquisition and brand-growth leadership to Oye !magine.',
+    bio: 'Co-Founder and growth leader with deep experience across sales, marketing, consumer acquisition, partnerships and destination-led businesses. Nidhi has spent the last four years leading Sales & Marketing for Worlds of Wonder at Entertainment City Limited, combining revenue ownership with brand building, channel development, institutional sales and customer-growth strategy. At Oye !magine, she brings the market-facing discipline required to ensure the platform remains commercially relevant, customer-led and grounded in the realities of modern growth execution.',
+  },
+  {
+    name: 'Pavan Kumar Manikonda',
+    role: 'Director',
+    image: 'https://indiagully.com/static/team/pavan-manikonda.jpg',
+    linkedin: 'https://in.linkedin.com/in/pavan-kumar-manikonda-49254421',
+    bio: 'Director and operating leader with 18+ years of experience across hospitality, hotel operations, HORECA, vendor ecosystems, brand onboarding and service delivery. Pavan brings a strong execution lens to Oye !magine, with particular depth in process discipline, partner operations, commercial coordination and the practical systems required to translate strategy into repeatable delivery at scale.',
+  },
+  {
+    name: 'Amit Jhingan',
+    role: 'Director',
+    image: 'https://indiagully.com/static/team/amit-jhingan.png',
+    linkedin: 'https://www.linkedin.com/in/amit-jhingan-11631451/',
+    bio: 'Director and commercial leader with 15+ years of pan-India experience across real estate, retail leasing, commercial transactions, asset advisory and relationship-led business development. Amit contributes a strong institutional perspective on enterprise sales, commercial structuring, market development and high-value client engagement, strengthening Oye !magine’s ability to serve complex businesses and large operating mandates.',
   },
 ] as const
 
 const operatingStrengths = [
-  'Hospitality & operations',
-  'Real estate & transactions',
-  'Destination entertainment',
+  'Enterprise strategy',
   'Sales & marketing',
-  'Consumer growth & partnerships',
+  'Consumer growth',
+  'Hospitality & operations',
+  'Commercial transactions',
+  'Partnerships & market development',
   'AI growth & governance',
 ]
 
@@ -44,14 +45,14 @@ export function LeadershipSection() {
       <div className="mx-auto w-[min(1460px,calc(100%-48px))] px-6 md:px-0">
         <div className="grid gap-10 border-b border-black/10 pb-12 lg:grid-cols-[0.68fr_1.32fr] lg:gap-20">
           <div>
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#786d57]">Promoter & leadership group</p>
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#786d57]">Founders & Board</p>
           </div>
           <div>
             <h2 id="oye-leadership-heading" className="max-w-[16ch] text-4xl font-semibold leading-[0.98] tracking-[-0.055em] text-[#101417] md:text-6xl">
-              Built by operators who have carried revenue, assets, destinations and customer growth.
+              Built by leaders who understand growth as an operating responsibility, not a marketing abstraction.
             </h2>
             <p className="mt-6 max-w-3xl text-base leading-8 text-[#5c6569]">
-              Oye !magine is backed by the same promoter group and core leadership behind India Gully, expanded with dedicated Sales & Marketing leadership for the Growth OS. The operating experience spans hospitality, real estate, entertainment, commercial transactions, consumer acquisition and partnership-led growth.
+              Oye !magine brings together leadership experience across enterprise strategy, sales and marketing, hospitality, destination entertainment, real estate, commercial transactions and operating delivery. The board combines market-facing growth leadership with the institutional discipline required to build a governed AI platform for serious businesses.
             </p>
           </div>
         </div>
@@ -69,7 +70,7 @@ export function LeadershipSection() {
                 />
               </div>
               <div className="flex flex-1 flex-col p-6 md:p-7">
-                <span className="text-[10px] font-bold uppercase tracking-[0.17em] text-[#8a8273]">{String(index + 1).padStart(2, '0')} · Leadership</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.17em] text-[#8a8273]">{String(index + 1).padStart(2, '0')} · Board leadership</span>
                 <h3 className="mt-5 text-2xl font-semibold tracking-[-0.035em] text-[#101417]">{leader.name}</h3>
                 <p className="mt-1 text-sm font-bold text-[#7b1e3b]">{leader.role}</p>
                 <p className="mt-5 text-[13px] leading-6 text-[#616b6f]">{leader.bio}</p>
@@ -89,25 +90,14 @@ export function LeadershipSection() {
         <div className="mt-14 grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:gap-20">
           <div>
             <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#786d57]">Operating strength</p>
-            <h3 className="mt-4 max-w-[14ch] text-3xl font-semibold leading-[1.02] tracking-[-0.045em] text-[#101417] md:text-4xl">Software is only one part of the proposition.</h3>
+            <h3 className="mt-4 max-w-[14ch] text-3xl font-semibold leading-[1.02] tracking-[-0.045em] text-[#101417] md:text-4xl">Technology informed by real operating experience.</h3>
           </div>
           <div>
-            <p className="max-w-3xl text-sm leading-7 text-[#5f686c]">The leadership group brings operating judgement from businesses where execution, revenue, customer experience and commercial accountability are inseparable. That experience informs how Oye !magine is designed, especially around approvals, evidence, budgets and real-world delivery.</p>
+            <p className="max-w-3xl text-sm leading-7 text-[#5f686c]">The leadership team has worked in businesses where growth is inseparable from revenue accountability, customer experience, operational execution, budgets, partnerships and governance. That operating perspective shapes Oye !magine’s product philosophy: AI should accelerate judgement and execution while preserving human authority, commercial control and traceable evidence.</p>
             <div className="mt-7 flex flex-wrap gap-2">
               {operatingStrengths.map((strength) => <span key={strength} className="rounded-full border border-black/15 bg-[#f8f5ee] px-4 py-2 text-[11px] font-bold text-[#404a4f]">{strength}</span>)}
             </div>
           </div>
-        </div>
-
-        <div className="mt-14 flex flex-col justify-between gap-6 border-t border-black/10 pt-8 md:flex-row md:items-end">
-          <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#8a8273]">Promoter group reference</p>
-            <a href="https://indiagully.com" target="_blank" rel="noreferrer" className="mt-2 inline-flex items-end gap-4 text-[#101417]">
-              <strong className="text-3xl font-semibold tracking-[-0.05em]">INDIA GULLY</strong>
-              <span className="pb-1 text-xs font-bold text-[#6a7275]">Visit group operating business ↗</span>
-            </a>
-          </div>
-          <p className="max-w-xl text-xs leading-5 text-[#747b7e]">Oye Imagine Private Limited and India Gully operate through their respective legal entities. The reference above identifies the shared promoter and core leadership group, not a parent-subsidiary representation.</p>
         </div>
       </div>
     </section>
