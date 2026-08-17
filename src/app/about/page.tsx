@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { CmsMarketingPageView } from '@/components/public/CmsMarketingPage'
+import { LeadershipSection } from '@/components/public/LeadershipSection'
 import { getCmsMarketingPage } from '@/lib/public/cms-marketing'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -8,5 +9,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AboutPage() {
-  return <CmsMarketingPageView page={await getCmsMarketingPage('about')} />
+  const page = await getCmsMarketingPage('about')
+  return (
+    <>
+      <CmsMarketingPageView page={page} />
+      <LeadershipSection />
+    </>
+  )
 }
