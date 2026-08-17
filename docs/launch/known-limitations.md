@@ -1,15 +1,27 @@
 # Known Limitations
 
 ## Current limitations
-- external channel publish actions are draft/export oriented and not yet fully automated for all platforms
-- AI provider routing is policy-based but not yet cost-optimized by real-time feedback loop
-- reporting KPIs are aggregation-ready but not yet wired to live GA4 / ads ingestion adapters
-- health center is rule-driven and not yet connected to live infrastructure telemetry
-- usage guardrails enforce logical controls but not billing reconciliation with payment gateway events
-- launch readiness checks are structured records and still need UI + workflow surfaces
+- external channel publish actions are not production-proven for live third-party accounts; provider credential/profile/account/resource/readiness records are currently absent
+- Google OAuth capabilities for Ads, GA4, Search Console and YouTube are registered but not connected to proven Neejee production resources
+- WhatsApp/AiSensy capability is registered but not connected to a proven production account
+- AI provider routing is policy-based but not yet cost-optimized by a real-time closed-loop cost/performance feedback model
+- reporting KPIs are aggregation-ready but live GA4 / ads ingestion cannot be treated as active until provider-side access is connected and evidenced
+- health-center logic does not substitute for independent infrastructure/provider telemetry
+- usage guardrails enforce logical controls but billing reconciliation must remain unproven until real payment-gateway events are connected
+- launch-readiness structures exist in the database and repository, but authenticated operator workflow proof remains dependent on the production administrator completing the mandatory password change and MFA enrollment
+- Supabase Auth leaked-password protection remains disabled and must be enabled through the supported Auth configuration surface
 
 ## Safe operating posture
-- keep spend-related actions approval-gated
-- treat exported campaign drafts as maker-checker artifacts until live adapters are production verified
+- keep spend, publish, billing and other consequential external actions approval-gated until provider-side production proof exists
+- treat exported/generated campaign artifacts as maker-checker artifacts until live adapters are authorized and verified
 - keep AI usage caps active for pilot tenants
-- use validation script before merge or deployment
+- do not bypass the production administrator password-change or MFA requirements to manufacture acceptance evidence
+- preserve default-deny RLS for service-only tables instead of adding permissive client policies merely to remove informational linter notices
+- run the full validation, production-activation, migration-parity, release-governance and workspace-branding gates before merge or production deployment
+
+## Closed during 2026-08-18 hardening
+- production signed-out login redirect loop
+- canonical-host mismatch between page metadata and sitemap/robots
+- browser-role `TRUNCATE`, `REFERENCES` and `TRIGGER` privileges on public tables
+- browser execution of internal public-schema trigger/helper functions
+- production/Git migration evidence drift after the privilege-hardening migrations
