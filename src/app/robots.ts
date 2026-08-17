@@ -1,5 +1,7 @@
 import type { MetadataRoute } from 'next'
 
+const siteUrl = 'https://www.oyeimagine.com'
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
@@ -19,7 +21,7 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: 'https://oyeimagine.com/sitemap.xml',
-    host: 'https://oyeimagine.com',
+    sitemap: `${siteUrl}/sitemap.xml`,
+    host: siteUrl,
   }
 }
