@@ -38,9 +38,6 @@ export const config = {
     '/onboarding/activation/:path*',
     '/account/change-password',
     '/auth/mfa',
-    '/login',
-    '/login/admin',
-    '/login/client',
     '/signup/:path*',
   ],
 }
