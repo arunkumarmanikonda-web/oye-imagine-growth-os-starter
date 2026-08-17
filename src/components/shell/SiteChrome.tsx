@@ -87,12 +87,12 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
         <div className="institutional-footer-top">
           <section className="institutional-footer-thesis">
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 14 }}>
-              <div style={{ display: 'inline-flex', borderRadius: 16, background: '#f4f1e9', padding: '12px 16px', boxShadow: '0 14px 34px rgba(0,0,0,.18)' }}>
+              <div style={{ display: 'inline-flex', minHeight: 72, alignItems: 'center', borderRadius: 16, background: '#f4f1e9', padding: '10px 16px', boxShadow: '0 14px 34px rgba(0,0,0,.18)' }}>
                 <img src="/brand/oye-imagine-logo.webp" alt="Oye !magine" style={{ filter: 'none', opacity: 1 }} />
               </div>
-              <a href="https://indiagully.com/" target="_blank" rel="noreferrer" aria-label="IndiaGully promoter-group leadership" style={{ minHeight: 72, display: 'inline-flex', flexDirection: 'column', justifyContent: 'center', padding: '10px 16px', border: '1px solid rgba(255,255,255,.18)', borderRadius: 16, color: '#fff', textDecoration: 'none' }}>
-                <span style={{ marginBottom: 4, color: 'rgba(255,255,255,.46)', fontSize: 9, fontWeight: 800, letterSpacing: '.16em', textTransform: 'uppercase' }}>Promoter-group leadership</span>
-                <strong style={{ fontSize: 18, fontWeight: 760, letterSpacing: '-.025em' }}>INDIA GULLY</strong>
+              <a href="https://indiagully.com/" target="_blank" rel="noreferrer" aria-label="India Gully promoter-group leadership" style={{ minHeight: 72, minWidth: 170, display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', padding: '10px 16px', border: '1px solid rgba(255,255,255,.18)', borderRadius: 16, color: '#fff', textDecoration: 'none' }}>
+                <span style={{ marginBottom: 6, color: 'rgba(255,255,255,.46)', fontSize: 9, fontWeight: 800, letterSpacing: '.16em', textTransform: 'uppercase' }}>Promoter-group leadership</span>
+                <img src="https://indiagully.com/assets/logo-white.png" alt="India Gully" style={{ width: 'auto', height: 34, maxWidth: 150, objectFit: 'contain', filter: 'none', opacity: 1 }} />
               </a>
             </div>
             <h2>Growth, operated as a governed system.</h2>
