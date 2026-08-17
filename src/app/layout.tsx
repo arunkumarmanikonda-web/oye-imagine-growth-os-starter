@@ -10,6 +10,7 @@ import './activation-rebuild.css'
 import SiteChrome from '@/components/shell/SiteChrome'
 import { organizationJsonLd, websiteJsonLd } from '@/lib/seo/site'
 
+// Production deployment marker for the 17 August 2026 public visual-system release.
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.oyeimagine.com'
 const brandLogo = '/brand/oye-imagine-logo.webp'
 
