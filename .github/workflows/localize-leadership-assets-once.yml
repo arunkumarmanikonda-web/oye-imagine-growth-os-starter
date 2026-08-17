@@ -1,0 +1,38 @@
+name: localize-leadership-assets-once
+
+on:
+  push:
+    branches:
+      - assets/localize-leadership-20260817
+
+permissions:
+  contents: write
+
+jobs:
+  localize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: assets/localize-leadership-20260817
+      - name: Fetch approved existing leadership portraits
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p public/leadership
+          curl --fail --location --retry 3 --retry-delay 2 'https://indiagully.com/static/team/arun-manikonda.jpg' --output public/leadership/arun-kumar-manikonda.jpg
+          curl --fail --location --retry 3 --retry-delay 2 'https://indiagully.com/static/team/pavan-manikonda.jpg' --output public/leadership/pavan-kumar-manikonda.jpg
+          curl --fail --location --retry 3 --retry-delay 2 'https://indiagully.com/static/team/amit-jhingan.png' --output public/leadership/amit-jhingan.png
+          test -s public/leadership/arun-kumar-manikonda.jpg
+          test -s public/leadership/pavan-kumar-manikonda.jpg
+          test -s public/leadership/amit-jhingan.png
+      - name: Commit local assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/leadership/arun-kumar-manikonda.jpg public/leadership/pavan-kumar-manikonda.jpg public/leadership/amit-jhingan.png
+          git commit -m 'Localize leadership portrait assets [skip assets]'
+          git push origin HEAD:assets/localize-leadership-20260817
