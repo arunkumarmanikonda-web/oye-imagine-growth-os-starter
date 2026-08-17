@@ -2,7 +2,7 @@ const leaders = [
   {
     name: 'Arun Kumar Manikonda',
     role: 'Founder & Managing Director',
-    image: 'https://indiagully.com/static/team/arun-manikonda.jpg',
+    image: '/leadership/arun-kumar-manikonda.jpg',
     linkedin: 'https://www.linkedin.com/in/arun-kumar-manikonda-74056748/',
     bio: 'Founder and enterprise operator with nearly two decades of leadership across hospitality, destination entertainment, real estate, strategic advisory and transaction-led businesses. Arun has led complex consumer-facing operations at executive and managing-director level, with direct responsibility across revenue, growth, commercial strategy, partnerships, governance and business transformation. At Oye !magine, he leads the company vision, institutional strategy and the development of an AI-native growth operating model built for accountable enterprise execution.',
   },
@@ -16,14 +16,14 @@ const leaders = [
   {
     name: 'Pavan Kumar Manikonda',
     role: 'Director',
-    image: 'https://indiagully.com/static/team/pavan-manikonda.jpg',
+    image: '/leadership/pavan-kumar-manikonda.jpg',
     linkedin: 'https://in.linkedin.com/in/pavan-kumar-manikonda-49254421',
     bio: 'Director and operating leader with 18+ years of experience across hospitality, hotel operations, HORECA, vendor ecosystems, brand onboarding and service delivery. Pavan brings a strong execution lens to Oye !magine, with particular depth in process discipline, partner operations, commercial coordination and the practical systems required to translate strategy into repeatable delivery at scale.',
   },
   {
     name: 'Amit Jhingan',
     role: 'Director',
-    image: 'https://indiagully.com/static/team/amit-jhingan.png',
+    image: '/leadership/amit-jhingan.png',
     linkedin: 'https://www.linkedin.com/in/amit-jhingan-11631451/',
     bio: 'Director and commercial leader with 15+ years of pan-India experience across real estate, retail leasing, commercial transactions, asset advisory and relationship-led business development. Amit contributes a strong institutional perspective on enterprise sales, commercial structuring, market development and high-value client engagement, strengthening Oye !magine’s ability to serve complex businesses and large operating mandates.',
   },
