@@ -14,16 +14,19 @@ const failures = []
 if (snapshot.issue !== 'P0-013' || snapshot.conclusion !== 'parity_reconciled') {
   failures.push('Final snapshot is not marked as reconciled P0-013 evidence.')
 }
-if (snapshot.application.gitSha !== 'b82e77d227f29554b55143a00c80fab74d82a82d') {
+if (snapshot.application.gitSha !== '349dd91ccdd5025530d0023a7a4be088202aed48') {
   failures.push(`Unexpected application Git SHA: ${snapshot.application.gitSha}`)
 }
 if (snapshot.supabase.projectRef !== 'bqhaifivpcwwiauiynlv') {
   failures.push(`Unexpected Supabase project ref: ${snapshot.supabase.projectRef}`)
 }
-if (snapshot.supabase.productionLedgerCount !== 75) {
+if (snapshot.supabase.productionLedgerCount !== 78) {
   failures.push(`Unexpected captured production ledger count: ${snapshot.supabase.productionLedgerCount}`)
 }
-if (files.length !== snapshot.gitMigrations.fileCount || files.length !== 75) {
+if (snapshot.supabase.productionLedgerLastVersion !== '20260817205833') {
+  failures.push(`Unexpected captured final production migration: ${snapshot.supabase.productionLedgerLastVersion}`)
+}
+if (files.length !== snapshot.gitMigrations.fileCount || files.length !== 78) {
   failures.push(`Git migration file count mismatch: actual=${files.length}, snapshot=${snapshot.gitMigrations.fileCount}`)
 }
 
@@ -58,6 +61,11 @@ if (snapshot.liveControls.publicTablesWithoutRls !== 0) failures.push('Snapshot 
 if (snapshot.liveControls.postReconciliationSearchPathFunctions !== 9) failures.push('Unexpected search-path function verification count.')
 if (snapshot.liveControls.postReconciliationSearchPath !== 'pg_catalog, public') failures.push('Unexpected captured trigger search_path.')
 if (snapshot.liveControls.credentialClientTableGrants.length !== 0) failures.push('Snapshot records client grants on credential tables.')
+if (snapshot.liveControls.browserNonCrudTablePrivileges !== 0) failures.push('Snapshot records browser-facing non-CRUD table privileges.')
+if (snapshot.liveControls.browserExecutablePublicFunctions !== 0) failures.push('Snapshot records browser-executable public functions.')
+if (JSON.stringify(snapshot.liveControls.publicFunctionDefaultAcl) !== JSON.stringify(['postgres', 'service_role'])) {
+  failures.push('Unexpected public function default ACL evidence.')
+}
 if (snapshot.applyHistory.firstAttempt.result !== 'failed_atomically' || snapshot.applyHistory.firstAttempt.ledgerRowsCreated !== 0 || snapshot.applyHistory.firstAttempt.partialMutation !== false) {
   failures.push('Failed first apply attempt is not captured as atomic/no-ledger/no-partial-mutation.')
 }
