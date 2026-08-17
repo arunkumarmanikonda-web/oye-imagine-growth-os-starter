@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "issue": "P0-013",
+  "capturedAt": "2026-08-17",
+  "conclusion": "parity_reconciled",
+  "application": {
+    "repository": "arunkumarmanikonda-web/oye-imagine-growth-os-starter",
+    "gitSha": "b82e77d227f29554b55143a00c80fab74d82a82d",
+    "branch": "main",
+    "vercelProject": "oye-imagine-growth-os-starter",
+    "productionDeploymentId": "dpl_BpfjNhjAwRFxRHfthgcZTHaYQZaQ",
+    "productionDeploymentState": "READY",
+    "domains": ["oyeimagine.com", "www.oyeimagine.com"]
+  },
+  "supabase": {
+    "projectRef": "bqhaifivpcwwiauiynlv",
+    "projectName": "oye-imagine-growth-os-20260721-1440",
+    "health": "ACTIVE_HEALTHY",
+    "postgresVersion": "17.6.1",
+    "productionLedgerCount": 75,
+    "productionLedgerLastVersion": "20260817083219",
+    "productionLedgerLastName": "reconcile_commercial_enquiry_permissions",
+    "pgNetSchema": "extensions"
+  },
+  "gitMigrations": {
+    "fileCount": 75,
+    "duplicateVersionCount": 0,
+    "canonicalLexicalReplay": "passed",
+    "canonicalReplayWorkflow": "migration-chain-validation",
+    "canonicalReplayRunId": 32010575462,
+    "productionOnly": [],
+    "gitOnly": []
+  },
+  "historicalAliases": [
+    {"sourceFile":"20260731000100_mega_batch_a_foundations.sql","productionLedgerName":"reconcile_20260731_mega_batch_a_foundations"},
+    {"sourceFile":"20260731000200_neejee_pilot_foundation_part1.sql","productionLedgerName":"reconcile_20260731_neejee_pilot_foundation_part1"},
+    {"sourceFile":"20260731000300_neejee_pilot_foundation_part2.sql","productionLedgerName":"reconcile_20260731_neejee_pilot_foundation_part2"},
+    {"sourceFile":"20260731000400_neejee_pilot_foundation_part3.sql","productionLedgerName":"reconcile_20260731_neejee_pilot_foundation_part3"},
+    {"sourceFile":"20260731000500_execution_stack_part1.sql","productionLedgerName":"reconcile_20260731_execution_stack_part1"},
+    {"sourceFile":"20260731000600_execution_stack_part2.sql","productionLedgerName":"reconcile_20260731_execution_stack_part2"},
+    {"sourceFile":"20260731000700_execution_stack_part3.sql","productionLedgerName":"reconcile_20260731_execution_stack_part3"},
+    {"sourceFile":"20260731000800_execution_integration_closeout.sql","productionLedgerName":"reconcile_20260731_execution_integration_closeout"},
+    {"sourceFile":"20260731000900_pilot_integration_closeout.sql","productionLedgerName":"reconcile_20260731_pilot_integration_closeout"},
+    {"sourceFile":"20260731001000_production_activation_foundations.sql","productionLedgerName":"reconcile_20260731_production_activation_foundations"},
+    {"sourceFile":"20260731001100_recovery_config_control_plane.sql","productionLedgerName":"reconcile_20260731_recovery_config_control_plane"},
+    {"sourceFile":"20260731001200_reporting_optimization_part1.sql","productionLedgerName":"reconcile_20260731_reporting_optimization_part1"},
+    {"sourceFile":"20260731001300_reporting_optimization_part2.sql","productionLedgerName":"reconcile_20260731_reporting_optimization_part2"},
+    {"sourceFile":"20260731001400_reporting_optimization_part4.sql","productionLedgerName":"reconcile_20260731_reporting_optimization_part4"},
+    {"sourceFile":"20260731001500_launch_hardening_closeout.sql","productionLedgerName":"reconcile_20260731_launch_hardening_closeout"}
+  ],
+  "reconciledSourceLedgerPairs": [
+    {
+      "sourceFile": "20260814101955_post_reconciliation_default_deny_rls_and_search_path.sql",
+      "productionLedgerVersion": "20260814101955",
+      "productionLedgerName": "post_reconciliation_default_deny_rls_and_search_path",
+      "provenance": "exact statement recovered from production migration ledger"
+    },
+    {
+      "sourceFile": "20260817083000_reconcile_commercial_enquiry_permissions.sql",
+      "productionLedgerVersion": "20260817083219",
+      "productionLedgerName": "reconcile_commercial_enquiry_permissions",
+      "provenance": "forward source migration applied after clean replay"
+    },
+    {
+      "sourceFile": "20260817080500_sensitive_provider_grant_hardening.sql",
+      "productionLedgerVersion": "20260817081617",
+      "productionLedgerName": "sensitive_provider_grant_hardening",
+      "provenance": "forward source migration applied after clean replay"
+    }
+  ],
+  "liveControls": {
+    "publicTablesWithoutRls": 0,
+    "postReconciliationSearchPathFunctions": 9,
+    "postReconciliationSearchPath": "pg_catalog, public",
+    "credentialClientTableGrants": [],
+    "commercialEnquiryPermissions": {
+      "commercial.enquiry.view": "low",
+      "commercial.enquiry.manage": "medium",
+      "tenant_admin": ["commercial.enquiry.view", "commercial.enquiry.manage"],
+      "account_manager": ["commercial.enquiry.view", "commercial.enquiry.manage"],
+      "finance_approver": ["commercial.enquiry.view"]
+    }
+  },
+  "applyHistory": {
+    "firstAttempt": {
+      "result": "failed_atomically",
+      "ledgerRowsCreated": 0,
+      "partialMutation": false,
+      "cause": "stale text-array query was rejected by production JSONB permissions type before commit"
+    },
+    "sourceExactRetry": {
+      "result": "success",
+      "migrationName": "reconcile_commercial_enquiry_permissions",
+      "ledgerVersion": "20260817083219"
+    }
+  },
+  "remainingOutsideP0013": [
+    "Supabase Auth leaked-password protection remains disabled and is tracked as a separate Auth/security configuration blocker.",
+    "MFA/AAL2 and other spend/autonomy P0 gates remain separate from migration parity."
+  ]
+}
