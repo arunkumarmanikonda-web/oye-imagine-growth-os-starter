@@ -1,0 +1,24 @@
+{
+  "capturedAt": "2026-08-17",
+  "issue": "P0-014",
+  "canonicalFile": "20260731_core_control_plane_part1.sql",
+  "repairType": "filename_only_reversioning",
+  "productionMutationAuthorized": false,
+  "renames": [
+    {"order":2,"oldFile":"20260731_mega_batch_a_foundations.sql","newFile":"20260731000100_mega_batch_a_foundations.sql","gitBlobSha":"db189985b22352ca34fb29881ff2dd237ac041a7"},
+    {"order":3,"oldFile":"20260731_neejee_pilot_foundation_part1.sql","newFile":"20260731000200_neejee_pilot_foundation_part1.sql","gitBlobSha":"e7db8cb296978a977e5ab7c3e8e0b7a6a6fe9cfc"},
+    {"order":4,"oldFile":"20260731_neejee_pilot_foundation_part2.sql","newFile":"20260731000300_neejee_pilot_foundation_part2.sql","gitBlobSha":"031920c555d1f8be7a42708b5dfdd570c74d19b2"},
+    {"order":5,"oldFile":"20260731_neejee_pilot_foundation_part3.sql","newFile":"20260731000400_neejee_pilot_foundation_part3.sql","gitBlobSha":"ad49a1b1e8b43ccc5e0a71ac99466cb32cca934e"},
+    {"order":6,"oldFile":"20260731_execution_stack_part1.sql","newFile":"20260731000500_execution_stack_part1.sql","gitBlobSha":"012941c34983e6de05344ced677a8304cbce2d90"},
+    {"order":7,"oldFile":"20260731_execution_stack_part2.sql","newFile":"20260731000600_execution_stack_part2.sql","gitBlobSha":"709d0a87a859c33504d40f9bd1bc4c1d17bcb382"},
+    {"order":8,"oldFile":"20260731_execution_stack_part3.sql","newFile":"20260731000700_execution_stack_part3.sql","gitBlobSha":"9f010162b6893a6004e2522e7051a1815f8bcae5"},
+    {"order":9,"oldFile":"20260731_execution_integration_closeout.sql","newFile":"20260731000800_execution_integration_closeout.sql","gitBlobSha":"36fcf391fccf5b785bac7cdc0083defb2c8a1983"},
+    {"order":10,"oldFile":"20260731_pilot_integration_closeout.sql","newFile":"20260731000900_pilot_integration_closeout.sql","gitBlobSha":"654be13f78058645b2efde39b0a646923ca2ddf2"},
+    {"order":11,"oldFile":"20260731_production_activation_foundations.sql","newFile":"20260731001000_production_activation_foundations.sql","gitBlobSha":"a8d0f7561d38f2d4b50eee2e73c7c57576cebe6b"},
+    {"order":12,"oldFile":"20260731_recovery_config_control_plane.sql","newFile":"20260731001100_recovery_config_control_plane.sql","gitBlobSha":"6deb606eb2096badc14ff552fbcbd5cc983b6633"},
+    {"order":13,"oldFile":"20260731_reporting_optimization_part1.sql","newFile":"20260731001200_reporting_optimization_part1.sql","gitBlobSha":"d8ea932da7e66a203e8d238522ad5d86828cd41a"},
+    {"order":14,"oldFile":"20260731_reporting_optimization_part2.sql","newFile":"20260731001300_reporting_optimization_part2.sql","gitBlobSha":"d1b5cbc86f0ab636b09dc1a263bbdaceae3ef235"},
+    {"order":15,"oldFile":"20260731_reporting_optimization_part4.sql","newFile":"20260731001400_reporting_optimization_part4.sql","gitBlobSha":"b831ba8adc8617d5f58da5629c8cc81d37f8d3dd"},
+    {"order":16,"oldFile":"20260731_launch_hardening_closeout.sql","newFile":"20260731001500_launch_hardening_closeout.sql","gitBlobSha":"9bbeba8789cd0f3bbe22fa337fe50cc595617ab5"}
+  ]
+}

@@ -62,29 +62,20 @@ then
   fail_with_summary "Supabase-compatible bootstrap" "$bootstrap_log"
 fi
 
-mapfile -t pre_20260731 < <(find supabase/migrations -maxdepth 1 -type f -name '*.sql' | sort | awk -F/ '$NF < "20260731_"')
-mapfile -t post_20260731 < <(find supabase/migrations -maxdepth 1 -type f -name '*.sql' | sort | awk -F/ '$NF > "20260731_zzzzzzzz.sql"')
+mapfile -t migrations < <(find supabase/migrations -maxdepth 1 -type f -name '*.sql' | sort)
 
-ordered_20260731=(
-  "supabase/migrations/20260731_core_control_plane_part1.sql"
-  "supabase/migrations/20260731_mega_batch_a_foundations.sql"
-  "supabase/migrations/20260731_neejee_pilot_foundation_part1.sql"
-  "supabase/migrations/20260731_neejee_pilot_foundation_part2.sql"
-  "supabase/migrations/20260731_neejee_pilot_foundation_part3.sql"
-  "supabase/migrations/20260731_execution_stack_part1.sql"
-  "supabase/migrations/20260731_execution_stack_part2.sql"
-  "supabase/migrations/20260731_execution_stack_part3.sql"
-  "supabase/migrations/20260731_execution_integration_closeout.sql"
-  "supabase/migrations/20260731_pilot_integration_closeout.sql"
-  "supabase/migrations/20260731_production_activation_foundations.sql"
-  "supabase/migrations/20260731_recovery_config_control_plane.sql"
-  "supabase/migrations/20260731_reporting_optimization_part1.sql"
-  "supabase/migrations/20260731_reporting_optimization_part2.sql"
-  "supabase/migrations/20260731_reporting_optimization_part4.sql"
-  "supabase/migrations/20260731_launch_hardening_closeout.sql"
-)
-
-migrations=("${pre_20260731[@]}" "${ordered_20260731[@]}" "${post_20260731[@]}")
+declare -A seen_versions=()
+for migration in "${migrations[@]}"; do
+  base="$(basename "$migration")"
+  version="${base%%_*}"
+  if [[ -n "${seen_versions[$version]:-}" ]]; then
+    duplicate_log=/tmp/migration-duplicate-version.log
+    printf 'Duplicate Supabase migration version %s:\n  %s\n  %s\n' \
+      "$version" "${seen_versions[$version]}" "$migration" > "$duplicate_log"
+    fail_with_summary "duplicate migration version" "$duplicate_log"
+  fi
+  seen_versions[$version]="$migration"
+done
 
 for migration in "${migrations[@]}"; do
   [[ -f "$migration" ]] || fail_with_summary "missing migration file: $migration" /dev/null
@@ -127,7 +118,7 @@ fi
 {
   echo "## Migration validation passed"
   echo
-  echo "Replayed ${#migrations[@]} migration files in dependency-safe order on disposable PostgreSQL 17."
+  echo "Replayed ${#migrations[@]} uniquely versioned migration files in canonical lexical order on disposable PostgreSQL 17."
 } >> "$summary_file"
 
 echo "Migration chain validated successfully in disposable PostgreSQL."
