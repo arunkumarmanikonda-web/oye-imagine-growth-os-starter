@@ -5,10 +5,10 @@
   "conclusion": "parity_reconciled",
   "application": {
     "repository": "arunkumarmanikonda-web/oye-imagine-growth-os-starter",
-    "gitSha": "349dd91ccdd5025530d0023a7a4be088202aed48",
+    "gitSha": "e9c7837c27d50042b247dfc66603fa207b37ba50",
     "branch": "main",
     "vercelProject": "oye-imagine-growth-os-starter",
-    "productionDeploymentId": "dpl_4nhgYWYu3kUVW58BUoZ7DdpQsvhM",
+    "productionDeploymentId": "dpl_HUTt6so6hB8aE5rms4pSfb2siK8c",
     "productionDeploymentState": "READY",
     "domains": ["oyeimagine.com", "www.oyeimagine.com"]
   },
@@ -17,13 +17,13 @@
     "projectName": "oye-imagine-growth-os-20260721-1440",
     "health": "ACTIVE_HEALTHY",
     "postgresVersion": "17.6.1",
-    "productionLedgerCount": 78,
-    "productionLedgerLastVersion": "20260817205833",
-    "productionLedgerLastName": "harden_public_function_schema_default_acl",
+    "productionLedgerCount": 79,
+    "productionLedgerLastVersion": "20260817211446",
+    "productionLedgerLastName": "public_contact_abuse_rate_limits",
     "pgNetSchema": "extensions"
   },
   "gitMigrations": {
-    "fileCount": 78,
+    "fileCount": 79,
     "duplicateVersionCount": 0,
     "canonicalLexicalReplay": "passed",
     "canonicalReplayWorkflow": "migration-chain-validation",
@@ -84,6 +84,12 @@
       "productionLedgerVersion": "20260817205833",
       "productionLedgerName": "harden_public_function_schema_default_acl",
       "provenance": "managed production hardening applied and then source-controlled with the exact production version"
+    },
+    {
+      "sourceFile": "20260817211446_public_contact_abuse_rate_limits.sql",
+      "productionLedgerVersion": "20260817211446",
+      "productionLedgerName": "public_contact_abuse_rate_limits",
+      "provenance": "managed production abuse-control migration applied and then source-controlled with the exact production version"
     }
   ],
   "liveControls": {
@@ -94,6 +100,13 @@
     "browserNonCrudTablePrivileges": 0,
     "browserExecutablePublicFunctions": 0,
     "publicFunctionDefaultAcl": ["postgres", "service_role"],
+    "publicContactRateLimiter": {
+      "rlsEnabled": true,
+      "browserTablePrivileges": false,
+      "browserFunctionExecute": false,
+      "serviceRoleFunctionExecute": true,
+      "functionSearchPath": "pg_catalog, public"
+    },
     "commercialEnquiryPermissions": {
       "commercial.enquiry.view": "low",
       "commercial.enquiry.manage": "medium",

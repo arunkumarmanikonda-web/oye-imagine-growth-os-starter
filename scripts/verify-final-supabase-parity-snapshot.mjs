@@ -14,19 +14,19 @@ const failures = []
 if (snapshot.issue !== 'P0-013' || snapshot.conclusion !== 'parity_reconciled') {
   failures.push('Final snapshot is not marked as reconciled P0-013 evidence.')
 }
-if (snapshot.application.gitSha !== '349dd91ccdd5025530d0023a7a4be088202aed48') {
+if (snapshot.application.gitSha !== 'e9c7837c27d50042b247dfc66603fa207b37ba50') {
   failures.push(`Unexpected application Git SHA: ${snapshot.application.gitSha}`)
 }
 if (snapshot.supabase.projectRef !== 'bqhaifivpcwwiauiynlv') {
   failures.push(`Unexpected Supabase project ref: ${snapshot.supabase.projectRef}`)
 }
-if (snapshot.supabase.productionLedgerCount !== 78) {
+if (snapshot.supabase.productionLedgerCount !== 79) {
   failures.push(`Unexpected captured production ledger count: ${snapshot.supabase.productionLedgerCount}`)
 }
-if (snapshot.supabase.productionLedgerLastVersion !== '20260817205833') {
+if (snapshot.supabase.productionLedgerLastVersion !== '20260817211446') {
   failures.push(`Unexpected captured final production migration: ${snapshot.supabase.productionLedgerLastVersion}`)
 }
-if (files.length !== snapshot.gitMigrations.fileCount || files.length !== 78) {
+if (files.length !== snapshot.gitMigrations.fileCount || files.length !== 79) {
   failures.push(`Git migration file count mismatch: actual=${files.length}, snapshot=${snapshot.gitMigrations.fileCount}`)
 }
 
@@ -65,6 +65,10 @@ if (snapshot.liveControls.browserNonCrudTablePrivileges !== 0) failures.push('Sn
 if (snapshot.liveControls.browserExecutablePublicFunctions !== 0) failures.push('Snapshot records browser-executable public functions.')
 if (JSON.stringify(snapshot.liveControls.publicFunctionDefaultAcl) !== JSON.stringify(['postgres', 'service_role'])) {
   failures.push('Unexpected public function default ACL evidence.')
+}
+const limiter = snapshot.liveControls.publicContactRateLimiter
+if (!limiter?.rlsEnabled || limiter.browserTablePrivileges !== false || limiter.browserFunctionExecute !== false || limiter.serviceRoleFunctionExecute !== true || limiter.functionSearchPath !== 'pg_catalog, public') {
+  failures.push('Public contact rate-limiter security evidence is incomplete or unsafe.')
 }
 if (snapshot.applyHistory.firstAttempt.result !== 'failed_atomically' || snapshot.applyHistory.firstAttempt.ledgerRowsCreated !== 0 || snapshot.applyHistory.firstAttempt.partialMutation !== false) {
   failures.push('Failed first apply attempt is not captured as atomic/no-ledger/no-partial-mutation.')
