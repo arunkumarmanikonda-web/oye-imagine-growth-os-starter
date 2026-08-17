@@ -45,14 +45,14 @@ export function LeadershipSection() {
       <div className="mx-auto w-[min(1460px,calc(100%-48px))] px-6 md:px-0">
         <div className="grid gap-10 border-b border-black/10 pb-12 lg:grid-cols-[0.68fr_1.32fr] lg:gap-20">
           <div>
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#786d57]">Founders & Board</p>
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#786d57]">Founders & Directors</p>
           </div>
           <div>
             <h2 id="oye-leadership-heading" className="max-w-[16ch] text-4xl font-semibold leading-[0.98] tracking-[-0.055em] text-[#101417] md:text-6xl">
               Built by leaders who understand growth as an operating responsibility, not a marketing abstraction.
             </h2>
             <p className="mt-6 max-w-3xl text-base leading-8 text-[#5c6569]">
-              Oye !magine brings together leadership experience across enterprise strategy, sales and marketing, hospitality, destination entertainment, real estate, commercial transactions and operating delivery. The board combines market-facing growth leadership with the institutional discipline required to build a governed AI platform for serious businesses.
+              Oye !magine brings together leadership experience across enterprise strategy, sales and marketing, hospitality, destination entertainment, real estate, commercial transactions and operating delivery. The leadership group combines market-facing growth judgement with the institutional discipline required to build a governed AI platform for serious businesses.
             </p>
           </div>
         </div>
@@ -70,7 +70,7 @@ export function LeadershipSection() {
                 />
               </div>
               <div className="flex flex-1 flex-col p-6 md:p-7">
-                <span className="text-[10px] font-bold uppercase tracking-[0.17em] text-[#8a8273]">{String(index + 1).padStart(2, '0')} · Board leadership</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.17em] text-[#8a8273]">{String(index + 1).padStart(2, '0')} · Leadership</span>
                 <h3 className="mt-5 text-2xl font-semibold tracking-[-0.035em] text-[#101417]">{leader.name}</h3>
                 <p className="mt-1 text-sm font-bold text-[#7b1e3b]">{leader.role}</p>
                 <p className="mt-5 text-[13px] leading-6 text-[#616b6f]">{leader.bio}</p>
