@@ -6,6 +6,7 @@ import './premium-social.css'
 import './premium-app.css'
 import './public-rebuild.css'
 import './auth-rebuild.css'
+import './activation-rebuild.css'
 import SiteChrome from '@/components/shell/SiteChrome'
 import { organizationJsonLd, websiteJsonLd } from '@/lib/seo/site'
 
