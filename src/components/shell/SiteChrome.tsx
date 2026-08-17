@@ -83,7 +83,7 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
           <section className="institutional-footer-links">
             <div><strong>Platform</strong><Link href="/platform">Growth OS</Link><Link href="/solutions">Solutions</Link><Link href="/integrations">Integrations</Link><Link href="/pricing">Commercial model</Link></div>
             <div><strong>Marketplace</strong><Link href="/marketplace">Capabilities</Link><Link href="/customers">Customer models</Link><Link href="/contact">Start an engagement</Link></div>
-            <div><strong>Company</strong><Link href="/about">About</Link><Link href="/about#oye-leadership-heading">Founders & Board</Link><Link href="/trust">Trust & governance</Link><Link href="/status">Status</Link><Link href="/contact">Contact</Link></div>
+            <div><strong>Company</strong><Link href="/about">About</Link><Link href="/about#oye-leadership-heading">Founders & Directors</Link><Link href="/trust">Trust & governance</Link><Link href="/status">Status</Link><Link href="/contact">Contact</Link></div>
             <div><strong>Legal</strong><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/dpa">DPA</Link><Link href="/subprocessors">Subprocessors</Link><Link href="/accessibility">Accessibility</Link></div>
           </section>
         </div>
