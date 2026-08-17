@@ -8,14 +8,13 @@ import { useEffect, useState } from 'react'
 
 const appPrefixes = ['/workspace', '/admin', '/client', '/auth/mfa']
 const primaryNav: Array<{ label: string; href: Route }> = [
-  { label: 'About', href: '/about' },
   { label: 'Platform', href: '/platform' },
   { label: 'Solutions', href: '/solutions' },
+  { label: 'Marketplace', href: '/marketplace' },
   { label: 'Customers', href: '/customers' },
   { label: 'Integrations', href: '/integrations' },
-  { label: 'Marketplace', href: '/marketplace' },
-  { label: 'Pricing', href: '/pricing' },
   { label: 'Trust', href: '/trust' },
+  { label: 'Company', href: '/about' },
 ]
 
 export default function SiteChrome({ children }: { children: ReactNode }) {
@@ -34,58 +33,59 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
   if (isApp) return <>{children}</>
 
   return (
-    <div className="oi-shell public-shell">
-      <header className="social-public-header">
-        <div className="oi-container social-public-header-inner">
-          <Link className="social-brand-lockup" href="/" aria-label="Oye !magine home">
+    <div className="oi-shell public-shell institutional-shell">
+      <header className="institutional-header">
+        <div className="institutional-header-inner">
+          <Link className="institutional-brand" href="/" aria-label="Oye !magine home">
             <img src="/brand/oye-imagine-logo.webp" alt="Oye !magine" />
           </Link>
 
-          <nav className="social-desktop-nav" aria-label="Primary navigation">
+          <nav className="institutional-nav" aria-label="Primary navigation">
             {primaryNav.map((item) => {
               const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
               return <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined} className={active ? 'is-active' : undefined}>{item.label}</Link>
             })}
           </nav>
 
-          <div className="social-header-actions">
-            <Link href="/login" className="social-signin">Sign in</Link>
-            <Link href="/contact" className="social-demo">Book a demo</Link>
-            <button type="button" className="social-menu-button" aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+          <div className="institutional-actions">
+            <Link href="/login" className="institutional-signin">Sign in</Link>
+            <Link href="/contact" className="institutional-contact">Discuss a rollout <span>↗</span></Link>
+            <button type="button" className="institutional-menu" aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open} onClick={() => setOpen((value) => !value)}>
               <span /><span /><span />
             </button>
           </div>
         </div>
 
-        {open ? <div className="social-mobile-panel is-open">
-          <div className="social-mobile-panel-inner">
-            <div className="social-mobile-intro"><span>One identity</span><strong>The right workspace appears after sign in.</strong></div>
+        {open ? <div className="institutional-mobile-panel is-open">
+          <div className="institutional-mobile-panel-inner">
+            <p className="institutional-kicker">Oye !magine</p>
+            <h2>One governed environment for growth intelligence, execution and specialist delivery.</h2>
             <nav aria-label="Mobile navigation">
               {primaryNav.map((item, index) => <Link href={item.href} key={item.href}><span>{String(index + 1).padStart(2, '0')}</span><strong>{item.label}</strong><b>↗</b></Link>)}
             </nav>
-            <div className="social-mobile-actions"><Link href="/signup">Create customer account</Link><Link href="/login">Sign in</Link><Link href="/contact">Contact us</Link></div>
+            <div className="institutional-mobile-actions"><Link href="/contact">Discuss a rollout</Link><Link href="/marketplace">Explore marketplace</Link><Link href="/login">Sign in</Link></div>
           </div>
         </div> : null}
       </header>
 
       <div id="main-content" className="oi-main">{children}</div>
 
-      <footer className="premium-footer">
-        <div className="premium-footer-grid">
-          <section>
-            <img src="/brand/oye-imagine-logo.webp" alt="Oye !magine" className="premium-footer-logo" />
-            <h2>Imagine growth as one living system.</h2>
-            <p>Strategy, creative, campaigns, approvals, analytics, commercial control and AI-assisted operations, organised around one brand truth.</p>
-            <div className="premium-footer-primary-links"><Link href="/about">About</Link><Link href="/contact">Contact</Link><Link href="/trust">Trust Center</Link></div>
+      <footer className="institutional-footer">
+        <div className="institutional-footer-top">
+          <section className="institutional-footer-thesis">
+            <img src="/brand/oye-imagine-logo.webp" alt="Oye !magine" />
+            <h2>Growth, operated as a governed system.</h2>
+            <p>Strategy, intelligence, creation, specialist delivery, approvals, commercial controls and performance evidence in one operating environment.</p>
+            <Link href="/contact">Discuss an enterprise or managed-growth rollout <span>↗</span></Link>
           </section>
-          <section className="premium-footer-links">
-            <div><strong>Product</strong><Link href="/platform">Platform</Link><Link href="/solutions">Solutions</Link><Link href="/integrations">Integrations</Link><Link href="/pricing">Pricing</Link></div>
-            <div><strong>Company</strong><Link href="/about">About</Link><Link href="/customers">Customers</Link><Link href="/contact">Contact</Link><Link href="/status">Status</Link></div>
-            <div><strong>Trust & legal</strong><Link href="/trust">Trust Center</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/cookies">Cookies</Link><Link href="/dpa">DPA</Link><Link href="/subprocessors">Subprocessors</Link><Link href="/accessibility">Accessibility</Link></div>
-            <div><strong>Access</strong><Link href="/login">Universal sign in</Link><Link href="/signup">Create customer account</Link><Link href="/marketplace">Marketplace</Link></div>
+          <section className="institutional-footer-links">
+            <div><strong>Platform</strong><Link href="/platform">Growth OS</Link><Link href="/solutions">Solutions</Link><Link href="/integrations">Integrations</Link><Link href="/pricing">Commercial model</Link></div>
+            <div><strong>Marketplace</strong><Link href="/marketplace">Capabilities</Link><Link href="/customers">Customer models</Link><Link href="/contact">Start an engagement</Link></div>
+            <div><strong>Company</strong><Link href="/about">About</Link><Link href="/trust">Trust & governance</Link><Link href="/status">Status</Link><Link href="/contact">Contact</Link></div>
+            <div><strong>Legal</strong><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/dpa">DPA</Link><Link href="/subprocessors">Subprocessors</Link><Link href="/accessibility">Accessibility</Link></div>
           </section>
         </div>
-        <div className="premium-footer-bottom"><span>Oye Imagine Private Limited</span><span>One identity. Role-scoped workspace. Governed growth.</span></div>
+        <div className="institutional-footer-bottom"><span>© 2026 Oye Imagine Private Limited</span><span>AI Growth OS · Curated Marketplace · Managed Growth</span><span>India · Built for global operations</span></div>
       </footer>
     </div>
   )
