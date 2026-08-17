@@ -12,6 +12,12 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   typedRoutes: true,
+  async redirects() {
+    return [
+      { source: '/login/client', destination: '/login', permanent: false },
+      { source: '/login/admin', destination: '/login', permanent: false },
+    ]
+  },
   async headers() {
     return [
       {

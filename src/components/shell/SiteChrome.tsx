@@ -86,17 +86,23 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
       <footer className="institutional-footer">
         <div className="institutional-footer-top">
           <section className="institutional-footer-thesis">
-            <div className="inline-flex rounded-2xl bg-[#f4f1e9] px-4 py-3 shadow-[0_14px_34px_rgba(0,0,0,.18)]">
-              <img src="/brand/oye-imagine-logo.webp" alt="Oye !magine" style={{ filter: 'none', opacity: 1 }} />
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 14 }}>
+              <div style={{ display: 'inline-flex', borderRadius: 16, background: '#f4f1e9', padding: '12px 16px', boxShadow: '0 14px 34px rgba(0,0,0,.18)' }}>
+                <img src="/brand/oye-imagine-logo.webp" alt="Oye !magine" style={{ filter: 'none', opacity: 1 }} />
+              </div>
+              <a href="https://indiagully.com/" target="_blank" rel="noreferrer" aria-label="IndiaGully promoter-group leadership" style={{ minHeight: 72, display: 'inline-flex', flexDirection: 'column', justifyContent: 'center', padding: '10px 16px', border: '1px solid rgba(255,255,255,.18)', borderRadius: 16, color: '#fff', textDecoration: 'none' }}>
+                <span style={{ marginBottom: 4, color: 'rgba(255,255,255,.46)', fontSize: 9, fontWeight: 800, letterSpacing: '.16em', textTransform: 'uppercase' }}>Promoter-group leadership</span>
+                <strong style={{ fontSize: 18, fontWeight: 760, letterSpacing: '-.025em' }}>INDIA GULLY</strong>
+              </a>
             </div>
             <h2>Growth, operated as a governed system.</h2>
-            <p>Strategy, intelligence, creation, specialist delivery, approvals, commercial controls and performance evidence in one operating environment.</p>
+            <p>Strategy, intelligence, creation, specialist delivery, approvals, commercial controls and performance evidence in one operating environment, backed by a leadership bench with operating depth across growth, hospitality, real estate and enterprise advisory.</p>
             <Link href="/contact">Discuss an enterprise or managed-growth rollout <span>↗</span></Link>
           </section>
           <section className="institutional-footer-links">
             <div><strong>Platform</strong><Link href="/platform">Growth OS</Link><Link href="/solutions">Solutions</Link><Link href="/integrations">Integrations</Link><Link href="/pricing">Commercial model</Link></div>
             <div><strong>Marketplace</strong><Link href="/marketplace">Capabilities</Link><Link href="/customers">Customer models</Link><Link href="/contact">Start an engagement</Link></div>
-            <div><strong>Company</strong><Link href="/about">About</Link><Link href="/about#oye-leadership-heading">Founders & Directors</Link><Link href="/trust">Trust & governance</Link><Link href="/status">Status</Link><Link href="/contact">Contact</Link></div>
+            <div><strong>Company</strong><Link href="/about">About</Link><Link href="/about#oye-leadership-heading">Leadership & promoter group</Link><Link href="/trust">Trust & governance</Link><Link href="/status">Status</Link><Link href="/contact">Contact</Link></div>
             <div><strong>Legal</strong><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/dpa">DPA</Link><Link href="/subprocessors">Subprocessors</Link><Link href="/accessibility">Accessibility</Link></div>
           </section>
         </div>

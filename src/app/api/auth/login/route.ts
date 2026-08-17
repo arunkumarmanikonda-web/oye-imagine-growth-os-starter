@@ -1,19 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { buildAuthCookieRecord } from '@/lib/auth/session'
-import {
-  membershipHasWorkspaceAuthority,
-  membershipLane,
-  membershipRequiresMfa,
-  selectPrimaryMembership,
-  type VerifiedMembership,
-} from '@/lib/auth/verified-membership'
+import { membershipHasWorkspaceAuthority, membershipLane, membershipRequiresMfa, selectPrimaryMembership, type VerifiedMembership } from '@/lib/auth/verified-membership'
 import { ACTIVE_WORKSPACE_COOKIE_KEY } from '@/lib/recovery/workspace-foundation'
 import { RECOVERY_AUTH_COOKIE_KEYS } from '@/lib/recovery/auth-types'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
-function loginErrorRedirect(request: NextRequest, code: string) {
+const allowedReturnPrefixes = ['/workspace', '/admin', '/client', '/onboarding/activation'] as const
+
+function safeDestination(value: FormDataEntryValue | null) {
+  const raw = String(value ?? '').trim()
+  if (!raw || !raw.startsWith('/') || raw.startsWith('//') || raw.includes('\\')) return '/workspace'
+  return allowedReturnPrefixes.some((prefix) => raw === prefix || raw.startsWith(`${prefix}/`) || raw.startsWith(`${prefix}?`)) ? raw : '/workspace'
+}
+
+function loginErrorRedirect(request: NextRequest, code: string, destination = '/workspace') {
   const url = new URL('/login', request.url)
   url.searchParams.set('error', code)
+  if (destination !== '/workspace') url.searchParams.set('next', destination)
   const response = NextResponse.redirect(url)
   response.headers.set('Cache-Control', 'private, no-store')
   return response
@@ -39,17 +42,18 @@ export async function POST(request: NextRequest) {
   const formData = await request.formData()
   const email = String(formData.get('email') ?? '').trim().toLowerCase()
   const password = String(formData.get('password') ?? '')
+  const destination = safeDestination(formData.get('next'))
 
-  if (!email || !password) return loginErrorRedirect(request, 'missing_credentials')
+  if (!email || !password) return loginErrorRedirect(request, 'missing_credentials', destination)
 
   const supabase = await createSupabaseServerClient()
   const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-  if (signInError) return loginErrorRedirect(request, 'invalid_credentials')
+  if (signInError) return loginErrorRedirect(request, 'invalid_credentials', destination)
 
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   if (userError || !user?.id || !user.email) {
     await supabase.auth.signOut()
-    return loginErrorRedirect(request, 'identity_verification_failed')
+    return loginErrorRedirect(request, 'identity_verification_failed', destination)
   }
 
   const { data: membershipRows, error: membershipError } = await supabase
@@ -60,39 +64,31 @@ export async function POST(request: NextRequest) {
 
   if (membershipError) {
     await supabase.auth.signOut()
-    return loginErrorRedirect(request, 'access_control_unavailable')
+    return loginErrorRedirect(request, 'access_control_unavailable', destination)
   }
 
   const memberships = (membershipRows ?? []) as VerifiedMembership[]
   const membership = selectPrimaryMembership(memberships)
   if (!membership || !membershipHasWorkspaceAuthority(membership)) {
     await supabase.auth.signOut()
-    return loginErrorRedirect(request, 'access_denied')
+    return loginErrorRedirect(request, 'access_denied', destination)
   }
 
   const lane = membershipLane(membership)
-  const destination = '/workspace'
-
   if (user.app_metadata?.must_change_password === true) return passwordChangeRedirect(request, destination)
 
   if (membershipRequiresMfa(membership)) {
     const { data: aalData, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
     if (aalError) {
       await supabase.auth.signOut()
-      return loginErrorRedirect(request, 'access_control_unavailable')
+      return loginErrorRedirect(request, 'access_control_unavailable', destination)
     }
     if (aalData.currentLevel !== 'aal2') return mfaRedirect(request, destination)
   }
 
   const response = NextResponse.redirect(new URL(destination, request.url))
   response.headers.set('Cache-Control', 'private, no-store')
-  const contextCookies = buildAuthCookieRecord({
-    lane,
-    email: user.email.toLowerCase(),
-    workspaceSlug: membership.workspace_id!,
-    tenantSlug: membership.tenant_id,
-    brandSlug: membership.brand_id!,
-  })
+  const contextCookies = buildAuthCookieRecord({ lane, email: user.email.toLowerCase(), workspaceSlug: membership.workspace_id!, tenantSlug: membership.tenant_id, brandSlug: membership.brand_id! })
   Object.entries(contextCookies).forEach(([key, value]) => response.cookies.set(key, value, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/' }))
   response.cookies.set(ACTIVE_WORKSPACE_COOKIE_KEY, membership.workspace_id!, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/' })
   response.cookies.set('oye_session_state', 'authenticated', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/' })
