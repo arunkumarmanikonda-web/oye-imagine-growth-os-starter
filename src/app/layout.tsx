@@ -4,6 +4,7 @@ import './globals.css'
 import './brand.css'
 import './premium-social.css'
 import './premium-app.css'
+import './public-rebuild.css'
 import SiteChrome from '@/components/shell/SiteChrome'
 import { organizationJsonLd, websiteJsonLd } from '@/lib/seo/site'
 
