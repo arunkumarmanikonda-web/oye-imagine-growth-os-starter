@@ -25,31 +25,44 @@ const specialistHighlights = [
 
 export default function MarketplaceSpecialistsPage() {
   return (
-    <main className='oi-section'>
-      <div className='oi-container'>
-        <div className='oi-card'>
-          <p className='text-xs font-semibold uppercase tracking-[0.3em] text-slate-400'>Specialist marketplace</p>
-          <h1 className='mt-3 text-4xl font-semibold text-white'>Human expertise, scoped by the same governance as the Growth OS.</h1>
-          <p className='mt-4 max-w-3xl text-base leading-7 text-slate-300'>
-            Oye !magine is designed to route appropriate work to vetted specialists without exposing unrelated customer data or pretending that every service lane is automatically available. Specialist availability depends on onboarding, scope, commercial terms and the permissions assigned to the engagement.
-          </p>
-          <p className='mt-4 text-sm leading-7 text-slate-300'>
-            Continue into the <Link href='/marketplace' className='text-white underline underline-offset-4'>Marketplace</Link>,
-            <Link href='/platform' className='ml-1 text-white underline underline-offset-4'>Platform</Link>,
-            <Link href='/pricing' className='ml-1 text-white underline underline-offset-4'>Pricing</Link>,
-            or <Link href='/contact?interest=managed' className='ml-1 text-white underline underline-offset-4'>discuss a managed engagement</Link>.
-          </p>
+    <main className="public-premium">
+      <section className="cms-institutional-hero">
+        <div className="cms-institutional-hero-inner">
+          <div>
+            <p className="public-kicker">Specialist marketplace</p>
+            <h1>Human expertise, scoped by the same governance as the Growth OS.</h1>
+            <p className="cms-lead">Oye !magine is designed to route appropriate work to vetted specialists without exposing unrelated customer data or pretending that every service lane is automatically available. Specialist availability depends on onboarding, scope, commercial terms and assigned permissions.</p>
+            <div className="public-actions"><Link href="/marketplace" className="public-btn-primary">Explore marketplace <span>↗</span></Link><Link href="/contact?interest=managed" className="public-btn-secondary">Discuss managed growth</Link></div>
+          </div>
+          <aside className="cms-hero-aside">
+            <p className="public-kicker">Operating principle</p>
+            <strong>Specialist capacity without a fragmented operating model.</strong>
+            <p>Scope, authority, delivery state and evidence remain connected to the customer operating context.</p>
+          </aside>
         </div>
+      </section>
 
-        <div className='mt-8 grid gap-4 md:grid-cols-3'>
-          {specialistHighlights.map((item) => (
-            <div key={item.title} className='oi-card'>
-              <h2 className='text-lg font-semibold text-white'>{item.title}</h2>
-              <p className='mt-3 text-sm leading-7 text-slate-300'>{item.body}</p>
-            </div>
-          ))}
+      <section className="public-section">
+        <div className="public-wrap">
+          <div className="public-section-head"><p className="public-kicker">How specialist delivery works</p><div><h2>Capability is useful only when the handoff remains accountable.</h2><p>The marketplace is designed around defined outcomes, explicit access boundaries and traceable delivery rather than an unstructured directory of providers.</p></div></div>
+          <div className="public-card-grid">
+            {specialistHighlights.map((item, index) => (
+              <article className="public-card" key={item.title}>
+                <span className="public-card-number">{String(index + 1).padStart(2, '0')} / SPECIALIST DELIVERY</span>
+                <h3>{item.title}</h3>
+                <p>{item.body}</p>
+              </article>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
+
+      <section className="public-final">
+        <div className="public-wrap public-final-grid">
+          <div><p className="public-kicker">Connect the capability to the operating system</p><h2>Start with the outcome, then define the specialist model around it.</h2></div>
+          <div><p>Review the broader marketplace and platform, compare the commercial model, or share the business objective for a managed engagement.</p><div className="public-actions"><Link href="/platform" className="public-btn-primary">Review the platform <span>↗</span></Link><Link href="/pricing" className="public-btn-secondary">Commercial model</Link></div></div>
+        </div>
+      </section>
     </main>
   )
 }

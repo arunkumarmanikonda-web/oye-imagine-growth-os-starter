@@ -6,7 +6,20 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-const appPrefixes = ['/workspace', '/admin', '/client', '/auth/mfa']
+const standaloneOrAppPrefixes = [
+  '/workspace',
+  '/admin',
+  '/client',
+  '/ask-oye',
+  '/account',
+  '/onboarding',
+  '/recovery',
+  '/operator',
+  '/super-admin',
+  '/auth',
+  '/login',
+  '/signup',
+]
 const primaryNav: Array<{ label: string; href: Route }> = [
   { label: 'Platform', href: '/platform' },
   { label: 'Solutions', href: '/solutions' },
@@ -19,7 +32,7 @@ const primaryNav: Array<{ label: string; href: Route }> = [
 
 export default function SiteChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname()
-  const isApp = appPrefixes.some((prefix) => pathname.startsWith(prefix))
+  const isStandaloneOrApp = standaloneOrAppPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
   const [open, setOpen] = useState(false)
 
   useEffect(() => setOpen(false), [pathname])
@@ -30,7 +43,7 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
     return () => { document.body.style.overflow = previous }
   }, [open])
 
-  if (isApp) return <>{children}</>
+  if (isStandaloneOrApp) return <>{children}</>
 
   return (
     <div className="oi-shell public-shell institutional-shell">
