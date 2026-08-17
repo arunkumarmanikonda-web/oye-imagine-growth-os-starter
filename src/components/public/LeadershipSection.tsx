@@ -39,64 +39,76 @@ const operatingStrengths = [
   'AI growth & governance',
 ]
 
-export function LeadershipSection() {
+function LeaderLink({ href }: { href: string }) {
   return (
-    <section className="border-y border-black/10 bg-[#e9e3d8] py-20 md:py-28" aria-labelledby="oye-leadership-heading">
-      <div className="mx-auto w-[min(1460px,calc(100%-48px))] px-6 md:px-0">
-        <div className="grid gap-10 border-b border-black/10 pb-12 lg:grid-cols-[0.68fr_1.32fr] lg:gap-20">
-          <div>
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#786d57]">Founders & Directors</p>
-          </div>
-          <div>
-            <h2 id="oye-leadership-heading" className="max-w-[16ch] text-4xl font-semibold leading-[0.98] tracking-[-0.055em] text-[#101417] md:text-6xl">
-              Built by leaders who understand growth as an operating responsibility, not a marketing abstraction.
-            </h2>
-            <p className="mt-6 max-w-3xl text-base leading-8 text-[#5c6569]">
-              Oye !magine brings together leadership experience across enterprise strategy, sales and marketing, hospitality, destination entertainment, real estate, commercial transactions and operating delivery. The leadership group combines market-facing growth judgement with the institutional discipline required to build a governed AI platform for serious businesses.
-            </p>
-          </div>
-        </div>
+    <a className="leader-link" href={href} target="_blank" rel="noreferrer">
+      <span>LinkedIn profile</span><span aria-hidden="true">↗</span>
+    </a>
+  )
+}
 
-        <div className="grid items-stretch border-x border-b border-black/10 bg-[#f4f1e9] md:grid-cols-2 xl:grid-cols-4">
-          {leaders.map((leader, index) => (
-            <article key={leader.name} className="group flex min-h-full flex-col border-b border-black/10 last:border-b-0 md:[&:nth-child(odd)]:border-r md:[&:nth-child(-n+2)]:border-b xl:border-b-0 xl:border-r xl:last:border-r-0">
-              <div className="aspect-[4/5] overflow-hidden bg-[#d9d2c4]">
-                <img
-                  src={leader.image}
-                  alt={`${leader.name}, ${leader.role}`}
-                  loading="lazy"
-                  decoding="async"
-                  className="h-full w-full object-cover object-top grayscale-[8%] transition duration-500 group-hover:scale-[1.015] group-hover:grayscale-0"
-                />
+export function LeadershipSection() {
+  const founders = leaders.slice(0, 2)
+  const directors = leaders.slice(2)
+
+  return (
+    <section className="leadership-section" aria-labelledby="oye-leadership-heading">
+      <div className="leadership-wrap">
+        <header className="leadership-intro">
+          <div><p className="public-kicker">Founders & Directors</p></div>
+          <div>
+            <h2 id="oye-leadership-heading">Operating judgement behind the intelligence.</h2>
+            <p>Oye !magine is being built by leaders who have carried revenue, customer, operating and commercial accountability in real businesses. The leadership model deliberately combines market-facing growth judgement with execution discipline, enterprise governance and long-horizon institution building.</p>
+          </div>
+        </header>
+
+        <div className="founder-pair" aria-label="Founders">
+          {founders.map((leader, index) => (
+            <article className={`leader-feature ${index === 1 ? 'is-reverse' : ''}`} key={leader.name}>
+              <div className="leader-image">
+                <img src={leader.image} alt={`${leader.name}, ${leader.role}`} loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />
               </div>
-              <div className="flex flex-1 flex-col p-6 md:p-7">
-                <span className="text-[10px] font-bold uppercase tracking-[0.17em] text-[#8a8273]">{String(index + 1).padStart(2, '0')} · Leadership</span>
-                <h3 className="mt-5 text-2xl font-semibold tracking-[-0.035em] text-[#101417]">{leader.name}</h3>
-                <p className="mt-1 text-sm font-bold text-[#7b1e3b]">{leader.role}</p>
-                <p className="mt-5 text-[13px] leading-6 text-[#616b6f]">{leader.bio}</p>
-                <a
-                  href={leader.linkedin}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-auto inline-flex items-center justify-between border-t border-black/10 pt-5 text-xs font-extrabold text-[#101417]"
-                >
-                  <span>LinkedIn profile</span><span aria-hidden="true">↗</span>
-                </a>
+              <div className="leader-copy">
+                <span className="leader-index">{String(index + 1).padStart(2, '0')} · Founder</span>
+                <h3>{leader.name}</h3>
+                <p className="leader-role">{leader.role}</p>
+                <p className="leader-bio">{leader.bio}</p>
+                <LeaderLink href={leader.linkedin} />
               </div>
             </article>
           ))}
         </div>
 
-        <div className="mt-14 grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:gap-20">
-          <div>
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#786d57]">Operating strength</p>
-            <h3 className="mt-4 max-w-[14ch] text-3xl font-semibold leading-[1.02] tracking-[-0.045em] text-[#101417] md:text-4xl">Technology informed by real operating experience.</h3>
+        <div className="directors-block">
+          <header className="directors-head">
+            <div><p className="public-kicker">Board leadership</p></div>
+            <h3>Execution depth across operations and commercial growth.</h3>
+          </header>
+          <div className="directors-grid">
+            {directors.map((leader, index) => (
+              <article className="director-card" key={leader.name}>
+                <div className="leader-image">
+                  <img src={leader.image} alt={`${leader.name}, ${leader.role}`} loading="lazy" decoding="async" />
+                </div>
+                <div className="leader-copy">
+                  <span className="leader-index">{String(index + 3).padStart(2, '0')} · Director</span>
+                  <h4>{leader.name}</h4>
+                  <p className="leader-role">{leader.role}</p>
+                  <p className="leader-bio">{leader.bio}</p>
+                  <LeaderLink href={leader.linkedin} />
+                </div>
+              </article>
+            ))}
           </div>
+        </div>
+
+        <div className="leadership-strength">
           <div>
-            <p className="max-w-3xl text-sm leading-7 text-[#5f686c]">The leadership team has worked in businesses where growth is inseparable from revenue accountability, customer experience, operational execution, budgets, partnerships and governance. That operating perspective shapes Oye !magine’s product philosophy: AI should accelerate judgement and execution while preserving human authority, commercial control and traceable evidence.</p>
-            <div className="mt-7 flex flex-wrap gap-2">
-              {operatingStrengths.map((strength) => <span key={strength} className="rounded-full border border-black/15 bg-[#f8f5ee] px-4 py-2 text-[11px] font-bold text-[#404a4f]">{strength}</span>)}
-            </div>
+            <p className="public-kicker">Operating strength</p>
+            <h3>Built from commercial and operating reality.</h3>
+          </div>
+          <div className="strength-list" aria-label="Leadership operating strengths">
+            {operatingStrengths.map((strength) => <span key={strength}>{strength}</span>)}
           </div>
         </div>
       </div>
