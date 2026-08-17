@@ -79,29 +79,18 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
             <h2>Growth, operated as a governed system.</h2>
             <p>Strategy, intelligence, creation, specialist delivery, approvals, commercial controls and performance evidence in one operating environment.</p>
             <Link href="/contact">Discuss an enterprise or managed-growth rollout <span>↗</span></Link>
-
-            <div className="mt-9 border-t border-white/10 pt-7">
-              <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-white/40">Promoter group</span>
-              <a href="https://indiagully.com" target="_blank" rel="noreferrer" className="mt-3 flex max-w-lg items-end justify-between gap-5 rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-5 transition hover:bg-white/[0.065]">
-                <span>
-                  <strong className="block text-2xl font-semibold tracking-[-0.045em] text-white">INDIA GULLY</strong>
-                  <small className="mt-1 block text-[11px] font-semibold text-white/45">Same promoter & core leadership group</small>
-                </span>
-                <span className="pb-1 text-sm text-white/60" aria-hidden="true">↗</span>
-              </a>
-            </div>
           </section>
           <section className="institutional-footer-links">
             <div><strong>Platform</strong><Link href="/platform">Growth OS</Link><Link href="/solutions">Solutions</Link><Link href="/integrations">Integrations</Link><Link href="/pricing">Commercial model</Link></div>
             <div><strong>Marketplace</strong><Link href="/marketplace">Capabilities</Link><Link href="/customers">Customer models</Link><Link href="/contact">Start an engagement</Link></div>
-            <div><strong>Company</strong><Link href="/about">About</Link><Link href="/about#oye-leadership-heading">Leadership</Link><a href="https://indiagully.com" target="_blank" rel="noreferrer">Promoter group ↗</a><Link href="/trust">Trust & governance</Link><Link href="/status">Status</Link><Link href="/contact">Contact</Link></div>
+            <div><strong>Company</strong><Link href="/about">About</Link><Link href="/about#oye-leadership-heading">Founders & Board</Link><Link href="/trust">Trust & governance</Link><Link href="/status">Status</Link><Link href="/contact">Contact</Link></div>
             <div><strong>Legal</strong><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/dpa">DPA</Link><Link href="/subprocessors">Subprocessors</Link><Link href="/accessibility">Accessibility</Link></div>
           </section>
         </div>
         <div className="institutional-footer-bottom">
           <span>© 2026 Oye Imagine Private Limited</span>
           <span>AI Growth OS · Curated Marketplace · Managed Growth</span>
-          <span>Shared promoter group with India Gully · respective legal entities</span>
+          <span>India · Built for global operations</span>
         </div>
       </footer>
     </div>
