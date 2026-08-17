@@ -5,7 +5,9 @@ import { fileURLToPath } from 'node:url'
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const adminApiRoot = path.join(repoRoot, 'src', 'app', 'api', 'admin')
 const centralGate = path.join(repoRoot, 'src', 'lib', 'auth', 'api-access.ts')
-const adminBoundary = path.join(repoRoot, 'src', 'proxy.ts')
+const sessionBoundary = path.join(repoRoot, 'src', 'lib', 'supabase', 'middleware.ts')
+const proxyPath = path.join(repoRoot, 'src', 'proxy.ts')
+const deprecatedMiddleware = path.join(repoRoot, 'src', 'middleware.ts')
 const legacyHelper = path.join(repoRoot, 'src', 'lib', 'admin-auth.ts')
 const failures = []
 
@@ -22,14 +24,20 @@ for (const route of routes) {
 }
 
 if (fs.existsSync(legacyHelper)) failures.push('src/lib/admin-auth.ts still exists')
-if (!fs.existsSync(adminBoundary)) failures.push('src/proxy.ts admin security boundary is missing')
+if (fs.existsSync(deprecatedMiddleware)) failures.push('src/middleware.ts still exists; Next.js 16 proxy boundary must be authoritative')
+if (!fs.existsSync(proxyPath)) failures.push('src/proxy.ts is missing')
 else {
-  const source = fs.readFileSync(adminBoundary,'utf8')
-  const required = ["matcher: ['/api/admin/:path*']", 'getClaims()', 'getAuthenticatorAssuranceLevel()', "currentLevel !== 'aal2'", "membershipAllowsLane(membership, 'admin')", "'mfa_required'", "'access_denied'"]
-  for (const marker of required) if (!source.includes(marker)) failures.push(`admin proxy boundary is missing required security marker: ${marker}`)
+  const source = fs.readFileSync(proxyPath,'utf8')
+  if (!source.includes("'/api/admin/:path*'")) failures.push('proxy matcher does not cover all admin APIs')
+  if (!source.includes('updateSession(request)')) failures.push('proxy does not delegate to the verified session boundary')
 }
-
-if (!fs.existsSync(centralGate)) failures.push('central API access gate is missing')
+if (!fs.existsSync(sessionBoundary)) failures.push('Supabase session boundary is missing')
+else {
+  const source = fs.readFileSync(sessionBoundary,'utf8')
+  const required = ["isAdmin || membershipRequiresMfa(membership)", "currentLevel !== 'aal2'", "apiError('mfa_required', 403)", "selectMembershipForLane(memberships, 'admin')"]
+  for (const marker of required) if (!source.includes(marker)) failures.push(`session boundary is missing required admin security marker: ${marker}`)
+}
+if (!fs.existsSync(centralGate)) failures.push('central route-level API access gate is missing')
 else {
   const source = fs.readFileSync(centralGate,'utf8')
   if (!source.includes("lane === 'admin'") || !source.includes('aal2') || !source.includes('mfa_required')) failures.push('central route-level API gate does not fail closed on admin AAL2')
@@ -42,4 +50,4 @@ if (failures.length) {
   process.exit(1)
 }
 const direct = routes.filter((route)=>fs.readFileSync(route,'utf8').includes('@/lib/auth/api-access')).length
-console.log(`Admin AAL2 coverage verified across ${routes.length} admin API route(s): shared AAL2/admin-membership boundary active, ${direct} route(s) also apply direct permission-aware API gating, zero legacy static-secret markers.`)
+console.log(`Admin AAL2 coverage verified across ${routes.length} admin API route(s): Next.js proxy -> Supabase boundary requires admin lane + AAL2, ${direct} route(s) add direct permission-aware gating, zero legacy static-secret markers.`)
