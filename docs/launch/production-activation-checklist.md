@@ -6,7 +6,7 @@ Status is evidence-based. A green build or adapter definition does not make an e
 - [x] Vercel production deployment passes and reaches `READY`
 - [x] Workspace branding smoke passes
 - [x] Full Growth OS validation passes
-- [x] Migration-chain / production parity validation passes at 78 Git migrations and 78 production ledger entries
+- [x] Migration-chain / production parity validation passes at 79 Git migrations and 79 production ledger entries
 - [x] Canonical public host is aligned to `https://www.oyeimagine.com` in page metadata, sitemap and robots
 - [x] Signed-out `/login` is reachable without an auth redirect loop
 - [x] Post-release Vercel runtime-error scan is clean
@@ -20,9 +20,14 @@ Status is evidence-based. A green build or adapter definition does not make an e
 - [x] Public database tables use RLS; service-only tables remain default-deny where no client policy is intended
 - [x] Browser-facing roles have no `TRUNCATE`, `REFERENCES` or `TRIGGER` privilege on public tables
 - [x] Browser-facing roles cannot execute public-schema helper functions by default
+- [x] Public contact intake uses a race-safe service-role rate limiter with separate network/device and identity ceilings
+- [x] Shared secret environment access is guarded by a `server-only` import boundary
+- [x] Repository-controlled weekly dependency updates and a production dependency audit gate are configured
+- [ ] GitHub native Dependabot security alerts enabled and issue #175 closed with evidence
 - [ ] Production administrator completes mandatory password change
 - [ ] Production administrator enrolls MFA and produces real AAL2 sign-in evidence
 - [ ] Supabase Auth leaked-password protection enabled and security advisor re-run
+- [ ] Enforced Content Security Policy introduced only after tested Supabase/provider origin coverage
 
 ## External providers
 - [ ] Google Ads developer token / production access confirmed provider-side

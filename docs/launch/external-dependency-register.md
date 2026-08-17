@@ -16,6 +16,7 @@ This register records external and human dependencies that cannot be closed by a
 | oye-imagine | platform_admin | password_change | blocked_user_action | platform_owner | Production administrator remains flagged for a mandatory password change. Complete the real authenticated password-change flow; do not clear the flag administratively. |
 | oye-imagine | platform_admin | mfa_enrollment | blocked_user_action | platform_owner | Platform-owner membership requires MFA and no factor is enrolled. Enroll a real factor and capture an AAL2 sign-in proof. |
 | oye-imagine | supabase_auth | leaked_password_protection | blocked_platform_setting | platform_security | Supabase security advisor reports leaked-password protection disabled. Enable the Auth password-security setting and re-run the security advisor. |
+| oye-imagine | github | native_dependabot_security_alerts | blocked_platform_setting | platform_security | GitHub reports native Dependabot alerts disabled. PR #174 adds weekly dependency updates and an independent production `npm audit` gate, but the native GitHub security-alert setting must still be enabled separately. Tracked by issue #175. |
 | neejee | google_oauth | google_ads_live_access | not_connected | integrations | Google OAuth/Ads capability is registered, but no production credential profile, integration account, resource link or publish-readiness proof exists. |
 | neejee | google_oauth | ga4_property_access | not_connected | integrations | No production control-plane credential/profile/account/resource evidence exists. |
 | neejee | google_oauth | search_console_property_access | not_connected | integrations | No production control-plane credential/profile/account/resource evidence exists. |
@@ -23,7 +24,7 @@ This register records external and human dependencies that cannot be closed by a
 | neejee | aisensy | whatsapp_production_access | not_connected | integrations | AiSensy adapter is registered, but no production provider credential/profile/account/resource evidence exists. |
 | neejee | external_channels | publish_readiness_proof | no_evidence | growth_ops | `execution_channel_publish_readiness` contains no provider-side production proof. Keep consequential publish/spend actions approval-gated until evidence exists. |
 
-The same nine records are persisted in `public.external_dependency_register` in the production Supabase project so application/runtime surfaces can consume the operational truth.
+The same ten records are persisted in `public.external_dependency_register` in the production Supabase project so application/runtime surfaces can consume the operational truth.
 
 ## Closure discipline
 A dependency can move to `verified` only when the external provider or real user action produces evidence that can be independently checked. Unit tests, mocks, generated drafts, adapter registration and CI success are not substitutes for provider-side proof.
