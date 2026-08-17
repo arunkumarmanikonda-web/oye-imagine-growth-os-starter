@@ -4,30 +4,42 @@ export default function SupportPage() {
   const experience = getLegalGovernanceExperience()
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-12 text-white md:px-10">
-      <section className="mx-auto max-w-5xl rounded-[2rem] border border-white/10 bg-white/5 p-8">
-        <p className="text-sm uppercase tracking-[0.35em] text-cyan-300">Support</p>
-        <h1 className="mt-4 text-4xl font-semibold">Support operations and publishing governance</h1>
-        <p className="mt-4 max-w-3xl text-base leading-8 text-slate-300">
-          Governed support routes for onboarding, legal questions, CMS publishing changes and accountable client coordination.
-        </p>
-
-        <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          {experience.supportChannels.map((channel) => (
-            <article key={channel.label} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-6">
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">{channel.label}</p>
-              <p className="mt-3 text-lg font-semibold">{channel.value}</p>
-              <p className="mt-3 text-sm leading-7 text-slate-300">{channel.responseWindow}</p>
-              <a href={channel.href} className="mt-4 inline-block text-sm font-semibold text-cyan-300">
-                Contact via {channel.label.toLowerCase()}
-              </a>
-            </article>
-          ))}
+    <main className="public-premium">
+      <section className="cms-institutional-hero">
+        <div className="cms-institutional-hero-inner">
+          <div>
+            <p className="public-kicker">Support operations</p>
+            <h1>Support with context, ownership and a clear route.</h1>
+            <p className="cms-lead">Governed support routes for onboarding, legal questions, CMS publishing changes and accountable client coordination.</p>
+          </div>
+          <aside className="cms-hero-aside">
+            <p className="public-kicker">Support principle</p>
+            <strong>The right issue should reach the right operating owner.</strong>
+            <p>Account, legal, publishing and customer coordination requests remain distinct so sensitive or consequential work is not handled through an ambiguous general queue.</p>
+          </aside>
         </div>
+      </section>
 
-        <div className="mt-8 rounded-[1.5rem] border border-white/10 bg-black/20 p-6 text-sm leading-7 text-slate-300">
-          <p>{experience.cmsPublicationNote}</p>
-          <p className="mt-3">Legal entity: {experience.legalIdentity.legalName}</p>
+      <section className="public-section">
+        <div className="public-wrap">
+          <div className="public-section-head"><p className="public-kicker">Support channels</p><div><h2>Choose the route that matches the issue.</h2><p>Published response windows describe the intended support posture for each available channel.</p></div></div>
+          <div className="cms-card-grid">
+            {experience.supportChannels.map((channel, index) => (
+              <article key={channel.label} className="cms-card">
+                <small>{String(index + 1).padStart(2, '0')} · {channel.label}</small>
+                <h3>{channel.value}</h3>
+                <p>{channel.responseWindow}</p>
+                <a href={channel.href}>Contact via {channel.label.toLowerCase()} →</a>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="public-final">
+        <div className="public-wrap public-final-grid">
+          <div><p className="public-kicker">Publishing governance</p><h2>Public changes remain part of an accountable publishing process.</h2></div>
+          <div><p>{experience.cmsPublicationNote}</p><p style={{marginTop:16}}>Legal entity: {experience.legalIdentity.legalName}</p><div className="public-actions"><a href="/contact" className="public-btn-primary">Contact Oye !magine <span>↗</span></a><a href="/status" className="public-btn-secondary">Service status</a></div></div>
         </div>
       </section>
     </main>
