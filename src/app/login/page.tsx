@@ -8,13 +8,22 @@ const errorCopy: Record<string, string> = {
   access_denied: 'This account does not yet have an active Oye !magine workspace membership.',
 }
 
+const allowedReturnPrefixes = ['/workspace', '/admin', '/client', '/onboarding/activation'] as const
+
+function safeNext(value?: string) {
+  const raw = String(value ?? '').trim()
+  if (!raw || !raw.startsWith('/') || raw.startsWith('//') || raw.includes('\\')) return ''
+  return allowedReturnPrefixes.some((prefix) => raw === prefix || raw.startsWith(`${prefix}/`) || raw.startsWith(`${prefix}?`)) ? raw : ''
+}
+
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>
+  searchParams: Promise<{ error?: string; next?: string }>
 }) {
   const params = await searchParams
   const message = params.error ? errorCopy[params.error] ?? 'Sign in could not be completed.' : null
+  const next = safeNext(params.next)
 
   return (
     <main className="auth-premium-page">
@@ -39,6 +48,7 @@ export default async function LoginPage({
           <div className="auth-form-heading"><p>Welcome back</p><h2>Continue to your workspace</h2><span>Your access scope is resolved automatically after your identity is verified.</span></div>
           {message ? <div className="auth-error" role="alert">{message}</div> : null}
           <form action="/api/auth/login" method="post" className="auth-premium-form">
+            {next ? <input type="hidden" name="next" value={next} /> : null}
             <label>Email address<input type="email" name="email" autoComplete="username" required placeholder="you@company.com" /></label>
             <label>Password<input type="password" name="password" autoComplete="current-password" required placeholder="Your password" /></label>
             <div className="auth-form-meta"><label className="auth-checkbox"><input type="checkbox" name="remember" /> <span>Keep me signed in</span></label><Link href="/auth/forgot-password">Forgot password?</Link></div>

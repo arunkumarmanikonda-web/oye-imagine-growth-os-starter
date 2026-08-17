@@ -2,30 +2,34 @@ const leaders = [
   {
     name: 'Arun Kumar Manikonda',
     role: 'Founder & Managing Director',
+    context: 'Oye !magine · IndiaGully promoter-group leadership',
     image: '/leadership/arun-kumar-manikonda.jpg',
     linkedin: 'https://www.linkedin.com/in/arun-kumar-manikonda-74056748/',
-    bio: 'Founder and enterprise operator with nearly two decades of leadership across hospitality, destination entertainment, real estate, strategic advisory and transaction-led businesses. Arun has led complex consumer-facing operations at executive and managing-director level, with direct responsibility across revenue, growth, commercial strategy, partnerships, governance and business transformation. At Oye !magine, he leads the company vision, institutional strategy and the development of an AI-native growth operating model built for accountable enterprise execution.',
+    bio: 'Founder and enterprise operator with nearly two decades of leadership across hospitality, destination entertainment, real estate, strategic advisory and transaction-led businesses. Arun has carried executive and managing-director responsibility across revenue, growth, commercial strategy, partnerships, governance and business transformation. At Oye !magine, he leads the institutional vision and the development of an AI-native growth operating model built for accountable enterprise execution.',
   },
   {
     name: 'Nidhi Chauhan',
-    role: 'Co-Founder',
-    image: '/leadership/nidhi-chauhan.webp',
+    role: 'Growth Leadership · Sales & Marketing',
+    context: 'Oye !magine leadership',
+    image: '/leadership/nidhi-chauhan.jpg',
     linkedin: 'https://www.linkedin.com/in/nidhi-chauhan-2a5543168/',
-    bio: 'Co-Founder and growth leader with deep experience across sales, marketing, consumer acquisition, partnerships and destination-led businesses. Nidhi has spent the last four years leading Sales & Marketing for Worlds of Wonder at Entertainment City Limited, combining revenue ownership with brand building, channel development, institutional sales and customer-growth strategy. At Oye !magine, she brings the market-facing discipline required to ensure the platform remains commercially relevant, customer-led and grounded in the realities of modern growth execution.',
+    bio: 'Sales and marketing leader with deep experience across revenue growth, consumer acquisition, partnerships and destination-led businesses. Nidhi has spent the last four years leading Sales & Marketing for Worlds of Wonder at Entertainment City Limited, combining revenue ownership with brand building, channel development, institutional sales and customer-growth strategy. At Oye !magine, she brings the market-facing discipline required to keep the operating system commercially relevant and grounded in real customer behaviour.',
   },
   {
     name: 'Pavan Kumar Manikonda',
-    role: 'Director',
+    role: 'Executive Leadership · Operations',
+    context: 'IndiaGully promoter-group leadership',
     image: '/leadership/pavan-kumar-manikonda.jpg',
     linkedin: 'https://in.linkedin.com/in/pavan-kumar-manikonda-49254421',
-    bio: 'Director and operating leader with 18+ years of experience across hospitality, hotel operations, HORECA, vendor ecosystems, brand onboarding and service delivery. Pavan brings a strong execution lens to Oye !magine, with particular depth in process discipline, partner operations, commercial coordination and the practical systems required to translate strategy into repeatable delivery at scale.',
+    bio: 'Operating leader with 18+ years of experience across hospitality, hotel operations, HORECA, vendor ecosystems, brand onboarding and service delivery. As Executive Director within the IndiaGully leadership bench, Pavan brings process discipline, partner operations and the practical systems required to translate strategy into repeatable delivery at scale.',
   },
   {
     name: 'Amit Jhingan',
-    role: 'Director',
+    role: 'Commercial Leadership · Real Estate',
+    context: 'IndiaGully promoter-group leadership',
     image: '/leadership/amit-jhingan.png',
     linkedin: 'https://www.linkedin.com/in/amit-jhingan-11631451/',
-    bio: 'Director and commercial leader with 15+ years of pan-India experience across real estate, retail leasing, commercial transactions, asset advisory and relationship-led business development. Amit contributes a strong institutional perspective on enterprise sales, commercial structuring, market development and high-value client engagement, strengthening Oye !magine’s ability to serve complex businesses and large operating mandates.',
+    bio: 'Commercial leader with 15+ years of pan-India experience across real estate, retail leasing, commercial transactions, hospitality asset advisory and relationship-led business development. As President, Real Estate within IndiaGully, Amit contributes institutional depth in enterprise sales, commercial structuring, market development and high-value client engagement.',
   },
 ] as const
 
@@ -48,52 +52,33 @@ function LeaderLink({ href }: { href: string }) {
 }
 
 export function LeadershipSection() {
-  const founders = leaders.slice(0, 2)
-  const directors = leaders.slice(2)
-
   return (
     <section className="leadership-section" aria-labelledby="oye-leadership-heading">
       <div className="leadership-wrap">
         <header className="leadership-intro">
-          <div><p className="public-kicker">Founders & Directors</p></div>
+          <div><p className="public-kicker">Leadership & promoter group</p></div>
           <div>
             <h2 id="oye-leadership-heading">Operating judgement behind the intelligence.</h2>
-            <p>Oye !magine is being built by leaders who have carried revenue, customer, operating and commercial accountability in real businesses. The leadership model deliberately combines market-facing growth judgement with execution discipline, enterprise governance and long-horizon institution building.</p>
+            <p>Oye !magine is being built around a senior operating bench with experience carrying revenue, customer, commercial and execution accountability in real businesses. The leadership model brings the established IndiaGully promoter-group bench together with dedicated sales and marketing leadership, creating continuity across enterprise strategy, commercial development, operations and customer growth.</p>
           </div>
         </header>
 
-        <div className="founder-pair" aria-label="Founders">
-          {founders.map((leader, index) => (
-            <article className={`leader-feature ${index === 1 ? 'is-reverse' : ''}`} key={leader.name}>
-              <div className="leader-image">
-                <img src={leader.image} alt={`${leader.name}, ${leader.role}`} loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />
-              </div>
-              <div className="leader-copy">
-                <span className="leader-index">{String(index + 1).padStart(2, '0')} · Founder</span>
-                <h3>{leader.name}</h3>
-                <p className="leader-role">{leader.role}</p>
-                <p className="leader-bio">{leader.bio}</p>
-                <LeaderLink href={leader.linkedin} />
-              </div>
-            </article>
-          ))}
-        </div>
-
         <div className="directors-block">
           <header className="directors-head">
-            <div><p className="public-kicker">Board leadership</p></div>
-            <h3>Execution depth across operations and commercial growth.</h3>
+            <div><p className="public-kicker">Senior leadership bench</p></div>
+            <h3>Market judgement, operating discipline and institutional accountability.</h3>
           </header>
           <div className="directors-grid">
-            {directors.map((leader, index) => (
+            {leaders.map((leader, index) => (
               <article className="director-card" key={leader.name}>
                 <div className="leader-image">
-                  <img src={leader.image} alt={`${leader.name}, ${leader.role}`} loading="lazy" decoding="async" />
+                  <img src={leader.image} alt={`${leader.name}, ${leader.role}`} loading={index < 2 ? 'eager' : 'lazy'} decoding="async" />
                 </div>
                 <div className="leader-copy">
-                  <span className="leader-index">{String(index + 3).padStart(2, '0')} · Director</span>
+                  <span className="leader-index">{String(index + 1).padStart(2, '0')} · Leadership</span>
                   <h4>{leader.name}</h4>
                   <p className="leader-role">{leader.role}</p>
+                  <p className="leader-context">{leader.context}</p>
                   <p className="leader-bio">{leader.bio}</p>
                   <LeaderLink href={leader.linkedin} />
                 </div>
