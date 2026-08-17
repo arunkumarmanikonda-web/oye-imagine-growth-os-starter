@@ -36,12 +36,12 @@ export default function StatusPage() {
       <section className="public-section">
         <div className="public-wrap">
           <div className="public-section-head"><p className="public-kicker">Current posture</p><div><h2>Core service areas and their present operating state.</h2><p>Status is stated at the service layer. Individual tenant integrations may differ because provider credentials, account permissions and external service health are customer-specific.</p></div></div>
-          <div className="status-grid">
+          <div className="cms-card-grid">
             {services.map(([name, state, description], index) => (
-              <article className="status-row" key={name}>
-                <span className="status-index">{String(index + 1).padStart(2, '0')}</span>
-                <div><h3>{name}</h3><p>{description}</p></div>
-                <strong className="status-state">{state}</strong>
+              <article className="cms-card" key={name}>
+                <small>{String(index + 1).padStart(2, '0')} · {state}</small>
+                <h3>{name}</h3>
+                <p>{description}</p>
               </article>
             ))}
           </div>
