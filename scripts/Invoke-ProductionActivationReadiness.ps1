@@ -16,6 +16,11 @@ node scripts/verify-webhook-authenticity-contract.mjs
 if ($LASTEXITCODE -ne 0) { throw "webhook authenticity verification failed with exit code $LASTEXITCODE" }
 
 Write-Host ''
+Write-Host "=== UNSUBSCRIBE INTENT AND REPLAY SAFETY ==="
+node scripts/verify-unsubscribe-intent-contract.mjs
+if ($LASTEXITCODE -ne 0) { throw "unsubscribe intent/replay verification failed with exit code $LASTEXITCODE" }
+
+Write-Host ''
 Write-Host "=== ADMIN OPS RELEASE SURFACES ==="
 npm run test:admin-ops-release-surfaces
 if ($LASTEXITCODE -ne 0) { throw "npm run test:admin-ops-release-surfaces failed with exit code $LASTEXITCODE" }
