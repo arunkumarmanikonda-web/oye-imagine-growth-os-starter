@@ -35,9 +35,15 @@ expect(readiness.includes('migrationFileCount: 93'), 'Runtime release expectatio
 expect(readiness.includes("lastSourceFile: '20260818190000_release_schema_evidence.sql'"), 'Runtime release expectation has the wrong migration tail.')
 expect(readiness.includes("lastProductionMigrationName: 'release_schema_evidence'"), 'Runtime release expectation has the wrong production migration name.')
 
+expect(migration.includes('language plpgsql'), 'Release schema evidence RPC must use capability-aware PL/pgSQL.')
 expect(migration.includes('security definer'), 'Release schema evidence RPC must be SECURITY DEFINER.')
 expect(migration.includes('set search_path = pg_catalog, public'), 'Release schema evidence RPC must use a fixed safe search path.')
-expect(migration.includes('from supabase_migrations.schema_migrations'), 'Release schema evidence RPC must read the real production migration ledger.')
+expect(migration.includes("to_regclass('supabase_migrations.schema_migrations') is null"), 'Release schema evidence RPC must detect a missing Supabase migration ledger without failing function creation.')
+expect(migration.includes("'ledgerAvailable', false"), 'Portable fallback must explicitly report the migration ledger as unavailable.')
+expect(migration.includes("'migrationCount', null"), 'Portable fallback must not fabricate a migration count.')
+expect(migration.includes('execute $sql$'), 'Production Supabase ledger query must be dynamically resolved after the capability check.')
+expect(migration.includes('from supabase_migrations.schema_migrations'), 'Release schema evidence RPC must read the real production migration ledger when available.')
+expect(migration.includes("'ledgerAvailable', true"), 'Real production ledger result must explicitly report ledger availability.')
 expect(migration.includes('revoke all on function public.release_schema_evidence() from public, anon, authenticated'), 'Browser execute must be revoked from release schema evidence RPC.')
 expect(migration.includes('grant execute on function public.release_schema_evidence() to service_role'), 'Service-role execute grant is missing from release schema evidence RPC.')
 
@@ -93,4 +99,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('Release readiness contract verified: 93/93 schema truth, AAL2 platform-owner access, no secret-presence readiness signals, provider/funding activation remains evidence-backed, external/human requirements remain fail-closed, CSP enforcement remains evidence-gated, and unrestricted autonomy remains disabled by design.')
+console.log('Release readiness contract verified: 93/93 schema truth, capability-aware portable ledger evidence, AAL2 platform-owner access, no secret-presence readiness signals, provider/funding activation remains evidence-backed, external/human requirements remain fail-closed, CSP enforcement remains evidence-gated, and unrestricted autonomy remains disabled by design.')
