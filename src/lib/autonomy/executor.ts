@@ -1,9 +1,11 @@
 import crypto from 'node:crypto'
 import type { ApiAccessContext } from '@/lib/auth/api-access'
+import { resolveRuntimeProviderFields } from '@/lib/config-control/runtime-provider-config'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { resolveOperationalTarget, type OperationalTarget } from '@/lib/integrations/operational-target'
 import { createBoundedSearchCampaign, readCampaign, setCampaignStatus } from '@/lib/integrations/google-ads'
 import { readGoogleAdsCustomer } from '@/lib/integrations/google-ads-customer'
+import { googleAdsRuntimeConfig } from '@/lib/integrations/google-ads-runtime'
 import { resolveSocialPublishingConnection } from '@/lib/integrations/social-accounts'
 import { publishSocialContent } from '@/lib/integrations/social-publish'
 import { publishYouTubeVideo } from '@/lib/integrations/youtube'
@@ -42,6 +44,27 @@ function runtimeMissing(names: string[]) {
   return names.filter(name => !process.env[name]?.trim())
 }
 
+async function googleOauthRuntimeState() {
+  const bootstrapReady = runtimeMissing(['OYE_OAUTH_ENCRYPTION_KEY']).length === 0
+  const resolution = await resolveRuntimeProviderFields({ providerKey: 'google_oauth', fieldKeys: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'] }).catch(() => null)
+  const missing = resolution?.missing || ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET']
+  return { ready: bootstrapReady && missing.length === 0, bootstrapReady, missing, sources: resolution?.sources || {} }
+}
+
+async function googleAdsRuntimeState() {
+  const oauth = await googleOauthRuntimeState()
+  let adsReady = false
+  let adsSources: Record<string, unknown> = {}
+  try {
+    const ads = await googleAdsRuntimeConfig()
+    adsReady = true
+    adsSources = ads.sources
+  } catch {
+    adsReady = false
+  }
+  return { ready: oauth.ready && adsReady, oauth, adsReady, adsSources }
+}
+
 function lifecycleProvider(input: AutonomousExecutionInput) {
   if (input.channel === 'email') return String(input.payload?.provider || 'resend')
   if (input.channel === 'whatsapp') return String(input.payload?.provider || 'whatsapp_cloud')
@@ -49,8 +72,15 @@ function lifecycleProvider(input: AutonomousExecutionInput) {
   return 'invalid'
 }
 
-function providerBlockers(input: AutonomousExecutionInput) {
-  if (input.actionKey === 'campaign.launch') return runtimeMissing(['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_ADS_DEVELOPER_TOKEN', 'OYE_OAUTH_ENCRYPTION_KEY']).map(name => `runtime_secret_missing:${name}`)
+async function providerBlockers(input: AutonomousExecutionInput) {
+  if (input.actionKey === 'campaign.launch') {
+    const state = await googleAdsRuntimeState()
+    const blockers: string[] = []
+    if (!state.oauth.bootstrapReady) blockers.push('runtime_secret_missing:OYE_OAUTH_ENCRYPTION_KEY')
+    for (const name of state.oauth.missing) blockers.push(`provider_runtime_field_missing:${name}`)
+    if (!state.adsReady) blockers.push('provider_runtime_field_missing:GOOGLE_ADS_DEVELOPER_TOKEN')
+    return blockers
+  }
   if (input.actionKey === 'lifecycle.send') {
     const provider = lifecycleProvider(input)
     if (input.channel === 'email' && provider !== 'resend') return [`provider_channel_mismatch:${provider}:email`]
@@ -63,7 +93,13 @@ function providerBlockers(input: AutonomousExecutionInput) {
   }
   if (input.actionKey === 'social.publish') {
     if (!['facebook', 'instagram', 'linkedin', 'youtube'].includes(input.channel)) return [`social_channel_unsupported:${input.channel}`]
-    if (input.channel === 'youtube') return runtimeMissing(['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'OYE_OAUTH_ENCRYPTION_KEY']).map(name => `runtime_secret_missing:${name}`)
+    if (input.channel === 'youtube') {
+      const state = await googleOauthRuntimeState()
+      const blockers: string[] = []
+      if (!state.bootstrapReady) blockers.push('runtime_secret_missing:OYE_OAUTH_ENCRYPTION_KEY')
+      for (const name of state.missing) blockers.push(`provider_runtime_field_missing:${name}`)
+      return blockers
+    }
     return runtimeMissing(['OYE_OAUTH_ENCRYPTION_KEY']).map(name => `runtime_secret_missing:${name}`)
   }
   return []
@@ -132,7 +168,7 @@ async function gate(access: ApiAccessContext, input: AutonomousExecutionInput): 
   const policyJson = (approvalPolicy?.policy || {}) as Record<string, unknown>
   if (!approvalPolicy || policyJson.autonomous !== true) blockers.push('autonomous_policy_not_authorized')
   if (approvalPolicy && (approvalPolicy.maker_checker_required || Number(approvalPolicy.min_approvers || 0) > 0)) blockers.push('human_approval_still_required')
-  blockers.push(...providerBlockers(input))
+  blockers.push(...await providerBlockers(input))
   if (input.actionKey === 'campaign.launch') {
     const account: any = await googleAccount(target)
     if (!account) blockers.push('google_account_not_connected')
@@ -369,7 +405,7 @@ export async function autonomousExecutionStatus(access: ApiAccessContext, worksp
   const target = await resolveOperationalTarget(access, workspaceId)
   const core = coreTarget(target)
   const admin = createSupabaseAdminClient()
-  const [policy, media, readiness, runs, routes, approvals, google, socialAccounts] = await Promise.all([
+  const [policy, media, readiness, runs, routes, approvals, google, socialAccounts, googleOauthState, googleAdsState] = await Promise.all([
     admin.from('agent_autonomy_policies').select('*').eq('tenant_id', core.tenantId).eq('workspace_id', core.workspaceId).eq('agent_key', 'growth-executor').maybeSingle(),
     admin.from('commercial_media_balance_accounts').select('tenant_id,currency,available,reserved,spent,updated_at').eq('tenant_id', target.tenantId).maybeSingle(),
     admin.from('execution_channel_publish_readiness').select('*').eq('brand_name', core.brandName).order('created_at', { ascending: false }).limit(50),
@@ -382,6 +418,8 @@ export async function autonomousExecutionStatus(access: ApiAccessContext, worksp
       if (target.workspaceId) query = query.eq('workspace_id', target.workspaceId)
       return query.order('created_at', { ascending: false })
     })(),
+    googleOauthRuntimeState(),
+    googleAdsRuntimeState(),
   ])
   for (const result of [policy, media, readiness, runs, routes, approvals, socialAccounts]) if (result.error) throw new Error(`autonomy_status_read_failed:${result.error.message}`)
   const latest = new Map<string, any>()
@@ -399,8 +437,8 @@ export async function autonomousExecutionStatus(access: ApiAccessContext, worksp
     killSwitch: Boolean((policy.data as any)?.kill_switch),
     mediaBalance: media.data || null,
     providers: {
-      google_ads: { runtimeConfigured: runtimeMissing(['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_ADS_DEVELOPER_TOKEN', 'OYE_OAUTH_ENCRYPTION_KEY']).length === 0, accountConnected: Boolean(googleRow), providerVerified: discovery?.googleAdsOk === true, lastVerifiedAt: googleRow?.last_verified_at || null },
-      youtube: { runtimeConfigured: runtimeMissing(['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'OYE_OAUTH_ENCRYPTION_KEY']).length === 0, accountConnected: Boolean(googleRow), uploadScopeGranted: googleScopes.includes('https://www.googleapis.com/auth/youtube.upload'), providerVerified: discovery?.youtubeOk === true, channelId: discovery?.youtubeChannelId || null, lastVerifiedAt: googleRow?.last_verified_at || null },
+      google_ads: { runtimeConfigured: googleAdsState.ready, configurationSources: { oauth: googleAdsState.oauth.sources, ads: googleAdsState.adsSources }, accountConnected: Boolean(googleRow), providerVerified: discovery?.googleAdsOk === true, lastVerifiedAt: googleRow?.last_verified_at || null },
+      youtube: { runtimeConfigured: googleOauthState.ready, configurationSources: googleOauthState.sources, accountConnected: Boolean(googleRow), uploadScopeGranted: googleScopes.includes('https://www.googleapis.com/auth/youtube.upload'), providerVerified: discovery?.youtubeOk === true, channelId: discovery?.youtubeChannelId || null, lastVerifiedAt: googleRow?.last_verified_at || null },
       email: { runtimeConfigured: runtimeMissing(['RESEND_API_KEY', 'RESEND_FROM_EMAIL']).length === 0, adapter: 'resend' },
       whatsapp: { runtimeConfigured: runtimeMissing(['WHATSAPP_GRAPH_VERSION', 'WHATSAPP_CLOUD_PHONE_NUMBER_ID', 'WHATSAPP_CLOUD_ACCESS_TOKEN']).length === 0, adapter: 'whatsapp_cloud' },
       sms: { runtimeConfigured: runtimeMissing(['FAST2SMS_API_URL', 'FAST2SMS_API_KEY']).length === 0, adapter: 'fast2sms' },
