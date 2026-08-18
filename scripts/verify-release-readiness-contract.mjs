@@ -65,7 +65,9 @@ expect(readiness.includes("state: killSwitch ? 'safe_lock' : 'blocked'"), 'Auton
 expect(readiness.includes('&& !killSwitch'), 'Full unattended autonomy eligibility must require deliberate kill-switch release.')
 expect(readiness.includes("state: providerAccounts > 0 ? 'go' : 'pending_external'"), 'Provider activation must remain evidence-based rather than adapter-based.')
 expect(readiness.includes("state: providerReady > 0 ? 'go' : 'pending_external'"), 'Provider readiness must require current machine READY evidence.')
-expect(readiness.includes("wallets.length === 0"), 'Media funding readiness must distinguish an unfunded wallet state.')
+expect(readiness.includes('const verifiedFundingAvailable = creditedFundingRequests > 0 && wallets.length > 0'), 'Funding readiness must require maker-checker credited funding plus wallet evidence.')
+expect(readiness.includes("state: verifiedFundingAvailable ? 'go' : 'pending_external'"), 'Funding activation must remain pending until credited funding evidence exists.')
+expect(readiness.includes('&& verifiedFundingAvailable'), 'Full unattended autonomy eligibility must require verified credited funding evidence.')
 
 expect(cockpit.includes("fetch('/api/admin/release-status'"), 'Release cockpit must consume the authoritative release-status API.')
 expect(cockpit.includes('NOT ENABLED'), 'Release cockpit must visibly state unrestricted spend/publish is not enabled.')
@@ -91,4 +93,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('Release readiness contract verified: 93/93 schema truth, AAL2 platform-owner access, no secret-presence readiness signals, external/human evidence remains fail-closed, CSP enforcement remains evidence-gated, and unrestricted autonomy remains disabled by design.')
+console.log('Release readiness contract verified: 93/93 schema truth, AAL2 platform-owner access, no secret-presence readiness signals, provider/funding activation remains evidence-backed, external/human requirements remain fail-closed, CSP enforcement remains evidence-gated, and unrestricted autonomy remains disabled by design.')
