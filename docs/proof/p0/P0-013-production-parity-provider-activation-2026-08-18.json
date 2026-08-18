@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "issue": "P0-013",
+  "capturedAt": "2026-08-18",
+  "conclusion": "parity_reconciled",
+  "baseSnapshot": "P0-013-production-parity-scheduler-2026-08-18.json",
+  "supabase": {
+    "projectRef": "bqhaifivpcwwiauiynlv",
+    "baseProductionLedgerCount": 85,
+    "productionLedgerCount": 86,
+    "productionLedgerLastVersion": "20260818101623",
+    "productionLedgerLastName": "google_ads_provider_vault_fields"
+  },
+  "gitMigrations": {
+    "baseFileCount": 85,
+    "fileCount": 86,
+    "duplicateVersionCount": 0,
+    "productionOnly": [],
+    "gitOnly": []
+  },
+  "providerActivationMigration": {
+    "sourceFile": "20260818101000_google_ads_provider_vault_fields.sql",
+    "productionLedgerVersion": "20260818101623",
+    "productionLedgerName": "google_ads_provider_vault_fields"
+  },
+  "activationBoundary": {
+    "growthExecutorKillSwitch": true,
+    "autonomousRunCount": 0,
+    "autonomousQueueCount": 0,
+    "neejeeMediaBalanceAccountCount": 0,
+    "neejeeProviderAccountCount": 0,
+    "migrationIsConfigurationOnly": true,
+    "providerCredentialsCreatedByMigration": false,
+    "mediaFundsCreatedByMigration": false,
+    "providerMutationPerformedByMigration": false
+  }
+}
