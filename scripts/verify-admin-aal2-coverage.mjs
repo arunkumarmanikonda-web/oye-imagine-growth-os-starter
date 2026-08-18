@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url'
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const adminApiRoot = path.join(repoRoot, 'src', 'app', 'api', 'admin')
 const centralGate = path.join(repoRoot, 'src', 'lib', 'auth', 'api-access.ts')
+const workspaceGate = path.join(repoRoot, 'src', 'lib', 'auth', 'workspace-access.ts')
+const adminLayout = path.join(repoRoot, 'src', 'app', 'admin', 'layout.tsx')
 const sessionBoundary = path.join(repoRoot, 'src', 'lib', 'supabase', 'middleware.ts')
 const proxyPath = path.join(repoRoot, 'src', 'proxy.ts')
 const deprecatedMiddleware = path.join(repoRoot, 'src', 'middleware.ts')
@@ -42,6 +44,22 @@ else {
   const source = fs.readFileSync(centralGate,'utf8')
   if (!source.includes("lane === 'admin'") || !source.includes('aal2') || !source.includes('mfa_required')) failures.push('central route-level API gate does not fail closed on admin AAL2')
 }
+if (!fs.existsSync(workspaceGate)) failures.push('server-rendered workspace identity gate is missing')
+else {
+  const source = fs.readFileSync(workspaceGate,'utf8')
+  const required = [
+    'workspaceIdentityRequiresAal2',
+    "lane === 'admin' || membershipRequiresMfa(membership)",
+    "aalData.currentLevel === 'aal2'",
+    "redirect(`/auth/mfa?redirect=${encodeURIComponent(destination)}` as Route)",
+  ]
+  for (const marker of required) if (!source.includes(marker)) failures.push(`workspace identity gate is missing required admin security marker: ${marker}`)
+}
+if (!fs.existsSync(adminLayout)) failures.push('admin layout is missing')
+else {
+  const source = fs.readFileSync(adminLayout,'utf8')
+  if (!source.includes("requireWorkspaceIdentity({ lane: 'admin'")) failures.push('admin layout does not bind server-rendered pages to the admin workspace identity gate')
+}
 if (!routes.length) failures.push('no admin API routes discovered')
 
 if (failures.length) {
@@ -50,4 +68,4 @@ if (failures.length) {
   process.exit(1)
 }
 const direct = routes.filter((route)=>fs.readFileSync(route,'utf8').includes('@/lib/auth/api-access')).length
-console.log(`Admin AAL2 coverage verified across ${routes.length} admin API route(s): Next.js proxy -> Supabase boundary requires admin lane + AAL2, ${direct} route(s) add direct permission-aware gating, zero legacy static-secret markers.`)
+console.log(`Admin AAL2 coverage verified across ${routes.length} admin API route(s) and the server-rendered admin layout: Next.js proxy -> Supabase boundary requires admin lane + AAL2, workspace identity independently requires admin AAL2, ${direct} route(s) add direct permission-aware gating, zero legacy static-secret markers.`)
