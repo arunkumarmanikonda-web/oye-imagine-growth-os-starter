@@ -46,6 +46,9 @@ jobs:
       - name: Verify public intake abuse controls
         run: node scripts/verify-public-intake-abuse-controls.mjs
 
+      - name: Verify webhook authenticity and replay safety
+        run: node scripts/verify-webhook-authenticity-contract.mjs
+
       - name: Run validation suite
         shell: pwsh
         run: ./scripts/Invoke-GrowthOsValidation.ps1
