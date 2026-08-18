@@ -34,6 +34,9 @@ jobs:
       - name: Verify admin AAL2 coverage
         run: node scripts/verify-admin-aal2-coverage.mjs
 
+      - name: Verify CSP telemetry privacy contract
+        run: node scripts/verify-csp-telemetry-contract.mjs
+
       - name: Run validation suite
         shell: pwsh
         run: ./scripts/Invoke-GrowthOsValidation.ps1
