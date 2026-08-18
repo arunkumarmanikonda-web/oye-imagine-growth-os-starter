@@ -1,6 +1,7 @@
 import type { ApiAccessContext } from '@/lib/auth/api-access'
 import { resolveOperationalTarget } from '@/lib/integrations/operational-target'
 import { resolveSocialPublishingConnection } from '@/lib/integrations/social-accounts'
+import { recordProviderCanarySuccess, runProviderQa } from '@/lib/integrations/provider-qa'
 
 export type SocialPublishInput = {
   workspaceId?: string
@@ -27,6 +28,19 @@ async function graphJson(url: string, init?: RequestInit) {
   const payload: any = await response.json().catch(() => ({}))
   if (!response.ok) throw new Error(`meta_graph_request_failed:${payload?.error?.code || response.status}`)
   return payload
+}
+
+async function certifyCanary(
+  access: ApiAccessContext,
+  input: { workspaceId?: string; channel: 'facebook' | 'instagram' | 'linkedin'; accountId: string; resourceId: string },
+) {
+  try {
+    await runProviderQa(access, { workspaceId: input.workspaceId, channel: input.channel })
+    const result = await recordProviderCanarySuccess(access, input)
+    return { certified: true, readiness: result.readiness }
+  } catch (error) {
+    return { certified: false, code: error instanceof Error ? error.message.split(':')[0] : 'provider_canary_certification_failed' }
+  }
 }
 
 async function metaIdentity(access: ApiAccessContext, workspaceId: string | undefined, channel: 'facebook' | 'instagram') {
@@ -58,7 +72,8 @@ export async function publishFacebookPagePost(access: ApiAccessContext, input: S
   const verify = new URLSearchParams({ fields: 'id,created_time,message,permalink_url', access_token: identity.token })
   const published: any = await graphJson(`${graphUrl(identity.version, postId)}?${verify.toString()}`)
   if (String(published.id || '') !== postId) throw new Error('facebook_post_verification_failed')
-  return { provider: 'meta', accountId: identity.account.id, channel: 'facebook', resourceId: postId, published }
+  const readinessCertification = await certifyCanary(access, { workspaceId: input.workspaceId, channel: 'facebook', accountId: identity.account.id, resourceId: postId })
+  return { provider: 'meta', accountId: identity.account.id, channel: 'facebook', resourceId: postId, published, readinessCertification }
 }
 
 async function instagramContainerStatus(identity: Awaited<ReturnType<typeof metaIdentity>>, containerId: string) {
@@ -99,7 +114,8 @@ export async function publishInstagramContent(access: ApiAccessContext, input: S
   const verify = new URLSearchParams({ fields: 'id,media_type,media_url,permalink,timestamp', access_token: identity.token })
   const media: any = await graphJson(`${graphUrl(identity.version, mediaId)}?${verify.toString()}`)
   if (String(media.id || '') !== mediaId) throw new Error('instagram_publish_verification_failed')
-  return { provider: 'meta', accountId: identity.account.id, channel: 'instagram', resourceId: mediaId, containerId, mediaType, published: media }
+  const readinessCertification = await certifyCanary(access, { workspaceId: input.workspaceId, channel: 'instagram', accountId: identity.account.id, resourceId: mediaId })
+  return { provider: 'meta', accountId: identity.account.id, channel: 'instagram', resourceId: mediaId, containerId, mediaType, published: media, readinessCertification }
 }
 
 async function linkedinIdentity(access: ApiAccessContext, workspaceId?: string) {
@@ -129,21 +145,33 @@ export async function publishLinkedInOrganizationPost(access: ApiAccessContext, 
     isReshareDisabledByAuthor: false,
   }
   if (input.linkUrl?.trim()) body.content = { article: { source: input.linkUrl.trim(), title: input.title?.trim() || undefined } }
+  const headers = {
+    Authorization: `Bearer ${identity.accessToken}`,
+    'Content-Type': 'application/json',
+    'Linkedin-Version': identity.version,
+    'X-Restli-Protocol-Version': '2.0.0',
+  }
   const response = await fetch('https://api.linkedin.com/rest/posts', {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${identity.accessToken}`,
-      'Content-Type': 'application/json',
-      'Linkedin-Version': identity.version,
-      'X-Restli-Protocol-Version': '2.0.0',
-    },
+    headers,
     body: JSON.stringify(body),
   })
   const payload: any = await response.json().catch(() => ({}))
   if (response.status !== 201) throw new Error(`linkedin_post_failed:${payload?.status || response.status}`)
   const postId = response.headers.get('x-restli-id')?.trim() || ''
   if (!postId) throw new Error('linkedin_post_id_missing')
-  return { provider: 'linkedin', accountId: identity.account.id, channel: 'linkedin', resourceId: postId, responseStatus: response.status }
+  const readbackResponse = await fetch(`https://api.linkedin.com/rest/posts/${encodeURIComponent(postId)}?viewContext=AUTHOR`, {
+    headers: {
+      Authorization: `Bearer ${identity.accessToken}`,
+      'Linkedin-Version': identity.version,
+      'X-Restli-Protocol-Version': '2.0.0',
+    },
+  })
+  const readback: any = await readbackResponse.json().catch(() => ({}))
+  if (!readbackResponse.ok) throw new Error(`linkedin_post_readback_failed:${readback?.status || readbackResponse.status}`)
+  if (String(readback.id || '') !== postId || String(readback.author || '') !== identity.author || String(readback.lifecycleState || '').toUpperCase() !== 'PUBLISHED') throw new Error('linkedin_post_verification_failed')
+  const readinessCertification = await certifyCanary(access, { workspaceId: input.workspaceId, channel: 'linkedin', accountId: identity.account.id, resourceId: postId })
+  return { provider: 'linkedin', accountId: identity.account.id, channel: 'linkedin', resourceId: postId, responseStatus: response.status, published: readback, readinessCertification }
 }
 
 export async function publishSocialContent(access: ApiAccessContext, input: SocialPublishInput) {
