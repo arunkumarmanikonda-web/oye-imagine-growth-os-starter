@@ -2,6 +2,7 @@ import crypto from 'node:crypto'
 import type { ApiAccessContext } from '@/lib/auth/api-access'
 import { resolveRuntimeProviderFields } from '@/lib/config-control/runtime-provider-config'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { googleAdsRuntimeConfig } from '@/lib/integrations/google-ads-runtime'
 import { resolveOperationalTarget } from '@/lib/integrations/operational-target'
 
 const googleScopes = [
@@ -28,7 +29,7 @@ type GoogleOAuthRuntimeConfig = {
   clientId: string
   clientSecret: string
   redirectUri: string
-  sources: Record<string, 'environment' | 'vault' | 'derived'>
+  sources: Record<string, 'environment' | 'vault' | 'derived' | undefined>
 }
 
 function requiredEnvironment(name: string) {
@@ -247,14 +248,19 @@ export async function googleAccessToken(tenantId: string, workspaceId?: string |
 export async function discoverGoogleResources(tenantId: string, workspaceId?: string | null) {
   const { accessToken, account } = await googleAccessToken(tenantId, workspaceId)
   const headers = { Authorization: `Bearer ${accessToken}` }
-  const adsVersion = process.env.GOOGLE_ADS_API_VERSION || 'v25'
-  const developerTokenResolution = await resolveRuntimeProviderFields({ providerKey: 'google_oauth', fieldKeys: ['GOOGLE_ADS_DEVELOPER_TOKEN'] })
-  const developerToken = developerTokenResolution.values.GOOGLE_ADS_DEVELOPER_TOKEN?.trim()
-  const adsHeaders: Record<string, string> = { ...headers }
-  if (developerToken) adsHeaders['developer-token'] = developerToken
+  let adsConfig: Awaited<ReturnType<typeof googleAdsRuntimeConfig>> | null = null
+  try {
+    adsConfig = await googleAdsRuntimeConfig()
+  } catch {
+    adsConfig = null
+  }
+  const adsHeaders: Record<string, string> = adsConfig
+    ? { ...headers, 'developer-token': adsConfig.developerToken }
+    : { ...headers }
+  if (adsConfig?.loginCustomerId) adsHeaders['login-customer-id'] = adsConfig.loginCustomerId
   const [ads, analytics, search, youtube] = await Promise.allSettled([
-    developerToken
-      ? fetch(`https://googleads.googleapis.com/${adsVersion}/customers:listAccessibleCustomers`, { headers: adsHeaders }).then(async response => ({ ok: response.ok, status: response.status, data: await response.json().catch(() => ({})) }))
+    adsConfig
+      ? fetch(`https://googleads.googleapis.com/${adsConfig.apiVersion}/customers:listAccessibleCustomers`, { headers: adsHeaders }).then(async response => ({ ok: response.ok, status: response.status, data: await response.json().catch(() => ({})) }))
       : Promise.resolve({ ok: false, status: 0, data: { error: 'google_ads_developer_token_not_configured' } }),
     fetch('https://analyticsadmin.googleapis.com/v1beta/accountSummaries?pageSize=200', { headers }).then(async response => ({ ok: response.ok, status: response.status, data: await response.json().catch(() => ({})) })),
     fetch('https://www.googleapis.com/webmasters/v3/sites', { headers }).then(async response => ({ ok: response.ok, status: response.status, data: await response.json().catch(() => ({})) })),
