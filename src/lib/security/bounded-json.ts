@@ -1,13 +1,17 @@
+export type BoundedBodyResult =
+  | { ok: true; bytes: Uint8Array }
+  | { ok: false; code: 'payload_too_large' | 'invalid_body' }
+
 export type BoundedJsonResult<T> =
   | { ok: true; value: T }
   | { ok: false; code: 'payload_too_large' | 'invalid_json' }
 
-export async function readBoundedJson<T>(
+export async function readBoundedBody(
   request: Request,
   maxBytes: number,
-): Promise<BoundedJsonResult<T>> {
+): Promise<BoundedBodyResult> {
   if (!Number.isInteger(maxBytes) || maxBytes < 1) {
-    throw new Error('invalid_bounded_json_limit')
+    throw new Error('invalid_bounded_body_limit')
   }
 
   const contentLength = Number(request.headers.get('content-length') ?? '0')
@@ -16,7 +20,7 @@ export async function readBoundedJson<T>(
   }
 
   if (!request.body) {
-    return { ok: false, code: 'invalid_json' }
+    return { ok: false, code: 'invalid_body' }
   }
 
   const reader = request.body.getReader()
@@ -47,10 +51,25 @@ export async function readBoundedJson<T>(
     offset += chunk.byteLength
   }
 
+  return { ok: true, bytes }
+}
+
+export async function readBoundedJson<T>(
+  request: Request,
+  maxBytes: number,
+): Promise<BoundedJsonResult<T>> {
+  const body = await readBoundedBody(request, maxBytes)
+  if (!body.ok) {
+    return {
+      ok: false,
+      code: body.code === 'payload_too_large' ? 'payload_too_large' : 'invalid_json',
+    }
+  }
+
   try {
     return {
       ok: true,
-      value: JSON.parse(new TextDecoder().decode(bytes)) as T,
+      value: JSON.parse(new TextDecoder().decode(body.bytes)) as T,
     }
   } catch {
     return { ok: false, code: 'invalid_json' }
