@@ -34,6 +34,10 @@ function required(value: unknown, code: string) {
   return result
 }
 
+function scopes(value: unknown) {
+  return Array.isArray(value) ? Array.from(new Set(value.map(String).filter(Boolean))) : []
+}
+
 function assertPlatformOwner(access: ApiAccessContext) {
   if (access.membership.role_key !== 'platform_owner') throw new Error('platform_owner_required')
 }
@@ -52,6 +56,8 @@ function metaGraphUrl(version: string, path: string) {
 async function verifyMeta(input: MetaConnectionInput) {
   const apiVersion = required(input.apiVersion, 'meta_graph_api_version_required')
   const token = required(input.accessToken, 'meta_access_token_required')
+  const grantedScopes = scopes(input.scopes)
+  if (!grantedScopes.includes('pages_manage_posts')) throw new Error('meta_pages_manage_posts_scope_missing')
   const pageId = required(input.facebookPageId, 'meta_facebook_page_id_required').replace(/\D/g, '')
   if (!pageId) throw new Error('meta_facebook_page_id_invalid')
   const query = new URLSearchParams({ fields: 'id,name,instagram_business_account', access_token: token })
@@ -60,6 +66,8 @@ async function verifyMeta(input: MetaConnectionInput) {
   const linkedInstagramId = String(page.instagram_business_account?.id || '') || null
   const requestedInstagramId = input.instagramUserId?.trim() || null
   if (requestedInstagramId && linkedInstagramId !== requestedInstagramId) throw new Error('meta_instagram_identity_mismatch')
+  const capabilities = ['facebook.publish']
+  if (linkedInstagramId && grantedScopes.includes('instagram_basic') && grantedScopes.includes('instagram_content_publish')) capabilities.push('instagram.publish')
   return {
     externalAccountId: pageId,
     accountName: String(page.name || `Meta Page ${pageId}`),
@@ -67,7 +75,8 @@ async function verifyMeta(input: MetaConnectionInput) {
       apiVersion,
       facebookPageId: pageId,
       instagramUserId: requestedInstagramId || linkedInstagramId,
-      verifiedCapabilities: linkedInstagramId ? ['facebook.publish', 'instagram.publish'] : ['facebook.publish'],
+      verifiedCapabilities: capabilities,
+      authoritySource: 'provider_granted_scopes_and_page_identity',
     },
   }
 }
@@ -85,15 +94,21 @@ async function verifyLinkedIn(input: LinkedInConnectionInput) {
   const version = required(input.apiVersion, 'linkedin_api_version_required')
   const organizationUrn = required(input.organizationUrn, 'linkedin_organization_urn_required')
   const memberUrn = required(input.memberUrn, 'linkedin_member_urn_required')
+  const grantedScopes = scopes(input.scopes)
   if (!/^20\d{4}$/.test(version)) throw new Error('linkedin_api_version_invalid')
   if (!/^urn:li:organization:\d+$/.test(organizationUrn)) throw new Error('linkedin_organization_urn_invalid')
   if (!/^urn:li:person:[A-Za-z0-9_-]+$/.test(memberUrn)) throw new Error('linkedin_member_urn_invalid')
+  if (!grantedScopes.includes('w_organization_social')) throw new Error('linkedin_w_organization_social_scope_missing')
+  if (!grantedScopes.includes('r_organization_admin') && !grantedScopes.includes('rw_organization_admin')) throw new Error('linkedin_organization_admin_scope_missing')
 
-  const action = '(organizationContentAuthorizationAction:(actionType:ORGANIC_SHARE_CREATE))'
-  const key = `(impersonator:${encodeURIComponent(memberUrn)},organization:${encodeURIComponent(organizationUrn)},action:${action})`
-  const url = `https://api.linkedin.com/rest/organizationAuthorizations/${key}`
-  const authorization: any = await jsonResponse(url, { headers: linkedinHeaders(token, version) }, 'linkedin_connection_verification_failed')
-  const approved = Boolean(authorization?.status?.['com.linkedin.organization.Approved'] ?? authorization?.status?.approved ?? authorization?.status?.APPROVED)
+  const acls: any = await jsonResponse(
+    'https://api.linkedin.com/rest/organizationAcls?q=roleAssignee&role=ADMINISTRATOR&state=APPROVED&count=100',
+    { headers: linkedinHeaders(token, version) },
+    'linkedin_connection_verification_failed',
+  )
+  const approved = (Array.isArray(acls.elements) ? acls.elements : []).some((acl: any) =>
+    String(acl.organization || '').trim() === organizationUrn && String(acl.roleAssignee || '').trim() === memberUrn,
+  )
   if (!approved) throw new Error('linkedin_organization_publish_not_authorized')
   return {
     externalAccountId: organizationUrn,
@@ -103,7 +118,7 @@ async function verifyLinkedIn(input: LinkedInConnectionInput) {
       organizationUrn,
       memberUrn,
       verifiedCapabilities: ['linkedin.organization.publish'],
-      authorizationAction: 'ORGANIC_SHARE_CREATE',
+      authoritySource: 'approved_administrator_acl_and_granted_write_scope',
     },
   }
 }
@@ -126,7 +141,7 @@ async function persistConnection(target: OperationalTarget, input: SocialConnect
     external_account_id: verified.externalAccountId,
     account_name: verified.accountName,
     status: 'connected',
-    scopes: input.scopes || [],
+    scopes: scopes(input.scopes),
     metadata: { ...verified.metadata, connectedBy: subject },
     last_verified_at: now,
     updated_at: now,
