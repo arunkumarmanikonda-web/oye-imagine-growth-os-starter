@@ -16,6 +16,7 @@ const paths = {
   oauth: path.join(proofDir, 'P0-013-production-parity-managed-social-oauth-2026-08-18.json'),
   readiness: path.join(proofDir, 'P0-013-production-parity-provider-readiness-2026-08-18.json'),
   csp: path.join(proofDir, 'P0-013-production-parity-csp-telemetry-2026-08-18.json'),
+  release: path.join(proofDir, 'P0-013-production-parity-release-readiness-2026-08-18.json'),
 }
 
 const proof = Object.fromEntries(Object.entries(paths).map(([key, value]) => [key, JSON.parse(fs.readFileSync(value, 'utf8'))]))
@@ -49,6 +50,7 @@ const chain = [
   { name: 'oauth', baseFile: path.basename(paths.funding), from: 87, to: 88, tailVersion: '20260818105118', tailName: 'managed_social_oauth_sessions' },
   { name: 'readiness', baseFile: path.basename(paths.oauth), from: 88, to: 91, tailVersion: '20260818172350', tailName: 'provider_readiness_guard_go' },
   { name: 'csp', baseFile: path.basename(paths.readiness), from: 91, to: 92, tailVersion: '20260818180811', tailName: 'durable_csp_telemetry' },
+  { name: 'release', baseFile: path.basename(paths.csp), from: 92, to: 93, tailVersion: '20260818183025', tailName: 'release_schema_evidence' },
 ]
 
 for (const step of chain) {
@@ -62,8 +64,8 @@ for (const step of chain) {
   expect(value.supabase?.productionLedgerLastName === step.tailName, `${step.name}: unexpected production ledger tail name.`)
 }
 
-expect(files.length === 92, `Expected 92 source-controlled migrations, found ${files.length}.`)
-expect(proof.csp.supabase?.productionLedgerCount === files.length, 'Final production/Git migration counts are not exact.')
+expect(files.length === 93, `Expected 93 source-controlled migrations, found ${files.length}.`)
+expect(proof.release.supabase?.productionLedgerCount === files.length, 'Final production/Git migration counts are not exact.')
 
 const versions = new Map()
 for (const file of files) {
@@ -108,6 +110,13 @@ expect(fileSet.has('20260818183000_durable_csp_telemetry.sql'), 'CSP telemetry s
 expect(cspMapping?.sourceFile === '20260818183000_durable_csp_telemetry.sql', 'Unexpected CSP telemetry source mapping.')
 expect(cspMapping?.productionLedgerVersion === '20260818180811', 'Unexpected CSP telemetry production ledger version.')
 expect(cspMapping?.productionLedgerName === 'durable_csp_telemetry', 'Unexpected CSP telemetry production ledger name.')
+
+const releaseMapping = proof.release.releaseMigrations?.[0]
+expect(Array.isArray(proof.release.releaseMigrations) && proof.release.releaseMigrations.length === 1, 'Release-readiness proof must contain exactly one release migration.')
+expect(fileSet.has('20260818190000_release_schema_evidence.sql'), 'Release-readiness source migration is missing.')
+expect(releaseMapping?.sourceFile === '20260818190000_release_schema_evidence.sql', 'Unexpected release-readiness source mapping.')
+expect(releaseMapping?.productionLedgerVersion === '20260818183025', 'Unexpected release-readiness production ledger version.')
+expect(releaseMapping?.productionLedgerName === 'release_schema_evidence', 'Unexpected release-readiness production ledger name.')
 
 expect(Array.isArray(proof.autonomy.releaseMigrations) && proof.autonomy.releaseMigrations.length === 5, 'Autonomy proof must contain five release migrations.')
 for (const item of proof.autonomy.releaseMigrations || []) {
@@ -202,10 +211,19 @@ expect(csp?.autonomousRunCount === 0 && csp?.autonomousQueueCount === 0 && csp?.
 expect(csp?.growthExecutorKillSwitch === true, 'CSP proof lost the kill switch.')
 expect(csp?.migrationCreatesProviderCredential === false && csp?.migrationCreatesMediaFunds === false && csp?.migrationPerformsProviderMutation === false && csp?.migrationReleasesKillSwitch === false && csp?.syntheticCspEvidenceInserted === false, 'CSP migration performed a forbidden side effect.')
 
+const release = proof.release.liveControls
+expect(release?.schemaEvidenceAnonExecute === false && release?.schemaEvidenceAuthenticatedExecute === false && release?.schemaEvidenceServiceRoleExecute === true, 'Release schema-evidence RPC privileges are unsafe.')
+expect(release?.cspReportBucketRowCount === 0 && release?.cspReportObservedCount === 0, 'Release-readiness migration fabricated CSP telemetry.')
+expect(release?.neejeeProviderAccountCount === 0 && release?.neejeeProviderReadinessCount === 0, 'Release-readiness migration fabricated provider evidence.')
+expect(release?.autonomousRunCount === 0 && release?.autonomousActiveQueueCount === 0, 'Release-readiness migration created autonomous work.')
+expect(release?.fundingRequestCount === 0 && release?.mediaBalanceAccountCount === 0, 'Release-readiness migration created funding state.')
+expect(release?.growthExecutorKillSwitch === true, 'Release-readiness proof lost the kill switch.')
+expect(release?.migrationCreatesProviderCredential === false && release?.migrationCreatesMediaFunds === false && release?.migrationPerformsProviderMutation === false && release?.migrationReleasesKillSwitch === false && release?.externalEvidenceAutoCompleted === false, 'Release-readiness migration performed a forbidden side effect.')
+
 if (failures.length) {
   console.error('P0-013 final parity snapshot verification failed.')
   failures.forEach(failure => console.error(`- ${failure}`))
   process.exit(1)
 }
 
-console.log(`P0-013 parity verified: ${files.length} uniquely versioned Git migrations, ${proof.csp.supabase.productionLedgerCount} captured production ledger entries, historical reconciliation retained, governed autonomy/provider/funding/OAuth/readiness boundaries remain safe, and durable CSP telemetry is privacy-minimized, report-only, empty of synthetic evidence, and retention-controlled.`)
+console.log(`P0-013 parity verified: ${files.length} uniquely versioned Git migrations, ${proof.release.supabase.productionLedgerCount} captured production ledger entries, historical reconciliation retained, governed autonomy/provider/funding/OAuth/readiness boundaries remain safe, durable CSP telemetry remains privacy-minimized/report-only, and release schema evidence is service-only with zero synthetic external proof.`)
