@@ -11,11 +11,13 @@ const deltaPath = path.join(proofDir, 'P0-013-production-parity-delta-2026-08-18
 const schedulerPath = path.join(proofDir, 'P0-013-production-parity-scheduler-2026-08-18.json')
 const providerPath = path.join(proofDir, 'P0-013-production-parity-provider-activation-2026-08-18.json')
 const fundingPath = path.join(proofDir, 'P0-013-production-parity-media-funding-2026-08-18.json')
+const managedOauthPath = path.join(proofDir, 'P0-013-production-parity-managed-social-oauth-2026-08-18.json')
 const snapshot = JSON.parse(fs.readFileSync(snapshotPath, 'utf8'))
 const delta = JSON.parse(fs.readFileSync(deltaPath, 'utf8'))
 const scheduler = JSON.parse(fs.readFileSync(schedulerPath, 'utf8'))
 const provider = JSON.parse(fs.readFileSync(providerPath, 'utf8'))
 const funding = JSON.parse(fs.readFileSync(fundingPath, 'utf8'))
+const managedOauth = JSON.parse(fs.readFileSync(managedOauthPath, 'utf8'))
 const files = fs.readdirSync(migrationsDir).filter((file) => file.endsWith('.sql')).sort()
 const fileSet = new Set(files)
 const failures = []
@@ -54,12 +56,19 @@ expect(funding.baseSnapshot === path.basename(providerPath), `Unexpected media f
 expect(funding.supabase.projectRef === snapshot.supabase.projectRef, `Media funding delta targets unexpected Supabase project: ${funding.supabase.projectRef}`)
 expect(funding.supabase.baseProductionLedgerCount === 86 && funding.supabase.productionLedgerCount === 87 && funding.gitMigrations.baseFileCount === 86 && funding.gitMigrations.fileCount === 87, 'Media funding delta does not prove exact 86 -> 87 parity.')
 expect(funding.supabase.productionLedgerLastVersion === '20260818103021' && funding.supabase.productionLedgerLastName === 'media_funding_controls', 'Unexpected media funding production migration ledger tail.')
-expect(files.length === funding.gitMigrations.fileCount, `Git migration file count mismatch: actual=${files.length}, snapshot=${funding.gitMigrations.fileCount}`)
+
+expect(managedOauth.issue === 'P0-013' && managedOauth.conclusion === 'parity_reconciled', 'Managed social OAuth parity delta is not reconciled P0-013 evidence.')
+expect(managedOauth.baseSnapshot === path.basename(fundingPath), `Unexpected managed OAuth base snapshot: ${managedOauth.baseSnapshot}`)
+expect(managedOauth.supabase.projectRef === snapshot.supabase.projectRef, `Managed OAuth delta targets unexpected Supabase project: ${managedOauth.supabase.projectRef}`)
+expect(managedOauth.supabase.baseProductionLedgerCount === 87 && managedOauth.supabase.productionLedgerCount === 88 && managedOauth.gitMigrations.baseFileCount === 87 && managedOauth.gitMigrations.fileCount === 88, 'Managed OAuth delta does not prove exact 87 -> 88 parity.')
+expect(managedOauth.supabase.productionLedgerLastVersion === '20260818105118' && managedOauth.supabase.productionLedgerLastName === 'managed_social_oauth_sessions', 'Unexpected managed OAuth production migration ledger tail.')
+expect(files.length === managedOauth.gitMigrations.fileCount, `Git migration file count mismatch: actual=${files.length}, snapshot=${managedOauth.gitMigrations.fileCount}`)
 
 const expectedMappings = [
   [scheduler.schedulerMigration, '20260818081100_autonomy_scheduler.sql', '20260818095047', 'autonomy_scheduler', 'scheduler'],
   [provider.providerActivationMigration, '20260818101000_google_ads_provider_vault_fields.sql', '20260818101623', 'google_ads_provider_vault_fields', 'provider activation'],
   [funding.mediaFundingMigration, '20260818103000_media_funding_controls.sql', '20260818103021', 'media_funding_controls', 'media funding'],
+  [managedOauth.managedOauthMigration, '20260818110000_managed_social_oauth_sessions.sql', '20260818105118', 'managed_social_oauth_sessions', 'managed social OAuth'],
 ]
 for (const [mapping, sourceFile, ledgerVersion, ledgerName, label] of expectedMappings) {
   expect(mapping?.sourceFile === sourceFile && mapping?.productionLedgerVersion === ledgerVersion && mapping?.productionLedgerName === ledgerName, `${label} source/ledger mapping is incomplete or unexpected.`)
@@ -74,7 +83,7 @@ for (const file of files) {
   versions.set(version, file)
 }
 
-for (const source of [snapshot.gitMigrations, delta.gitMigrations, scheduler.gitMigrations, provider.gitMigrations, funding.gitMigrations]) {
+for (const source of [snapshot.gitMigrations, delta.gitMigrations, scheduler.gitMigrations, provider.gitMigrations, funding.gitMigrations, managedOauth.gitMigrations]) {
   expect(source.productionOnly.length === 0 && source.gitOnly.length === 0, 'A parity proof contains unresolved production-only or Git-only migrations.')
 }
 
@@ -111,10 +120,13 @@ expect(providerBoundary?.growthExecutorKillSwitch && providerBoundary.autonomous
 const fundingControls = funding.liveControls
 expect(fundingControls?.fundingRequestCount === 0 && fundingControls.neejeeMediaBalanceAccountCount === 0 && fundingControls.neejeeMediaFundingLedgerEntryCount === 0 && fundingControls.growthExecutorKillSwitch === true && fundingControls.creditFunctionBrowserExecute === false && fundingControls.creditFunctionServiceRoleExecute === true && fundingControls.fundingTableBrowserPrivileges === false && fundingControls.fundingTableServiceRoleCrudOnly === true, 'Media funding parity delta does not preserve the safe zero-funding boundary or privilege contract.')
 
+const oauthControls = managedOauth.liveControls
+expect(oauthControls?.oauthSelectionSessionCount === 0 && oauthControls.neejeeProviderAccountCount === 0 && oauthControls.autonomousRunCount === 0 && oauthControls.autonomousQueueCount === 0 && oauthControls.fundingRequestCount === 0 && oauthControls.neejeeMediaBalanceAccountCount === 0 && oauthControls.growthExecutorKillSwitch === true && oauthControls.selectionTableBrowserPrivileges === false && oauthControls.selectionTableServiceRoleCrudOnly === true && oauthControls.migrationCreatesProviderCredential === false && oauthControls.migrationPerformsProviderMutation === false, 'Managed OAuth parity delta does not preserve the safe zero-connection boundary or privilege contract.')
+
 if (failures.length) {
   console.error('P0-013 final parity snapshot verification failed.')
   failures.forEach((failure) => console.error(`- ${failure}`))
   process.exit(1)
 }
 
-console.log(`P0-013 parity verified: ${files.length} uniquely versioned Git migrations, ${funding.supabase.productionLedgerCount} captured production ledger entries, ${snapshot.historicalAliases.length} explicit July aliases, ${delta.releaseMigrations.length} autonomy release migrations, scheduler live, provider activation reconciled, media funding controls reconciled with zero credited funds, zero unresolved source/ledger gaps.`)
+console.log(`P0-013 parity verified: ${files.length} uniquely versioned Git migrations, ${managedOauth.supabase.productionLedgerCount} captured production ledger entries, ${snapshot.historicalAliases.length} explicit July aliases, ${delta.releaseMigrations.length} autonomy release migrations, scheduler live, provider activation reconciled, media funding reconciled with zero credited funds, managed social OAuth reconciled with zero provider connections, zero unresolved source/ledger gaps.`)
