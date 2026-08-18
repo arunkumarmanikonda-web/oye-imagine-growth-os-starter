@@ -1,110 +1,74 @@
-import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+const baseUrl = (process.env.SMOKE_BASE_URL || 'http://localhost:3000').replace(/\/$/, '')
+const expectedWorkspaceDisplayName = (process.env.NEXT_PUBLIC_WORKSPACE_DISPLAY_NAME || 'Oye Imagine').trim()
 
-function parseDotEnv(text) {
-  const result = {};
-  for (const rawLine of text.split(/\r?\n/)) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith("#")) continue;
-    const eq = line.indexOf("=");
-    if (eq === -1) continue;
-    const key = line.slice(0, eq).trim();
-    let value = line.slice(eq + 1).trim();
-    if (
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
-      value = value.slice(1, -1);
-    }
-    result[key] = value;
-  }
-  return result;
+async function fetchResponse(path) {
+  const response = await fetch(`${baseUrl}${path}`, { redirect: 'manual' })
+  const text = await response.text()
+  return { response, text }
 }
 
-function loadLocalEnv() {
-  const envPath = resolve(process.cwd(), ".env.local");
-  if (!existsSync(envPath)) return {};
-  return parseDotEnv(readFileSync(envPath, "utf8"));
-}
+async function assertHealthBranding() {
+  const path = '/api/health'
+  const { response, text } = await fetchResponse(path)
+  if (!response.ok) throw new Error(`${path} returned ${response.status}`)
 
-function resolveAdminSecret(localEnv) {
-  return (
-    process.env.ADMIN_SECRET ||
-    process.env.ADMIN_PASSWORD ||
-    process.env.ADMIN_API_PASSWORD ||
-    process.env.NEXT_PUBLIC_ADMIN_PASSWORD ||
-    localEnv.ADMIN_SECRET ||
-    localEnv.ADMIN_PASSWORD ||
-    localEnv.ADMIN_API_PASSWORD ||
-    localEnv.NEXT_PUBLIC_ADMIN_PASSWORD ||
-    ""
-  ).trim();
-}
-
-async function fetchJson(url, options = {}) {
-  const response = await fetch(url, options);
-  const text = await response.text();
-  let json = null;
-
+  let payload
   try {
-    json = text ? JSON.parse(text) : null;
+    payload = text ? JSON.parse(text) : null
   } catch {
-    throw new Error(`Non-JSON response from ${url}: ${text.slice(0, 300)}`);
+    throw new Error(`${path} returned non-JSON content: ${text.slice(0, 200)}`)
   }
 
-  if (!response.ok) {
-    throw new Error(`${url} returned ${response.status}: ${JSON.stringify(json)}`);
+  if (!payload || payload.ok !== true) throw new Error(`${path} missing ok=true`)
+  if (payload.workspaceDisplayName !== expectedWorkspaceDisplayName) {
+    throw new Error(`${path} workspaceDisplayName=${JSON.stringify(payload.workspaceDisplayName)} expected=${JSON.stringify(expectedWorkspaceDisplayName)}`)
   }
 
-  return json;
+  console.log(`OK  ${path}  workspaceDisplayName=${JSON.stringify(payload.workspaceDisplayName)}`)
 }
 
-function assertWorkspaceDisplayName(path, payload) {
-  if (!payload || typeof payload !== "object") {
-    throw new Error(`${path} did not return an object payload`);
-  }
-
-  if (
-    typeof payload.workspaceDisplayName !== "string" ||
-    payload.workspaceDisplayName.trim().length === 0
-  ) {
-    throw new Error(`${path} missing workspaceDisplayName`);
-  }
+async function assertPublicBranding() {
+  const path = '/'
+  const { response, text } = await fetchResponse(path)
+  if (!response.ok) throw new Error(`${path} returned ${response.status}`)
+  if (!text.includes('Oye !magine')) throw new Error(`${path} missing public Oye !magine branding`)
+  console.log(`OK  ${path}  public brand rendered`)
 }
 
-const localEnv = loadLocalEnv();
-const baseUrl = (process.env.SMOKE_BASE_URL || "http://localhost:3000").replace(/\/$/, "");
-const adminSecret = resolveAdminSecret(localEnv);
-
-const jobs = [
-  { path: "/api/bootstrap/admin", headers: {} },
-  { path: "/api/bootstrap/seed", headers: {} },
-  { path: "/api/bootstrap/neejee-seed", headers: {} },
-];
-
-if (adminSecret) {
-  jobs.push({
-    path: "/api/admin/health",
-    headers: { "x-admin-secret": adminSecret },
-  });
+async function assertRetiredRouteAbsent(path) {
+  const { response } = await fetchResponse(path)
+  if (response.status !== 404) {
+    throw new Error(`${path} returned ${response.status}; retired bootstrap surface must return 404`)
+  }
+  console.log(`OK  ${path}  retired surface absent (404)`)
 }
 
-let failures = 0;
+const retiredBootstrapRoutes = [
+  '/api/bootstrap/admin',
+  '/api/bootstrap/seed',
+  '/api/bootstrap/neejee-seed',
+]
 
-for (const job of jobs) {
-  const url = `${baseUrl}${job.path}`;
+let failures = 0
+
+for (const check of [assertHealthBranding, assertPublicBranding]) {
   try {
-    const json = await fetchJson(url, { headers: job.headers });
-    assertWorkspaceDisplayName(job.path, json);
-    console.log(`OK  ${job.path}  workspaceDisplayName="${json.workspaceDisplayName}"`);
+    await check()
   } catch (error) {
-    failures += 1;
-    console.error(`FAIL ${job.path} :: ${error instanceof Error ? error.message : String(error)}`);
+    failures += 1
+    console.error(`FAIL branding :: ${error instanceof Error ? error.message : String(error)}`)
   }
 }
 
-if (failures > 0) {
-  process.exit(1);
+for (const path of retiredBootstrapRoutes) {
+  try {
+    await assertRetiredRouteAbsent(path)
+  } catch (error) {
+    failures += 1
+    console.error(`FAIL ${path} :: ${error instanceof Error ? error.message : String(error)}`)
+  }
 }
 
-console.log(`PASS workspace branding runtime smoke (${jobs.length} endpoints)`);
+if (failures > 0) process.exit(1)
+
+console.log(`PASS workspace branding + production surface smoke (${2 + retiredBootstrapRoutes.length} checks)`)
