@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "issue": "P0-013",
+  "capturedAt": "2026-08-18",
+  "conclusion": "parity_reconciled",
+  "baseSnapshot": "P0-013-production-parity-managed-social-oauth-2026-08-18.json",
+  "supabase": {
+    "projectRef": "bqhaifivpcwwiauiynlv",
+    "ledgerEvidenceSource": "supabase_migrations.schema_migrations",
+    "baseProductionLedgerCount": 88,
+    "productionLedgerCount": 90,
+    "productionLedgerLastVersion": "20260818171545",
+    "productionLedgerLastName": "provider_readiness_enforcement"
+  },
+  "gitMigrations": {
+    "baseFileCount": 88,
+    "fileCount": 90,
+    "duplicateVersionCount": 0,
+    "productionOnly": [],
+    "gitOnly": []
+  },
+  "releaseMigrations": [
+    {
+      "sourceFile": "20260818170000_automated_provider_readiness.sql",
+      "productionLedgerVersion": "20260818170340",
+      "productionLedgerName": "automated_provider_readiness"
+    },
+    {
+      "sourceFile": "20260818171500_provider_readiness_enforcement.sql",
+      "productionLedgerVersion": "20260818171545",
+      "productionLedgerName": "provider_readiness_enforcement"
+    }
+  ],
+  "liveControls": {
+    "providerQaRunCount": 0,
+    "providerChannelReadinessCount": 0,
+    "neejeeProviderAccountCount": 0,
+    "autonomousRunCount": 0,
+    "autonomousQueueCount": 0,
+    "fundingRequestCount": 0,
+    "neejeeMediaBalanceAccountCount": 0,
+    "growthExecutorKillSwitch": true,
+    "providerQaBrowserPrivileges": false,
+    "providerReadinessBrowserPrivileges": false,
+    "legacyReadinessBrowserWritePrivileges": false,
+    "manualPassingReadinessProbeBlocked": true,
+    "expiryCronJobName": "oye-provider-readiness-expiry",
+    "expiryCronSchedule": "* * * * *",
+    "expiryCronActive": true,
+    "migrationCreatesProviderCredential": false,
+    "migrationCreatesMediaFunds": false,
+    "migrationPerformsProviderMutation": false,
+    "migrationReleasesKillSwitch": false
+  }
+}
