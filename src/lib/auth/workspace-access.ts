@@ -29,6 +29,15 @@ function mustChangePassword(claims: Record<string, unknown> | null | undefined) 
   return Boolean(appMetadata && typeof appMetadata === 'object' && (appMetadata as Record<string, unknown>).must_change_password === true)
 }
 
+export function workspaceIdentityRequiresAal2(
+  lane: VerifiedAccessLane | undefined,
+  membership: Pick<VerifiedMembership, 'role_key' | 'metadata'>,
+) {
+  // Admin is always privileged. Membership metadata may only add MFA requirements,
+  // never remove AAL2 from the admin lane.
+  return lane === 'admin' || membershipRequiresMfa(membership)
+}
+
 export async function requireWorkspaceIdentity(input?: { lane?: VerifiedAccessLane; redirectTo?: string }): Promise<WorkspaceIdentity> {
   const supabase = await createSupabaseServerClient()
   const { data: claimsData, error: claimsError } = await supabase.auth.getClaims()
@@ -57,7 +66,7 @@ export async function requireWorkspaceIdentity(input?: { lane?: VerifiedAccessLa
 
   const role = getRoleExperience(membershipExperienceRoleKey(membership))
   let assuranceLevel: 'aal1' | 'aal2' = 'aal1'
-  if (membershipRequiresMfa(membership)) {
+  if (workspaceIdentityRequiresAal2(input?.lane, membership)) {
     const { data: aalData, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
     if (aalError) redirect('/login?error=access_control_unavailable' as Route)
     assuranceLevel = aalData.currentLevel === 'aal2' ? 'aal2' : 'aal1'
