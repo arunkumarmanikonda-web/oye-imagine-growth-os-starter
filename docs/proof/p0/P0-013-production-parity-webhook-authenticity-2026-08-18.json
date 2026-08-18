@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "issue": "P0-013",
+  "capturedAt": "2026-08-18",
+  "conclusion": "parity_reconciled",
+  "baseSnapshot": "P0-013-production-parity-release-readiness-2026-08-18.json",
+  "supabase": {
+    "projectRef": "bqhaifivpcwwiauiynlv",
+    "ledgerEvidenceSource": "supabase_migrations.schema_migrations",
+    "baseProductionLedgerCount": 93,
+    "productionLedgerCount": 94,
+    "productionLedgerLastVersion": "20260818211024",
+    "productionLedgerLastName": "lifecycle_webhook_guard"
+  },
+  "gitMigrations": {
+    "baseFileCount": 93,
+    "fileCount": 94,
+    "duplicateVersionCount": 0,
+    "productionOnly": [],
+    "gitOnly": []
+  },
+  "releaseMigrations": [
+    {
+      "sourceFile": "20260818220000_lifecycle_webhook_guard.sql",
+      "productionLedgerVersion": "20260818211024",
+      "productionLedgerName": "lifecycle_webhook_guard"
+    }
+  ],
+  "liveControls": {
+    "guardedCallbackAnonExecute": false,
+    "guardedCallbackAuthenticatedExecute": false,
+    "guardedCallbackServiceRoleExecute": true,
+    "uniqueProviderMessageIndexCount": 1,
+    "whatsappVerifyTokenFieldCount": 1,
+    "lifecycleDeliveryJobCount": 0,
+    "neejeeProviderAccountCount": 0,
+    "neejeeProviderReadinessCount": 0,
+    "providerQaRunCount": 0,
+    "oauthSelectionSessionCount": 0,
+    "fundingRequestCount": 0,
+    "mediaBalanceAccountCount": 0,
+    "autonomousRunCount": 0,
+    "autonomousActiveQueueCount": 0,
+    "cspReportObservedCount": 0,
+    "growthExecutorKillSwitch": true,
+    "migrationCreatesProviderCredential": false,
+    "migrationCreatesMediaFunds": false,
+    "migrationCreatesLifecycleJob": false,
+    "migrationPerformsProviderMutation": false,
+    "migrationReleasesKillSwitch": false
+  }
+}
