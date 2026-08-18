@@ -31,17 +31,16 @@ on conflict (provider_key) do update set
   metadata=excluded.metadata,
   updated_at=now();
 
--- Only platform/app configuration belongs in the global provider vault.
--- Brand-specific page IDs, organisation URNs and access tokens are stored in
--- integration_accounts + integration_secret_material, scoped by tenant/workspace.
+-- Platform app fields are optional until managed OAuth is enabled. Brand/page
+-- versions, IDs and access tokens live in tenant/workspace integration accounts.
 insert into public.config_provider_secret_fields (
   provider_key, field_key, label, field_type, required, sensitive, help_text, sort_order
 ) values
-  ('meta_marketing','META_GRAPH_API_VERSION','Graph API version','text',true,false,'Active Graph API version used by connected Meta accounts.',10),
-  ('meta_marketing','META_APP_ID','Meta App ID','text',false,false,'Platform Meta app identifier. Required when managed OAuth onboarding is enabled.',20),
+  ('meta_marketing','META_GRAPH_API_VERSION','Default Graph API version','text',false,false,'Optional platform default. Connected accounts persist the provider version that was actually verified.',10),
+  ('meta_marketing','META_APP_ID','Meta App ID','text',false,false,'Platform Meta app identifier. Required only when managed OAuth onboarding is enabled.',20),
   ('meta_marketing','META_APP_SECRET','Meta App secret','secret',false,true,'Platform Meta app secret. Never stores a client Page access token.',30),
   ('meta_marketing','META_OAUTH_REDIRECT_URI','Meta OAuth redirect URI','url',false,false,'Platform OAuth callback used for managed Meta account connection.',40),
-  ('linkedin_marketing','LINKEDIN_API_VERSION','LinkedIn API version','text',true,false,'YYYYMM version header using a currently supported Marketing API version.',10),
+  ('linkedin_marketing','LINKEDIN_API_VERSION','Default LinkedIn API version','text',false,false,'Optional platform default. Connected accounts persist the YYYYMM version that was actually verified.',10),
   ('linkedin_marketing','LINKEDIN_CLIENT_ID','LinkedIn Client ID','text',false,false,'Platform LinkedIn OAuth client identifier.',20),
   ('linkedin_marketing','LINKEDIN_CLIENT_SECRET','LinkedIn Client secret','secret',false,true,'Platform LinkedIn OAuth client secret. Never stores an organisation access token.',30),
   ('linkedin_marketing','LINKEDIN_OAUTH_REDIRECT_URI','LinkedIn OAuth redirect URI','url',false,false,'Platform OAuth callback used for managed LinkedIn account connection.',40)
@@ -53,8 +52,6 @@ on conflict (provider_key,field_key) do update set
   help_text=excluded.help_text,
   sort_order=excluded.sort_order;
 
--- Remove obsolete globally-scoped account credential field definitions if this
--- migration is reapplied after an earlier preview implementation.
 delete from public.config_provider_secret_fields
 where (provider_key='meta_marketing' and field_key in ('META_PAGE_ACCESS_TOKEN','META_FACEBOOK_PAGE_ID','META_INSTAGRAM_USER_ID'))
    or (provider_key='linkedin_marketing' and field_key in ('LINKEDIN_ACCESS_TOKEN','LINKEDIN_AUTHOR_URN'));
