@@ -1,5 +1,7 @@
 import crypto from 'node:crypto'
 
+import { chooseProviderFromMetrics, type ProviderRoutingMetric, type RoutableModelProvider } from '@/lib/ai/provider-routing'
+
 export type ModelGatewayProvider = 'rule-based' | 'openai' | 'anthropic' | 'fallback'
 export type LiveModelProvider = 'openai' | 'anthropic'
 
@@ -34,6 +36,11 @@ export type ModelGatewayProviderHandler = (request: ModelGatewayRequest) => Prom
 
 type CostLedgerEntry = { tenantId: string; spentUsd: number }
 type ProviderRates = { input: number; output: number; configured: boolean }
+type ProviderSelection = {
+  handler: ModelGatewayProviderHandler
+  provider: LiveModelProvider | 'rule-based'
+  routingReason: 'explicit-provider' | 'single-configured-provider' | 'insufficient-history' | 'learned-cost-reliability' | 'synthetic-fallback'
+}
 
 const responseCache = new Map<string, ModelGatewayResponse>()
 const costLedger = new Map<string, CostLedgerEntry>()
@@ -136,15 +143,62 @@ async function monthSpendUsd(tenantId: string) {
   }
 }
 
-async function persistUsage(input: { request: ModelGatewayRequest; result?: ModelGatewayResponse; requestId: string; status: 'succeeded'|'failed'|'blocked'; errorCode?: string }) {
+async function readProviderRoutingMetrics(request: ModelGatewayRequest): Promise<ProviderRoutingMetric[]> {
+  try {
+    const admin = await getAdminClient()
+    const { data, error } = await admin
+      .from('ai_usage_ledger')
+      .select('provider,status,estimated_cost_usd,created_at')
+      .eq('tenant_id', normalizeTenantId(request.tenantId))
+      .eq('task_type', request.taskType)
+      .eq('cache_hit', false)
+      .in('provider', ['openai', 'anthropic'])
+      .in('status', ['succeeded', 'failed'])
+      .order('created_at', { ascending: false })
+      .limit(100)
+
+    if (error) throw error
+
+    return (['openai', 'anthropic'] as RoutableModelProvider[]).flatMap((provider) => {
+      const rows = (data ?? []).filter((row) => row.provider === provider)
+      if (rows.length === 0) return []
+      const succeeded = rows.filter((row) => row.status === 'succeeded')
+      const successfulCost = succeeded.reduce((sum, row) => sum + Number(row.estimated_cost_usd || 0), 0)
+      const recent = rows.slice(0, 10)
+      const recentFailures = recent.filter((row) => row.status === 'failed').length
+      return [{
+        provider,
+        attempts: rows.length,
+        successes: succeeded.length,
+        averageSuccessfulCostUsd: succeeded.length > 0 ? successfulCost / succeeded.length : 0,
+        recentFailureRate: recent.length > 0 ? recentFailures / recent.length : 0,
+      }]
+    })
+  } catch {
+    return []
+  }
+}
+
+async function persistUsage(input: {
+  request: ModelGatewayRequest
+  result?: ModelGatewayResponse
+  requestId: string
+  status: 'succeeded'|'failed'|'blocked'
+  errorCode?: string
+  selectedProvider?: LiveModelProvider | 'rule-based'
+  routingReason?: ProviderSelection['routingReason']
+}) {
   const tenantId = normalizeTenantId(input.request.tenantId); const result = input.result
   const row = {
     tenant_id: tenantId, workspace_id: input.request.workspaceId?.trim() || null, pilot_id: input.request.pilotId?.trim() || null,
     task_type: input.request.taskType, request_id: input.requestId,
-    provider: result?.provider || input.request.preferredProvider || 'unavailable', model: result?.model || 'unknown',
+    provider: result?.provider || input.selectedProvider || input.request.preferredProvider || 'unavailable', model: result?.model || 'unknown',
     prompt_tokens: result?.promptTokens || 0, completion_tokens: result?.completionTokens || 0, estimated_cost_usd: result?.estimatedCostUsd || 0,
     cache_hit: result?.cacheHit || false, status: input.status, error_code: input.errorCode || null,
-    metadata: { pricingConfigured: result?.provider === 'openai' || result?.provider === 'anthropic' ? providerRates(result.provider).configured : false },
+    metadata: {
+      pricingConfigured: result?.provider === 'openai' || result?.provider === 'anthropic' ? providerRates(result.provider).configured : false,
+      routingReason: input.routingReason || null,
+    },
   }
   try {
     const admin = await getAdminClient(); const { error } = await admin.from('ai_usage_ledger').insert(row); if (error) throw error
@@ -186,12 +240,34 @@ async function ruleBasedProvider(request: ModelGatewayRequest): Promise<ModelGat
   return {ok:true,provider:'rule-based',model:'deterministic-test-fallback',content:`RULE-BASED RESPONSE :: ${request.taskType} :: ${request.prompt}`,promptTokens,completionTokens:0,estimatedCostUsd:0,cacheHit:false,fallbackUsed:true}
 }
 
-function chooseProvider(request: ModelGatewayRequest): ModelGatewayProviderHandler {
-  if(request.preferredProvider==='openai'){if(process.env.OPENAI_API_KEY)return openAIProvider;throw new Error('openai_not_configured')}
-  if(request.preferredProvider==='anthropic'){if(process.env.ANTHROPIC_API_KEY)return anthropicProvider;throw new Error('anthropic_not_configured')}
-  if(process.env.OPENAI_API_KEY)return openAIProvider
-  if(process.env.ANTHROPIC_API_KEY)return anthropicProvider
-  const allowSynthetic=process.env.MODEL_GATEWAY_ALLOW_RULE_BASED_FALLBACK==='true'||!isProduction(); if(allowSynthetic)return ruleBasedProvider
+async function chooseProvider(request: ModelGatewayRequest): Promise<ProviderSelection> {
+  if(request.preferredProvider==='openai'){
+    if(process.env.OPENAI_API_KEY)return{handler:openAIProvider,provider:'openai',routingReason:'explicit-provider'}
+    throw new Error('openai_not_configured')
+  }
+  if(request.preferredProvider==='anthropic'){
+    if(process.env.ANTHROPIC_API_KEY)return{handler:anthropicProvider,provider:'anthropic',routingReason:'explicit-provider'}
+    throw new Error('anthropic_not_configured')
+  }
+
+  const configuredProviders: LiveModelProvider[] = []
+  if(process.env.OPENAI_API_KEY)configuredProviders.push('openai')
+  if(process.env.ANTHROPIC_API_KEY)configuredProviders.push('anthropic')
+
+  if(configuredProviders.length > 0) {
+    const decision = chooseProviderFromMetrics({
+      configuredProviders,
+      metrics: await readProviderRoutingMetrics(request),
+    })
+    return {
+      handler: decision.provider === 'openai' ? openAIProvider : anthropicProvider,
+      provider: decision.provider,
+      routingReason: decision.reason,
+    }
+  }
+
+  const allowSynthetic=process.env.MODEL_GATEWAY_ALLOW_RULE_BASED_FALLBACK==='true'||!isProduction()
+  if(allowSynthetic)return{handler:ruleBasedProvider,provider:'rule-based',routingReason:'synthetic-fallback'}
   throw new Error('model_provider_unavailable')
 }
 
@@ -202,11 +278,31 @@ export async function executeModelGateway(request: ModelGatewayRequest, provider
   const persistentCached=await readPersistentCache(cacheKey,tenantId); if(persistentCached){responseCache.set(cacheKey,{...persistentCached,cacheHit:false});await persistUsage({request,result:persistentCached,requestId,status:'succeeded'});return persistentCached}
   const monthlySpent=await monthSpendUsd(tenantId)
   if(request.monthlyCostCapUsd!==undefined&&monthlySpent>=request.monthlyCostCapUsd){await persistUsage({request,requestId,status:'blocked',errorCode:'monthly_cost_cap_exceeded'});throw new Error(`Model gateway monthly cost cap exceeded for tenant '${tenantId}'.`)}
+
+  let selection: ProviderSelection | undefined
   let result:ModelGatewayResponse
-  try{result=await(providerHandler||chooseProvider(request))(request)}catch(error){await persistUsage({request,requestId,status:'failed',errorCode:error instanceof Error?error.message.slice(0,160):'provider_failed'});throw error}
+  try{
+    if(providerHandler){
+      result=await providerHandler(request)
+    }else{
+      selection=await chooseProvider(request)
+      result=await selection.handler(request)
+    }
+  }catch(error){
+    await persistUsage({
+      request,
+      requestId,
+      status:'failed',
+      errorCode:error instanceof Error?error.message.slice(0,160):'provider_failed',
+      selectedProvider:selection?.provider,
+      routingReason:selection?.routingReason,
+    })
+    throw error
+  }
+
   const maxCostUsd=request.maxCostUsd??1
-  if(result.estimatedCostUsd>maxCostUsd||(request.monthlyCostCapUsd!==undefined&&monthlySpent+result.estimatedCostUsd>request.monthlyCostCapUsd)){await persistUsage({request,result,requestId,status:'blocked',errorCode:'cost_cap_exceeded'});throw new Error(`Model gateway cost cap exceeded for tenant '${tenantId}'.`)}
-  const persisted:ModelGatewayResponse={...result,requestId:result.requestId||requestId,cacheHit:false}; await persistUsage({request,result:persisted,requestId,status:'succeeded'}); await persistCache(cacheKey,request,persisted); responseCache.set(cacheKey,persisted); return persisted
+  if(result.estimatedCostUsd>maxCostUsd||(request.monthlyCostCapUsd!==undefined&&monthlySpent+result.estimatedCostUsd>request.monthlyCostCapUsd)){await persistUsage({request,result,requestId,status:'blocked',errorCode:'cost_cap_exceeded',selectedProvider:selection?.provider,routingReason:selection?.routingReason});throw new Error(`Model gateway cost cap exceeded for tenant '${tenantId}'.`)}
+  const persisted:ModelGatewayResponse={...result,requestId:result.requestId||requestId,cacheHit:false}; await persistUsage({request,result:persisted,requestId,status:'succeeded',selectedProvider:selection?.provider,routingReason:selection?.routingReason}); await persistCache(cacheKey,request,persisted); responseCache.set(cacheKey,persisted); return persisted
 }
 
 export function getTenantCostLedger(tenantId?:string):CostLedgerEntry{return readLedger(normalizeTenantId(tenantId))}

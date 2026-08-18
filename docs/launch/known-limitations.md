@@ -4,7 +4,7 @@
 - external channel publish actions are not production-proven for live third-party accounts; provider credential/profile/account/resource/readiness records are currently absent
 - Google OAuth capabilities for Ads, GA4, Search Console and YouTube are registered but not connected to proven Neejee production resources
 - WhatsApp/AiSensy capability is registered but not connected to a proven production account
-- AI provider routing is policy-based but not yet cost-optimized by a real-time closed-loop cost/performance feedback model
+- closed-loop AI routing now optimizes live-provider selection from task-specific cost and reliability evidence, but it intentionally remains deterministic until sufficient real usage history exists and does not yet incorporate explicit human quality ratings
 - reporting KPIs are aggregation-ready but live GA4 / ads ingestion cannot be treated as active until provider-side access is connected and evidenced
 - health-center logic does not substitute for independent infrastructure/provider telemetry
 - usage guardrails enforce logical controls but billing reconciliation must remain unproven until real payment-gateway events are connected
@@ -31,3 +31,4 @@
 - public contact count-then-insert rate-limit race and email-rotation bypass
 - shared secret environment module lacking an explicit server-only boundary
 - CSP report-only observation and bounded, sanitized violation collection introduced as the evidence stage before enforcement
+- fixed OpenAI-first automatic routing replaced with task-specific closed-loop cost/reliability routing while preserving explicit provider choice and production fallback controls
