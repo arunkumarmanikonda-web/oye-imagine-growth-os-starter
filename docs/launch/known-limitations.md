@@ -11,7 +11,7 @@
 - launch-readiness structures exist in the database and repository, but authenticated operator workflow proof remains dependent on the production administrator completing the mandatory password change and MFA enrollment
 - Supabase Auth leaked-password protection remains disabled and must be enabled through the supported Auth configuration surface
 - GitHub native Dependabot security alerts are disabled; weekly dependency update automation and a production `npm audit` gate reduce exposure but do not replace the native alert setting tracked by issue #175
-- an enforced Content Security Policy is not yet present; do not introduce a restrictive policy until Supabase auth and intended provider/media origins are covered by tested directives
+- an enforced Content Security Policy is not yet present; report-only CSP telemetry is configured to inventory required Supabase, provider and media origins before enforcement
 
 ## Safe operating posture
 - keep spend, publish, billing and other consequential external actions approval-gated until provider-side production proof exists
@@ -30,3 +30,4 @@
 - production/Git migration evidence drift after the privilege-hardening migrations
 - public contact count-then-insert rate-limit race and email-rotation bypass
 - shared secret environment module lacking an explicit server-only boundary
+- CSP report-only observation and bounded, sanitized violation collection introduced as the evidence stage before enforcement
