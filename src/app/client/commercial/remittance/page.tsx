@@ -68,7 +68,7 @@ export default function ClientCommercialRemittancePage() {
           amount: Number(amount),
           currency: 'INR',
           remittanceReference: reference,
-          paidAt: paidAt || null,
+          paidAt: paidAt ? new Date(paidAt).toISOString() : null,
           note,
           evidence: { bankName, payerName, sourceAccountLast4: last4, proofReference },
         }),
