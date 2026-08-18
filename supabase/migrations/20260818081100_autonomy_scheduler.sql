@@ -1,3 +1,6 @@
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
+
 alter table public.autonomous_action_queue
   drop constraint if exists autonomous_action_queue_status_check;
 alter table public.autonomous_action_queue
