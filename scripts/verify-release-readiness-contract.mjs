@@ -9,8 +9,10 @@ const targets = {
   route: path.join(repoRoot, 'src', 'app', 'api', 'admin', 'release-status', 'route.ts'),
   cockpit: path.join(repoRoot, 'src', 'app', 'admin', 'release-readiness', 'page.tsx'),
   migration: path.join(migrationsDir, '20260818190000_release_schema_evidence.sql'),
+  webhookMigration: path.join(migrationsDir, '20260818220000_lifecycle_webhook_guard.sql'),
   checklist: path.join(repoRoot, 'docs', 'launch', 'production-activation-checklist.md'),
   proof: path.join(repoRoot, 'docs', 'proof', 'p0', 'P0-013-production-parity-release-readiness-2026-08-18.json'),
+  webhookProof: path.join(repoRoot, 'docs', 'proof', 'p0', 'P0-013-production-parity-webhook-authenticity-2026-08-18.json'),
 }
 
 const failures = []
@@ -26,14 +28,16 @@ const readiness = read('readiness')
 const route = read('route')
 const cockpit = read('cockpit')
 const migration = read('migration')
+const webhookMigration = read('webhookMigration')
 const checklist = read('checklist')
 const proof = JSON.parse(read('proof') || '{}')
+const webhookProof = JSON.parse(read('webhookProof') || '{}')
 
-expect(migrations.length === 93, `Expected 93 source migrations, found ${migrations.length}.`)
-expect(migrations.at(-1) === '20260818190000_release_schema_evidence.sql', `Unexpected migration tail: ${migrations.at(-1)}`)
-expect(readiness.includes('migrationFileCount: 93'), 'Runtime release expectation is not pinned to 93 migrations.')
-expect(readiness.includes("lastSourceFile: '20260818190000_release_schema_evidence.sql'"), 'Runtime release expectation has the wrong migration tail.')
-expect(readiness.includes("lastProductionMigrationName: 'release_schema_evidence'"), 'Runtime release expectation has the wrong production migration name.')
+expect(migrations.length === 94, `Expected 94 source migrations, found ${migrations.length}.`)
+expect(migrations.at(-1) === '20260818220000_lifecycle_webhook_guard.sql', `Unexpected migration tail: ${migrations.at(-1)}`)
+expect(readiness.includes('migrationFileCount: 94'), 'Runtime release expectation is not pinned to 94 migrations.')
+expect(readiness.includes("lastSourceFile: '20260818220000_lifecycle_webhook_guard.sql'"), 'Runtime release expectation has the wrong migration tail.')
+expect(readiness.includes("lastProductionMigrationName: 'lifecycle_webhook_guard'"), 'Runtime release expectation has the wrong production migration name.')
 
 expect(migration.includes('language plpgsql'), 'Release schema evidence RPC must use capability-aware PL/pgSQL.')
 expect(migration.includes('security definer'), 'Release schema evidence RPC must be SECURITY DEFINER.')
@@ -46,6 +50,16 @@ expect(migration.includes('from supabase_migrations.schema_migrations'), 'Releas
 expect(migration.includes("'ledgerAvailable', true"), 'Real production ledger result must explicitly report ledger availability.')
 expect(migration.includes('revoke all on function public.release_schema_evidence() from public, anon, authenticated'), 'Browser execute must be revoked from release schema evidence RPC.')
 expect(migration.includes('grant execute on function public.release_schema_evidence() to service_role'), 'Service-role execute grant is missing from release schema evidence RPC.')
+
+expect(webhookMigration.includes('ux_lifecycle_delivery_provider_message_id'), 'Webhook migration must enforce unique provider-message identity.')
+expect(webhookMigration.includes('apply_lifecycle_delivery_callback_guarded'), 'Webhook migration must define the guarded lifecycle callback RPC.')
+expect(webhookMigration.includes('security definer'), 'Webhook callback RPC must be SECURITY DEFINER.')
+expect(webhookMigration.includes('set search_path = pg_catalog, public'), 'Webhook callback RPC must use a fixed safe search path.')
+expect(webhookMigration.includes('for update'), 'Webhook callback RPC must serialize transitions per delivery job.')
+expect(webhookMigration.includes("v_job.status in ('failed', 'cancelled', 'blocked')"), 'Webhook callback RPC must preserve terminal failed/cancelled/blocked states.')
+expect(webhookMigration.includes("v_job.status = 'delivered'"), 'Webhook callback RPC must preserve delivered terminal state.')
+expect(webhookMigration.includes('revoke all on function public.apply_lifecycle_delivery_callback_guarded'), 'Browser execute must be revoked from guarded callback RPC.')
+expect(webhookMigration.includes('grant execute on function public.apply_lifecycle_delivery_callback_guarded') && webhookMigration.includes('to service_role'), 'Guarded callback RPC must remain service-role executable.')
 
 expect(route.includes("requireApiAccess({ lane: 'admin' })"), 'Release status route must use the admin AAL2 access boundary.')
 expect(route.includes("access.membership.role_key !== 'platform_owner'"), 'Release status route must be platform-owner only.')
@@ -79,19 +93,27 @@ expect(cockpit.includes("fetch('/api/admin/release-status'"), 'Release cockpit m
 expect(cockpit.includes('NOT ENABLED'), 'Release cockpit must visibly state unrestricted spend/publish is not enabled.')
 expect(cockpit.includes('External and human requirements'), 'Release cockpit must separate external/human evidence from machine controls.')
 
-expect(checklist.includes('93 source migrations and 93 production ledger entries'), 'Launch checklist is not reconciled to 93/93 parity.')
-expect(!checklist.includes('79 Git migrations and 79 production ledger entries'), 'Launch checklist still contains stale 79/79 parity text.')
+expect(checklist.includes('94 source migrations and 94 production ledger entries'), 'Launch checklist is not reconciled to 94/94 parity.')
+expect(!checklist.includes('93 source migrations and 93 production ledger entries'), 'Launch checklist still contains stale 93/93 parity text.')
 expect(checklist.includes('Supabase Auth leaked-password protection enabled'), 'Launch checklist lost the external leaked-password requirement.')
 expect(checklist.includes('GitHub native Dependabot security alerts enabled'), 'Launch checklist lost the external Dependabot requirement.')
 expect(checklist.includes('CSP telemetry stores normalized origin/path only'), 'Launch checklist lost durable CSP privacy evidence.')
 expect(checklist.includes('kill switch defaults ON and remains the deliberate final safety lock'), 'Launch checklist lost the autonomy safety-lock rule.')
+expect(checklist.includes('WhatsApp Cloud webhook software verifies the subscription token and HMAC-SHA256 signature'), 'Launch checklist lost webhook-authenticity software evidence.')
+expect(checklist.includes('External webhook endpoints verified provider-side'), 'Launch checklist lost provider-side webhook verification as an external requirement.')
 
-expect(proof.supabase?.productionLedgerCount === 93, 'Release readiness parity proof does not record 93 production migrations.')
-expect(proof.supabase?.productionLedgerLastVersion === '20260818183025', 'Release readiness parity proof has the wrong production ledger version.')
-expect(proof.supabase?.productionLedgerLastName === 'release_schema_evidence', 'Release readiness parity proof has the wrong production ledger name.')
+expect(proof.supabase?.productionLedgerCount === 93, 'Historical release-readiness parity proof must remain the 93-migration snapshot.')
+expect(proof.supabase?.productionLedgerLastVersion === '20260818183025', 'Historical release-readiness parity proof has the wrong production ledger version.')
+expect(proof.supabase?.productionLedgerLastName === 'release_schema_evidence', 'Historical release-readiness parity proof has the wrong production ledger name.')
 expect(proof.liveControls?.schemaEvidenceAnonExecute === false && proof.liveControls?.schemaEvidenceAuthenticatedExecute === false && proof.liveControls?.schemaEvidenceServiceRoleExecute === true, 'Release schema evidence privilege proof is unsafe.')
 expect(proof.liveControls?.externalEvidenceAutoCompleted === false, 'External evidence must not be auto-completed.')
 expect(proof.liveControls?.growthExecutorKillSwitch === true, 'Release readiness proof must preserve the kill switch.')
+
+expect(webhookProof.supabase?.productionLedgerCount === 94, 'Current release truth does not record 94 production migrations.')
+expect(webhookProof.supabase?.productionLedgerLastVersion === '20260818211024', 'Current release truth has the wrong production ledger version.')
+expect(webhookProof.supabase?.productionLedgerLastName === 'lifecycle_webhook_guard', 'Current release truth has the wrong production ledger name.')
+expect(webhookProof.liveControls?.guardedCallbackAnonExecute === false && webhookProof.liveControls?.guardedCallbackAuthenticatedExecute === false && webhookProof.liveControls?.guardedCallbackServiceRoleExecute === true, 'Current guarded callback privilege proof is unsafe.')
+expect(webhookProof.liveControls?.growthExecutorKillSwitch === true, 'Current webhook proof must preserve the kill switch.')
 
 if (failures.length) {
   console.error('Release readiness contract verification failed.')
@@ -99,4 +121,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('Release readiness contract verified: 93/93 schema truth, capability-aware portable ledger evidence, AAL2 platform-owner access, no secret-presence readiness signals, provider/funding activation remains evidence-backed, external/human requirements remain fail-closed, CSP enforcement remains evidence-gated, and unrestricted autonomy remains disabled by design.')
+console.log('Release readiness contract verified: 94/94 schema truth, capability-aware portable ledger evidence, AAL2 platform-owner access, authenticated guarded lifecycle callbacks, no secret-presence readiness signals, provider/funding activation remains evidence-backed, external/human requirements remain fail-closed, CSP enforcement remains evidence-gated, and unrestricted autonomy remains disabled by design.')
