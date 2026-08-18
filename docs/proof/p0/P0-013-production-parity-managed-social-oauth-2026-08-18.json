@@ -8,6 +8,7 @@
     "projectRef": "bqhaifivpcwwiauiynlv",
     "baseProductionLedgerCount": 87,
     "productionLedgerCount": 88,
+    "productionLedgerLastVersion": "20260818105118",
     "productionLedgerLastName": "managed_social_oauth_sessions"
   },
   "gitMigrations": {
@@ -19,6 +20,7 @@
   },
   "managedOauthMigration": {
     "sourceFile": "20260818110000_managed_social_oauth_sessions.sql",
+    "productionLedgerVersion": "20260818105118",
     "productionLedgerName": "managed_social_oauth_sessions"
   },
   "liveControls": {
