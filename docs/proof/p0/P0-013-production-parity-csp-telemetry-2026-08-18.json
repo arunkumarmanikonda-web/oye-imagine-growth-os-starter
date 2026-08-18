@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "issue": "P0-013",
+  "capturedAt": "2026-08-18",
+  "conclusion": "parity_reconciled",
+  "baseSnapshot": "P0-013-production-parity-provider-readiness-2026-08-18.json",
+  "supabase": {
+    "projectRef": "bqhaifivpcwwiauiynlv",
+    "ledgerEvidenceSource": "supabase_migrations.schema_migrations",
+    "baseProductionLedgerCount": 91,
+    "productionLedgerCount": 92,
+    "productionLedgerLastVersion": "20260818180811",
+    "productionLedgerLastName": "durable_csp_telemetry"
+  },
+  "gitMigrations": {
+    "baseFileCount": 91,
+    "fileCount": 92,
+    "duplicateVersionCount": 0,
+    "productionOnly": [],
+    "gitOnly": []
+  },
+  "releaseMigrations": [
+    {
+      "sourceFile": "20260818183000_durable_csp_telemetry.sql",
+      "productionLedgerVersion": "20260818180811",
+      "productionLedgerName": "durable_csp_telemetry"
+    }
+  ],
+  "liveControls": {
+    "cspReportBucketRowCount": 0,
+    "cspReportObservedCount": 0,
+    "cspRateBucketRowCount": 0,
+    "cspReportRlsEnabled": true,
+    "cspRateLimitRlsEnabled": true,
+    "cspReportBrowserPrivileges": false,
+    "cspRateLimitBrowserPrivileges": false,
+    "recordFunctionAnonExecute": false,
+    "recordFunctionAuthenticatedExecute": false,
+    "recordFunctionServiceRoleExecute": true,
+    "retentionCronJobName": "oye-csp-telemetry-retention",
+    "retentionCronSchedule": "17 3 * * *",
+    "retentionCronActive": true,
+    "reportRetentionDays": 30,
+    "rateBucketRetentionDays": 1,
+    "rawIpPersisted": false,
+    "urlQueryPersisted": false,
+    "urlFragmentPersisted": false,
+    "cspEnforcementEnabled": false,
+    "cspReportOnlyPreserved": true,
+    "providerQaRunCount": 0,
+    "providerChannelReadinessCount": 0,
+    "providerAccountCount": 0,
+    "oauthSelectionSessionCount": 0,
+    "autonomousRunCount": 0,
+    "autonomousQueueCount": 0,
+    "fundingRequestCount": 0,
+    "mediaBalanceAccountCount": 0,
+    "growthExecutorKillSwitch": true,
+    "migrationCreatesProviderCredential": false,
+    "migrationCreatesMediaFunds": false,
+    "migrationPerformsProviderMutation": false,
+    "migrationReleasesKillSwitch": false,
+    "syntheticCspEvidenceInserted": false
+  }
+}
