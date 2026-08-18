@@ -2,24 +2,169 @@
 
 import { FormEvent, useCallback, useEffect, useState } from 'react'
 
-type PageRow={slug:string;title:string;audience:string;page_type:string;status:string;layout_key:string;data:Record<string,unknown>;seo:Record<string,unknown>;updated_at:string}
-type Claim={claim_key:string;claim_pattern:string;capability:string;minimum_state:string;current_state:string;approved_at:string|null}
+type PageRow = {
+  slug: string
+  title: string
+  audience: string
+  page_type: string
+  status: string
+  layout_key: string
+  data: Record<string, unknown>
+  seo: Record<string, unknown>
+  updated_at: string
+}
+type Claim = { claim_key: string; claim_pattern: string; capability: string; minimum_state: string; current_state: string; approved_at: string | null }
+type VersionRow = { version_label: string; published_at: string; published_by: string | null }
 
-export default function AdminContentPage(){
-  const[pages,setPages]=useState<PageRow[]>([]);const[claims,setClaims]=useState<Claim[]>([]);const[slug,setSlug]=useState('homepage');const[title,setTitle]=useState('Homepage');const[body,setBody]=useState('');const[notice,setNotice]=useState('');const[versions,setVersions]=useState<any[]>([])
-  const load=useCallback(async()=>{const[p,c]=await Promise.all([fetch('/api/admin/cms/pages',{cache:'no-store'}),fetch('/api/admin/cms/claims',{cache:'no-store'})]);const pj=await p.json();const cj=await c.json();if(pj.ok)setPages(pj.pages||[]);if(cj.ok)setClaims(cj.claims||[])},[])
-  useEffect(()=>{void load()},[load])
-  async function api(payload:Record<string,unknown>){const r=await fetch('/api/admin/cms/pages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const j=await r.json();setNotice(j.ok?'Action completed.':`${j.code||'error'}${j.blockers?`: ${j.blockers.map((b:any)=>b.claimKey).join(', ')}`:''}`);await load();return j}
-  async function save(event:FormEvent){event.preventDefault();await api({action:'save_draft',page:{slug,title,audience:'public',pageType:'marketing',layoutKey:'public',data:{body},seo:{title,description:body.slice(0,160)},visibilityRules:{}}})}
-  async function loadVersions(pageSlug:string){const r=await fetch(`/api/admin/cms/pages?slug=${encodeURIComponent(pageSlug)}`,{cache:'no-store'});const j=await r.json();if(j.ok)setVersions(j.versions||[]);setSlug(pageSlug)}
+function prettyJson(value: Record<string, unknown>) {
+  return JSON.stringify(value ?? {}, null, 2)
+}
+
+function parseEditorData(raw: string, pageType: string, audience: string, layoutKey: string) {
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    return { ok: false as const, error: 'Page data must be valid JSON.' }
+  }
+
+  if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') {
+    return { ok: false as const, error: 'Page data must be a JSON object.' }
+  }
+
+  const data = parsed as Record<string, unknown>
+  if (pageType === 'marketing' && audience === 'public' && layoutKey === 'public') {
+    if (typeof data.title !== 'string' || !data.title.trim()) {
+      return { ok: false as const, error: 'Public marketing pages require data.title.' }
+    }
+    if (!Array.isArray(data.sections)) {
+      return { ok: false as const, error: 'Public marketing pages require data.sections as an array.' }
+    }
+  }
+
+  return { ok: true as const, data }
+}
+
+export default function AdminContentPage() {
+  const [pages, setPages] = useState<PageRow[]>([])
+  const [claims, setClaims] = useState<Claim[]>([])
+  const [slug, setSlug] = useState('')
+  const [title, setTitle] = useState('')
+  const [audience, setAudience] = useState('public')
+  const [pageType, setPageType] = useState('marketing')
+  const [layoutKey, setLayoutKey] = useState('public')
+  const [dataJson, setDataJson] = useState('{}')
+  const [seoTitle, setSeoTitle] = useState('')
+  const [seoDescription, setSeoDescription] = useState('')
+  const [notice, setNotice] = useState('')
+  const [versions, setVersions] = useState<VersionRow[]>([])
+
+  const load = useCallback(async () => {
+    const [p, c] = await Promise.all([
+      fetch('/api/admin/cms/pages', { cache: 'no-store' }),
+      fetch('/api/admin/cms/claims', { cache: 'no-store' }),
+    ])
+    const pj = await p.json()
+    const cj = await c.json()
+    if (pj.ok) setPages(pj.pages || [])
+    if (cj.ok) setClaims(cj.claims || [])
+  }, [])
+
+  useEffect(() => { void load() }, [load])
+
+  async function api(payload: Record<string, unknown>) {
+    const response = await fetch('/api/admin/cms/pages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    const result = await response.json()
+    setNotice(result.ok ? 'Action completed.' : `${result.code || 'error'}${result.blockers ? `: ${result.blockers.map((blocker: { claimKey: string }) => blocker.claimKey).join(', ')}` : ''}`)
+    await load()
+    return result
+  }
+
+  function editPage(page: PageRow) {
+    setSlug(page.slug)
+    setTitle(page.title)
+    setAudience(page.audience || 'public')
+    setPageType(page.page_type || 'marketing')
+    setLayoutKey(page.layout_key || 'public')
+    setDataJson(prettyJson(page.data))
+    setSeoTitle(typeof page.seo?.title === 'string' ? page.seo.title : page.title)
+    setSeoDescription(typeof page.seo?.description === 'string' ? page.seo.description : '')
+    setNotice(`Editing /${page.slug}. Save creates a draft; it does not publish automatically.`)
+  }
+
+  function newPage() {
+    setSlug('')
+    setTitle('')
+    setAudience('public')
+    setPageType('marketing')
+    setLayoutKey('public')
+    setDataJson(JSON.stringify({ eyebrow: '', title: '', body: '', sections: [] }, null, 2))
+    setSeoTitle('')
+    setSeoDescription('')
+    setVersions([])
+    setNotice('New public marketing page template loaded.')
+  }
+
+  async function save(event: FormEvent) {
+    event.preventDefault()
+    const normalizedSlug = slug.trim().replace(/^\/+|\/+$/g, '')
+    if (!normalizedSlug || !title.trim()) {
+      setNotice('Slug and page title are required.')
+      return
+    }
+
+    const parsed = parseEditorData(dataJson, pageType, audience, layoutKey)
+    if (!parsed.ok) {
+      setNotice(parsed.error)
+      return
+    }
+
+    await api({
+      action: 'save_draft',
+      page: {
+        slug: normalizedSlug,
+        title: title.trim(),
+        audience,
+        pageType,
+        layoutKey,
+        data: parsed.data,
+        seo: {
+          title: seoTitle.trim() || title.trim(),
+          description: seoDescription.trim(),
+        },
+        visibilityRules: {},
+      },
+    })
+  }
+
+  async function loadVersions(pageSlug: string) {
+    const response = await fetch(`/api/admin/cms/pages?slug=${encodeURIComponent(pageSlug)}`, { cache: 'no-store' })
+    const result = await response.json()
+    if (result.ok) setVersions(result.versions || [])
+    setSlug(pageSlug)
+  }
+
   return <main className="min-h-screen bg-[#111] px-6 py-10 text-[#fffdf8]"><section className="mx-auto max-w-7xl">
-    <p className="text-xs font-black uppercase tracking-[0.24em] text-[#fdca5a]">Governed CMS</p><h1 className="mt-3 text-4xl font-black tracking-[-0.05em]">Draft. Review. Approve. Publish. Roll back.</h1><p className="mt-4 max-w-3xl text-sm leading-7 text-white/60">Public content is versioned and audited. Publishing is blocked when a registered high-risk capability claim exceeds its evidence state.</p>
-    {notice?<p className="mt-5 rounded-xl bg-[#f7adc8] p-4 font-bold text-black">{notice}</p>:null}
-    <div className="mt-8 grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
-      <form onSubmit={save} className="rounded-[2rem] border border-white/15 bg-white/[0.06] p-6"><h2 className="text-xl font-black">Page editor</h2><label className="mt-4 block text-xs font-bold uppercase tracking-[0.18em] text-white/50">Slug</label><input value={slug} onChange={e=>setSlug(e.target.value)} className="mt-2 w-full rounded-xl border border-white/15 bg-black p-3"/><label className="mt-4 block text-xs font-bold uppercase tracking-[0.18em] text-white/50">Title</label><input value={title} onChange={e=>setTitle(e.target.value)} className="mt-2 w-full rounded-xl border border-white/15 bg-black p-3"/><label className="mt-4 block text-xs font-bold uppercase tracking-[0.18em] text-white/50">Body</label><textarea rows={10} value={body} onChange={e=>setBody(e.target.value)} className="mt-2 w-full rounded-xl border border-white/15 bg-black p-3"/><button className="mt-4 w-full rounded-full bg-[#fdca5a] px-5 py-3 font-black text-black">Save draft</button></form>
-      <div className="rounded-[2rem] border border-white/15 bg-white/[0.06] p-6"><h2 className="text-xl font-black">Pages</h2><div className="mt-4 grid gap-3">{pages.map(page=><div key={page.slug} className="rounded-xl border border-white/10 bg-black/30 p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-black">{page.title}</p><p className="text-xs text-white/50">/{page.slug} · {page.status}</p></div><button onClick={()=>void loadVersions(page.slug)} className="rounded-full border border-white/20 px-3 py-1 text-xs font-bold">Versions</button></div><div className="mt-3 flex flex-wrap gap-2"><button onClick={()=>void api({action:'review',slug:page.slug})} className="rounded-full border border-white/20 px-3 py-1 text-xs">Review</button><button onClick={()=>void api({action:'approve',slug:page.slug})} className="rounded-full bg-[#f7adc8] px-3 py-1 text-xs font-black text-black">Approve</button><button onClick={()=>void api({action:'publish',slug:page.slug})} className="rounded-full bg-[#fdca5a] px-3 py-1 text-xs font-black text-black">Publish</button></div></div>)}</div></div>
+    <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[0.24em] text-[#fdca5a]">Governed CMS</p><h1 className="mt-3 text-4xl font-black tracking-[-0.05em]">Draft. Review. Approve. Publish. Roll back.</h1><p className="mt-4 max-w-3xl text-sm leading-7 text-white/60">Public content is versioned and audited. Marketing pages are edited as their full structured document so saving a draft cannot silently discard the sections required by the live renderer. Publishing remains blocked when a registered high-risk capability claim exceeds its evidence state.</p></div><button type="button" onClick={newPage} className="rounded-full border border-[#fdca5a] px-4 py-2 text-xs font-black text-[#fdca5a]">New page</button></div>
+    {notice ? <p className="mt-5 rounded-xl bg-[#f7adc8] p-4 font-bold text-black" role="status">{notice}</p> : null}
+    <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_1fr]">
+      <form onSubmit={save} className="rounded-[2rem] border border-white/15 bg-white/[0.06] p-6">
+        <h2 className="text-xl font-black">Schema-safe page editor</h2>
+        <div className="mt-4 grid gap-4 md:grid-cols-2"><label className="text-xs font-bold uppercase tracking-[0.18em] text-white/50">Slug<input value={slug} onChange={event => setSlug(event.target.value)} className="mt-2 w-full rounded-xl border border-white/15 bg-black p-3 normal-case tracking-normal text-white" /></label><label className="text-xs font-bold uppercase tracking-[0.18em] text-white/50">Page title<input value={title} onChange={event => setTitle(event.target.value)} className="mt-2 w-full rounded-xl border border-white/15 bg-black p-3 normal-case tracking-normal text-white" /></label></div>
+        <div className="mt-4 grid gap-4 md:grid-cols-3"><label className="text-xs font-bold uppercase tracking-[0.18em] text-white/50">Audience<select value={audience} onChange={event => setAudience(event.target.value)} className="mt-2 w-full rounded-xl border border-white/15 bg-black p-3 normal-case tracking-normal text-white"><option value="public">public</option><option value="client">client</option><option value="internal">internal</option></select></label><label className="text-xs font-bold uppercase tracking-[0.18em] text-white/50">Page type<input value={pageType} onChange={event => setPageType(event.target.value)} className="mt-2 w-full rounded-xl border border-white/15 bg-black p-3 normal-case tracking-normal text-white" /></label><label className="text-xs font-bold uppercase tracking-[0.18em] text-white/50">Layout<input value={layoutKey} onChange={event => setLayoutKey(event.target.value)} className="mt-2 w-full rounded-xl border border-white/15 bg-black p-3 normal-case tracking-normal text-white" /></label></div>
+        <label className="mt-4 block text-xs font-bold uppercase tracking-[0.18em] text-white/50">Structured page data (JSON)<textarea rows={22} spellCheck={false} value={dataJson} onChange={event => setDataJson(event.target.value)} className="mt-2 w-full rounded-xl border border-white/15 bg-black p-3 font-mono text-xs normal-case tracking-normal text-white" /></label>
+        <p className="mt-2 text-xs leading-5 text-white/45">Public marketing documents require <code>data.title</code> and <code>data.sections</code>. Existing records are loaded in full before editing, preserving hero, cards, steps, CTAs, assets and other structured fields.</p>
+        <label className="mt-4 block text-xs font-bold uppercase tracking-[0.18em] text-white/50">SEO title<input value={seoTitle} onChange={event => setSeoTitle(event.target.value)} className="mt-2 w-full rounded-xl border border-white/15 bg-black p-3 normal-case tracking-normal text-white" /></label>
+        <label className="mt-4 block text-xs font-bold uppercase tracking-[0.18em] text-white/50">SEO description<textarea rows={3} value={seoDescription} onChange={event => setSeoDescription(event.target.value)} className="mt-2 w-full rounded-xl border border-white/15 bg-black p-3 normal-case tracking-normal text-white" /></label>
+        <button className="mt-4 w-full rounded-full bg-[#fdca5a] px-5 py-3 font-black text-black">Save schema-safe draft</button>
+      </form>
+      <div className="rounded-[2rem] border border-white/15 bg-white/[0.06] p-6"><h2 className="text-xl font-black">Pages</h2><div className="mt-4 grid gap-3">{pages.map(page => <div key={page.slug} className="rounded-xl border border-white/10 bg-black/30 p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-black">{page.title}</p><p className="text-xs text-white/50">/{page.slug} · {page.status} · {page.page_type}/{page.layout_key}</p></div><div className="flex gap-2"><button type="button" onClick={() => editPage(page)} className="rounded-full bg-white px-3 py-1 text-xs font-black text-black">Edit</button><button type="button" onClick={() => void loadVersions(page.slug)} className="rounded-full border border-white/20 px-3 py-1 text-xs font-bold">Versions</button></div></div><div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={() => void api({ action: 'review', slug: page.slug })} className="rounded-full border border-white/20 px-3 py-1 text-xs">Review</button><button type="button" onClick={() => void api({ action: 'approve', slug: page.slug })} className="rounded-full bg-[#f7adc8] px-3 py-1 text-xs font-black text-black">Approve</button><button type="button" onClick={() => void api({ action: 'publish', slug: page.slug })} className="rounded-full bg-[#fdca5a] px-3 py-1 text-xs font-black text-black">Publish</button></div></div>)}</div></div>
     </div>
-    {versions.length?<section className="mt-6 rounded-[2rem] border border-white/15 bg-white/[0.06] p-6"><h2 className="text-xl font-black">Version history: {slug}</h2><div className="mt-4 grid gap-3">{versions.map(v=><div key={v.version_label} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/30 p-4"><div><p className="font-bold">{v.version_label}</p><p className="text-xs text-white/50">{v.published_at} · {v.published_by||'unknown'}</p></div><button onClick={()=>void api({action:'rollback',slug,version:v.version_label})} className="rounded-full border border-[#fdca5a] px-3 py-1 text-xs font-bold text-[#fdca5a]">Publish rollback</button></div>)}</div></section>:null}
-    <section className="mt-6 rounded-[2rem] border border-white/15 bg-white/[0.06] p-6"><h2 className="text-xl font-black">Capability claims register</h2><div className="mt-4 grid gap-3 md:grid-cols-2">{claims.map(claim=><div key={claim.claim_key} className="rounded-xl border border-white/10 bg-black/30 p-4"><p className="font-black">{claim.capability}</p><p className="mt-1 text-xs text-white/50">Pattern: “{claim.claim_pattern}”</p><p className="mt-2 text-sm">{claim.current_state} → minimum {claim.minimum_state}</p><p className={`mt-2 text-xs font-bold ${claim.approved_at?'text-emerald-300':'text-amber-300'}`}>{claim.approved_at?'Evidence approved':'Approval required before publish'}</p></div>)}</div></section>
+    {versions.length ? <section className="mt-6 rounded-[2rem] border border-white/15 bg-white/[0.06] p-6"><h2 className="text-xl font-black">Version history: {slug}</h2><div className="mt-4 grid gap-3">{versions.map(version => <div key={version.version_label} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/30 p-4"><div><p className="font-bold">{version.version_label}</p><p className="text-xs text-white/50">{version.published_at} · {version.published_by || 'unknown'}</p></div><button type="button" onClick={() => void api({ action: 'rollback', slug, version: version.version_label })} className="rounded-full border border-[#fdca5a] px-3 py-1 text-xs font-bold text-[#fdca5a]">Publish rollback</button></div>)}</div></section> : null}
+    <section className="mt-6 rounded-[2rem] border border-white/15 bg-white/[0.06] p-6"><h2 className="text-xl font-black">Capability claims register</h2><div className="mt-4 grid gap-3 md:grid-cols-2">{claims.map(claim => <div key={claim.claim_key} className="rounded-xl border border-white/10 bg-black/30 p-4"><p className="font-black">{claim.capability}</p><p className="mt-1 text-xs text-white/50">Pattern: “{claim.claim_pattern}”</p><p className="mt-2 text-sm">{claim.current_state} → minimum {claim.minimum_state}</p><p className={`mt-2 text-xs font-bold ${claim.approved_at ? 'text-emerald-300' : 'text-amber-300'}`}>{claim.approved_at ? 'Evidence approved' : 'Approval required before publish'}</p></div>)}</div></section>
   </section></main>
 }
