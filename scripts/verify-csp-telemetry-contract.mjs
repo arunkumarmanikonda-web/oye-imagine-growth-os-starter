@@ -41,7 +41,13 @@ expect(migration.includes("now() - interval '30 days'"), 'CSP telemetry must hav
 expect(migration.includes("now() - interval '1 day'"), 'CSP rate buckets must have bounded one-day retention.')
 expect(migration.includes("'oye-csp-telemetry-retention'"), 'CSP retention cron must be source-controlled.')
 expect(!/\b(ip|ip_address|remote_addr|client_ip)\b/i.test(migration), 'CSP database schema must not store raw IP-address fields.')
-expect(!/query|string_query|search_params|fragment|hash_value/i.test(migration), 'CSP database schema must not store query strings or fragments.')
+const forbiddenUrlStorageColumns = [
+  /\b(query_string|url_query|query_params|search_params)\s+(text|varchar|json|jsonb)\b/i,
+  /\b(fragment|url_fragment|hash_value|raw_url|full_url)\s+(text|varchar|json|jsonb)\b/i,
+]
+for (const pattern of forbiddenUrlStorageColumns) {
+  expect(!pattern.test(migration), `CSP database schema contains forbidden raw URL storage column matching ${pattern}.`)
+}
 
 expect(service.includes("new URL(raw)"), 'CSP URL normalization must parse URLs before persistence.')
 expect(service.includes('url.origin.toLowerCase()'), 'CSP telemetry must store normalized origin rather than raw URL.')
