@@ -17,6 +17,7 @@ const paths = {
   readiness: path.join(proofDir, 'P0-013-production-parity-provider-readiness-2026-08-18.json'),
   csp: path.join(proofDir, 'P0-013-production-parity-csp-telemetry-2026-08-18.json'),
   release: path.join(proofDir, 'P0-013-production-parity-release-readiness-2026-08-18.json'),
+  webhook: path.join(proofDir, 'P0-013-production-parity-webhook-authenticity-2026-08-18.json'),
 }
 
 const proof = Object.fromEntries(Object.entries(paths).map(([key, value]) => [key, JSON.parse(fs.readFileSync(value, 'utf8'))]))
@@ -51,6 +52,7 @@ const chain = [
   { name: 'readiness', baseFile: path.basename(paths.oauth), from: 88, to: 91, tailVersion: '20260818172350', tailName: 'provider_readiness_guard_go' },
   { name: 'csp', baseFile: path.basename(paths.readiness), from: 91, to: 92, tailVersion: '20260818180811', tailName: 'durable_csp_telemetry' },
   { name: 'release', baseFile: path.basename(paths.csp), from: 92, to: 93, tailVersion: '20260818183025', tailName: 'release_schema_evidence' },
+  { name: 'webhook', baseFile: path.basename(paths.release), from: 93, to: 94, tailVersion: '20260818211024', tailName: 'lifecycle_webhook_guard' },
 ]
 
 for (const step of chain) {
@@ -64,8 +66,8 @@ for (const step of chain) {
   expect(value.supabase?.productionLedgerLastName === step.tailName, `${step.name}: unexpected production ledger tail name.`)
 }
 
-expect(files.length === 93, `Expected 93 source-controlled migrations, found ${files.length}.`)
-expect(proof.release.supabase?.productionLedgerCount === files.length, 'Final production/Git migration counts are not exact.')
+expect(files.length === 94, `Expected 94 source-controlled migrations, found ${files.length}.`)
+expect(proof.webhook.supabase?.productionLedgerCount === files.length, 'Final production/Git migration counts are not exact.')
 
 const versions = new Map()
 for (const file of files) {
@@ -117,6 +119,13 @@ expect(fileSet.has('20260818190000_release_schema_evidence.sql'), 'Release-readi
 expect(releaseMapping?.sourceFile === '20260818190000_release_schema_evidence.sql', 'Unexpected release-readiness source mapping.')
 expect(releaseMapping?.productionLedgerVersion === '20260818183025', 'Unexpected release-readiness production ledger version.')
 expect(releaseMapping?.productionLedgerName === 'release_schema_evidence', 'Unexpected release-readiness production ledger name.')
+
+const webhookMapping = proof.webhook.releaseMigrations?.[0]
+expect(Array.isArray(proof.webhook.releaseMigrations) && proof.webhook.releaseMigrations.length === 1, 'Webhook-authenticity proof must contain exactly one release migration.')
+expect(fileSet.has('20260818220000_lifecycle_webhook_guard.sql'), 'Webhook-authenticity source migration is missing.')
+expect(webhookMapping?.sourceFile === '20260818220000_lifecycle_webhook_guard.sql', 'Unexpected webhook-authenticity source mapping.')
+expect(webhookMapping?.productionLedgerVersion === '20260818211024', 'Unexpected webhook-authenticity production ledger version.')
+expect(webhookMapping?.productionLedgerName === 'lifecycle_webhook_guard', 'Unexpected webhook-authenticity production ledger name.')
 
 expect(Array.isArray(proof.autonomy.releaseMigrations) && proof.autonomy.releaseMigrations.length === 5, 'Autonomy proof must contain five release migrations.')
 for (const item of proof.autonomy.releaseMigrations || []) {
@@ -220,10 +229,22 @@ expect(release?.fundingRequestCount === 0 && release?.mediaBalanceAccountCount =
 expect(release?.growthExecutorKillSwitch === true, 'Release-readiness proof lost the kill switch.')
 expect(release?.migrationCreatesProviderCredential === false && release?.migrationCreatesMediaFunds === false && release?.migrationPerformsProviderMutation === false && release?.migrationReleasesKillSwitch === false && release?.externalEvidenceAutoCompleted === false, 'Release-readiness migration performed a forbidden side effect.')
 
+const webhook = proof.webhook.liveControls
+expect(webhook?.guardedCallbackAnonExecute === false && webhook?.guardedCallbackAuthenticatedExecute === false && webhook?.guardedCallbackServiceRoleExecute === true, 'Webhook callback guard privileges are unsafe.')
+expect(webhook?.uniqueProviderMessageIndexCount === 1, 'Webhook callback provider-message uniqueness evidence is missing.')
+expect(webhook?.whatsappVerifyTokenFieldCount === 1, 'WhatsApp webhook verify-token provider field evidence is missing.')
+expect(webhook?.lifecycleDeliveryJobCount === 0, 'Webhook migration fabricated lifecycle delivery work.')
+expect(webhook?.neejeeProviderAccountCount === 0 && webhook?.neejeeProviderReadinessCount === 0 && webhook?.providerQaRunCount === 0 && webhook?.oauthSelectionSessionCount === 0, 'Webhook migration fabricated provider evidence.')
+expect(webhook?.fundingRequestCount === 0 && webhook?.mediaBalanceAccountCount === 0, 'Webhook migration created funding state.')
+expect(webhook?.autonomousRunCount === 0 && webhook?.autonomousActiveQueueCount === 0, 'Webhook migration created autonomous work.')
+expect(webhook?.cspReportObservedCount === 0, 'Webhook migration fabricated CSP telemetry.')
+expect(webhook?.growthExecutorKillSwitch === true, 'Webhook proof lost the kill switch.')
+expect(webhook?.migrationCreatesProviderCredential === false && webhook?.migrationCreatesMediaFunds === false && webhook?.migrationCreatesLifecycleJob === false && webhook?.migrationPerformsProviderMutation === false && webhook?.migrationReleasesKillSwitch === false, 'Webhook migration performed a forbidden side effect.')
+
 if (failures.length) {
   console.error('P0-013 final parity snapshot verification failed.')
   failures.forEach(failure => console.error(`- ${failure}`))
   process.exit(1)
 }
 
-console.log(`P0-013 parity verified: ${files.length} uniquely versioned Git migrations, ${proof.release.supabase.productionLedgerCount} captured production ledger entries, historical reconciliation retained, governed autonomy/provider/funding/OAuth/readiness boundaries remain safe, durable CSP telemetry remains privacy-minimized/report-only, and release schema evidence is service-only with zero synthetic external proof.`)
+console.log(`P0-013 parity verified: ${files.length} uniquely versioned Git migrations, ${proof.webhook.supabase.productionLedgerCount} captured production ledger entries, historical reconciliation retained, governed autonomy/provider/funding/OAuth/readiness boundaries remain safe, durable CSP telemetry remains privacy-minimized/report-only, release schema evidence remains service-only, and webhook callback guards preserve zero synthetic external proof with the kill switch ON.`)
