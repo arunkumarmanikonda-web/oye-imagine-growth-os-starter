@@ -9,7 +9,7 @@ create table if not exists public.autonomous_execution_runs (
   channel text not null,
   requested_amount numeric not null default 0 check (requested_amount >= 0),
   currency text not null default 'INR',
-  status text not null default 'gated' check (status in ('gated','blocked','approved','executing','succeeded','failed')),
+  status text not null default 'gated' check (status in ('gated','blocked','approved','executing','verification_pending','succeeded','failed','reconciliation_required')),
   reservation_state text not null default 'not_required' check (reservation_state in ('not_required','pending','reserved','settled','released')),
   approval_id text,
   external_resource_id text,
