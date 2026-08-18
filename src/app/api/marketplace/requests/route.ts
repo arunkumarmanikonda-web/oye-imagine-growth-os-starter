@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { getWorkspaceDisplayName } from '@/lib/admin/workspace-branding'
+import { readBoundedJson } from '@/lib/security/bounded-json'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 
 const workspaceDisplayName = getWorkspaceDisplayName()
@@ -76,11 +77,6 @@ function clientFingerprintParts(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const contentLength = Number(request.headers.get('content-length') ?? '0')
-    if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
-      return noStoreJson({ ok: false, code: 'payload_too_large' }, 413)
-    }
-
     const { clientAddress, userAgent } = clientFingerprintParts(request)
     const supabase = createSupabaseAdminClient()
     const networkFingerprint = fingerprint(`marketplace|network|${clientAddress}|${userAgent}`)
@@ -96,13 +92,15 @@ export async function POST(request: NextRequest) {
     if (networkRateError) throw new Error('marketplace_rate_limit_unavailable')
     if (networkAllowed !== true) return rateLimited()
 
-    let body: RequestBody | null
-    try {
-      body = (await request.json()) as RequestBody
-    } catch {
-      return noStoreJson({ ok: false, code: 'invalid_json' }, 400)
+    const parsedBody = await readBoundedJson<RequestBody>(request, MAX_BODY_BYTES)
+    if (!parsedBody.ok) {
+      return noStoreJson(
+        { ok: false, code: parsedBody.code },
+        parsedBody.code === 'payload_too_large' ? 413 : 400,
+      )
     }
 
+    const body = parsedBody.value
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
       return noStoreJson({ ok: false, code: 'invalid_request' }, 400)
     }
