@@ -1,10 +1,7 @@
 import type { ApiAccessContext } from '@/lib/auth/api-access'
 import { googleAccessToken } from '@/lib/integrations/google'
+import { googleAdsRuntimeConfig } from '@/lib/integrations/google-ads-runtime'
 import { resolveOperationalTarget } from '@/lib/integrations/operational-target'
-
-function version() {
-  return process.env.GOOGLE_ADS_API_VERSION || 'v25'
-}
 
 function customer(value: string) {
   const id = value.replace(/\D/g, '')
@@ -17,20 +14,23 @@ export async function readGoogleAdsCustomer(
   input: { workspaceId?: string; customerId: string },
 ) {
   const target = await resolveOperationalTarget(access, input.workspaceId)
-  const { accessToken } = await googleAccessToken(target.tenantId, target.workspaceId)
-  const developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN?.trim()
-  if (!developerToken) throw new Error('google_ads_developer_token_not_configured')
+  const [{ accessToken }, config] = await Promise.all([
+    googleAccessToken(target.tenantId, target.workspaceId),
+    googleAdsRuntimeConfig(),
+  ])
   const headers: Record<string, string> = {
     Authorization: `Bearer ${accessToken}`,
     'Content-Type': 'application/json',
-    'developer-token': developerToken,
+    'developer-token': config.developerToken,
   }
-  if (process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID) headers['login-customer-id'] = process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID.replace(/-/g, '')
+  if (config.loginCustomerId) headers['login-customer-id'] = config.loginCustomerId
   const id = customer(input.customerId)
-  const response = await fetch(`https://googleads.googleapis.com/${version()}/customers/${id}/googleAds:search`, {
+  const response = await fetch(`https://googleads.googleapis.com/${config.apiVersion}/customers/${id}/googleAds:search`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ query: 'SELECT customer.id, customer.descriptive_name, customer.currency_code, customer.time_zone FROM customer LIMIT 1' }),
+    body: JSON.stringify({
+      query: 'SELECT customer.id, customer.descriptive_name, customer.currency_code, customer.time_zone, customer.status, customer.manager, customer.test_account FROM customer LIMIT 1',
+    }),
   })
   const payload: any = await response.json().catch(() => ({}))
   if (!response.ok) throw new Error(`google_ads_customer_read_failed:${payload?.error?.status || response.status}`)
@@ -41,5 +41,8 @@ export async function readGoogleAdsCustomer(
     descriptiveName: String(row.descriptiveName || ''),
     currencyCode: String(row.currencyCode).toUpperCase(),
     timeZone: String(row.timeZone || ''),
+    status: String(row.status || 'UNKNOWN').toUpperCase(),
+    manager: row.manager === true,
+    testAccount: row.testAccount === true,
   }
 }
