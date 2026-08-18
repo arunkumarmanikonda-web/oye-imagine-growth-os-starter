@@ -8,6 +8,7 @@ import { resolveSocialPublishingConnection } from '@/lib/integrations/social-acc
 import { publishSocialContent } from '@/lib/integrations/social-publish'
 import { publishYouTubeVideo } from '@/lib/integrations/youtube'
 import { sendLifecycleMessage } from '@/lib/privacy/delivery'
+import { publishVerifiedReportSnapshot } from '@/lib/reporting/autonomous-report'
 
 export type AutonomousExecutionInput = {
   actionKey: 'campaign.launch' | 'lifecycle.send' | 'social.publish' | 'report.publish'
@@ -65,7 +66,7 @@ function providerBlockers(input: AutonomousExecutionInput) {
     if (input.channel === 'youtube') return runtimeMissing(['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'OYE_OAUTH_ENCRYPTION_KEY']).map(name => `runtime_secret_missing:${name}`)
     return runtimeMissing(['OYE_OAUTH_ENCRYPTION_KEY']).map(name => `runtime_secret_missing:${name}`)
   }
-  return ['report_external_publisher_not_configured']
+  return []
 }
 
 async function latestReadiness(brandName: string, channel: string) {
@@ -166,7 +167,7 @@ async function createRun(access: ApiAccessContext, target: OperationalTarget, in
       ? lifecycleProvider(input)
       : input.actionKey === 'social.publish'
         ? input.channel === 'linkedin' ? 'linkedin' : 'meta'
-        : input.providerKey || 'unconfigured'
+        : input.actionKey === 'report.publish' ? 'oye_internal' : input.providerKey || 'unconfigured'
   const admin = createSupabaseAdminClient()
   const { data, error } = await admin.from('autonomous_execution_runs').insert({
     tenant_id: target.tenantId,
@@ -333,6 +334,24 @@ async function executeSocial(access: ApiAccessContext, input: AutonomousExecutio
   }
 }
 
+async function executeReport(access: ApiAccessContext, input: AutonomousExecutionInput, gateResult: GateResult, run: any) {
+  const snapshotId = String(input.payload?.snapshotId || '').trim()
+  if (!snapshotId) return markBlocked(run, ['report_snapshot_id_required'])
+  const approval: any = await machineApproval(access, gateResult.target, run, input)
+  await updateRun(run.run_id, { status: 'executing', approval_id: approval.approval_id, started_at: new Date().toISOString(), blockers: [] })
+  try {
+    const result = await publishVerifiedReportSnapshot({ tenantId: gateResult.core.tenantId, brandId: gateResult.core.brandId, workspaceId: gateResult.core.workspaceId }, {
+      snapshotId,
+      audience: input.payload?.audience,
+      actor: `autonomy:growth-executor:${access.subject}`,
+    })
+    return updateRun(run.run_id, { status: 'succeeded', provider_result: result, external_resource_id: result.publicationJobId, error_code: null, completed_at: new Date().toISOString() })
+  } catch (error) {
+    const code = error instanceof Error ? error.message.split(':')[0] : 'autonomous_report_publish_failed'
+    return updateRun(run.run_id, { status: code.includes('required') || code.includes('not_finalized') ? 'blocked' : 'failed', error_code: code, completed_at: new Date().toISOString() })
+  }
+}
+
 export async function executeAutonomousAction(access: ApiAccessContext, input: AutonomousExecutionInput) {
   if (!input || typeof input !== 'object') throw new Error('autonomy_execution_required')
   const target = await resolveOperationalTarget(access, input.workspaceId)
@@ -343,7 +362,7 @@ export async function executeAutonomousAction(access: ApiAccessContext, input: A
   if (input.actionKey === 'campaign.launch') return { replayed: false, run: await executeCampaign(access, input, gateResult, created.run), gate: gateResult }
   if (input.actionKey === 'lifecycle.send') return { replayed: false, run: await executeLifecycle(access, input, gateResult, created.run), gate: gateResult }
   if (input.actionKey === 'social.publish') return { replayed: false, run: await executeSocial(access, input, gateResult, created.run), gate: gateResult }
-  return { replayed: false, run: await markBlocked(created.run, providerBlockers(input)), gate: gateResult }
+  return { replayed: false, run: await executeReport(access, input, gateResult, created.run), gate: gateResult }
 }
 
 export async function autonomousExecutionStatus(access: ApiAccessContext, workspaceId?: string) {
@@ -387,6 +406,7 @@ export async function autonomousExecutionStatus(access: ApiAccessContext, worksp
       sms: { runtimeConfigured: runtimeMissing(['FAST2SMS_API_URL', 'FAST2SMS_API_KEY']).length === 0, adapter: 'fast2sms' },
       meta_social: { accountConnected: Boolean(meta), providerVerified: Boolean(meta?.last_verified_at), lastVerifiedAt: meta?.last_verified_at || null },
       linkedin_social: { accountConnected: Boolean(linkedin), providerVerified: Boolean(linkedin?.last_verified_at), lastVerifiedAt: linkedin?.last_verified_at || null },
+      reporting: { adapter: 'verified_internal_web', verifiedDataRequired: true },
     },
     channelReadiness: Array.from(latest.values()),
     actionRoutes: routes.data || [],
