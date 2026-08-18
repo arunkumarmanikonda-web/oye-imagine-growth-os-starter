@@ -18,6 +18,7 @@ const paths = {
   csp: path.join(proofDir, 'P0-013-production-parity-csp-telemetry-2026-08-18.json'),
   release: path.join(proofDir, 'P0-013-production-parity-release-readiness-2026-08-18.json'),
   webhook: path.join(proofDir, 'P0-013-production-parity-webhook-authenticity-2026-08-18.json'),
+  unsubscribe: path.join(proofDir, 'P0-013-production-parity-unsubscribe-guard-2026-08-18.json'),
 }
 
 const proof = Object.fromEntries(Object.entries(paths).map(([key, value]) => [key, JSON.parse(fs.readFileSync(value, 'utf8'))]))
@@ -53,6 +54,7 @@ const chain = [
   { name: 'csp', baseFile: path.basename(paths.readiness), from: 91, to: 92, tailVersion: '20260818180811', tailName: 'durable_csp_telemetry' },
   { name: 'release', baseFile: path.basename(paths.csp), from: 92, to: 93, tailVersion: '20260818183025', tailName: 'release_schema_evidence' },
   { name: 'webhook', baseFile: path.basename(paths.release), from: 93, to: 94, tailVersion: '20260818211024', tailName: 'lifecycle_webhook_guard' },
+  { name: 'unsubscribe', baseFile: path.basename(paths.webhook), from: 94, to: 95, tailVersion: '20260818212902', tailName: 'privacy_unsubscribe_guard' },
 ]
 
 for (const step of chain) {
@@ -66,8 +68,8 @@ for (const step of chain) {
   expect(value.supabase?.productionLedgerLastName === step.tailName, `${step.name}: unexpected production ledger tail name.`)
 }
 
-expect(files.length === 94, `Expected 94 source-controlled migrations, found ${files.length}.`)
-expect(proof.webhook.supabase?.productionLedgerCount === files.length, 'Final production/Git migration counts are not exact.')
+expect(files.length === 95, `Expected 95 source-controlled migrations, found ${files.length}.`)
+expect(proof.unsubscribe.supabase?.productionLedgerCount === files.length, 'Final production/Git migration counts are not exact.')
 
 const versions = new Map()
 for (const file of files) {
@@ -126,6 +128,13 @@ expect(fileSet.has('20260818220000_lifecycle_webhook_guard.sql'), 'Webhook-authe
 expect(webhookMapping?.sourceFile === '20260818220000_lifecycle_webhook_guard.sql', 'Unexpected webhook-authenticity source mapping.')
 expect(webhookMapping?.productionLedgerVersion === '20260818211024', 'Unexpected webhook-authenticity production ledger version.')
 expect(webhookMapping?.productionLedgerName === 'lifecycle_webhook_guard', 'Unexpected webhook-authenticity production ledger name.')
+
+const unsubscribeMapping = proof.unsubscribe.releaseMigrations?.[0]
+expect(Array.isArray(proof.unsubscribe.releaseMigrations) && proof.unsubscribe.releaseMigrations.length === 1, 'Unsubscribe-guard proof must contain exactly one release migration.')
+expect(fileSet.has('20260818230000_privacy_unsubscribe_guard.sql'), 'Unsubscribe-guard source migration is missing.')
+expect(unsubscribeMapping?.sourceFile === '20260818230000_privacy_unsubscribe_guard.sql', 'Unexpected unsubscribe-guard source mapping.')
+expect(unsubscribeMapping?.productionLedgerVersion === '20260818212902', 'Unexpected unsubscribe-guard production ledger version.')
+expect(unsubscribeMapping?.productionLedgerName === 'privacy_unsubscribe_guard', 'Unexpected unsubscribe-guard production ledger name.')
 
 expect(Array.isArray(proof.autonomy.releaseMigrations) && proof.autonomy.releaseMigrations.length === 5, 'Autonomy proof must contain five release migrations.')
 for (const item of proof.autonomy.releaseMigrations || []) {
@@ -241,10 +250,19 @@ expect(webhook?.cspReportObservedCount === 0, 'Webhook migration fabricated CSP 
 expect(webhook?.growthExecutorKillSwitch === true, 'Webhook proof lost the kill switch.')
 expect(webhook?.migrationCreatesProviderCredential === false && webhook?.migrationCreatesMediaFunds === false && webhook?.migrationCreatesLifecycleJob === false && webhook?.migrationPerformsProviderMutation === false && webhook?.migrationReleasesKillSwitch === false, 'Webhook migration performed a forbidden side effect.')
 
+const unsubscribe = proof.unsubscribe.liveControls
+expect(unsubscribe?.guardedUnsubscribeAnonExecute === false && unsubscribe?.guardedUnsubscribeAuthenticatedExecute === false && unsubscribe?.guardedUnsubscribeServiceRoleExecute === true, 'Unsubscribe guard RPC privileges are unsafe.')
+expect(unsubscribe?.suppressionCount === 0 && unsubscribe?.consentEventCount === 0, 'Unsubscribe migration fabricated privacy state.')
+expect(unsubscribe?.lifecycleDeliveryJobCount === 0, 'Unsubscribe migration fabricated lifecycle delivery work.')
+expect(unsubscribe?.neejeeProviderAccountCount === 0, 'Unsubscribe migration fabricated provider evidence.')
+expect(unsubscribe?.autonomousRunCount === 0, 'Unsubscribe migration created autonomous execution work.')
+expect(unsubscribe?.growthExecutorKillSwitch === true, 'Unsubscribe proof lost the kill switch.')
+expect(unsubscribe?.migrationCreatesSuppression === false && unsubscribe?.migrationCreatesConsentEvent === false && unsubscribe?.migrationCreatesProviderCredential === false && unsubscribe?.migrationCreatesMediaFunds === false && unsubscribe?.migrationPerformsProviderMutation === false && unsubscribe?.migrationReleasesKillSwitch === false, 'Unsubscribe migration performed a forbidden side effect.')
+
 if (failures.length) {
   console.error('P0-013 final parity snapshot verification failed.')
   failures.forEach(failure => console.error(`- ${failure}`))
   process.exit(1)
 }
 
-console.log(`P0-013 parity verified: ${files.length} uniquely versioned Git migrations, ${proof.webhook.supabase.productionLedgerCount} captured production ledger entries, historical reconciliation retained, governed autonomy/provider/funding/OAuth/readiness boundaries remain safe, durable CSP telemetry remains privacy-minimized/report-only, release schema evidence remains service-only, and webhook callback guards preserve zero synthetic external proof with the kill switch ON.`)
+console.log(`P0-013 parity verified: ${files.length} uniquely versioned Git migrations, ${proof.unsubscribe.supabase.productionLedgerCount} captured production ledger entries, historical reconciliation retained, governed autonomy/provider/funding/OAuth/readiness boundaries remain safe, durable CSP telemetry remains privacy-minimized/report-only, release schema evidence remains service-only, webhook callback guards remain authenticated/replay-safe, and public unsubscribe remains scanner-safe, atomic and free of synthetic privacy state with the kill switch ON.`)
