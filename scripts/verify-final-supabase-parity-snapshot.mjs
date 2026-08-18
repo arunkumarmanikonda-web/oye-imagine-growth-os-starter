@@ -41,12 +41,12 @@ expect(proof.baseline.supabase?.productionLedgerCount === 79 && proof.baseline.g
 expect(proof.baseline.supabase?.productionLedgerLastVersion === '20260817211446', 'Unexpected baseline production ledger tail.')
 
 const chain = [
-  { name: 'autonomy', base: 'baseline', baseFile: path.basename(paths.baseline), from: 79, to: 84, tailVersion: '20260818093605', tailName: 'integration_account_contract' },
-  { name: 'scheduler', base: 'autonomy', baseFile: path.basename(paths.autonomy), from: 84, to: 85, tailVersion: '20260818095047', tailName: 'autonomy_scheduler' },
-  { name: 'provider', base: 'scheduler', baseFile: path.basename(paths.scheduler), from: 85, to: 86, tailVersion: '20260818101623', tailName: 'google_ads_provider_vault_fields' },
-  { name: 'funding', base: 'provider', baseFile: path.basename(paths.provider), from: 86, to: 87, tailVersion: '20260818103021', tailName: 'media_funding_controls' },
-  { name: 'oauth', base: 'funding', baseFile: path.basename(paths.funding), from: 87, to: 88, tailVersion: '20260818105118', tailName: 'managed_social_oauth_sessions' },
-  { name: 'readiness', base: 'oauth', baseFile: path.basename(paths.oauth), from: 88, to: 90, tailVersion: '20260818171545', tailName: 'provider_readiness_enforcement' },
+  { name: 'autonomy', baseFile: path.basename(paths.baseline), from: 79, to: 84, tailVersion: '20260818093605', tailName: 'integration_account_contract' },
+  { name: 'scheduler', baseFile: path.basename(paths.autonomy), from: 84, to: 85, tailVersion: '20260818095047', tailName: 'autonomy_scheduler' },
+  { name: 'provider', baseFile: path.basename(paths.scheduler), from: 85, to: 86, tailVersion: '20260818101623', tailName: 'google_ads_provider_vault_fields' },
+  { name: 'funding', baseFile: path.basename(paths.provider), from: 86, to: 87, tailVersion: '20260818103021', tailName: 'media_funding_controls' },
+  { name: 'oauth', baseFile: path.basename(paths.funding), from: 87, to: 88, tailVersion: '20260818105118', tailName: 'managed_social_oauth_sessions' },
+  { name: 'readiness', baseFile: path.basename(paths.oauth), from: 88, to: 91, tailVersion: '20260818172350', tailName: 'provider_readiness_guard_go' },
 ]
 
 for (const step of chain) {
@@ -60,7 +60,7 @@ for (const step of chain) {
   expect(value.supabase?.productionLedgerLastName === step.tailName, `${step.name}: unexpected production ledger tail name.`)
 }
 
-expect(files.length === 90, `Expected 90 source-controlled migrations, found ${files.length}.`)
+expect(files.length === 91, `Expected 91 source-controlled migrations, found ${files.length}.`)
 expect(proof.readiness.supabase?.productionLedgerCount === files.length, 'Final production/Git migration counts are not exact.')
 
 const versions = new Map()
@@ -86,10 +86,11 @@ for (const [sourceFile, ledgerVersion, ledgerName, mapping] of requiredMappings)
 }
 
 const readinessMigrations = proof.readiness.releaseMigrations
-expect(Array.isArray(readinessMigrations) && readinessMigrations.length === 2, 'Provider readiness proof must contain exactly two release migrations.')
+expect(Array.isArray(readinessMigrations) && readinessMigrations.length === 3, 'Provider readiness proof must contain exactly three release migrations.')
 const readinessExpected = [
   ['20260818170000_automated_provider_readiness.sql', '20260818170340', 'automated_provider_readiness'],
   ['20260818171500_provider_readiness_enforcement.sql', '20260818171545', 'provider_readiness_enforcement'],
+  ['20260818173500_provider_readiness_guard_go.sql', '20260818172350', 'provider_readiness_guard_go'],
 ]
 for (const [index, expected] of readinessExpected.entries()) {
   const [sourceFile, ledgerVersion, ledgerName] = expected
@@ -176,6 +177,7 @@ expect(readiness?.growthExecutorKillSwitch === true, 'Provider readiness proof l
 expect(readiness?.providerQaBrowserPrivileges === false && readiness?.providerReadinessBrowserPrivileges === false, 'Machine QA tables expose browser privileges.')
 expect(readiness?.legacyReadinessBrowserWritePrivileges === false, 'Legacy readiness still permits browser writes.')
 expect(readiness?.manualPassingReadinessProbeBlocked === true, 'Manual passing readiness guard was not exercised successfully.')
+expect(readiness?.manualGoReadinessProbeBlocked === true, 'Legacy go readiness bypass was not blocked successfully.')
 expect(readiness?.expiryCronJobName === 'oye-provider-readiness-expiry' && readiness?.expiryCronSchedule === '* * * * *' && readiness?.expiryCronActive === true, 'Provider readiness expiry scheduler evidence is incomplete.')
 expect(readiness?.migrationCreatesProviderCredential === false && readiness?.migrationCreatesMediaFunds === false && readiness?.migrationPerformsProviderMutation === false && readiness?.migrationReleasesKillSwitch === false, 'Provider readiness migration performed a forbidden side effect.')
 
