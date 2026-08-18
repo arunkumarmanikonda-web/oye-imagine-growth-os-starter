@@ -44,7 +44,7 @@ function normalizeUrl(value: unknown) {
 }
 
 export function normalizeCspReport(input: Record<string, unknown>): NormalizedCspReport {
-  const document = normalizeUrl(input.blockedDocumentUri ?? input.documentUri)
+  const document = normalizeUrl(input.documentUri)
   const blocked = normalizeUrl(input.blockedUri)
   const source = normalizeUrl(input.sourceFile)
   const line = typeof input.lineNumber === 'number' && Number.isFinite(input.lineNumber)
@@ -86,6 +86,11 @@ function telemetrySecret() {
   return secret
 }
 
+function safeCount(value: unknown) {
+  const count = Number(value)
+  return Number.isSafeInteger(count) && count >= 0 ? count : null
+}
+
 export function cspNetworkBucket(networkIdentifier: string) {
   return createHmac('sha256', telemetrySecret()).update(networkIdentifier || 'unknown').digest('hex')
 }
@@ -116,7 +121,7 @@ export async function recordCspTelemetry(input: { report: NormalizedCspReport; n
   return {
     accepted: row?.accepted === true,
     throttled: row?.throttled === true,
-    reportCount: typeof row?.stored_report_count === 'number' ? row.stored_report_count : null,
+    reportCount: safeCount(row?.stored_report_count),
   }
 }
 
@@ -131,12 +136,15 @@ export async function listCspTelemetry(hours = 168) {
     .limit(500)
   if (error) throw new Error(`csp_telemetry_read_failed:${error.message}`)
 
-  const rows = data || []
-  const totalReports = rows.reduce((sum, row: any) => sum + Number(row.report_count || 0), 0)
+  const rows = (data || []).map((row: any) => ({
+    ...row,
+    report_count: safeCount(row.report_count) ?? 0,
+  }))
+  const totalReports = rows.reduce((sum, row: any) => sum + row.report_count, 0)
   const blocked = new Map<string, number>()
   const directives = new Map<string, number>()
   for (const row of rows as any[]) {
-    const count = Number(row.report_count || 0)
+    const count = row.report_count
     const blockedKey = String(row.blocked_origin || 'unknown')
     const directiveKey = String(row.effective_directive || row.violated_directive || 'unknown')
     blocked.set(blockedKey, (blocked.get(blockedKey) || 0) + count)
