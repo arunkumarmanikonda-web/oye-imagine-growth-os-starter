@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "issue": "P0-013",
+  "capturedAt": "2026-08-18",
+  "conclusion": "parity_reconciled",
+  "baseSnapshot": "P0-013-production-parity-delta-2026-08-18.json",
+  "supabase": {
+    "projectRef": "bqhaifivpcwwiauiynlv",
+    "baseProductionLedgerCount": 84,
+    "productionLedgerCount": 85,
+    "productionLedgerLastVersion": "20260818095047",
+    "productionLedgerLastName": "autonomy_scheduler"
+  },
+  "gitMigrations": {
+    "baseFileCount": 84,
+    "fileCount": 85,
+    "duplicateVersionCount": 0,
+    "productionOnly": [],
+    "gitOnly": []
+  },
+  "schedulerMigration": {
+    "sourceFile": "20260818081100_autonomy_scheduler.sql",
+    "productionLedgerVersion": "20260818095047",
+    "productionLedgerName": "autonomy_scheduler"
+  },
+  "runtimeProof": {
+    "workerEndpoint": "https://www.oyeimagine.com/api/cron/autonomy",
+    "cronJobName": "oye-autonomy-worker",
+    "cronJobId": 2,
+    "schedule": "*/5 * * * *",
+    "cronActive": true,
+    "manualInvocationRequestId": 1,
+    "manualInvocationHttpStatus": 200,
+    "manualInvocationClaimed": 0,
+    "manualInvocationProcessedCount": 0,
+    "manualInvocationReconciledCount": 0,
+    "growthExecutorKillSwitch": true
+  }
+}
