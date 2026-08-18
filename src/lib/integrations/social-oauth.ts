@@ -5,6 +5,7 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { encryptSecret, decryptSecret } from '@/lib/integrations/google'
 import { resolveOperationalTarget } from '@/lib/integrations/operational-target'
 import { connectSocialAccount } from '@/lib/integrations/social-accounts'
+import { runProviderQa } from '@/lib/integrations/provider-qa'
 
 type SocialOauthProvider = 'meta' | 'linkedin'
 
@@ -140,7 +141,22 @@ async function metaExchange(code: string) {
   longUrl.searchParams.set('fb_exchange_token', String(payload.access_token))
   const longResponse = await fetch(longUrl)
   const longPayload: any = await longResponse.json().catch(() => ({}))
-  return { config, accessToken: longResponse.ok && longPayload.access_token ? String(longPayload.access_token) : String(payload.access_token), expiresIn: Number(longPayload.expires_in || payload.expires_in || 0) || null }
+  return {
+    config,
+    accessToken: longResponse.ok && longPayload.access_token ? String(longPayload.access_token) : String(payload.access_token),
+    expiresIn: Number(longPayload.expires_in || payload.expires_in || 0) || null,
+  }
+}
+
+async function metaGrantedScopes(accessToken: string, apiVersion: string) {
+  const params = new URLSearchParams({ access_token: accessToken })
+  const response = await fetch(`https://graph.facebook.com/${apiVersion}/me/permissions?${params.toString()}`)
+  const payload: any = await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(`meta_permission_discovery_failed:${payload?.error?.code || response.status}`)
+  return Array.from(new Set((Array.isArray(payload.data) ? payload.data : [])
+    .filter((row: any) => String(row.status || '').toLowerCase() === 'granted')
+    .map((row: any) => String(row.permission || '').trim())
+    .filter(Boolean))) as string[]
 }
 
 async function metaCandidates(accessToken: string, apiVersion: string) {
@@ -233,12 +249,28 @@ export async function completeSocialOauthCallback(provider: SocialOauthProvider,
   const state = verifyState(input.state, provider)
   if (provider === 'meta') {
     const exchange = await metaExchange(input.code)
-    const discovered = await metaCandidates(exchange.accessToken, exchange.config.apiVersion)
-    return createSelectionSession({ state, provider, encryptedPayload: { userAccessToken: exchange.accessToken, pages: discovered.secretPages }, candidates: discovered.candidates, metadata: { apiVersion: exchange.config.apiVersion, expiresIn: exchange.expiresIn, scopes: exchange.config.scopes } })
+    const [discovered, grantedScopes] = await Promise.all([
+      metaCandidates(exchange.accessToken, exchange.config.apiVersion),
+      metaGrantedScopes(exchange.accessToken, exchange.config.apiVersion),
+    ])
+    return createSelectionSession({
+      state,
+      provider,
+      encryptedPayload: { userAccessToken: exchange.accessToken, pages: discovered.secretPages },
+      candidates: discovered.candidates,
+      metadata: { apiVersion: exchange.config.apiVersion, expiresIn: exchange.expiresIn, scopes: grantedScopes },
+    })
   }
   const exchange = await linkedinExchange(input.code)
+  const grantedScopes = splitScopes(exchange.scope, [])
   const discovered = await linkedinCandidates(exchange.accessToken, exchange.config.apiVersion)
-  return createSelectionSession({ state, provider, encryptedPayload: { accessToken: exchange.accessToken, scopes: splitScopes(exchange.scope, exchange.config.scopes) }, candidates: discovered.candidates, metadata: { apiVersion: exchange.config.apiVersion, expiresIn: exchange.expiresIn, profile: discovered.profile } })
+  return createSelectionSession({
+    state,
+    provider,
+    encryptedPayload: { accessToken: exchange.accessToken, scopes: grantedScopes },
+    candidates: discovered.candidates,
+    metadata: { apiVersion: exchange.config.apiVersion, expiresIn: exchange.expiresIn, profile: discovered.profile },
+  })
 }
 
 async function loadSelectionSession(access: ApiAccessContext, sessionId: string) {
@@ -268,6 +300,7 @@ export async function chooseSocialOauthResource(access: ApiAccessContext, input:
   if (!candidates.some((candidate: any) => String(candidate.resourceId) === input.resourceId)) throw new Error('oauth_selection_resource_invalid')
   const secret = JSON.parse(decryptSecret(session.encrypted_secret)) as any
   let result: any
+  let qa: any
   if (session.provider === 'meta') {
     const page = Array.isArray(secret.pages) ? secret.pages.find((candidate: any) => String(candidate.pageId) === input.resourceId) : null
     if (!page?.pageAccessToken) throw new Error('oauth_selection_secret_missing')
@@ -280,6 +313,11 @@ export async function chooseSocialOauthResource(access: ApiAccessContext, input:
       instagramUserId: page.instagramUserId ? String(page.instagramUserId) : null,
       scopes: Array.isArray(session.metadata?.scopes) ? session.metadata.scopes.map(String) : [],
     })
+    const facebookQa = await runProviderQa(access, { workspaceId: session.workspace_id || undefined, channel: 'facebook' })
+    const instagramQa = page.instagramUserId
+      ? await runProviderQa(access, { workspaceId: session.workspace_id || undefined, channel: 'instagram' })
+      : null
+    qa = { facebook: facebookQa, instagram: instagramQa }
   } else {
     if (!secret.accessToken) throw new Error('oauth_selection_secret_missing')
     const apiVersion = String(session.metadata?.apiVersion || '')
@@ -293,8 +331,9 @@ export async function chooseSocialOauthResource(access: ApiAccessContext, input:
       memberUrn,
       scopes: Array.isArray(secret.scopes) ? secret.scopes.map(String) : [],
     })
+    qa = await runProviderQa(access, { workspaceId: session.workspace_id || undefined, channel: 'linkedin' })
   }
   const admin = createSupabaseAdminClient()
   await admin.from('integration_oauth_selection_sessions').update({ status: 'consumed', consumed_at: new Date().toISOString(), encrypted_secret: encryptSecret('consumed'), updated_at: new Date().toISOString() }).eq('session_id', session.session_id)
-  return result
+  return { ...result, qa }
 }
