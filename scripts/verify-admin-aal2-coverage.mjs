@@ -6,6 +6,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const adminApiRoot = path.join(repoRoot, 'src', 'app', 'api', 'admin')
 const centralGate = path.join(repoRoot, 'src', 'lib', 'auth', 'api-access.ts')
 const workspaceGate = path.join(repoRoot, 'src', 'lib', 'auth', 'workspace-access.ts')
+const loginRoute = path.join(repoRoot, 'src', 'app', 'api', 'auth', 'login', 'route.ts')
 const adminLayout = path.join(repoRoot, 'src', 'app', 'admin', 'layout.tsx')
 const sessionBoundary = path.join(repoRoot, 'src', 'lib', 'supabase', 'middleware.ts')
 const proxyPath = path.join(repoRoot, 'src', 'proxy.ts')
@@ -55,6 +56,17 @@ else {
   ]
   for (const marker of required) if (!source.includes(marker)) failures.push(`workspace identity gate is missing required admin security marker: ${marker}`)
 }
+if (!fs.existsSync(loginRoute)) failures.push('password login route is missing')
+else {
+  const source = fs.readFileSync(loginRoute,'utf8')
+  const required = [
+    "const lane = membershipLane(membership)",
+    "lane === 'admin' || membershipRequiresMfa(membership)",
+    "aalData.currentLevel !== 'aal2'",
+    'return mfaRedirect(request, destination)',
+  ]
+  for (const marker of required) if (!source.includes(marker)) failures.push(`login route is missing required admin AAL2 marker: ${marker}`)
+}
 if (!fs.existsSync(adminLayout)) failures.push('admin layout is missing')
 else {
   const source = fs.readFileSync(adminLayout,'utf8')
@@ -68,4 +80,4 @@ if (failures.length) {
   process.exit(1)
 }
 const direct = routes.filter((route)=>fs.readFileSync(route,'utf8').includes('@/lib/auth/api-access')).length
-console.log(`Admin AAL2 coverage verified across ${routes.length} admin API route(s) and the server-rendered admin layout: Next.js proxy -> Supabase boundary requires admin lane + AAL2, workspace identity independently requires admin AAL2, ${direct} route(s) add direct permission-aware gating, zero legacy static-secret markers.`)
+console.log(`Admin AAL2 coverage verified across password sign-in, ${routes.length} admin API route(s), proxy/session boundary, and server-rendered admin layout: admin lane always requires AAL2; ${direct} route(s) add direct permission-aware gating; zero legacy static-secret markers.`)
