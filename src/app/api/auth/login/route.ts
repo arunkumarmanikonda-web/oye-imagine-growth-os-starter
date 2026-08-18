@@ -77,7 +77,9 @@ export async function POST(request: NextRequest) {
   const lane = membershipLane(membership)
   if (user.app_metadata?.must_change_password === true) return passwordChangeRedirect(request, destination)
 
-  if (membershipRequiresMfa(membership)) {
+  // Admin sessions are privileged regardless of role metadata. Metadata may add MFA
+  // requirements for non-admin lanes, but can never remove AAL2 from admin sign-in.
+  if (lane === 'admin' || membershipRequiresMfa(membership)) {
     const { data: aalData, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
     if (aalError) {
       await supabase.auth.signOut()
