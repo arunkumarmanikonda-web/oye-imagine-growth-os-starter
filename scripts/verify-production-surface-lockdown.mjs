@@ -27,10 +27,16 @@ const forbiddenRoutes = [
   'src/app/api/bootstrap/seed/route.ts',
   'src/app/api/bootstrap/neejee-seed/route.ts',
   'src/app/api/setup/check/route.ts',
+  'src/app/api/commercial/agreement-signup/route.ts',
+  'src/app/api/commercial/agreement-execution/route.ts',
+  'src/app/api/commercial/invoice-preview/route.ts',
+  'src/app/api/commercial/ledger-snapshot/route.ts',
+  'src/app/api/public/submissions/route.ts',
+  'src/app/api/seller/application/route.ts',
 ]
 
 for (const route of forbiddenRoutes) {
-  expect(!exists(route), `${route}: legacy public diagnostic/bootstrap route must not be deployed.`)
+  expect(!exists(route), `${route}: retired public diagnostic/bootstrap/recovery route must not be deployed.`)
 }
 
 expect(!exists('src/lib/setup-status.ts'), 'src/lib/setup-status.ts: secret-presence setup helper must not remain deployable.')
@@ -47,7 +53,12 @@ expect(releaseStatus.includes("requireApiAccess({ lane: 'admin' })"), 'Release s
 expect(releaseStatus.includes("role_key !== 'platform_owner'"), 'Release status route must remain platform-owner restricted.')
 
 const apiRoot = path.join(repoRoot, 'src', 'app', 'api')
-const forbiddenMarkers = ['BOOTSTRAP_SECRET', 'sendResendEmail', 'sendFast2Sms', 'sendAiSensyCampaign']
+const forbiddenMarkers = [
+  'BOOTSTRAP_SECRET',
+  'sendResendEmail',
+  'sendFast2Sms',
+  'sendAiSensyCampaign',
+]
 
 function walk(dir) {
   if (!fs.existsSync(dir)) return []
@@ -73,4 +84,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('Production surface lockdown verified: legacy test-send/bootstrap/setup routes are absent, privileged provider actions remain under verified /api/admin boundaries, and no public API directly references bootstrap secrets or raw provider send adapters.')
+console.log('Production surface lockdown verified: legacy test-send/bootstrap/setup/recovery routes are absent, privileged provider actions remain under verified /api/admin boundaries, and no public API directly references bootstrap secrets or raw provider send adapters.')
