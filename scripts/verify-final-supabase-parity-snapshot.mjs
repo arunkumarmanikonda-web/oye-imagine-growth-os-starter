@@ -5,12 +5,15 @@ import { fileURLToPath } from 'node:url'
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(scriptDir, '..')
 const migrationsDir = path.join(repoRoot, 'supabase', 'migrations')
-const snapshotPath = path.join(repoRoot, 'docs', 'proof', 'p0', 'P0-013-production-parity-final-2026-08-17.json')
-const deltaPath = path.join(repoRoot, 'docs', 'proof', 'p0', 'P0-013-production-parity-delta-2026-08-18.json')
-const schedulerPath = path.join(repoRoot, 'docs', 'proof', 'p0', 'P0-013-production-parity-scheduler-2026-08-18.json')
+const proofDir = path.join(repoRoot, 'docs', 'proof', 'p0')
+const snapshotPath = path.join(proofDir, 'P0-013-production-parity-final-2026-08-17.json')
+const deltaPath = path.join(proofDir, 'P0-013-production-parity-delta-2026-08-18.json')
+const schedulerPath = path.join(proofDir, 'P0-013-production-parity-scheduler-2026-08-18.json')
+const providerPath = path.join(proofDir, 'P0-013-production-parity-provider-activation-2026-08-18.json')
 const snapshot = JSON.parse(fs.readFileSync(snapshotPath, 'utf8'))
 const delta = JSON.parse(fs.readFileSync(deltaPath, 'utf8'))
 const scheduler = JSON.parse(fs.readFileSync(schedulerPath, 'utf8'))
+const provider = JSON.parse(fs.readFileSync(providerPath, 'utf8'))
 const files = fs.readdirSync(migrationsDir).filter((file) => file.endsWith('.sql')).sort()
 const fileSet = new Set(files)
 const failures = []
@@ -33,11 +36,21 @@ if (scheduler.baseSnapshot !== path.basename(deltaPath)) failures.push(`Unexpect
 if (scheduler.supabase.projectRef !== snapshot.supabase.projectRef) failures.push(`Scheduler delta targets unexpected Supabase project: ${scheduler.supabase.projectRef}`)
 if (scheduler.supabase.baseProductionLedgerCount !== 84 || scheduler.supabase.productionLedgerCount !== 85 || scheduler.gitMigrations.baseFileCount !== 84 || scheduler.gitMigrations.fileCount !== 85) failures.push('Scheduler delta does not prove exact 84 -> 85 parity.')
 if (scheduler.supabase.productionLedgerLastVersion !== '20260818095047' || scheduler.supabase.productionLedgerLastName !== 'autonomy_scheduler') failures.push('Unexpected scheduler production migration ledger tail.')
-if (files.length !== scheduler.gitMigrations.fileCount) failures.push(`Git migration file count mismatch: actual=${files.length}, snapshot=${scheduler.gitMigrations.fileCount}`)
+
+if (provider.issue !== 'P0-013' || provider.conclusion !== 'parity_reconciled') failures.push('Provider activation parity delta is not reconciled P0-013 evidence.')
+if (provider.baseSnapshot !== path.basename(schedulerPath)) failures.push(`Unexpected provider activation base snapshot: ${provider.baseSnapshot}`)
+if (provider.supabase.projectRef !== snapshot.supabase.projectRef) failures.push(`Provider activation delta targets unexpected Supabase project: ${provider.supabase.projectRef}`)
+if (provider.supabase.baseProductionLedgerCount !== 85 || provider.supabase.productionLedgerCount !== 86 || provider.gitMigrations.baseFileCount !== 85 || provider.gitMigrations.fileCount !== 86) failures.push('Provider activation delta does not prove exact 85 -> 86 parity.')
+if (provider.supabase.productionLedgerLastVersion !== '20260818101623' || provider.supabase.productionLedgerLastName !== 'google_ads_provider_vault_fields') failures.push('Unexpected provider activation production migration ledger tail.')
+if (files.length !== provider.gitMigrations.fileCount) failures.push(`Git migration file count mismatch: actual=${files.length}, snapshot=${provider.gitMigrations.fileCount}`)
 
 const schedulerMigration = scheduler.schedulerMigration || {}
 if (schedulerMigration.sourceFile !== '20260818081100_autonomy_scheduler.sql' || schedulerMigration.productionLedgerVersion !== '20260818095047' || schedulerMigration.productionLedgerName !== 'autonomy_scheduler') failures.push('Scheduler source/ledger mapping is incomplete or unexpected.')
 if (!fileSet.has('20260818081100_autonomy_scheduler.sql')) failures.push('Source-controlled autonomy scheduler migration is missing.')
+
+const providerMigration = provider.providerActivationMigration || {}
+if (providerMigration.sourceFile !== '20260818101000_google_ads_provider_vault_fields.sql' || providerMigration.productionLedgerVersion !== '20260818101623' || providerMigration.productionLedgerName !== 'google_ads_provider_vault_fields') failures.push('Provider activation source/ledger mapping is incomplete or unexpected.')
+if (!fileSet.has('20260818101000_google_ads_provider_vault_fields.sql')) failures.push('Source-controlled provider activation migration is missing.')
 
 const versions = new Map()
 for (const file of files) {
@@ -47,7 +60,7 @@ for (const file of files) {
   versions.set(version, file)
 }
 
-for (const source of [snapshot.gitMigrations, delta.gitMigrations, scheduler.gitMigrations]) {
+for (const source of [snapshot.gitMigrations, delta.gitMigrations, scheduler.gitMigrations, provider.gitMigrations]) {
   if (source.productionOnly.length !== 0 || source.gitOnly.length !== 0) failures.push('A parity proof contains unresolved production-only or Git-only migrations.')
 }
 
@@ -78,10 +91,13 @@ if (!boundary?.growthExecutorKillSwitch || boundary.autonomousRunCount !== 0 || 
 const runtime = scheduler.runtimeProof
 if (runtime?.workerEndpoint !== 'https://www.oyeimagine.com/api/cron/autonomy' || runtime.cronJobName !== 'oye-autonomy-worker' || runtime.schedule !== '*/5 * * * *' || runtime.cronActive !== true || runtime.manualInvocationHttpStatus !== 200 || runtime.manualInvocationClaimed !== 0 || runtime.manualInvocationProcessedCount !== 0 || runtime.manualInvocationReconciledCount !== 0 || runtime.growthExecutorKillSwitch !== true) failures.push('Scheduler runtime proof is incomplete or unsafe.')
 
+const providerBoundary = provider.activationBoundary
+if (!providerBoundary?.growthExecutorKillSwitch || providerBoundary.autonomousRunCount !== 0 || providerBoundary.autonomousQueueCount !== 0 || providerBoundary.neejeeMediaBalanceAccountCount !== 0 || providerBoundary.neejeeProviderAccountCount !== 0 || providerBoundary.migrationIsConfigurationOnly !== true || providerBoundary.providerCredentialsCreatedByMigration !== false || providerBoundary.mediaFundsCreatedByMigration !== false || providerBoundary.providerMutationPerformedByMigration !== false) failures.push('Provider activation parity delta does not preserve the safe activation boundary.')
+
 if (failures.length) {
   console.error('P0-013 final parity snapshot verification failed.')
   failures.forEach((failure) => console.error(`- ${failure}`))
   process.exit(1)
 }
 
-console.log(`P0-013 parity verified: ${files.length} uniquely versioned Git migrations, ${scheduler.supabase.productionLedgerCount} captured production ledger entries, ${snapshot.historicalAliases.length} explicit July aliases, ${delta.releaseMigrations.length} autonomy release migrations, scheduler live with an empty worker run, zero unresolved source/ledger gaps.`)
+console.log(`P0-013 parity verified: ${files.length} uniquely versioned Git migrations, ${provider.supabase.productionLedgerCount} captured production ledger entries, ${snapshot.historicalAliases.length} explicit July aliases, ${delta.releaseMigrations.length} autonomy release migrations, scheduler live, provider activation catalog reconciled, zero unresolved source/ledger gaps.`)
