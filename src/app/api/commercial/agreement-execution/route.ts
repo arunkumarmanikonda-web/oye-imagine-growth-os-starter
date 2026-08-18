@@ -1,7 +1,0 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { buildAgreementExecutionPackage } from '@/lib/recovery/commercial-agreement-execution'
-
-export async function POST(request: NextRequest) {
-  const body = await request.json().catch(() => ({}))
-  return NextResponse.json(buildAgreementExecutionPackage(body))
-}
