@@ -3,6 +3,7 @@ import net from 'node:net'
 import type { ApiAccessContext } from '@/lib/auth/api-access'
 import { googleAccessToken } from '@/lib/integrations/google'
 import { resolveOperationalTarget } from '@/lib/integrations/operational-target'
+import { recordProviderCanarySuccess, runProviderQa } from '@/lib/integrations/provider-qa'
 
 export type YouTubePublishInput = {
   workspaceId?: string
@@ -74,11 +75,22 @@ async function youtubeJson(url: string, accessToken: string) {
   return payload
 }
 
+async function certifyCanary(access: ApiAccessContext, input: { workspaceId?: string; accountId: string; resourceId: string }) {
+  try {
+    await runProviderQa(access, { workspaceId: input.workspaceId, channel: 'youtube' })
+    const result = await recordProviderCanarySuccess(access, { ...input, channel: 'youtube' })
+    return { certified: true, readiness: result.readiness }
+  } catch (error) {
+    return { certified: false, code: error instanceof Error ? error.message.split(':')[0] : 'provider_canary_certification_failed' }
+  }
+}
+
 export async function verifyYouTubePublishingConnection(access: ApiAccessContext, workspaceId?: string) {
   const target = await resolveOperationalTarget(access, workspaceId)
   const { accessToken, account } = await googleAccessToken(target.tenantId, target.workspaceId)
   const scopes = Array.isArray(account.scopes) ? account.scopes.map(String) : []
   if (!scopes.includes('https://www.googleapis.com/auth/youtube.upload')) throw new Error('youtube_upload_scope_missing')
+  if (!scopes.includes('https://www.googleapis.com/auth/youtube.readonly')) throw new Error('youtube_read_scope_missing')
   const channels: any = await youtubeJson('https://www.googleapis.com/youtube/v3/channels?part=id,snippet&mine=true', accessToken)
   const channel = Array.isArray(channels.items) ? channels.items[0] : null
   if (!channel?.id) throw new Error('youtube_channel_missing')
@@ -139,6 +151,7 @@ export async function publishYouTubeVideo(access: ApiAccessContext, input: YouTu
   if (!video?.id || String(video.id) !== videoId) throw new Error('youtube_upload_verification_failed')
   const actualPrivacy = String(video.status?.privacyStatus || '')
   if (actualPrivacy !== privacyStatus) throw new Error(`youtube_privacy_verification_failed:${actualPrivacy || 'unknown'}`)
+  const readinessCertification = await certifyCanary(access, { workspaceId: input.workspaceId, accountId: identity.account.id, resourceId: videoId })
   return {
     provider: 'google',
     channel: 'youtube',
@@ -147,5 +160,6 @@ export async function publishYouTubeVideo(access: ApiAccessContext, input: YouTu
     resourceId: videoId,
     privacyStatus: actualPrivacy,
     published: video,
+    readinessCertification,
   }
 }
