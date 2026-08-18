@@ -10,6 +10,8 @@ const googleScopes = [
   'https://www.googleapis.com/auth/adwords',
   'https://www.googleapis.com/auth/analytics.readonly',
   'https://www.googleapis.com/auth/webmasters.readonly',
+  'https://www.googleapis.com/auth/youtube.readonly',
+  'https://www.googleapis.com/auth/youtube.upload',
 ]
 
 type GoogleOAuthState = {
@@ -215,13 +217,16 @@ export async function discoverGoogleResources(tenantId: string, workspaceId?: st
   const headers = { Authorization: `Bearer ${accessToken}` }
   const adsVersion = process.env.GOOGLE_ADS_API_VERSION || 'v25'
   const adsHeaders: Record<string, string> = { ...headers, 'developer-token': required('GOOGLE_ADS_DEVELOPER_TOKEN') }
-  const [ads, analytics, search] = await Promise.allSettled([
+  const [ads, analytics, search, youtube] = await Promise.allSettled([
     fetch(`https://googleads.googleapis.com/${adsVersion}/customers:listAccessibleCustomers`, { headers: adsHeaders }).then(async r => ({ ok: r.ok, status: r.status, data: await r.json().catch(() => ({})) })),
     fetch('https://analyticsadmin.googleapis.com/v1beta/accountSummaries?pageSize=200', { headers }).then(async r => ({ ok: r.ok, status: r.status, data: await r.json().catch(() => ({})) })),
     fetch('https://www.googleapis.com/webmasters/v3/sites', { headers }).then(async r => ({ ok: r.ok, status: r.status, data: await r.json().catch(() => ({})) })),
+    fetch('https://www.googleapis.com/youtube/v3/channels?part=id,snippet&mine=true', { headers }).then(async r => ({ ok: r.ok, status: r.status, data: await r.json().catch(() => ({})) })),
   ])
   const value = (r: PromiseSettledResult<any>) => r.status === 'fulfilled' ? r.value : { ok: false, status: 0, data: { error: 'request_failed' } }
-  const result = { googleAds: value(ads), ga4: value(analytics), searchConsole: value(search) }
+  const result = { googleAds: value(ads), ga4: value(analytics), searchConsole: value(search), youtube: value(youtube) }
+  const youtubeItems = result.youtube.ok && Array.isArray(result.youtube.data?.items) ? result.youtube.data.items : []
+  const youtubeChannel = youtubeItems[0] || null
   const admin = createSupabaseAdminClient()
   await admin.from('integration_accounts').update({
     metadata: {
@@ -231,10 +236,13 @@ export async function discoverGoogleResources(tenantId: string, workspaceId?: st
         googleAdsOk: result.googleAds.ok,
         ga4Ok: result.ga4.ok,
         searchConsoleOk: result.searchConsole.ok,
+        youtubeOk: result.youtube.ok && Boolean(youtubeChannel?.id),
+        youtubeChannelId: youtubeChannel?.id || null,
+        youtubeChannelTitle: youtubeChannel?.snippet?.title || null,
       },
     },
     last_verified_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   }).eq('id', account.id)
-  return { accountId: account.id, ...result }
+  return { accountId: account.id, ...result, youtubeChannel }
 }
