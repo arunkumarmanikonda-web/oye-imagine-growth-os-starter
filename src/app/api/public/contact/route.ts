@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
+import { readBoundedJson } from '@/lib/security/bounded-json'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 
 const ALLOWED_INTERESTS = new Set([
@@ -37,28 +38,6 @@ function rateLimited() {
 
 export async function POST(request: NextRequest) {
   try {
-    const contentLength = Number(request.headers.get('content-length') ?? '0')
-    if (Number.isFinite(contentLength) && contentLength > 16_384) {
-      return NextResponse.json(
-        { ok: false, code: 'payload_too_large' },
-        { status: 413, headers: { 'Cache-Control': 'no-store' } }
-      )
-    }
-
-    let body: Record<string, unknown>
-    try {
-      body = await request.json()
-    } catch {
-      return NextResponse.json(
-        { ok: false, code: 'invalid_json' },
-        { status: 400, headers: { 'Cache-Control': 'no-store' } }
-      )
-    }
-
-    if (clean(body.website, 200)) {
-      return NextResponse.json({ ok: true }, { status: 202, headers: { 'Cache-Control': 'no-store' } })
-    }
-
     const forwardedFor = request.headers.get('x-forwarded-for')
     const clientAddress =
       request.headers.get('x-real-ip')?.trim() ||
@@ -75,6 +54,22 @@ export async function POST(request: NextRequest) {
     })
     if (networkRateError) throw new Error(networkRateError.message)
     if (networkAllowed !== true) return rateLimited()
+
+    const parsedBody = await readBoundedJson<Record<string, unknown>>(request, 16_384)
+    if (!parsedBody.ok) {
+      return NextResponse.json(
+        { ok: false, code: parsedBody.code },
+        {
+          status: parsedBody.code === 'payload_too_large' ? 413 : 400,
+          headers: { 'Cache-Control': 'no-store' },
+        },
+      )
+    }
+    const body = parsedBody.value
+
+    if (clean(body.website, 200)) {
+      return NextResponse.json({ ok: true }, { status: 202, headers: { 'Cache-Control': 'no-store' } })
+    }
 
     const fullName = clean(body.fullName, 160)
     const companyName = clean(body.companyName, 200)
