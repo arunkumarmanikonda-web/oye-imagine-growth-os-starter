@@ -17,11 +17,13 @@ create table if not exists private.autonomy_scheduler_config (
 
 revoke all on private.autonomy_scheduler_config from public, anon, authenticated;
 
+select pg_catalog.set_config('search_path', 'pg_catalog,public,extensions', false);
+
 insert into private.autonomy_scheduler_config (singleton, worker_endpoint, worker_secret)
 values (
   true,
   'https://www.oyeimagine.com/api/cron/autonomy',
-  pg_catalog.encode(extensions.gen_random_bytes(32), 'hex')
+  pg_catalog.encode(gen_random_bytes(32), 'hex')
 )
 on conflict (singleton) do update set worker_endpoint = excluded.worker_endpoint;
 
@@ -29,11 +31,11 @@ create or replace function public.verify_autonomy_scheduler_secret(p_secret text
 returns boolean
 language sql
 security definer
-set search_path = pg_catalog, public, private
+set search_path = pg_catalog, public, extensions, private
 as $$
   select coalesce(
-    pg_catalog.encode(extensions.digest(coalesce(p_secret,''), 'sha256'), 'hex') =
-    pg_catalog.encode(extensions.digest(c.worker_secret, 'sha256'), 'hex'),
+    pg_catalog.encode(digest(coalesce(p_secret,''), 'sha256'), 'hex') =
+    pg_catalog.encode(digest(c.worker_secret, 'sha256'), 'hex'),
     false
   )
   from private.autonomy_scheduler_config c
