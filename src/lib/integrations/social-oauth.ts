@@ -175,25 +175,40 @@ async function linkedinExchange(code: string) {
   return { config, accessToken: String(payload.access_token), expiresIn: Number(payload.expires_in || 0) || null, scope: String(payload.scope || '') }
 }
 
+function linkedinHeaders(accessToken: string, apiVersion: string) {
+  return { Authorization: `Bearer ${accessToken}`, 'Linkedin-Version': apiVersion, 'X-Restli-Protocol-Version': '2.0.0' }
+}
+
 async function linkedinCandidates(accessToken: string, apiVersion: string) {
-  const headers = { Authorization: `Bearer ${accessToken}`, 'Linkedin-Version': apiVersion, 'X-Restli-Protocol-Version': '2.0.0' }
+  const headers = linkedinHeaders(accessToken, apiVersion)
   const [profileResponse, aclResponse] = await Promise.all([
     fetch('https://api.linkedin.com/v2/userinfo', { headers: { Authorization: `Bearer ${accessToken}` } }),
     fetch('https://api.linkedin.com/rest/organizationAcls?q=roleAssignee&role=ADMINISTRATOR&state=APPROVED&count=100', { headers }),
   ])
   const profile: any = await profileResponse.json().catch(() => ({}))
   const acls: any = await aclResponse.json().catch(() => ({}))
-  if (!profileResponse.ok || !profile.sub) throw new Error(`linkedin_profile_discovery_failed:${profileResponse.status}`)
+  if (!profileResponse.ok) throw new Error(`linkedin_profile_discovery_failed:${profileResponse.status}`)
   if (!aclResponse.ok) throw new Error(`linkedin_organization_discovery_failed:${acls?.status || aclResponse.status}`)
-  const memberUrn = `urn:li:person:${String(profile.sub)}`
+  const seen = new Set<string>()
   const candidates: SelectionCandidate[] = []
   for (const acl of Array.isArray(acls.elements) ? acls.elements : []) {
     const organizationUrn = String(acl.organization || '').trim()
-    if (!/^urn:li:organization:\d+$/.test(organizationUrn)) continue
-    candidates.push({ resourceId: organizationUrn, label: organizationUrn, secondary: String(profile.name || profile.email || 'LinkedIn organisation'), metadata: { memberUrn } })
+    const roleAssignee = String(acl.roleAssignee || '').trim()
+    if (!/^urn:li:organization:\d+$/.test(organizationUrn) || !/^urn:li:person:[A-Za-z0-9_-]+$/.test(roleAssignee) || seen.has(organizationUrn)) continue
+    seen.add(organizationUrn)
+    candidates.push({ resourceId: organizationUrn, label: organizationUrn, secondary: String(profile.name || profile.email || 'LinkedIn organisation') })
   }
   if (!candidates.length) throw new Error('linkedin_no_admin_organizations')
-  return { candidates, memberUrn, profile: { name: profile.name || null, email: profile.email || null, sub: profile.sub } }
+  return { candidates, profile: { name: profile.name || null, email: profile.email || null, sub: profile.sub || null } }
+}
+
+async function linkedinApprovedRoleAssignee(accessToken: string, apiVersion: string, organizationUrn: string) {
+  const response = await fetch('https://api.linkedin.com/rest/organizationAcls?q=roleAssignee&role=ADMINISTRATOR&state=APPROVED&count=100', { headers: linkedinHeaders(accessToken, apiVersion) })
+  const payload: any = await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(`linkedin_organization_reverification_failed:${payload?.status || response.status}`)
+  const match = (Array.isArray(payload.elements) ? payload.elements : []).find((acl: any) => String(acl.organization || '').trim() === organizationUrn && /^urn:li:person:[A-Za-z0-9_-]+$/.test(String(acl.roleAssignee || '').trim()))
+  if (!match) throw new Error('linkedin_organization_admin_authority_revoked')
+  return String(match.roleAssignee).trim()
 }
 
 async function createSelectionSession(input: { state: SocialOauthState; provider: SocialOauthProvider; encryptedPayload: Record<string, unknown>; candidates: SelectionCandidate[]; metadata: Record<string, unknown> }) {
@@ -219,11 +234,11 @@ export async function completeSocialOauthCallback(provider: SocialOauthProvider,
   if (provider === 'meta') {
     const exchange = await metaExchange(input.code)
     const discovered = await metaCandidates(exchange.accessToken, exchange.config.apiVersion)
-    return createSelectionSession({ state, provider, encryptedPayload: { userAccessToken: exchange.accessToken, pages: discovered.secretPages }, candidates: discovered.candidates, metadata: { apiVersion: exchange.config.apiVersion, expiresIn: exchange.expiresIn } })
+    return createSelectionSession({ state, provider, encryptedPayload: { userAccessToken: exchange.accessToken, pages: discovered.secretPages }, candidates: discovered.candidates, metadata: { apiVersion: exchange.config.apiVersion, expiresIn: exchange.expiresIn, scopes: exchange.config.scopes } })
   }
   const exchange = await linkedinExchange(input.code)
   const discovered = await linkedinCandidates(exchange.accessToken, exchange.config.apiVersion)
-  return createSelectionSession({ state, provider, encryptedPayload: { accessToken: exchange.accessToken, memberUrn: discovered.memberUrn, scopes: splitScopes(exchange.scope, exchange.config.scopes) }, candidates: discovered.candidates, metadata: { apiVersion: exchange.config.apiVersion, expiresIn: exchange.expiresIn, profile: discovered.profile } })
+  return createSelectionSession({ state, provider, encryptedPayload: { accessToken: exchange.accessToken, scopes: splitScopes(exchange.scope, exchange.config.scopes) }, candidates: discovered.candidates, metadata: { apiVersion: exchange.config.apiVersion, expiresIn: exchange.expiresIn, profile: discovered.profile } })
 }
 
 async function loadSelectionSession(access: ApiAccessContext, sessionId: string) {
@@ -263,17 +278,19 @@ export async function chooseSocialOauthResource(access: ApiAccessContext, input:
       apiVersion: String(session.metadata?.apiVersion || ''),
       facebookPageId: String(page.pageId),
       instagramUserId: page.instagramUserId ? String(page.instagramUserId) : null,
-      scopes: splitScopes(String(session.metadata?.scopes || ''), ['pages_manage_posts','pages_read_engagement','instagram_basic','instagram_content_publish']),
+      scopes: Array.isArray(session.metadata?.scopes) ? session.metadata.scopes.map(String) : [],
     })
   } else {
-    if (!secret.accessToken || !secret.memberUrn) throw new Error('oauth_selection_secret_missing')
+    if (!secret.accessToken) throw new Error('oauth_selection_secret_missing')
+    const apiVersion = String(session.metadata?.apiVersion || '')
+    const memberUrn = await linkedinApprovedRoleAssignee(String(secret.accessToken), apiVersion, input.resourceId)
     result = await connectSocialAccount(access, {
       provider: 'linkedin',
       workspaceId: session.workspace_id || undefined,
       accessToken: String(secret.accessToken),
-      apiVersion: String(session.metadata?.apiVersion || ''),
+      apiVersion,
       organizationUrn: input.resourceId,
-      memberUrn: String(secret.memberUrn),
+      memberUrn,
       scopes: Array.isArray(secret.scopes) ? secret.scopes.map(String) : [],
     })
   }
