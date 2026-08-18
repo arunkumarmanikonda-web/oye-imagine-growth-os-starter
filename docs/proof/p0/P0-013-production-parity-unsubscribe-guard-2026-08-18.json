@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "issue": "P0-013",
+  "capturedAt": "2026-08-18",
+  "conclusion": "parity_reconciled",
+  "baseSnapshot": "P0-013-production-parity-webhook-authenticity-2026-08-18.json",
+  "supabase": {
+    "projectRef": "bqhaifivpcwwiauiynlv",
+    "ledgerEvidenceSource": "supabase_migrations.schema_migrations",
+    "baseProductionLedgerCount": 94,
+    "productionLedgerCount": 95,
+    "productionLedgerLastVersion": "20260818212902",
+    "productionLedgerLastName": "privacy_unsubscribe_guard"
+  },
+  "gitMigrations": {
+    "baseFileCount": 94,
+    "fileCount": 95,
+    "duplicateVersionCount": 0,
+    "productionOnly": [],
+    "gitOnly": []
+  },
+  "releaseMigrations": [
+    {
+      "sourceFile": "20260818230000_privacy_unsubscribe_guard.sql",
+      "productionLedgerVersion": "20260818212902",
+      "productionLedgerName": "privacy_unsubscribe_guard"
+    }
+  ],
+  "liveControls": {
+    "guardedUnsubscribeAnonExecute": false,
+    "guardedUnsubscribeAuthenticatedExecute": false,
+    "guardedUnsubscribeServiceRoleExecute": true,
+    "suppressionCount": 0,
+    "consentEventCount": 0,
+    "lifecycleDeliveryJobCount": 0,
+    "neejeeProviderAccountCount": 0,
+    "autonomousRunCount": 0,
+    "growthExecutorKillSwitch": true,
+    "migrationCreatesSuppression": false,
+    "migrationCreatesConsentEvent": false,
+    "migrationCreatesProviderCredential": false,
+    "migrationCreatesMediaFunds": false,
+    "migrationPerformsProviderMutation": false,
+    "migrationReleasesKillSwitch": false
+  }
+}
