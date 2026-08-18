@@ -4,9 +4,9 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { listCspTelemetry } from '@/lib/security/csp-telemetry'
 
 export const RELEASE_SCHEMA_EXPECTATION = {
-  migrationFileCount: 94,
-  lastSourceFile: '20260818220000_lifecycle_webhook_guard.sql',
-  lastProductionMigrationName: 'lifecycle_webhook_guard',
+  migrationFileCount: 95,
+  lastSourceFile: '20260818230000_privacy_unsubscribe_guard.sql',
+  lastProductionMigrationName: 'privacy_unsubscribe_guard',
 } as const
 
 export const NEEJEE_RELEASE_TARGET = {
