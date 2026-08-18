@@ -7,16 +7,16 @@ insert into public.config_provider_definitions (
     'meta_marketing','Meta Business','social',
     '["facebook.publish","instagram.publish","instagram.reels","instagram.stories"]'::jsonb,
     'https://www.postman.com/meta/','https://developers.facebook.com/apps/',true,false,
-    'meta_graph','v1','credential_validation',
-    '{"requires_page_access_token":true,"instagram_requires_professional_account":true}'::jsonb
+    'meta_graph','v1','account_connection_validation',
+    '{"credential_scope":"tenant_workspace","requires_page_access_token":true,"instagram_requires_professional_account":true}'::jsonb
   ),
   (
     'linkedin_marketing','LinkedIn','social',
     '["linkedin.organization.publish"]'::jsonb,
     'https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/posts-api',
     'https://www.linkedin.com/developers/apps',true,false,
-    'linkedin_posts','v1','credential_validation',
-    '{"required_permission":"w_organization_social","api_path":"/rest/posts"}'::jsonb
+    'linkedin_posts','v1','account_connection_validation',
+    '{"credential_scope":"tenant_workspace","required_permission":"w_organization_social","api_path":"/rest/posts"}'::jsonb
   )
 on conflict (provider_key) do update set
   display_name=excluded.display_name,
@@ -31,16 +31,20 @@ on conflict (provider_key) do update set
   metadata=excluded.metadata,
   updated_at=now();
 
+-- Only platform/app configuration belongs in the global provider vault.
+-- Brand-specific page IDs, organisation URNs and access tokens are stored in
+-- integration_accounts + integration_secret_material, scoped by tenant/workspace.
 insert into public.config_provider_secret_fields (
   provider_key, field_key, label, field_type, required, sensitive, help_text, sort_order
 ) values
-  ('meta_marketing','META_GRAPH_API_VERSION','Graph API version','text',true,false,'Use the active Graph API version configured for the Meta app.',10),
-  ('meta_marketing','META_PAGE_ACCESS_TOKEN','Page access token','secret',true,true,'Page token with the permissions required for the connected Facebook Page and linked Instagram professional account.',20),
-  ('meta_marketing','META_FACEBOOK_PAGE_ID','Facebook Page ID','text',true,false,'The Page to publish Facebook content on behalf of.',30),
-  ('meta_marketing','META_INSTAGRAM_USER_ID','Instagram professional account ID','text',true,false,'The Instagram professional account connected for publishing.',40),
-  ('linkedin_marketing','LINKEDIN_ACCESS_TOKEN','Access token','secret',true,true,'OAuth token authorized for organization publishing.',10),
-  ('linkedin_marketing','LINKEDIN_AUTHOR_URN','Organization author URN','text',true,false,'Example: urn:li:organization:1234567',20),
-  ('linkedin_marketing','LINKEDIN_API_VERSION','LinkedIn API version','text',true,false,'YYYYMM version header; use a currently supported Marketing API version.',30)
+  ('meta_marketing','META_GRAPH_API_VERSION','Graph API version','text',true,false,'Active Graph API version used by connected Meta accounts.',10),
+  ('meta_marketing','META_APP_ID','Meta App ID','text',false,false,'Platform Meta app identifier. Required when managed OAuth onboarding is enabled.',20),
+  ('meta_marketing','META_APP_SECRET','Meta App secret','secret',false,true,'Platform Meta app secret. Never stores a client Page access token.',30),
+  ('meta_marketing','META_OAUTH_REDIRECT_URI','Meta OAuth redirect URI','url',false,false,'Platform OAuth callback used for managed Meta account connection.',40),
+  ('linkedin_marketing','LINKEDIN_API_VERSION','LinkedIn API version','text',true,false,'YYYYMM version header using a currently supported Marketing API version.',10),
+  ('linkedin_marketing','LINKEDIN_CLIENT_ID','LinkedIn Client ID','text',false,false,'Platform LinkedIn OAuth client identifier.',20),
+  ('linkedin_marketing','LINKEDIN_CLIENT_SECRET','LinkedIn Client secret','secret',false,true,'Platform LinkedIn OAuth client secret. Never stores an organisation access token.',30),
+  ('linkedin_marketing','LINKEDIN_OAUTH_REDIRECT_URI','LinkedIn OAuth redirect URI','url',false,false,'Platform OAuth callback used for managed LinkedIn account connection.',40)
 on conflict (provider_key,field_key) do update set
   label=excluded.label,
   field_type=excluded.field_type,
@@ -49,13 +53,20 @@ on conflict (provider_key,field_key) do update set
   help_text=excluded.help_text,
   sort_order=excluded.sort_order;
 
+-- Remove obsolete globally-scoped account credential field definitions if this
+-- migration is reapplied after an earlier preview implementation.
+delete from public.config_provider_secret_fields
+where (provider_key='meta_marketing' and field_key in ('META_PAGE_ACCESS_TOKEN','META_FACEBOOK_PAGE_ID','META_INSTAGRAM_USER_ID'))
+   or (provider_key='linkedin_marketing' and field_key in ('LINKEDIN_ACCESS_TOKEN','LINKEDIN_AUTHOR_URN'));
+
 insert into public.config_capability_routes (
   route_id, capability_key, purpose, primary_provider_key, fallback_provider_keys,
   routing_policy, client_label, client_provider_disclosure, enabled
 ) values
-  ('route_social_facebook','social.publish','facebook','meta_marketing','[]'::jsonb,'{"fail_closed":true}'::jsonb,'Oye !magine',false,true),
-  ('route_social_instagram','social.publish','instagram','meta_marketing','[]'::jsonb,'{"fail_closed":true}'::jsonb,'Oye !magine',false,true),
-  ('route_social_linkedin','social.publish','linkedin','linkedin_marketing','[]'::jsonb,'{"fail_closed":true}'::jsonb,'Oye !magine',false,true)
+  ('route_social_facebook','social.publish','facebook','meta_marketing','[]'::jsonb,'{"fail_closed":true,"credential_scope":"tenant_workspace"}'::jsonb,'Oye !magine',false,true),
+  ('route_social_instagram','social.publish','instagram','meta_marketing','[]'::jsonb,'{"fail_closed":true,"credential_scope":"tenant_workspace"}'::jsonb,'Oye !magine',false,true),
+  ('route_social_linkedin','social.publish','linkedin','linkedin_marketing','[]'::jsonb,'{"fail_closed":true,"credential_scope":"tenant_workspace"}'::jsonb,'Oye !magine',false,true),
+  ('route_social_youtube','social.publish','youtube','google_oauth','[]'::jsonb,'{"fail_closed":true,"credential_scope":"tenant_workspace"}'::jsonb,'Oye !magine',false,true)
 on conflict (route_id) do update set
   capability_key=excluded.capability_key,
   purpose=excluded.purpose,
