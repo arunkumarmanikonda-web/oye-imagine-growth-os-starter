@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ApiAccessError, requireApiAccess } from '@/lib/auth/api-access'
-import { autonomousExecutionStatus, executeAutonomousAction, recordChannelReadiness, setAutonomyKillSwitch } from '@/lib/autonomy/executor'
+import { autonomousExecutionStatus, executeAutonomousAction, recordChannelReadiness, setAutonomyKillSwitch, type AutonomousExecutionInput } from '@/lib/autonomy/executor'
+import { enqueueAutonomousAction } from '@/lib/autonomy/worker'
+import { resolveOperationalTarget } from '@/lib/integrations/operational-target'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -35,6 +37,26 @@ export async function POST(request: NextRequest) {
     if (operation === 'execute') {
       const result = await executeAutonomousAction(access, body.execution)
       return json({ ok: true, ...result }, result.run?.status === 'blocked' ? 409 : 200)
+    }
+    if (operation === 'enqueue') {
+      if (access.membership.role_key !== 'platform_owner') throw new Error('platform_owner_required')
+      const execution = (body.execution || {}) as AutonomousExecutionInput
+      const target = await resolveOperationalTarget(access, execution.workspaceId)
+      const queued = await enqueueAutonomousAction({
+        tenantId: target.tenantId,
+        workspaceId: target.workspaceId,
+        actionKey: execution.actionKey,
+        channel: execution.channel,
+        providerKey: execution.providerKey,
+        idempotencyKey: execution.idempotencyKey,
+        amount: execution.amount,
+        currency: execution.currency,
+        payload: execution.payload,
+        priority: Number(body.priority ?? 50),
+        scheduledAt: typeof body.scheduledAt === 'string' ? body.scheduledAt : undefined,
+        createdBy: access.subject,
+      })
+      return json({ ok: true, queued }, 201)
     }
     if (operation === 'set_kill_switch') {
       const policy = await setAutonomyKillSwitch(access, { workspaceId: body.workspaceId, active: body.active === true })
