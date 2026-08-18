@@ -1,6 +1,9 @@
-import { resolveCapabilityProvider } from '@/lib/config-control/provider-vault'
+import type { ApiAccessContext } from '@/lib/auth/api-access'
+import { resolveOperationalTarget } from '@/lib/integrations/operational-target'
+import { resolveSocialPublishingConnection } from '@/lib/integrations/social-accounts'
 
 export type SocialPublishInput = {
+  workspaceId?: string
   channel: 'facebook' | 'instagram' | 'linkedin'
   text?: string
   mediaUrl?: string
@@ -26,31 +29,27 @@ async function graphJson(url: string, init?: RequestInit) {
   return payload
 }
 
-async function metaSecrets() {
-  const provider = await resolveCapabilityProvider({ capabilityKey: 'social.publish', purpose: 'facebook', environment: 'production' })
-  if (provider.providerKey !== 'meta_marketing') throw new Error('meta_provider_route_mismatch')
-  return provider.secrets
-}
-
-async function verifyMetaIdentity(secrets: Record<string, string>) {
-  const version = required(secrets.META_GRAPH_API_VERSION, 'meta_graph_api_version_missing')
-  const token = required(secrets.META_PAGE_ACCESS_TOKEN, 'meta_page_access_token_missing')
-  const pageId = required(secrets.META_FACEBOOK_PAGE_ID, 'meta_facebook_page_id_missing')
-  const expectedIgId = required(secrets.META_INSTAGRAM_USER_ID, 'meta_instagram_user_id_missing')
-  const query = new URLSearchParams({ fields: 'id,name,instagram_business_account', access_token: token })
+async function metaIdentity(access: ApiAccessContext, workspaceId: string | undefined, channel: 'facebook' | 'instagram') {
+  const target = await resolveOperationalTarget(access, workspaceId)
+  const { account, accessToken } = await resolveSocialPublishingConnection(target, channel)
+  const version = required(account.metadata?.apiVersion, 'meta_graph_api_version_missing')
+  const pageId = required(account.metadata?.facebookPageId, 'meta_facebook_page_id_missing')
+  const expectedIgId = account.metadata?.instagramUserId ? String(account.metadata.instagramUserId) : null
+  const query = new URLSearchParams({ fields: 'id,name,instagram_business_account', access_token: accessToken })
   const page: any = await graphJson(`${graphUrl(version, pageId)}?${query.toString()}`)
   if (String(page.id || '') !== pageId) throw new Error('meta_page_identity_mismatch')
-  const actualIgId = String(page.instagram_business_account?.id || '')
-  if (!actualIgId || actualIgId !== expectedIgId) throw new Error('meta_instagram_identity_mismatch')
-  return { version, token, pageId, igUserId: expectedIgId, pageName: String(page.name || '') }
+  const actualIgId = String(page.instagram_business_account?.id || '') || null
+  if (channel === 'instagram' && (!expectedIgId || actualIgId !== expectedIgId)) throw new Error('meta_instagram_identity_mismatch')
+  return { target, account, version, token: accessToken, pageId, igUserId: expectedIgId, pageName: String(page.name || '') }
 }
 
-export async function verifyMetaPublishingConnection() {
-  return verifyMetaIdentity(await metaSecrets())
+export async function verifyMetaPublishingConnection(access: ApiAccessContext, workspaceId: string | undefined, channel: 'facebook' | 'instagram') {
+  const identity = await metaIdentity(access, workspaceId, channel)
+  return { accountId: identity.account.id, pageId: identity.pageId, instagramUserId: identity.igUserId, pageName: identity.pageName, verifiedAt: new Date().toISOString() }
 }
 
-export async function publishFacebookPagePost(input: SocialPublishInput) {
-  const identity = await verifyMetaPublishingConnection()
+export async function publishFacebookPagePost(access: ApiAccessContext, input: SocialPublishInput & { channel: 'facebook' }) {
+  const identity = await metaIdentity(access, input.workspaceId, 'facebook')
   const message = required(input.text, 'facebook_message_required')
   const body = new URLSearchParams({ message, access_token: identity.token })
   if (input.linkUrl?.trim()) body.set('link', input.linkUrl.trim())
@@ -59,15 +58,15 @@ export async function publishFacebookPagePost(input: SocialPublishInput) {
   const verify = new URLSearchParams({ fields: 'id,created_time,message,permalink_url', access_token: identity.token })
   const published: any = await graphJson(`${graphUrl(identity.version, postId)}?${verify.toString()}`)
   if (String(published.id || '') !== postId) throw new Error('facebook_post_verification_failed')
-  return { provider: 'meta_marketing', channel: 'facebook', resourceId: postId, published }
+  return { provider: 'meta', accountId: identity.account.id, channel: 'facebook', resourceId: postId, published }
 }
 
-async function instagramContainerStatus(identity: Awaited<ReturnType<typeof verifyMetaPublishingConnection>>, containerId: string) {
+async function instagramContainerStatus(identity: Awaited<ReturnType<typeof metaIdentity>>, containerId: string) {
   const query = new URLSearchParams({ fields: 'id,status_code,status', access_token: identity.token })
   return graphJson(`${graphUrl(identity.version, containerId)}?${query.toString()}`)
 }
 
-async function waitForInstagramContainer(identity: Awaited<ReturnType<typeof verifyMetaPublishingConnection>>, containerId: string) {
+async function waitForInstagramContainer(identity: Awaited<ReturnType<typeof metaIdentity>>, containerId: string) {
   for (let attempt = 0; attempt < 12; attempt += 1) {
     const status: any = await instagramContainerStatus(identity, containerId)
     const code = String(status.status_code || '').toUpperCase()
@@ -78,8 +77,8 @@ async function waitForInstagramContainer(identity: Awaited<ReturnType<typeof ver
   throw new Error('instagram_container_processing_timeout')
 }
 
-export async function publishInstagramContent(input: SocialPublishInput) {
-  const identity = await verifyMetaPublishingConnection()
+export async function publishInstagramContent(access: ApiAccessContext, input: SocialPublishInput & { channel: 'instagram' }) {
+  const identity = await metaIdentity(access, input.workspaceId, 'instagram')
   const mediaUrl = required(input.mediaUrl, 'instagram_media_url_required')
   const mediaType = input.mediaType || 'image'
   const form = new URLSearchParams({ access_token: identity.token })
@@ -100,27 +99,26 @@ export async function publishInstagramContent(input: SocialPublishInput) {
   const verify = new URLSearchParams({ fields: 'id,media_type,media_url,permalink,timestamp', access_token: identity.token })
   const media: any = await graphJson(`${graphUrl(identity.version, mediaId)}?${verify.toString()}`)
   if (String(media.id || '') !== mediaId) throw new Error('instagram_publish_verification_failed')
-  return { provider: 'meta_marketing', channel: 'instagram', resourceId: mediaId, containerId, mediaType, published: media }
+  return { provider: 'meta', accountId: identity.account.id, channel: 'instagram', resourceId: mediaId, containerId, mediaType, published: media }
 }
 
-async function linkedinSecrets() {
-  const provider = await resolveCapabilityProvider({ capabilityKey: 'social.publish', purpose: 'linkedin', environment: 'production' })
-  if (provider.providerKey !== 'linkedin_marketing') throw new Error('linkedin_provider_route_mismatch')
-  return provider.secrets
-}
-
-export async function verifyLinkedInPublishingConnection() {
-  const secrets = await linkedinSecrets()
-  const accessToken = required(secrets.LINKEDIN_ACCESS_TOKEN, 'linkedin_access_token_missing')
-  const author = required(secrets.LINKEDIN_AUTHOR_URN, 'linkedin_author_urn_missing')
-  const version = required(secrets.LINKEDIN_API_VERSION, 'linkedin_api_version_missing')
+async function linkedinIdentity(access: ApiAccessContext, workspaceId?: string) {
+  const target = await resolveOperationalTarget(access, workspaceId)
+  const { account, accessToken } = await resolveSocialPublishingConnection(target, 'linkedin')
+  const author = required(account.metadata?.organizationUrn || account.external_account_id, 'linkedin_author_urn_missing')
+  const version = required(account.metadata?.apiVersion, 'linkedin_api_version_missing')
   if (!/^urn:li:organization:\d+$/.test(author)) throw new Error('linkedin_author_urn_invalid')
   if (!/^20\d{4}$/.test(version)) throw new Error('linkedin_api_version_invalid')
-  return { accessToken, author, version }
+  return { target, account, accessToken, author, version }
 }
 
-export async function publishLinkedInOrganizationPost(input: SocialPublishInput) {
-  const identity = await verifyLinkedInPublishingConnection()
+export async function verifyLinkedInPublishingConnection(access: ApiAccessContext, workspaceId?: string) {
+  const identity = await linkedinIdentity(access, workspaceId)
+  return { accountId: identity.account.id, organizationUrn: identity.author, verifiedAt: identity.account.last_verified_at || null }
+}
+
+export async function publishLinkedInOrganizationPost(access: ApiAccessContext, input: SocialPublishInput & { channel: 'linkedin' }) {
+  const identity = await linkedinIdentity(access, input.workspaceId)
   const commentary = required(input.text, 'linkedin_commentary_required')
   const body: Record<string, unknown> = {
     author: identity.author,
@@ -130,9 +128,7 @@ export async function publishLinkedInOrganizationPost(input: SocialPublishInput)
     lifecycleState: 'PUBLISHED',
     isReshareDisabledByAuthor: false,
   }
-  if (input.linkUrl?.trim()) {
-    body.content = { article: { source: input.linkUrl.trim(), title: input.title?.trim() || undefined } }
-  }
+  if (input.linkUrl?.trim()) body.content = { article: { source: input.linkUrl.trim(), title: input.title?.trim() || undefined } }
   const response = await fetch('https://api.linkedin.com/rest/posts', {
     method: 'POST',
     headers: {
@@ -147,12 +143,12 @@ export async function publishLinkedInOrganizationPost(input: SocialPublishInput)
   if (response.status !== 201) throw new Error(`linkedin_post_failed:${payload?.status || response.status}`)
   const postId = response.headers.get('x-restli-id')?.trim() || ''
   if (!postId) throw new Error('linkedin_post_id_missing')
-  return { provider: 'linkedin_marketing', channel: 'linkedin', resourceId: postId, responseStatus: response.status }
+  return { provider: 'linkedin', accountId: identity.account.id, channel: 'linkedin', resourceId: postId, responseStatus: response.status }
 }
 
-export async function publishSocialContent(input: SocialPublishInput) {
-  if (input.channel === 'facebook') return publishFacebookPagePost(input)
-  if (input.channel === 'instagram') return publishInstagramContent(input)
-  if (input.channel === 'linkedin') return publishLinkedInOrganizationPost(input)
+export async function publishSocialContent(access: ApiAccessContext, input: SocialPublishInput) {
+  if (input.channel === 'facebook') return publishFacebookPagePost(access, { ...input, channel: 'facebook' })
+  if (input.channel === 'instagram') return publishInstagramContent(access, { ...input, channel: 'instagram' })
+  if (input.channel === 'linkedin') return publishLinkedInOrganizationPost(access, { ...input, channel: 'linkedin' })
   throw new Error('social_channel_unsupported')
 }
