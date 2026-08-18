@@ -40,6 +40,9 @@ jobs:
       - name: Verify release readiness truth contract
         run: node scripts/verify-release-readiness-contract.mjs
 
+      - name: Verify production surface lockdown
+        run: node scripts/verify-production-surface-lockdown.mjs
+
       - name: Run validation suite
         shell: pwsh
         run: ./scripts/Invoke-GrowthOsValidation.ps1
