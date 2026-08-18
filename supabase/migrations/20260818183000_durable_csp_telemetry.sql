@@ -167,15 +167,19 @@ $$;
 revoke all on function public.expire_csp_security_telemetry() from public, anon, authenticated;
 grant execute on function public.expire_csp_security_telemetry() to service_role;
 
-do $$
+do $do$
 begin
-  if exists (select 1 from cron.job where jobname = 'oye-csp-telemetry-retention') then
-    perform cron.unschedule('oye-csp-telemetry-retention');
+  if exists (select 1 from pg_extension where extname = 'pg_cron') then
+    begin
+      perform cron.unschedule('oye-csp-telemetry-retention');
+    exception when others then
+      null;
+    end;
+    perform cron.schedule(
+      'oye-csp-telemetry-retention',
+      '17 3 * * *',
+      'select public.expire_csp_security_telemetry();'
+    );
   end if;
-  perform cron.schedule(
-    'oye-csp-telemetry-retention',
-    '17 3 * * *',
-    'select public.expire_csp_security_telemetry();'
-  );
-end;
-$$;
+end
+$do$;
