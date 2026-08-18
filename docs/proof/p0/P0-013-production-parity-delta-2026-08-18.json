@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "issue": "P0-013",
+  "capturedAt": "2026-08-18",
+  "conclusion": "parity_reconciled",
+  "baseSnapshot": "P0-013-production-parity-final-2026-08-17.json",
+  "supabase": {
+    "projectRef": "bqhaifivpcwwiauiynlv",
+    "baseProductionLedgerCount": 79,
+    "productionLedgerCount": 84,
+    "productionLedgerLastVersion": "20260818093605",
+    "productionLedgerLastName": "integration_account_contract"
+  },
+  "gitMigrations": {
+    "baseFileCount": 79,
+    "fileCount": 84,
+    "duplicateVersionCount": 0,
+    "productionOnly": [],
+    "gitOnly": []
+  },
+  "releaseMigrations": [
+    {
+      "sourceFile": "20260818080500_autonomous_execution_control.sql",
+      "productionLedgerVersion": "20260818082842",
+      "productionLedgerName": "autonomous_execution_control"
+    },
+    {
+      "sourceFile": "20260818081000_autonomous_action_queue.sql",
+      "productionLedgerVersion": "20260818082904",
+      "productionLedgerName": "autonomous_action_queue"
+    },
+    {
+      "sourceFile": "20260818081200_autonomy_safe_default.sql",
+      "productionLedgerVersion": "20260818082916",
+      "productionLedgerName": "autonomy_safe_default"
+    },
+    {
+      "sourceFile": "20260818081300_social_provider_catalog.sql",
+      "productionLedgerVersion": "20260818093550",
+      "productionLedgerName": "social_provider_catalog"
+    },
+    {
+      "sourceFile": "20260818081400_integration_account_contract.sql",
+      "productionLedgerVersion": "20260818093605",
+      "productionLedgerName": "integration_account_contract"
+    }
+  ],
+  "activationBoundary": {
+    "growthExecutorKillSwitch": true,
+    "autonomousRunCount": 0,
+    "autonomousQueueCount": 0,
+    "neejeeMediaBalanceAccountCount": 0,
+    "neejeeProviderAccountCount": 0,
+    "schedulerMigrationDeferredUntilWorkerProductionReady": true
+  }
+}
