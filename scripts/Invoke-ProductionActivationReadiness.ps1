@@ -1,6 +1,11 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+Write-Host "=== PRODUCTION SURFACE LOCKDOWN ==="
+node scripts/verify-production-surface-lockdown.mjs
+if ($LASTEXITCODE -ne 0) { throw "production surface lockdown verification failed with exit code $LASTEXITCODE" }
+
+Write-Host ''
 Write-Host "=== ADMIN OPS RELEASE SURFACES ==="
 npm run test:admin-ops-release-surfaces
 if ($LASTEXITCODE -ne 0) { throw "npm run test:admin-ops-release-surfaces failed with exit code $LASTEXITCODE" }
