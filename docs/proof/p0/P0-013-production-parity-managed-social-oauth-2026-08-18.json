@@ -6,6 +6,7 @@
   "baseSnapshot": "P0-013-production-parity-media-funding-2026-08-18.json",
   "supabase": {
     "projectRef": "bqhaifivpcwwiauiynlv",
+    "ledgerEvidenceSource": "supabase_migrations.schema_migrations",
     "baseProductionLedgerCount": 87,
     "productionLedgerCount": 88,
     "productionLedgerLastVersion": "20260818105118",
