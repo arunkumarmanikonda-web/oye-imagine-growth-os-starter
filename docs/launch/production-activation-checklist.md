@@ -10,7 +10,7 @@ The authoritative runtime view is `/admin/release-readiness`, backed by `/api/ad
 - [x] Workspace branding smoke passes
 - [x] Full Growth OS validation passes
 - [x] Clean migration-chain replay passes in disposable PostgreSQL
-- [x] Production/Git migration parity is reconciled through 93 source migrations and 93 production ledger entries
+- [x] Production/Git migration parity is reconciled through 94 source migrations and 94 production ledger entries
 - [x] Service-role-only `release_schema_evidence()` exposes live migration count/tail to the release-readiness control plane
 - [x] Canonical public host is aligned to `https://www.oyeimagine.com` in page metadata, sitemap and robots
 - [x] Signed-out `/login` is reachable without an auth redirect loop
@@ -49,6 +49,8 @@ The authoritative runtime view is `/admin/release-readiness`, backed by `/api/ad
 - [x] Social/YouTube READY state requires a real supervised provider-write plus provider-readback canary
 - [x] Provider readiness is tenant/workspace/account/resource bound and expires automatically
 - [x] Legacy passing readiness values, including `go`, cannot authorize provider execution without a current machine certificate
+- [x] WhatsApp Cloud webhook software verifies the subscription token and HMAC-SHA256 signature before parsing provider payloads
+- [x] Lifecycle delivery callbacks use a unique provider-message identity and atomic monotonic state transitions so replayed/out-of-order callbacks cannot regress terminal delivery state
 - [ ] Google Ads developer token / production access confirmed provider-side
 - [ ] GA4 property access confirmed provider-side
 - [ ] Search Console property access confirmed provider-side
