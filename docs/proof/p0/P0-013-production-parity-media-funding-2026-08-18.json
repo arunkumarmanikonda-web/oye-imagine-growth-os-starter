@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "issue": "P0-013",
+  "capturedAt": "2026-08-18",
+  "conclusion": "parity_reconciled",
+  "baseSnapshot": "P0-013-production-parity-provider-activation-2026-08-18.json",
+  "supabase": {
+    "projectRef": "bqhaifivpcwwiauiynlv",
+    "baseProductionLedgerCount": 86,
+    "productionLedgerCount": 87,
+    "productionLedgerLastVersion": "20260818103021",
+    "productionLedgerLastName": "media_funding_controls"
+  },
+  "gitMigrations": {
+    "baseFileCount": 86,
+    "fileCount": 87,
+    "duplicateVersionCount": 0,
+    "productionOnly": [],
+    "gitOnly": []
+  },
+  "mediaFundingMigration": {
+    "sourceFile": "20260818103000_media_funding_controls.sql",
+    "productionLedgerVersion": "20260818103021",
+    "productionLedgerName": "media_funding_controls"
+  },
+  "liveControls": {
+    "fundingRequestCount": 0,
+    "neejeeMediaBalanceAccountCount": 0,
+    "neejeeMediaFundingLedgerEntryCount": 0,
+    "growthExecutorKillSwitch": true,
+    "creditFunctionBrowserExecute": false,
+    "creditFunctionServiceRoleExecute": true,
+    "fundingTableBrowserPrivileges": false,
+    "fundingTableServiceRoleCrudOnly": true
+  }
+}
