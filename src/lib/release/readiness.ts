@@ -53,6 +53,7 @@ export async function buildReleaseReadinessEvidence() {
     providerQaPassed,
     pendingOauthSessions,
     pendingFundingRequests,
+    creditedFundingRequests,
     autonomousRuns,
     activeQueue,
     walletResult,
@@ -86,6 +87,10 @@ export async function buildReleaseReadinessEvidence() {
       .eq('tenant_id', NEEJEE_RELEASE_TARGET.coreTenantId)
       .eq('workspace_id', NEEJEE_RELEASE_TARGET.operationalWorkspaceId)
       .eq('status', 'submitted')),
+    exactCount('commercial_media_funding_requests', query => query
+      .eq('tenant_id', NEEJEE_RELEASE_TARGET.coreTenantId)
+      .eq('workspace_id', NEEJEE_RELEASE_TARGET.operationalWorkspaceId)
+      .eq('status', 'credited')),
     exactCount('autonomous_execution_runs', query => query
       .eq('tenant_id', NEEJEE_RELEASE_TARGET.coreTenantId)
       .eq('workspace_id', NEEJEE_RELEASE_TARGET.coreWorkspaceId)),
@@ -127,6 +132,7 @@ export async function buildReleaseReadinessEvidence() {
   const totalReserved = wallets.reduce((sum, row) => sum + row.reserved, 0)
   const autonomy = autonomyResult.data as any
   const killSwitch = autonomy?.kill_switch !== false
+  const verifiedFundingAvailable = creditedFundingRequests > 0 && wallets.length > 0
 
   const machineControls: ReleaseEvidenceItem[] = [
     {
@@ -148,7 +154,7 @@ export async function buildReleaseReadinessEvidence() {
     {
       id: 'csp_durable_telemetry',
       label: 'Durable CSP telemetry',
-      state: csp.totalReports > 0 ? 'observing' : 'observing',
+      state: 'observing',
       detail: csp.totalReports > 0
         ? `${csp.totalReports} real report-only CSP violation(s) are available for enforcement review.`
         : 'Durable telemetry is operational but representative browser evidence has not accumulated; keep CSP report-only.',
@@ -206,13 +212,13 @@ export async function buildReleaseReadinessEvidence() {
     {
       id: 'media_funding_verification',
       label: 'Media funding verification',
-      state: pendingFundingRequests === 0 && wallets.length === 0 ? 'pending_external' : pendingFundingRequests > 0 ? 'pending_external' : 'go',
+      state: verifiedFundingAvailable ? 'go' : 'pending_external',
       detail: pendingFundingRequests > 0
         ? `${pendingFundingRequests} submitted remittance request(s) await independent verification.`
-        : wallets.length === 0
-          ? 'No verified real media funding has been credited; autonomous spend remains unavailable.'
-          : 'Verified wallet funding evidence exists.',
-      evidence: { submittedFundingRequests: pendingFundingRequests, walletCount: wallets.length },
+        : verifiedFundingAvailable
+          ? `${creditedFundingRequests} independently verified funding request(s) back the governed media wallet.`
+          : 'No maker-checker credited funding request plus wallet evidence exists; autonomous spend remains unavailable.',
+      evidence: { submittedFundingRequests: pendingFundingRequests, creditedFundingRequests, walletCount: wallets.length },
     },
   ]
 
@@ -265,7 +271,7 @@ export async function buildReleaseReadinessEvidence() {
     && !externalPending
     && providerAccounts > 0
     && providerReady > 0
-    && wallets.length > 0
+    && verifiedFundingAvailable
     && !killSwitch
 
   return {
