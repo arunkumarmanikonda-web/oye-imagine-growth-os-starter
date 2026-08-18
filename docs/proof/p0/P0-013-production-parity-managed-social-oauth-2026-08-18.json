@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "issue": "P0-013",
+  "capturedAt": "2026-08-18",
+  "conclusion": "parity_reconciled",
+  "baseSnapshot": "P0-013-production-parity-media-funding-2026-08-18.json",
+  "supabase": {
+    "projectRef": "bqhaifivpcwwiauiynlv",
+    "baseProductionLedgerCount": 87,
+    "productionLedgerCount": 88,
+    "productionLedgerLastName": "managed_social_oauth_sessions"
+  },
+  "gitMigrations": {
+    "baseFileCount": 87,
+    "fileCount": 88,
+    "duplicateVersionCount": 0,
+    "productionOnly": [],
+    "gitOnly": []
+  },
+  "managedOauthMigration": {
+    "sourceFile": "20260818110000_managed_social_oauth_sessions.sql",
+    "productionLedgerName": "managed_social_oauth_sessions"
+  },
+  "liveControls": {
+    "oauthSelectionSessionCount": 0,
+    "neejeeProviderAccountCount": 0,
+    "autonomousRunCount": 0,
+    "autonomousQueueCount": 0,
+    "fundingRequestCount": 0,
+    "neejeeMediaBalanceAccountCount": 0,
+    "growthExecutorKillSwitch": true,
+    "selectionTableBrowserPrivileges": false,
+    "selectionTableServiceRoleCrudOnly": true,
+    "migrationCreatesProviderCredential": false,
+    "migrationPerformsProviderMutation": false
+  }
+}
