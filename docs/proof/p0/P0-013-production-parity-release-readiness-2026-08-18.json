@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "issue": "P0-013",
+  "capturedAt": "2026-08-18",
+  "conclusion": "parity_reconciled",
+  "baseSnapshot": "P0-013-production-parity-csp-telemetry-2026-08-18.json",
+  "supabase": {
+    "projectRef": "bqhaifivpcwwiauiynlv",
+    "ledgerEvidenceSource": "supabase_migrations.schema_migrations",
+    "baseProductionLedgerCount": 92,
+    "productionLedgerCount": 93,
+    "productionLedgerLastVersion": "20260818183025",
+    "productionLedgerLastName": "release_schema_evidence"
+  },
+  "gitMigrations": {
+    "baseFileCount": 92,
+    "fileCount": 93,
+    "duplicateVersionCount": 0,
+    "productionOnly": [],
+    "gitOnly": []
+  },
+  "releaseMigrations": [
+    {
+      "sourceFile": "20260818190000_release_schema_evidence.sql",
+      "productionLedgerVersion": "20260818183025",
+      "productionLedgerName": "release_schema_evidence"
+    }
+  ],
+  "liveControls": {
+    "schemaEvidenceAnonExecute": false,
+    "schemaEvidenceAuthenticatedExecute": false,
+    "schemaEvidenceServiceRoleExecute": true,
+    "cspReportBucketRowCount": 0,
+    "cspReportObservedCount": 0,
+    "neejeeProviderAccountCount": 0,
+    "neejeeProviderReadinessCount": 0,
+    "autonomousRunCount": 0,
+    "autonomousActiveQueueCount": 0,
+    "fundingRequestCount": 0,
+    "mediaBalanceAccountCount": 0,
+    "growthExecutorKillSwitch": true,
+    "migrationCreatesProviderCredential": false,
+    "migrationCreatesMediaFunds": false,
+    "migrationPerformsProviderMutation": false,
+    "migrationReleasesKillSwitch": false,
+    "externalEvidenceAutoCompleted": false
+  }
+}
