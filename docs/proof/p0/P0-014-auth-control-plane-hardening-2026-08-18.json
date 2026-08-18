@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "issue": "P0-014",
+  "capturedAt": "2026-08-18",
+  "conclusion": "application_controls_hardened_external_auth_setting_pending",
+  "baseGitSha": "e9281189deca46f7f1d305a73adcdbf60fe7829b",
+  "scope": "Authentication and privileged control-plane hardening",
+  "applicationControls": {
+    "adminApiRequiresAal2": true,
+    "adminProxyBoundaryRequiresAal2": true,
+    "adminServerRenderedPagesRequireAal2": true,
+    "adminPasswordLoginRequiresAal2": true,
+    "membershipMetadataCannotDisableAdminAal2": true,
+    "mandatoryPasswordChangeUsesAppMetadata": true,
+    "passwordPolicyServerSide": {
+      "minimumLength": 12,
+      "requiresLowercase": true,
+      "requiresUppercase": true,
+      "requiresNumber": true,
+      "requiresSymbol": true,
+      "signupValidated": true,
+      "mandatoryChangeValidated": true,
+      "recoveryUpdateValidated": true
+    },
+    "passwordRecoveryEnumerationResistance": true,
+    "sessionClaimsCrossCheckedWithUser": true,
+    "sessionResponsesNoStore": true,
+    "legacyStaticAdminSecretsAllowed": false
+  },
+  "supabaseControlPlane": {
+    "projectRef": "bqhaifivpcwwiauiynlv",
+    "migrationCount": 91,
+    "lastMigrationVersion": "20260818172350",
+    "lastMigrationName": "provider_readiness_guard_go",
+    "schemaChangedByThisTranche": false,
+    "leakedPasswordProtection": "pending_external_control_plane_enablement",
+    "securityAdvisorWarning": "auth_leaked_password_protection",
+    "doNotClaimResolvedUntilAdvisorClears": true,
+    "rlsNoPolicyInfoNotices": "intentional_default_deny_server_only_tables_not_weakened"
+  },
+  "autonomySafety": {
+    "providerQaRuns": 0,
+    "providerReadinessRows": 0,
+    "providerAccounts": 0,
+    "oauthSelectionSessions": 0,
+    "autonomousRuns": 0,
+    "activeQueueRows": 0,
+    "fundingRequests": 0,
+    "mediaBalanceAccounts": 0,
+    "growthExecutorKillSwitch": true,
+    "providerMutationPerformed": false,
+    "mediaFundsCreated": false,
+    "killSwitchReleased": false
+  }
+}
