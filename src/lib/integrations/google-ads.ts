@@ -13,6 +13,26 @@ function customer(value: string) {
   return id
 }
 
+function campaignDate(value: string, field: string) {
+  const normalized = value.trim()
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) throw new Error(`google_ads_${field}_invalid`)
+  const parsed = new Date(`${normalized}T00:00:00Z`)
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== normalized) throw new Error(`google_ads_${field}_invalid`)
+  return normalized
+}
+
+function campaignWindow(startDate: string, endDate: string) {
+  const start = campaignDate(startDate, 'start_date')
+  const end = campaignDate(endDate, 'end_date')
+  if (end < start) throw new Error('google_ads_campaign_window_invalid')
+  return {
+    startDate: start,
+    endDate: end,
+    startDateTime: `${start} 00:00:00`,
+    endDateTime: `${end} 23:59:59`,
+  }
+}
+
 async function headers(tenantId: string, workspaceId?: string | null) {
   const { accessToken } = await googleAccessToken(tenantId, workspaceId)
   const developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN?.trim()
@@ -131,6 +151,113 @@ export async function createPausedSearchCampaign(
   return { resourceName, budgetResource, status: 'PAUSED', link }
 }
 
+export async function createBoundedSearchCampaign(
+  access: ApiAccessContext,
+  input: {
+    workspaceId?: string
+    approvalId: string
+    customerId: string
+    name: string
+    totalBudgetMicros: number
+    startDate: string
+    endDate: string
+  },
+) {
+  const { target } = await approved(access, input.workspaceId, input.approvalId, 'google_ads_campaign')
+  const customerId = customer(input.customerId)
+  const name = input.name.trim()
+  if (!name) throw new Error('google_ads_campaign_name_required')
+  const totalBudgetMicros = Math.trunc(input.totalBudgetMicros)
+  if (!Number.isSafeInteger(totalBudgetMicros) || totalBudgetMicros <= 0) throw new Error('google_ads_total_budget_invalid')
+  const window = campaignWindow(input.startDate, input.endDate)
+  const suffix = Date.now()
+
+  const budget = await mutate(target.tenantId, target.workspaceId, customerId, 'campaignBudgets', {
+    operations: [{ create: {
+      name: `${name} total budget ${suffix}`,
+      period: 'CUSTOM_PERIOD',
+      totalAmountMicros: String(totalBudgetMicros),
+      deliveryMethod: 'STANDARD',
+      explicitlyShared: false,
+    } }],
+  })
+  const budgetResource = budget?.results?.[0]?.resourceName
+  if (!budgetResource) throw new Error('google_ads_budget_resource_missing')
+
+  const campaign = await mutate(target.tenantId, target.workspaceId, customerId, 'campaigns', {
+    operations: [{ create: {
+      name,
+      status: 'PAUSED',
+      advertisingChannelType: 'SEARCH',
+      campaignBudget: budgetResource,
+      startDateTime: window.startDateTime,
+      endDateTime: window.endDateTime,
+      maximizeClicks: {},
+      networkSettings: { targetGoogleSearch: true, targetSearchNetwork: true, targetContentNetwork: false, targetPartnerSearchNetwork: false },
+    } }],
+  })
+  const resourceName = campaign?.results?.[0]?.resourceName
+  if (!resourceName) throw new Error('google_ads_campaign_resource_missing')
+
+  await recordResource(access, {
+    workspaceId: input.workspaceId,
+    customerId,
+    resourceType: 'campaign',
+    resourceName,
+    displayName: name,
+    write: true,
+    metadata: {
+      approvalId: input.approvalId,
+      budgetResource,
+      budgetMode: 'CUSTOM_PERIOD_TOTAL',
+      totalBudgetMicros,
+      startDate: window.startDate,
+      endDate: window.endDate,
+      createdStatus: 'PAUSED',
+    },
+  })
+
+  const verified = await readCampaign(access, { workspaceId: input.workspaceId, customerId, resourceName })
+  if (String(verified?.campaign?.status || '').toUpperCase() !== 'PAUSED') throw new Error('google_ads_paused_verification_failed')
+  return { resourceName, budgetResource, status: 'PAUSED', totalBudgetMicros, window, verified }
+}
+
+export async function setCampaignStatus(
+  access: ApiAccessContext,
+  input: { workspaceId?: string; approvalId: string; customerId: string; resourceName: string; status: 'ENABLED' | 'PAUSED' },
+) {
+  await approved(access, input.workspaceId, input.approvalId, 'google_ads_campaign')
+  await mutate((await resolveOperationalTarget(access, input.workspaceId)).tenantId, (await resolveOperationalTarget(access, input.workspaceId)).workspaceId, input.customerId, 'campaigns', {
+    operations: [{ update: { resourceName: input.resourceName, status: input.status }, updateMask: 'status' }],
+  })
+  const verified = await readCampaign(access, { workspaceId: input.workspaceId, customerId: input.customerId, resourceName: input.resourceName })
+  if (String(verified?.campaign?.status || '').toUpperCase() !== input.status) throw new Error('google_ads_status_verification_failed')
+  return verified
+}
+
+export async function createAndEnableBoundedSearchCampaign(
+  access: ApiAccessContext,
+  input: {
+    workspaceId?: string
+    approvalId: string
+    customerId: string
+    name: string
+    totalBudgetMicros: number
+    startDate: string
+    endDate: string
+  },
+) {
+  const created = await createBoundedSearchCampaign(access, input)
+  const enabled = await setCampaignStatus(access, {
+    workspaceId: input.workspaceId,
+    approvalId: input.approvalId,
+    customerId: input.customerId,
+    resourceName: created.resourceName,
+    status: 'ENABLED',
+  })
+  return { ...created, status: 'ENABLED', enabled }
+}
+
 export async function updateOrPauseCampaign(
   access: ApiAccessContext,
   input: { workspaceId?: string; approvalId: string; customerId: string; resourceName: string; name?: string; pause?: boolean },
@@ -170,7 +297,7 @@ export async function readCampaign(
   const response = await fetch(`https://googleads.googleapis.com/${version()}/customers/${customer(input.customerId)}/googleAds:search`, {
     method: 'POST',
     headers: await headers(target.tenantId, target.workspaceId),
-    body: JSON.stringify({ query: `SELECT campaign.id, campaign.name, campaign.status, campaign.advertising_channel_type, campaign_budget.amount_micros FROM campaign WHERE campaign.id = ${campaignId} LIMIT 1` }),
+    body: JSON.stringify({ query: `SELECT campaign.id, campaign.name, campaign.status, campaign.advertising_channel_type, campaign.start_date_time, campaign.end_date_time, campaign_budget.amount_micros, campaign_budget.total_amount_micros, campaign_budget.period FROM campaign WHERE campaign.id = ${campaignId} LIMIT 1` }),
   })
   const payload: any = await response.json().catch(() => ({}))
   if (!response.ok) throw new Error(`google_ads_read_failed:${payload?.error?.status || response.status}`)
