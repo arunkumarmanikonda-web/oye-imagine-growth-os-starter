@@ -10,7 +10,7 @@ The authoritative runtime view is `/admin/release-readiness`, backed by `/api/ad
 - [x] Workspace branding smoke passes
 - [x] Full Growth OS validation passes
 - [x] Clean migration-chain replay passes in disposable PostgreSQL
-- [x] Production/Git migration parity is reconciled through 94 source migrations and 94 production ledger entries
+- [x] Production/Git migration parity is reconciled through 95 source migrations and 95 production ledger entries
 - [x] Service-role-only `release_schema_evidence()` exposes live migration count/tail to the release-readiness control plane
 - [x] Canonical public host is aligned to `https://www.oyeimagine.com` in page metadata, sitemap and robots
 - [x] Signed-out `/login` is reachable without an auth redirect loop
@@ -19,7 +19,7 @@ The authoritative runtime view is `/admin/release-readiness`, backed by `/api/ad
 - [ ] External callback URLs verified provider-side
 - [ ] External webhook endpoints verified provider-side
 
-## Authentication and platform security
+## Authentication, privacy and platform security
 - [x] Protected application routes remain behind session/membership enforcement
 - [x] Public auth entry routes are reachable without session middleware loops
 - [x] Admin API proxy/session boundary requires admin-lane membership and AAL2
@@ -34,6 +34,9 @@ The authoritative runtime view is `/admin/release-readiness`, backed by `/api/ad
 - [x] Repository-controlled dependency updates and a production dependency audit gate are configured
 - [x] CSP report-only observation uses durable, privacy-minimized telemetry with RLS, service-only writes, hourly deduplication, abuse limits and 30-day retention
 - [x] CSP telemetry stores normalized origin/path only; raw IP addresses, URL query strings and fragments are not persisted
+- [x] Public unsubscribe GET is confirmation-only and cannot mutate consent/suppression state, preventing scanner/link-prefetch opt-outs
+- [x] One-click unsubscribe POST is bounded, requires `List-Unsubscribe=One-Click`, and applies through a service-role-only atomic workspace-correct replay guard
+- [x] Parallel/repeated unsubscribe requests are serialized and do not create duplicate withdrawal events when the latest consent is already withdrawn
 - [ ] GitHub native Dependabot security alerts enabled and issue #175 closed with native GitHub evidence
 - [ ] Production administrator completes mandatory password change and supplies real acceptance evidence
 - [ ] Production administrator enrolls MFA and produces real AAL2 sign-in evidence
