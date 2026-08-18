@@ -1,11 +1,8 @@
 import type { ApiAccessContext } from '@/lib/auth/api-access'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { googleAccessToken } from '@/lib/integrations/google'
+import { googleAdsRuntimeConfig } from '@/lib/integrations/google-ads-runtime'
 import { resolveOperationalTarget } from '@/lib/integrations/operational-target'
-
-function version() {
-  return process.env.GOOGLE_ADS_API_VERSION || 'v25'
-}
 
 function customer(value: string) {
   const id = value.replace(/\D/g, '')
@@ -33,17 +30,18 @@ function campaignWindow(startDate: string, endDate: string) {
   }
 }
 
-async function headers(tenantId: string, workspaceId?: string | null) {
-  const { accessToken } = await googleAccessToken(tenantId, workspaceId)
-  const developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN?.trim()
-  if (!developerToken) throw new Error('google_ads_developer_token_not_configured')
-  const h: Record<string, string> = {
+async function requestConfig(tenantId: string, workspaceId?: string | null) {
+  const [{ accessToken }, config] = await Promise.all([
+    googleAccessToken(tenantId, workspaceId),
+    googleAdsRuntimeConfig(),
+  ])
+  const headers: Record<string, string> = {
     Authorization: `Bearer ${accessToken}`,
     'Content-Type': 'application/json',
-    'developer-token': developerToken,
+    'developer-token': config.developerToken,
   }
-  if (process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID) h['login-customer-id'] = process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID.replace(/-/g, '')
-  return h
+  if (config.loginCustomerId) headers['login-customer-id'] = config.loginCustomerId
+  return { headers, apiVersion: config.apiVersion }
 }
 
 async function approved(access: ApiAccessContext, workspaceId: string | undefined, approvalId: string, resourceType: string) {
@@ -102,9 +100,10 @@ async function recordResource(
 }
 
 async function mutate(tenantId: string, workspaceId: string | null, customerId: string, resource: string, body: unknown) {
-  const response = await fetch(`https://googleads.googleapis.com/${version()}/customers/${customer(customerId)}/${resource}:mutate`, {
+  const config = await requestConfig(tenantId, workspaceId)
+  const response = await fetch(`https://googleads.googleapis.com/${config.apiVersion}/customers/${customer(customerId)}/${resource}:mutate`, {
     method: 'POST',
-    headers: await headers(tenantId, workspaceId),
+    headers: config.headers,
     body: JSON.stringify(body),
   })
   const payload: any = await response.json().catch(() => ({}))
@@ -226,8 +225,8 @@ export async function setCampaignStatus(
   access: ApiAccessContext,
   input: { workspaceId?: string; approvalId: string; customerId: string; resourceName: string; status: 'ENABLED' | 'PAUSED' },
 ) {
-  await approved(access, input.workspaceId, input.approvalId, 'google_ads_campaign')
-  await mutate((await resolveOperationalTarget(access, input.workspaceId)).tenantId, (await resolveOperationalTarget(access, input.workspaceId)).workspaceId, input.customerId, 'campaigns', {
+  const { target } = await approved(access, input.workspaceId, input.approvalId, 'google_ads_campaign')
+  await mutate(target.tenantId, target.workspaceId, input.customerId, 'campaigns', {
     operations: [{ update: { resourceName: input.resourceName, status: input.status }, updateMask: 'status' }],
   })
   const verified = await readCampaign(access, { workspaceId: input.workspaceId, customerId: input.customerId, resourceName: input.resourceName })
@@ -294,9 +293,10 @@ export async function readCampaign(
   const target = await resolveOperationalTarget(access, input.workspaceId)
   const campaignId = input.resourceName.split('/').pop()?.replace(/\D/g, '')
   if (!campaignId) throw new Error('google_ads_campaign_resource_invalid')
-  const response = await fetch(`https://googleads.googleapis.com/${version()}/customers/${customer(input.customerId)}/googleAds:search`, {
+  const config = await requestConfig(target.tenantId, target.workspaceId)
+  const response = await fetch(`https://googleads.googleapis.com/${config.apiVersion}/customers/${customer(input.customerId)}/googleAds:search`, {
     method: 'POST',
-    headers: await headers(target.tenantId, target.workspaceId),
+    headers: config.headers,
     body: JSON.stringify({ query: `SELECT campaign.id, campaign.name, campaign.status, campaign.advertising_channel_type, campaign.start_date_time, campaign.end_date_time, campaign_budget.amount_micros, campaign_budget.total_amount_micros, campaign_budget.period FROM campaign WHERE campaign.id = ${campaignId} LIMIT 1` }),
   })
   const payload: any = await response.json().catch(() => ({}))
