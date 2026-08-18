@@ -58,12 +58,13 @@ function maxMediaBytes() {
 async function sourceMedia(rawUrl: string) {
   const url = await assertPublicMediaUrl(rawUrl)
   const response = await fetch(url, { redirect: 'error', signal: AbortSignal.timeout(30_000) })
-  if (!response.ok || !response.body) throw new Error(`youtube_media_fetch_failed:${response.status}`)
+  const body = response.body
+  if (!response.ok || !body) throw new Error(`youtube_media_fetch_failed:${response.status}`)
   const contentType = response.headers.get('content-type')?.split(';')[0]?.trim() || 'application/octet-stream'
   if (!contentType.startsWith('video/')) throw new Error(`youtube_media_content_type_invalid:${contentType}`)
   const declaredLength = Number(response.headers.get('content-length') || 0)
   if (declaredLength && (!Number.isSafeInteger(declaredLength) || declaredLength > maxMediaBytes())) throw new Error('youtube_media_too_large')
-  return { response, contentType, declaredLength }
+  return { body, contentType, declaredLength }
 }
 
 async function youtubeJson(url: string, accessToken: string) {
@@ -112,13 +113,13 @@ export async function publishYouTubeVideo(access: ApiAccessContext, input: YouTu
     body: JSON.stringify(metadata),
   })
   if (!initiation.ok) {
-    await media.response.body.cancel().catch(() => undefined)
+    await media.body.cancel().catch(() => undefined)
     const payload: any = await initiation.json().catch(() => ({}))
     throw new Error(`youtube_upload_init_failed:${payload?.error?.code || initiation.status}`)
   }
   const location = initiation.headers.get('location')?.trim()
   if (!location) {
-    await media.response.body.cancel().catch(() => undefined)
+    await media.body.cancel().catch(() => undefined)
     throw new Error('youtube_resumable_location_missing')
   }
   const uploadHeaders: Record<string, string> = { 'Content-Type': media.contentType }
@@ -126,7 +127,7 @@ export async function publishYouTubeVideo(access: ApiAccessContext, input: YouTu
   const uploadInit: RequestInit & { duplex: 'half' } = {
     method: 'PUT',
     headers: uploadHeaders,
-    body: media.response.body,
+    body: media.body,
     duplex: 'half',
   }
   const upload = await fetch(location, uploadInit)
