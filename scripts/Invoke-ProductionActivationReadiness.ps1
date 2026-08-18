@@ -11,6 +11,11 @@ node scripts/verify-public-intake-abuse-controls.mjs
 if ($LASTEXITCODE -ne 0) { throw "public intake abuse-control verification failed with exit code $LASTEXITCODE" }
 
 Write-Host ''
+Write-Host "=== WEBHOOK AUTHENTICITY AND REPLAY SAFETY ==="
+node scripts/verify-webhook-authenticity-contract.mjs
+if ($LASTEXITCODE -ne 0) { throw "webhook authenticity verification failed with exit code $LASTEXITCODE" }
+
+Write-Host ''
 Write-Host "=== ADMIN OPS RELEASE SURFACES ==="
 npm run test:admin-ops-release-surfaces
 if ($LASTEXITCODE -ne 0) { throw "npm run test:admin-ops-release-surfaces failed with exit code $LASTEXITCODE" }
