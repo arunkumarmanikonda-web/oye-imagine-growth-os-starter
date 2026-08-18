@@ -164,45 +164,30 @@ export async function releaseSuppression(access: ApiAccessContext, suppressionId
 
 export async function applyPublicUnsubscribe(token: string) {
   const payload = verifyUnsubscribeToken(token)
-  const admin = createSupabaseAdminClient()
   const subjectKey = normalizeSubject(payload.channel, payload.subjectKey)
-  const { data: existing } = await admin.from('privacy_suppressions').select('suppression_id')
-    .eq('tenant_id', payload.tenantId)
-    .eq('subject_key', subjectKey)
-    .eq('channel', payload.channel)
-    .eq('scope', 'channel')
-    .eq('active', true)
-    .limit(1)
-    .maybeSingle()
-  if (!existing) {
-    const { error: suppressionError } = await admin.from('privacy_suppressions').insert({
-      tenant_id: payload.tenantId,
-      workspace_id: payload.workspaceId,
-      subject_key: subjectKey,
-      channel: payload.channel,
-      scope: 'channel',
-      reason: 'recipient_opt_out',
-      source: 'signed_unsubscribe',
-      reversible: true,
-      active: true,
-    })
-    if (suppressionError) throw new Error(`privacy_unsubscribe_failed:${suppressionError.message}`)
-  }
-  const { error: consentError } = await admin.from('privacy_consent_events').insert({
-    tenant_id: payload.tenantId,
-    workspace_id: payload.workspaceId,
-    subject_key: subjectKey,
-    channel: payload.channel,
-    purpose: payload.purpose,
-    decision: 'withdrawn',
-    notice_version: 'recipient_opt_out',
-    source: 'signed_unsubscribe',
-    lawful_basis: null,
-    actor_id: null,
-    metadata: { unsubscribe: true },
+  const admin = createSupabaseAdminClient()
+  const { data, error } = await admin.rpc('apply_public_unsubscribe_guarded', {
+    p_tenant_id: payload.tenantId,
+    p_workspace_id: payload.workspaceId,
+    p_subject_key: subjectKey,
+    p_channel: payload.channel,
+    p_purpose: payload.purpose,
   })
-  if (consentError) throw new Error(`privacy_unsubscribe_consent_failed:${consentError.message}`)
-  return { ok: true, channel: payload.channel, purpose: payload.purpose }
+  if (error) {
+    const message = error.message || ''
+    if (message.includes('unsubscribe_channel_invalid')) throw new Error('unsubscribe_token_invalid')
+    if (message.includes('unsubscribe_fields_required') || message.includes('unsubscribe_tenant_required')) throw new Error('unsubscribe_token_invalid')
+    throw new Error('privacy_unsubscribe_failed')
+  }
+  return data as {
+    ok: boolean
+    applied: boolean
+    alreadyApplied: boolean
+    suppressionCreated: boolean
+    consentEventCreated: boolean
+    channel: LifecycleChannel
+    purpose: string
+  }
 }
 
 export async function listPrivacyState(access: ApiAccessContext, workspaceId?: string) {
