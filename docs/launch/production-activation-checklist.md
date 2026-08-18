@@ -23,11 +23,12 @@ Status is evidence-based. A green build or adapter definition does not make an e
 - [x] Public contact intake uses a race-safe service-role rate limiter with separate network/device and identity ceilings
 - [x] Shared secret environment access is guarded by a `server-only` import boundary
 - [x] Repository-controlled weekly dependency updates and a production dependency audit gate are configured
+- [x] CSP report-only observation is configured with a bounded, sanitized violation collector
 - [ ] GitHub native Dependabot security alerts enabled and issue #175 closed with evidence
 - [ ] Production administrator completes mandatory password change
 - [ ] Production administrator enrolls MFA and produces real AAL2 sign-in evidence
 - [ ] Supabase Auth leaked-password protection enabled and security advisor re-run
-- [ ] Enforced Content Security Policy introduced only after tested Supabase/provider origin coverage
+- [ ] Enforced Content Security Policy introduced only after report-only telemetry confirms tested Supabase/provider/media origin coverage
 
 ## External providers
 - [ ] Google Ads developer token / production access confirmed provider-side
