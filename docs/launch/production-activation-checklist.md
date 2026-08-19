@@ -10,7 +10,7 @@ The authoritative runtime view is `/admin/release-readiness`, backed by `/api/ad
 - [x] Workspace branding smoke passes
 - [x] Full Growth OS validation passes
 - [x] Clean migration-chain replay passes in disposable PostgreSQL
-- [x] Production/Git migration parity is reconciled through 95 source migrations and 95 production ledger entries
+- [x] Production/Git migration parity is reconciled through 96 source migrations and 96 production ledger entries
 - [x] Service-role-only `release_schema_evidence()` exposes live migration count/tail to the release-readiness control plane
 - [x] Canonical public host is aligned to `https://www.oyeimagine.com` in page metadata, sitemap and robots
 - [x] Signed-out `/login` is reachable without an auth redirect loop
@@ -47,6 +47,9 @@ The authoritative runtime view is `/admin/release-readiness`, backed by `/api/ad
 - [x] Provider Activation Center is implemented
 - [x] Google OAuth discovery and Provider Vault-backed runtime configuration are implemented
 - [x] Managed Meta and LinkedIn OAuth use signed state, server-side token handling and exact resource selection
+- [x] Provider activation-core truth is fail-closed and recognizes secure deployment-environment or encrypted Provider Vault configuration without exposing credential values
+- [x] Governed lifecycle email, SMS and WhatsApp runtime resolves capability routing through the provider fabric rather than bypassing it with direct provider-secret reads
+- [x] WhatsApp lifecycle routing uses WhatsApp Cloud as primary with AiSensy retained as a governed fallback
 - [x] Google Ads machine QA verifies customer identity/status/billing and validate-only write authority without creating a campaign
 - [x] Meta/Facebook, Instagram, LinkedIn and YouTube machine authority verification is implemented
 - [x] Social/YouTube READY state requires a real supervised provider-write plus provider-readback canary
