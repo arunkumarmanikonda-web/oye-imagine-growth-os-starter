@@ -26,6 +26,11 @@ node scripts/verify-client-identity-binding.mjs
 if ($LASTEXITCODE -ne 0) { throw "client identity binding verification failed with exit code $LASTEXITCODE" }
 
 Write-Host ''
+Write-Host "=== PROVIDER RUNTIME ALIGNMENT ==="
+node scripts/verify-provider-runtime-alignment.mjs
+if ($LASTEXITCODE -ne 0) { throw "provider runtime alignment verification failed with exit code $LASTEXITCODE" }
+
+Write-Host ''
 Write-Host "=== ADMIN OPS RELEASE SURFACES ==="
 npm run test:admin-ops-release-surfaces
 if ($LASTEXITCODE -ne 0) { throw "npm run test:admin-ops-release-surfaces failed with exit code $LASTEXITCODE" }
