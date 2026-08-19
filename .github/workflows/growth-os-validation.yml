@@ -52,6 +52,9 @@ jobs:
       - name: Verify unsubscribe intent and replay safety
         run: node scripts/verify-unsubscribe-intent-contract.mjs
 
+      - name: Verify client identity binding
+        run: node scripts/verify-client-identity-binding.mjs
+
       - name: Run validation suite
         shell: pwsh
         run: ./scripts/Invoke-GrowthOsValidation.ps1
