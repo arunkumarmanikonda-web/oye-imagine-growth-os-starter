@@ -40,7 +40,7 @@ jobs:
         run: bash scripts/validate-migration-chain.sh
       - name: Upload migration validation logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: migration-validation-logs
           path: |
