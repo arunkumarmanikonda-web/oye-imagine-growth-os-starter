@@ -1,26 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { buildAiConciergeResponse } from '@/lib/ai/concierge-engine'
-import { getAiConciergePromptPresets, getAiConciergeRegistrySummary } from '@/lib/ai/concierge-registry'
+import { ApiAccessError, requireApiAccess } from '@/lib/auth/api-access'
+import { buildConciergeExperiencePayload } from '@/lib/ai/concierge-experience'
+import type { ConciergeSurface } from '@/lib/ai/concierge-retrieval-types'
+import { buildVerifiedClientConciergeScope, clientMembershipIsDemo } from '@/lib/client/client-surface-context'
 
-function isSurface(value: string): value is 'client' | 'admin' {
-  return value === 'client' || value === 'admin'
-}
+const allowedSurfaces = new Set<ConciergeSurface>(['client_dashboard', 'help_panel', 'support_center'])
+const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { 'Cache-Control': 'private, no-store' } })
 
 export async function GET(request: NextRequest) {
-  const workspaceKey = request.nextUrl.searchParams.get('workspaceKey') ?? 'neejee'
-  const message = request.nextUrl.searchParams.get('message') ?? 'Show my outstanding invoices and next actions'
-  const referenceDate = request.nextUrl.searchParams.get('referenceDate') ?? '2026-08-05T00:00:00.000Z'
-  const surfaceValue = request.nextUrl.searchParams.get('surface') ?? 'client'
-  const surface = isSurface(surfaceValue) ? surfaceValue : 'client'
+  try {
+    const access = await requireApiAccess({ lane: 'client' })
+    const message = (request.nextUrl.searchParams.get('message') ?? 'Show my available workspace help and next actions')
+      .trim()
+      .slice(0, 512)
+    const requestedSurface = request.nextUrl.searchParams.get('surface') as ConciergeSurface | null
+    const surface: ConciergeSurface = requestedSurface && allowedSurfaces.has(requestedSurface)
+      ? requestedSurface
+      : 'client_dashboard'
+    const scope = buildVerifiedClientConciergeScope({ subject: access.subject, membership: access.membership })
+    const experience = buildConciergeExperiencePayload(scope, surface, message)
 
-  return NextResponse.json({
-    response: buildAiConciergeResponse({
-      workspaceKey,
-      surface,
-      message,
-      referenceDate,
-    }),
-    presets: getAiConciergePromptPresets(workspaceKey),
-    registry: getAiConciergeRegistrySummary(),
-  })
+    return json({
+      ok: true,
+      mode: clientMembershipIsDemo(access.membership) ? 'authenticated_demo_fixture' : 'verified_membership',
+      response: experience,
+      presets: experience.shell.promptPresets,
+      registry: {
+        source: clientMembershipIsDemo(access.membership) ? 'authenticated_demo_fixture' : 'verified_membership_scope',
+        fixtureData: clientMembershipIsDemo(access.membership),
+      },
+    })
+  } catch (error) {
+    if (error instanceof ApiAccessError) return json({ ok: false, code: error.code }, error.status)
+    return json({ ok: false, code: 'concierge_unavailable' }, 500)
+  }
 }
