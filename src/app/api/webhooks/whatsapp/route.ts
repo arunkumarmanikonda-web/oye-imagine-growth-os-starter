@@ -20,14 +20,21 @@ function timingSafeStringEqual(a: string, b: string) {
 }
 
 async function webhookConfig() {
-  const resolution = await resolveRuntimeProviderFields({
-    providerKey: 'meta_marketing',
-    fieldKeys: ['META_APP_SECRET', 'WHATSAPP_WEBHOOK_VERIFY_TOKEN'],
-    environment: 'production',
-  })
+  const [cloud, meta] = await Promise.all([
+    resolveRuntimeProviderFields({
+      providerKey: 'whatsapp_cloud',
+      fieldKeys: ['WHATSAPP_CLOUD_APP_SECRET', 'WHATSAPP_WEBHOOK_VERIFY_TOKEN'],
+      environment: 'production',
+    }),
+    resolveRuntimeProviderFields({
+      providerKey: 'meta_marketing',
+      fieldKeys: ['META_APP_SECRET', 'WHATSAPP_WEBHOOK_VERIFY_TOKEN'],
+      environment: 'production',
+    }),
+  ])
   return {
-    appSecret: process.env.WHATSAPP_CLOUD_APP_SECRET?.trim() || resolution.values.META_APP_SECRET || '',
-    verifyToken: resolution.values.WHATSAPP_WEBHOOK_VERIFY_TOKEN || '',
+    appSecret: cloud.values.WHATSAPP_CLOUD_APP_SECRET || meta.values.META_APP_SECRET || '',
+    verifyToken: cloud.values.WHATSAPP_WEBHOOK_VERIFY_TOKEN || meta.values.WHATSAPP_WEBHOOK_VERIFY_TOKEN || '',
   }
 }
 
