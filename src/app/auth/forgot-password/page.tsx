@@ -8,15 +8,15 @@ export default async function ForgotPasswordPage({ searchParams }: { searchParam
         <div className="auth-visual-content">
           <p className="premium-eyebrow">Secure account recovery</p>
           <h1>Reset access without bypassing identity.</h1>
-          <p>Enter the email attached to your Oye !magine account. If the account is eligible, Supabase Auth will send a time-limited recovery link to that address.</p>
+          <p>Enter the email attached to your Oye !magine account. If the account is eligible, Oye !magine will send a time-limited recovery email from hello@oyeimagine.com through our governed transactional email provider.</p>
         </div>
       </section>
       <section className="auth-premium-form-wrap">
         <div className="auth-premium-card">
           <Link href="/" className="auth-logo-link"><img src="/brand/oye-imagine-logo.webp" alt="Oye !magine" /></Link>
           <div className="auth-form-heading"><p>Password recovery</p><h2>Request a reset link</h2><span>For privacy, the response does not confirm whether an email is registered.</span></div>
-          {params.sent === '1' ? <div className="auth-success" role="status">If an eligible account exists for that address, a recovery email has been requested. Check your inbox and spam folder.</div> : null}
-          {params.error ? <div className="auth-error" role="alert">The recovery request could not be completed. Please try again or contact support.</div> : null}
+          {params.sent === '1' ? <div className="auth-success" role="status">If an eligible account exists for that address, an Oye !magine recovery email has been requested. Check your inbox and spam folder for a message from hello@oyeimagine.com.</div> : null}
+          {params.error ? <div className="auth-error" role="alert">That recovery link is invalid or has expired. Please request a fresh link below.</div> : null}
           <form action="/api/auth/forgot-password" method="post" className="auth-premium-form">
             <label>Email address<input type="email" name="email" autoComplete="email" required placeholder="you@company.com" /></label>
             <button type="submit" className="auth-submit">Send recovery link <span aria-hidden="true">→</span></button>
