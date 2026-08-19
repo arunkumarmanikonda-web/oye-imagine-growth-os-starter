@@ -11,6 +11,7 @@ type ProviderField = {
   sensitive: boolean;
   help_text?: string | null;
   configured: boolean;
+  configurationSource?: 'environment' | 'vault' | null;
   credential?: {
     status: string;
     last_verified_at?: string | null;
@@ -27,6 +28,11 @@ type Provider = {
   enabled: boolean;
   client_visible: boolean;
   fields: ProviderField[];
+  activationCore: {
+    totalRequired: number;
+    configuredRequired: number;
+    ready: boolean;
+  };
 };
 
 type IntegrationRequest = {
@@ -72,7 +78,7 @@ export function ProviderVaultConsole() {
       return;
     }
     setConfiguration(payload.configuration);
-    setMessage('Secrets are write-only. Existing secret values are never returned to the browser.');
+    setMessage('Secrets are write-only. Runtime checks may use deployment environment values or encrypted Vault values; neither is returned to the browser.');
   }
 
   useEffect(() => {
@@ -82,11 +88,10 @@ export function ProviderVaultConsole() {
   const readiness = useMemo(() => {
     if (!configuration) return { ready: 0, total: 0 };
     return configuration.providers.reduce(
-      (state, provider) => {
-        const required = provider.fields.filter((field) => field.required);
-        const ready = required.length === 0 || required.every((field) => field.configured);
-        return { ready: state.ready + (ready ? 1 : 0), total: state.total + 1 };
-      },
+      (state, provider) => ({
+        ready: state.ready + (provider.activationCore.ready ? 1 : 0),
+        total: state.total + 1,
+      }),
       { ready: 0, total: 0 },
     );
   }, [configuration]);
@@ -134,21 +139,25 @@ export function ProviderVaultConsole() {
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">Oye provider fabric</p>
           <h2 className="mt-3 text-2xl font-semibold">One secure configuration desk. Every provider stays behind Oye !magine.</h2>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-300">
-            Add or rotate production credentials here. Clients receive Oye outcomes, not vendor names. Capability routing chooses the configured provider and fallback internally.
+            Add or rotate production credentials here. Runtime resolution prefers securely configured deployment values and falls back to the encrypted Provider Vault. Clients receive Oye outcomes, not vendor credentials.
           </p>
           <p className="mt-5 text-sm font-medium text-white">{message}</p>
         </div>
         <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-7">
-          <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Provider readiness</p>
+          <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Activation core present</p>
           <p className="mt-4 text-5xl font-semibold">{readiness.ready}/{readiness.total}</p>
-          <p className="mt-3 text-sm leading-6 text-slate-400">Credential presence only. A provider becomes production-ready after its authenticated health check and execution proof pass.</p>
+          <p className="mt-3 text-sm leading-6 text-slate-400">Credential/configuration presence only. Provider authority, machine QA and execution proof are separate gates and cannot be inferred from this card.</p>
         </div>
       </section>
 
       <section className="grid gap-5 xl:grid-cols-2">
         {configuration.providers.map((provider) => {
-          const required = provider.fields.filter((field) => field.required);
-          const ready = required.length === 0 || required.every((field) => field.configured);
+          const core = provider.activationCore;
+          const badge = core.totalRequired === 0
+            ? 'No activation contract'
+            : core.ready
+              ? 'Activation core present'
+              : `${core.configuredRequired}/${core.totalRequired} required fields`;
           return (
             <article key={provider.provider_key} className="rounded-[2rem] border border-white/10 bg-black/20 p-7">
               <div className="flex flex-wrap items-start justify-between gap-4">
@@ -157,19 +166,24 @@ export function ProviderVaultConsole() {
                   <h3 className="mt-2 text-xl font-semibold">{provider.display_name}</h3>
                   <p className="mt-2 text-xs text-slate-400">{provider.capabilities.join(' · ')}</p>
                 </div>
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${ready ? 'bg-emerald-300/10 text-emerald-200' : 'bg-amber-300/10 text-amber-200'}`}>
-                  {ready ? 'Credentials present' : 'Needs configuration'}
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${core.ready ? 'bg-emerald-300/10 text-emerald-200' : 'bg-amber-300/10 text-amber-200'}`}>
+                  {badge}
                 </span>
               </div>
 
               <div className="mt-6 space-y-4">
                 {provider.fields.map((field) => {
                   const stateKey = `${provider.provider_key}|${field.field_key}`;
+                  const sourceLabel = field.configurationSource === 'environment'
+                    ? 'Configured in environment'
+                    : field.configurationSource === 'vault'
+                      ? 'Configured in Vault'
+                      : 'Not configured';
                   return (
                     <form key={field.field_key} onSubmit={(event) => save(event, provider.provider_key, field)} className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4">
                       <div className="flex items-center justify-between gap-3">
                         <label className="text-sm font-medium" htmlFor={stateKey}>{field.label}{field.required ? ' *' : ''}</label>
-                        <span className={`text-xs ${field.configured ? 'text-emerald-200' : 'text-slate-500'}`}>{field.configured ? 'Configured' : 'Not configured'}</span>
+                        <span className={`text-xs ${field.configured ? 'text-emerald-200' : 'text-slate-500'}`}>{sourceLabel}</span>
                       </div>
                       {field.help_text ? <p className="mt-1 text-xs text-slate-500">{field.help_text}</p> : null}
                       <div className="mt-3 flex gap-2">
@@ -179,7 +193,7 @@ export function ProviderVaultConsole() {
                           autoComplete="off"
                           value={values[stateKey] ?? ''}
                           onChange={(event) => setValues((current) => ({ ...current, [stateKey]: event.target.value }))}
-                          placeholder={field.configured ? 'Enter a new value to rotate' : `Enter ${field.label}`}
+                          placeholder={field.configured ? 'Enter a new value to rotate or override in Vault' : `Enter ${field.label}`}
                           className="min-w-0 flex-1 rounded-xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/50"
                         />
                         <button
@@ -187,7 +201,7 @@ export function ProviderVaultConsole() {
                           className="rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-50"
                           type="submit"
                         >
-                          {busyKey === stateKey ? 'Saving…' : field.configured ? 'Rotate' : 'Save'}
+                          {busyKey === stateKey ? 'Saving…' : field.configurationSource === 'vault' ? 'Rotate' : 'Save to Vault'}
                         </button>
                       </div>
                     </form>
