@@ -1,0 +1,45 @@
+{
+  "issue": "P0-013",
+  "conclusion": "parity_reconciled",
+  "baseSnapshot": "P0-013-production-parity-unsubscribe-guard-2026-08-18.json",
+  "supabase": {
+    "projectRef": "bqhaifivpcwwiauiynlv",
+    "baseProductionLedgerCount": 95,
+    "productionLedgerCount": 96,
+    "productionLedgerLastVersion": "20260819092907",
+    "productionLedgerLastName": "provider_runtime_alignment"
+  },
+  "gitMigrations": {
+    "baseFileCount": 95,
+    "fileCount": 96,
+    "productionOnly": [],
+    "gitOnly": []
+  },
+  "releaseMigrations": [
+    {
+      "sourceFile": "20260819143000_provider_runtime_alignment.sql",
+      "productionLedgerVersion": "20260819092907",
+      "productionLedgerName": "provider_runtime_alignment"
+    }
+  ],
+  "activationBoundary": {
+    "storedProductionProviderCredentials": 0,
+    "neejeeProviderAccounts": 0,
+    "neejeeProviderReadiness": 0,
+    "neejeeProviderQaRuns": 0,
+    "pendingOauthSelectionSessions": 0,
+    "lifecycleDeliveryJobs": 0,
+    "neejeeFundingRequests": 0,
+    "neejeeMediaAccounts": 0,
+    "neejeeAutonomousRuns": 0,
+    "neejeeActiveQueue": 0,
+    "growthExecutorKillSwitch": true
+  },
+  "providerContract": {
+    "whatsappPrimary": "whatsapp_cloud",
+    "whatsappFallbacks": ["aisensy"],
+    "metaActivationCoreRequired": true,
+    "linkedinActivationCoreRequired": true,
+    "migrationTriggeredExternalAction": false
+  }
+}
