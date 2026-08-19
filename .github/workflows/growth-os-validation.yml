@@ -28,8 +28,8 @@ jobs:
       - name: Verify Supabase migration parity baseline
         run: node scripts/verify-supabase-parity-snapshot.mjs
 
-      - name: Verify final Supabase migration parity closure
-        run: node scripts/verify-final-supabase-parity-snapshot.mjs
+      - name: Verify provider runtime Supabase parity closure
+        run: node scripts/verify-provider-runtime-parity-closure.mjs
 
       - name: Verify admin AAL2 coverage
         run: node scripts/verify-admin-aal2-coverage.mjs
@@ -54,6 +54,9 @@ jobs:
 
       - name: Verify client identity binding
         run: node scripts/verify-client-identity-binding.mjs
+
+      - name: Verify provider runtime alignment
+        run: node scripts/verify-provider-runtime-alignment.mjs
 
       - name: Run validation suite
         shell: pwsh
