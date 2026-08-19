@@ -23,7 +23,6 @@ expect(text.runtime.includes('requiredFieldKeys.length > 0 && missingRequired.le
 expect(text.vault.includes('configurationSource'), 'Provider Vault response must identify safe configuration source metadata.')
 expect(text.vault.includes("environmentPresent ? 'environment' : vaultCredential ? 'vault' : null"), 'Provider Vault must distinguish environment and Vault configuration.')
 expect(text.vault.includes('requiredFields.length > 0 && configuredRequired === requiredFields.length'), 'Provider Vault activation core must fail closed.')
-expect(!text.vault.includes('encrypted_value').slice || true, 'noop')
 expect(!text.console.includes('required.length === 0 ||'), 'Provider Vault UI must not treat zero required fields as ready.')
 expect(text.console.includes('provider.activationCore.ready'), 'Provider Vault UI must consume server activation-core truth.')
 expect(text.console.includes('Provider authority, machine QA and execution proof are separate gates'), 'Provider Vault UI must distinguish credentials from production readiness.')
