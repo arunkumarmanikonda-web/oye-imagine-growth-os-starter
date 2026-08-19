@@ -11,10 +11,12 @@ const targets = {
   migration: path.join(migrationsDir, '20260818190000_release_schema_evidence.sql'),
   webhookMigration: path.join(migrationsDir, '20260818220000_lifecycle_webhook_guard.sql'),
   unsubscribeMigration: path.join(migrationsDir, '20260818230000_privacy_unsubscribe_guard.sql'),
+  providerRuntimeMigration: path.join(migrationsDir, '20260819143000_provider_runtime_alignment.sql'),
   checklist: path.join(repoRoot, 'docs', 'launch', 'production-activation-checklist.md'),
   proof: path.join(repoRoot, 'docs', 'proof', 'p0', 'P0-013-production-parity-release-readiness-2026-08-18.json'),
   webhookProof: path.join(repoRoot, 'docs', 'proof', 'p0', 'P0-013-production-parity-webhook-authenticity-2026-08-18.json'),
   unsubscribeProof: path.join(repoRoot, 'docs', 'proof', 'p0', 'P0-013-production-parity-unsubscribe-guard-2026-08-18.json'),
+  providerRuntimeProof: path.join(repoRoot, 'docs', 'proof', 'p0', 'P0-013-production-parity-provider-runtime-2026-08-19.json'),
 }
 
 const failures = []
@@ -32,16 +34,18 @@ const cockpit = read('cockpit')
 const migration = read('migration')
 const webhookMigration = read('webhookMigration')
 const unsubscribeMigration = read('unsubscribeMigration')
+const providerRuntimeMigration = read('providerRuntimeMigration')
 const checklist = read('checklist')
 const proof = JSON.parse(read('proof') || '{}')
 const webhookProof = JSON.parse(read('webhookProof') || '{}')
 const unsubscribeProof = JSON.parse(read('unsubscribeProof') || '{}')
+const providerRuntimeProof = JSON.parse(read('providerRuntimeProof') || '{}')
 
-expect(migrations.length === 95, `Expected 95 source migrations, found ${migrations.length}.`)
-expect(migrations.at(-1) === '20260818230000_privacy_unsubscribe_guard.sql', `Unexpected migration tail: ${migrations.at(-1)}`)
-expect(readiness.includes('migrationFileCount: 95'), 'Runtime release expectation is not pinned to 95 migrations.')
-expect(readiness.includes("lastSourceFile: '20260818230000_privacy_unsubscribe_guard.sql'"), 'Runtime release expectation has the wrong migration tail.')
-expect(readiness.includes("lastProductionMigrationName: 'privacy_unsubscribe_guard'"), 'Runtime release expectation has the wrong production migration name.')
+expect(migrations.length === 96, `Expected 96 source migrations, found ${migrations.length}.`)
+expect(migrations.at(-1) === '20260819143000_provider_runtime_alignment.sql', `Unexpected migration tail: ${migrations.at(-1)}`)
+expect(readiness.includes('migrationFileCount: 96'), 'Runtime release expectation is not pinned to 96 migrations.')
+expect(readiness.includes("lastSourceFile: '20260819143000_provider_runtime_alignment.sql'"), 'Runtime release expectation has the wrong migration tail.')
+expect(readiness.includes("lastProductionMigrationName: 'provider_runtime_alignment'"), 'Runtime release expectation has the wrong production migration name.')
 
 expect(migration.includes('language plpgsql'), 'Release schema evidence RPC must use capability-aware PL/pgSQL.')
 expect(migration.includes('security definer'), 'Release schema evidence RPC must be SECURITY DEFINER.')
@@ -76,6 +80,15 @@ expect(unsubscribeMigration.includes("scope = 'channel'"), 'Unsubscribe guard mu
 expect(unsubscribeMigration.includes('revoke all on function public.apply_public_unsubscribe_guarded'), 'Browser execute must be revoked from unsubscribe guard RPC.')
 expect(unsubscribeMigration.includes('grant execute on function public.apply_public_unsubscribe_guarded') && unsubscribeMigration.includes('to service_role'), 'Unsubscribe guard RPC must remain service-role executable.')
 
+expect(providerRuntimeMigration.includes("primary_provider_key = 'whatsapp_cloud'"), 'Provider-runtime migration must align WhatsApp lifecycle primary to WhatsApp Cloud.')
+expect(providerRuntimeMigration.includes("fallback_provider_keys = '[\"aisensy\"]'::jsonb"), 'Provider-runtime migration must retain AiSensy only as governed fallback.')
+for (const field of ['META_GRAPH_API_VERSION', 'META_APP_ID', 'META_APP_SECRET', 'META_OAUTH_REDIRECT_URI']) {
+  expect(providerRuntimeMigration.includes(`'${field}'`), `Provider-runtime migration is missing Meta activation field ${field}.`)
+}
+for (const field of ['LINKEDIN_API_VERSION', 'LINKEDIN_CLIENT_ID', 'LINKEDIN_CLIENT_SECRET', 'LINKEDIN_OAUTH_REDIRECT_URI']) {
+  expect(providerRuntimeMigration.includes(`'${field}'`), `Provider-runtime migration is missing LinkedIn activation field ${field}.`)
+}
+
 expect(route.includes("requireApiAccess({ lane: 'admin' })"), 'Release status route must use the admin AAL2 access boundary.')
 expect(route.includes("access.membership.role_key !== 'platform_owner'"), 'Release status route must be platform-owner only.')
 expect(route.includes("'Cache-Control': 'private, no-store'"), 'Release status response must be private/no-store.')
@@ -108,17 +121,21 @@ expect(cockpit.includes("fetch('/api/admin/release-status'"), 'Release cockpit m
 expect(cockpit.includes('NOT ENABLED'), 'Release cockpit must visibly state unrestricted spend/publish is not enabled.')
 expect(cockpit.includes('External and human requirements'), 'Release cockpit must separate external/human evidence from machine controls.')
 
-expect(checklist.includes('95 source migrations and 95 production ledger entries'), 'Launch checklist is not reconciled to 95/95 parity.')
-expect(!checklist.includes('94 source migrations and 94 production ledger entries'), 'Launch checklist still contains stale 94/94 parity text.')
+expect(checklist.includes('96 source migrations and 96 production ledger entries'), 'Launch checklist is not reconciled to 96/96 parity.')
+expect(!checklist.includes('95 source migrations and 95 production ledger entries'), 'Launch checklist still contains stale 95/95 parity text.')
 expect(checklist.includes('Supabase Auth leaked-password protection enabled'), 'Launch checklist lost the external leaked-password requirement.')
 expect(checklist.includes('GitHub native Dependabot security alerts enabled'), 'Launch checklist lost the external Dependabot requirement.')
 expect(checklist.includes('CSP telemetry stores normalized origin/path only'), 'Launch checklist lost durable CSP privacy evidence.')
 expect(checklist.includes('kill switch defaults ON and remains the deliberate final safety lock'), 'Launch checklist lost the autonomy safety-lock rule.')
+expect(checklist.includes('Provider activation-core truth is fail-closed'), 'Launch checklist lost provider activation-core truth evidence.')
+expect(checklist.includes('Governed lifecycle email, SMS and WhatsApp runtime resolves capability routing through the provider fabric'), 'Launch checklist lost governed provider-runtime routing evidence.')
+expect(checklist.includes('WhatsApp lifecycle routing uses WhatsApp Cloud as primary with AiSensy retained as a governed fallback'), 'Launch checklist lost WhatsApp provider-route evidence.')
 expect(checklist.includes('WhatsApp Cloud webhook software verifies the subscription token and HMAC-SHA256 signature'), 'Launch checklist lost webhook-authenticity software evidence.')
 expect(checklist.includes('External webhook endpoints verified provider-side'), 'Launch checklist lost provider-side webhook verification as an external requirement.')
 expect(checklist.includes('Public unsubscribe GET is confirmation-only and cannot mutate'), 'Launch checklist lost scanner-safe unsubscribe evidence.')
 expect(checklist.includes('One-click unsubscribe POST is bounded'), 'Launch checklist lost bounded one-click unsubscribe evidence.')
 
+// Historical snapshots remain immutable evidence for the releases that produced them.
 expect(proof.supabase?.productionLedgerCount === 93, 'Historical release-readiness parity proof must remain the 93-migration snapshot.')
 expect(proof.supabase?.productionLedgerLastVersion === '20260818183025', 'Historical release-readiness parity proof has the wrong production ledger version.')
 expect(proof.supabase?.productionLedgerLastName === 'release_schema_evidence', 'Historical release-readiness parity proof has the wrong production ledger name.')
@@ -132,12 +149,22 @@ expect(webhookProof.supabase?.productionLedgerLastName === 'lifecycle_webhook_gu
 expect(webhookProof.liveControls?.guardedCallbackAnonExecute === false && webhookProof.liveControls?.guardedCallbackAuthenticatedExecute === false && webhookProof.liveControls?.guardedCallbackServiceRoleExecute === true, 'Historical guarded callback privilege proof is unsafe.')
 expect(webhookProof.liveControls?.growthExecutorKillSwitch === true, 'Historical webhook proof must preserve the kill switch.')
 
-expect(unsubscribeProof.supabase?.productionLedgerCount === 95, 'Current release truth does not record 95 production migrations.')
-expect(unsubscribeProof.supabase?.productionLedgerLastVersion === '20260818212902', 'Current release truth has the wrong production ledger version.')
-expect(unsubscribeProof.supabase?.productionLedgerLastName === 'privacy_unsubscribe_guard', 'Current release truth has the wrong production ledger name.')
-expect(unsubscribeProof.liveControls?.guardedUnsubscribeAnonExecute === false && unsubscribeProof.liveControls?.guardedUnsubscribeAuthenticatedExecute === false && unsubscribeProof.liveControls?.guardedUnsubscribeServiceRoleExecute === true, 'Current unsubscribe guard privilege proof is unsafe.')
-expect(unsubscribeProof.liveControls?.suppressionCount === 0 && unsubscribeProof.liveControls?.consentEventCount === 0, 'Current unsubscribe proof contains synthetic privacy state.')
-expect(unsubscribeProof.liveControls?.growthExecutorKillSwitch === true, 'Current unsubscribe proof must preserve the kill switch.')
+expect(unsubscribeProof.supabase?.productionLedgerCount === 95, 'Historical unsubscribe proof must remain the 95-migration snapshot.')
+expect(unsubscribeProof.supabase?.productionLedgerLastVersion === '20260818212902', 'Historical unsubscribe proof has the wrong production ledger version.')
+expect(unsubscribeProof.supabase?.productionLedgerLastName === 'privacy_unsubscribe_guard', 'Historical unsubscribe proof has the wrong production ledger name.')
+expect(unsubscribeProof.liveControls?.guardedUnsubscribeAnonExecute === false && unsubscribeProof.liveControls?.guardedUnsubscribeAuthenticatedExecute === false && unsubscribeProof.liveControls?.guardedUnsubscribeServiceRoleExecute === true, 'Historical unsubscribe guard privilege proof is unsafe.')
+expect(unsubscribeProof.liveControls?.suppressionCount === 0 && unsubscribeProof.liveControls?.consentEventCount === 0, 'Historical unsubscribe proof contains synthetic privacy state.')
+expect(unsubscribeProof.liveControls?.growthExecutorKillSwitch === true, 'Historical unsubscribe proof must preserve the kill switch.')
+
+expect(providerRuntimeProof.supabase?.productionLedgerCount === 96, 'Current provider-runtime proof must record 96 production migrations.')
+expect(providerRuntimeProof.supabase?.productionLedgerLastVersion === '20260819092907', 'Current provider-runtime proof has the wrong production ledger version.')
+expect(providerRuntimeProof.supabase?.productionLedgerLastName === 'provider_runtime_alignment', 'Current provider-runtime proof has the wrong production ledger name.')
+expect(providerRuntimeProof.activationBoundary?.storedProductionProviderCredentials === 0, 'Provider-runtime proof contains a fabricated provider credential.')
+expect(providerRuntimeProof.activationBoundary?.neejeeProviderAccounts === 0 && providerRuntimeProof.activationBoundary?.neejeeProviderReadiness === 0 && providerRuntimeProof.activationBoundary?.neejeeProviderQaRuns === 0, 'Provider-runtime proof contains fabricated provider activation evidence.')
+expect(providerRuntimeProof.activationBoundary?.lifecycleDeliveryJobs === 0, 'Provider-runtime proof contains a synthetic lifecycle delivery.')
+expect(providerRuntimeProof.activationBoundary?.neejeeFundingRequests === 0 && providerRuntimeProof.activationBoundary?.neejeeMediaAccounts === 0, 'Provider-runtime proof contains synthetic funding state.')
+expect(providerRuntimeProof.activationBoundary?.neejeeAutonomousRuns === 0 && providerRuntimeProof.activationBoundary?.neejeeActiveQueue === 0, 'Provider-runtime proof contains autonomous execution work.')
+expect(providerRuntimeProof.activationBoundary?.growthExecutorKillSwitch === true, 'Current provider-runtime proof must preserve the kill switch.')
 
 if (failures.length) {
   console.error('Release readiness contract verification failed.')
@@ -145,4 +172,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('Release readiness contract verified: 95/95 schema truth, capability-aware portable ledger evidence, AAL2 platform-owner access, authenticated guarded lifecycle callbacks, scanner-safe atomic unsubscribe semantics, no secret-presence readiness signals, provider/funding activation remains evidence-backed, external/human requirements remain fail-closed, CSP enforcement remains evidence-gated, and unrestricted autonomy remains disabled by design.')
+console.log('Release readiness contract verified: 96/96 schema truth, capability-aware portable ledger evidence, AAL2 platform-owner access, authenticated guarded lifecycle callbacks, scanner-safe atomic unsubscribe semantics, fail-closed provider runtime routing, no secret-presence readiness signals, provider/funding activation remains evidence-backed, external/human requirements remain fail-closed, CSP enforcement remains evidence-gated, and unrestricted autonomy remains disabled by design.')
