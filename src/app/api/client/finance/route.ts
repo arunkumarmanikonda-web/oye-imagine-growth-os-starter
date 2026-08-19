@@ -18,7 +18,7 @@ function safeReferenceDate(value: string | null) {
 
 export async function GET(request: NextRequest) {
   try {
-    const access = await requireApiAccess({ lane: 'client', requiredPermission: 'view_client_finance' })
+    const access = await requireApiAccess({ lane: 'client', permission: 'view_client_finance' })
     const isDemo = clientMembershipIsDemo(access.membership)
 
     if (!isDemo) {
