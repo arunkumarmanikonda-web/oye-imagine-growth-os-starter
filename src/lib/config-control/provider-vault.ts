@@ -1,3 +1,5 @@
+import 'server-only';
+
 import crypto from 'node:crypto';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import type { ApiAccessContext } from '@/lib/auth/api-access';
@@ -42,15 +44,34 @@ export async function listProviderConfiguration(access: ApiAccessContext) {
   if (requestError) throw new Error(`integration_requests_read_failed:${requestError.message}`);
 
   const configured = new Map((credentials ?? []).map((row: any) => [`${row.provider_key}|${row.environment}|${row.field_key}`, row]));
-  return {
-    providers: (providers ?? []).map((provider: any) => ({
+  const providerRows = (providers ?? []).map((provider: any) => {
+    const providerFields = (fields ?? [])
+      .filter((field: any) => field.provider_key === provider.provider_key)
+      .map((field: any) => {
+        const vaultCredential = configured.get(`${provider.provider_key}|production|${field.field_key}`) ?? null;
+        const environmentPresent = Boolean(process.env[String(field.field_key)]?.trim());
+        return {
+          ...field,
+          configured: environmentPresent || Boolean(vaultCredential),
+          configurationSource: environmentPresent ? 'environment' : vaultCredential ? 'vault' : null,
+          credential: vaultCredential,
+        };
+      });
+    const requiredFields = providerFields.filter((field: any) => Boolean(field.required));
+    const configuredRequired = requiredFields.filter((field: any) => Boolean(field.configured)).length;
+    return {
       ...provider,
-      fields: (fields ?? []).filter((field: any) => field.provider_key === provider.provider_key).map((field: any) => ({
-        ...field,
-        configured: configured.has(`${provider.provider_key}|production|${field.field_key}`),
-        credential: configured.get(`${provider.provider_key}|production|${field.field_key}`) ?? null,
-      })),
-    })),
+      fields: providerFields,
+      activationCore: {
+        totalRequired: requiredFields.length,
+        configuredRequired,
+        ready: requiredFields.length > 0 && configuredRequired === requiredFields.length,
+      },
+    };
+  });
+
+  return {
+    providers: providerRows,
     routes: routes ?? [],
     integrationRequests: requests ?? [],
     clientDisclosurePolicy: 'provider_hidden',
@@ -123,7 +144,9 @@ export async function resolveProviderSecrets(input: {
   const byField = new Map((credentials ?? []).map((row: any) => [row.field_key, row]));
   const missingRequired: string[] = [];
   const values: Record<string, string> = {};
+  let requiredCount = 0;
   for (const field of fields ?? []) {
+    if (field.required) requiredCount += 1;
     const row: any = byField.get(field.field_key);
     if (!row) {
       if (field.required) missingRequired.push(field.field_key);
@@ -135,7 +158,8 @@ export async function resolveProviderSecrets(input: {
   return {
     providerKey: input.providerKey,
     environment,
-    ready: missingRequired.length === 0,
+    ready: requiredCount > 0 && missingRequired.length === 0,
+    requiredCount,
     missingRequired,
     values,
   };
