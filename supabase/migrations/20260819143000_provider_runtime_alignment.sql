@@ -4,8 +4,7 @@ begin;
 -- credentials are required for activation even when individual fields may be
 -- supplied by the deployment environment instead of the encrypted Provider Vault.
 update public.config_provider_secret_fields
-set required = true,
-    updated_at = now()
+set required = true
 where provider_key = 'meta_marketing'
   and field_key in (
     'META_GRAPH_API_VERSION',
@@ -15,8 +14,7 @@ where provider_key = 'meta_marketing'
   );
 
 update public.config_provider_secret_fields
-set required = true,
-    updated_at = now()
+set required = true
 where provider_key = 'linkedin_marketing'
   and field_key in (
     'LINKEDIN_API_VERSION',
