@@ -2,10 +2,8 @@ import 'server-only'
 
 import type { ApiVerifiedMembership } from '@/lib/auth/api-access'
 import { requireWorkspaceIdentity } from '@/lib/auth/workspace-access'
-import {
-  buildDemoClientConciergeScope,
-  type ConciergeScope,
-} from '@/lib/ai/concierge-retrieval-registry'
+import { buildDemoClientConciergeScope } from '@/lib/ai/concierge-retrieval-registry'
+import type { ConciergeScope } from '@/lib/ai/concierge-retrieval-types'
 
 function metadataString(membership: Pick<ApiVerifiedMembership, 'metadata'>, key: string) {
   const value = membership.metadata?.[key]
