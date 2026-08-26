@@ -24,6 +24,21 @@ function canonicalRecoverySender(configured: string | undefined) {
   return RECOVERY_FROM
 }
 
+function classifyResendRejection(status: number, payload: any) {
+  const name = String(payload?.name || payload?.error || '').toLowerCase()
+  const message = String(payload?.message || '').toLowerCase()
+  const combined = `${name} ${message}`
+
+  if (status === 401 || combined.includes('api key') || combined.includes('unauthorized')) return 'api_key_invalid_or_unauthorized'
+  if (combined.includes('domain') && (combined.includes('verify') || combined.includes('verified'))) return 'sender_domain_unverified'
+  if (combined.includes('testing') && combined.includes('email')) return 'resend_test_mode_recipient_restricted'
+  if (combined.includes('recipient') && combined.includes('restrict')) return 'recipient_restricted'
+  if (status === 429 || combined.includes('rate limit')) return 'rate_limited'
+  if (status === 403) return 'forbidden_or_sender_not_authorized'
+  if (status >= 500) return 'provider_server_error'
+  return name ? `provider_${name.replace(/[^a-z0-9_]+/g, '_').slice(0, 60)}` : 'provider_rejection_unclassified'
+}
+
 function recoveryEmailHtml(continueUrl: string) {
   return `<!doctype html>
 <html>
@@ -92,7 +107,11 @@ export async function sendPasswordRecoveryEmail(input: { email: string; tokenHas
 
   const payload: any = await response.json().catch(() => ({}))
   if (!response.ok || !payload?.id) {
-    throw new Error(`password_recovery_resend_send_failed:${payload?.message || response.status}`)
+    console.error('password recovery resend rejected', {
+      status: response.status,
+      providerErrorClass: classifyResendRejection(response.status, payload),
+    })
+    throw new Error('password_recovery_resend_send_failed')
   }
 
   return { provider: 'resend', providerMessageId: String(payload.id) }
