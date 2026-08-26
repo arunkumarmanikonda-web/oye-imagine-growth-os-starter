@@ -1,4 +1,17 @@
 const domainName = 'oyeimagine.com'
+const teamId = 'team_QSIyuQ3mwCKAAxaBkmJBCTSK'
+const oidcToken = String(process.env.VERCEL_OIDC_TOKEN || '').trim()
+
+if (!oidcToken) {
+  console.log('VERCEL_DNS_OIDC no_oidc_token_in_this_build_environment')
+} else {
+  const dnsProbe = await fetch(`https://api.vercel.com/v4/domains/${domainName}/records?teamId=${encodeURIComponent(teamId)}&limit=1`, {
+    headers: { Authorization: `Bearer ${oidcToken}` },
+    cache: 'no-store',
+  })
+  console.log(`VERCEL_DNS_OIDC status=${dnsProbe.status}`)
+}
+
 const apiKey = String(process.env.RESEND_API_KEY || '').trim()
 
 if (!apiKey) {
