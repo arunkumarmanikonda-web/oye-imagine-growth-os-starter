@@ -2,5 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "npm install",
-  "buildCommand": "node scripts/resend-domain-dns-probe.mjs && node scripts/verify-production-schema-contract.mjs && node scripts/generate-release-manifest.mjs && npm run build"
+  "buildCommand": "node scripts/verify-production-schema-contract.mjs && node scripts/generate-release-manifest.mjs && npm run build"
 }
